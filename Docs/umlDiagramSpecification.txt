@@ -10,24 +10,33 @@ class GameManager {
 }
 
 class Player {
-    - String name
-    - Ship ship
-    - int credits
-    - isStillThere
+    - nickName : String 
+    - ship : Ship 
+    - credits : int
+    - isStillThere : bool
     + assembleShip()
     + takeTurn()
     + addComponent()
     + connect()
 }
 
-class Ship {
-    - List<Component> components
+class ShipBuilder {
+    - components : Map<Component, position>
     + addComponent(Component c)
+    + getCompByPosition(position x)
     + validateShip()
 }
 
+class FlightBoard {
+    - Map<Player, Integer> positions
+    + updatePosition(Player p, int spaces)
+}
+
 abstract class Component {
-    - String type
+    - type : String oppure enum?
+    - numberOfConnections : int
+    - direction : enum
+    - exposedConnection : bool
     + getType()
 }
 
@@ -49,15 +58,11 @@ class Smugglers extends AdventureCard {}
 class MeteorShower extends AdventureCard {}
 class WarZone extends AdventureCard {}
 
-class FlightBoard {
-    - Map<Player, Integer> positions
-    + updatePosition(Player p, int spaces)
-}
 
 GameManager "1" -- "*" Player
 GameManager "1" -- "1" FlightBoard
-Player "1" -- "1" Ship
-Ship "1" -- "*" Component
+Player "1" -- "1" ShipBuilder
+ShipBuilder "1" -- "*" Component
 GameManager "1" -- "*" AdventureCard
 
 
