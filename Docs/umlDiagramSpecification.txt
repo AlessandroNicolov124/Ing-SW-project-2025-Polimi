@@ -1,0 +1,65 @@
+@startuml
+
+class GameManager {
+    - players : List<Player>
+    - flightBoard : FlightBoard 
+    - adventureDeck : List<AdventureCard>
+    - turnNumber : int
+    + startGame()
+    + playTurn()
+}
+
+class Player {
+    - String name
+    - Ship ship
+    - int credits
+    - isStillThere
+    + assembleShip()
+    + takeTurn()
+    + addComponent()
+    + connect()
+}
+
+class Ship {
+    - List<Component> components
+    + addComponent(Component c)
+    + validateShip()
+}
+
+abstract class Component {
+    - String type
+    + getType()
+}
+
+class Cabin extends Component {}
+class Engine extends Component {}
+class Cannon extends Component {}
+class BatteryCompartment extends Component {}
+class ShieldGenerator extends Component {}
+class CargoBay extends Component {}
+class StructuralModule extends Component {}
+
+abstract class AdventureCard {
+    + resolveEvent(Player p)
+}
+
+class Planet extends AdventureCard {}
+class AbandonedShip extends AdventureCard {}
+class Smugglers extends AdventureCard {}
+class MeteorShower extends AdventureCard {}
+class WarZone extends AdventureCard {}
+
+class FlightBoard {
+    - Map<Player, Integer> positions
+    + updatePosition(Player p, int spaces)
+}
+
+GameManager "1" -- "*" Player
+GameManager "1" -- "1" FlightBoard
+Player "1" -- "1" Ship
+Ship "1" -- "*" Component
+GameManager "1" -- "*" AdventureCard
+
+
+
+@enduml
