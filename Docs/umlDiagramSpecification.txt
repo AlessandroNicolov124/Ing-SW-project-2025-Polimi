@@ -7,6 +7,7 @@ class GameManager {
     - turnNumber : int
     + startGame()
     + playTurn()
+    + calculatePoints()
 }
 
 class Player {
@@ -14,10 +15,12 @@ class Player {
     - ship : Ship 
     - credits : int
     - isStillThere : bool
+    - score : int
     + assembleShip()
     + takeTurn()
     + addComponent()
     + connect()
+    + pickCard()
 }
 
 class ShipBuilder {
@@ -49,6 +52,7 @@ class CargoBay extends Component {}
 class StructuralModule extends Component {}
 
 abstract class AdventureCard {
+    + additionalPts()
     + resolveEvent(Player p)
 }
 
@@ -63,7 +67,8 @@ GameManager "1" -- "*" Player
 GameManager "1" -- "1" FlightBoard
 Player "1" -- "1" ShipBuilder
 ShipBuilder "1" -- "*" Component
-GameManager "1" -- "*" AdventureCard
+Player "1" -- "*" AdventureCard
+
 
 
 
