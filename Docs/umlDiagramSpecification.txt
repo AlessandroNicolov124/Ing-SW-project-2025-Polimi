@@ -5,28 +5,47 @@ class GameManager {
     - flightBoard : FlightBoard 
     - adventureDeck : List<AdventureCard>
     - turnNumber : int
+    - state: String
+    - currentPlayer: Player
+    - credits: Map<Player, int>
     + startGame()
+    + endGame()
     + playTurn()
     + calculatePoints()
+    + loadAdventureCard()
+    + updateState()
+    + getCurrentPlayer()
+    + setCredits()
 }
 
-class Player {
-    - nickName : String 
+class Player{
+    - nickName : String
     - ship : ShipBuilder
-    - credits : int
-    - isStillThere : bool
-    - score : int
+    - isStillThere : boolean
+    - cargo: Cargo[]
     + assembleShip()
     + takeTurn()
     + addComponent()
-    + connect()
+    + loadCargo()
+    + unloadCargo()
     + pickCard()
+}
+
+class Cargo{
+    + value: int
+    + color: enum
+    + amount: int
+    - setColor()
+    - setValue()
+    - setAmount()
 }
 
 class ShipBuilder {
     - components : Map<Component, position>
+    - isAssembled : boolean
     + addComponent(Component c)
     + getCompByPosition(position x)
+    + removeComponent(Component c)
     + validateShip()
 }
 
@@ -36,31 +55,65 @@ class FlightBoard {
 }
 
 abstract class Component {
-    - type : String oppure enum?
     - numberOfConnections : int
+    - isUniversal : boolean(False)
     - direction : enum
-    - exposedConnection : bool
+    - exposedConnection : boolean
+    - validateConnection : boolean
+    - validateDirection: boolean
+    + connectTo(Component)
+    + disconnect()
     + getType()
 }
 
-class Cabin extends Component {}
-class Engine extends Component {}
-class Cannon extends Component {}
-class BatteryCompartment extends Component {}
+class Cabin extends Component {
+    + type: enum
+    - setType()
+}
+class Engine extends Component {
+    + type: enum
+    - setType()
+}
+class Cannon extends Component {
+    + type: enum
+    - setType()
+}
+class BatteryCompartment extends Component {
+    + amount: int
+    + type: enum
+    - setAmount()
+    - setType()
+}
 class ShieldGenerator extends Component {}
-class CargoBay extends Component {}
+class CargoBay extends Component {
+    + type: enum
+    - setType()
+}
 class StructuralModule extends Component {}
+class LifeSupport extends Component {}
 
 abstract class AdventureCard {
-    + additionalPts()
-    + resolveEvent(Player p)
+    - additionalPts()
+    - resolveEvent(Player p)
+    - effect()
+    - copies : int
+    - duration : int
+    + setCopies()
 }
 
-class Planet extends AdventureCard {}
+class Planets extends AdventureCard {}
+class AbandonedStation extends AdventureCard {}
 class AbandonedShip extends AdventureCard {}
 class Smugglers extends AdventureCard {}
-class MeteorShower extends AdventureCard {}
-class WarZone extends AdventureCard {}
+class OpenSpace extends AdventureCard {}
+class MeteorSwarm extends AdventureCard {}
+class CombactZone extends AdventureCard {}
+class Stardust extends AdventureCard {}
+class BigMeteorSwarm extends AdventureCard {}
+class Slavers extends AdventureCard {}
+class Pirates extends AdventureCard {}
+class Epidemic extends AdventureCard {}
+class Sabotage extends AdventureCard {}
 
 
 GameManager "1" -- "*" Player
@@ -68,8 +121,7 @@ GameManager "1" -- "1" FlightBoard
 Player "1" -- "1" ShipBuilder
 ShipBuilder "1" -- "*" Component
 Player "1" -- "*" AdventureCard
-
-
+Player "1" -- "*" Cargo
 
 
 @enduml
