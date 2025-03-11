@@ -7,7 +7,7 @@ public class GameManager {
     private String state;
     private Player currentPlayer;
     private List<Player> Players;
-    //Adventure deck, yet to come
+    private List<AdventureCard> deck;
 
     public GameManager() {
 
