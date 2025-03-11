@@ -27,6 +27,24 @@ class Position {
 
 package "Model" {
 
+class GameModel {
+    - players : List<Player>
+    - flightBoard : FlightBoard
+    - adventureDeck : List<AdventureCard>
+    - turnNumber : int
+    - state: String
+    - currentPlayer: Player
+    - credits: Map<Player, int>
+    + startGame() : void
+    + endGame() : void
+    + playTurn() : void
+    + calculatePoints() : int
+    + loadAdventureCard() : AdventureCard
+    + updateState(newState: String) : void
+    + getCurrentPlayer() : Player
+    + setCredits(player: Player, amount: int) : void
+  }
+
   class Timer {
       - currentTime: int
       + start() : void
@@ -42,11 +60,8 @@ package "Model" {
       - nickName : String
       - ship : ShipBuilder
       - isStillThere : boolean
-      - cargo: List<Cargo>
-      - crew: List<Crew>
       + assembleShip() : void
       + takeTurn() : void
-      + addComponent(c: Component) : void
       + loadCargo(c: Cargo) : void
       + unloadCargo(c: Cargo) : void
       + pickCard() : void
@@ -79,12 +94,12 @@ package "Model" {
   }
 
   class Cargo {
-      + value : int
-      + color : CargoColor
-      + amount : int
-      - setColor(c: CargoColor) : void
-      - setValue(v: int) : void
-      - setAmount(a: int) : void
+      - value : int
+      - color : CargoColor
+      - amount : int
+      + setColor(c: CargoColor) : void
+      + setValue(v: int) : void
+      + setAmount(a: int) : void
   }
 
   class ShipBuilder {
@@ -122,6 +137,7 @@ package "Model" {
 
   class Cabin extends Component {
       - type : String
+      - crew: List<Crew>
       + setType(t: String) : void
   }
 
@@ -148,6 +164,7 @@ package "Model" {
 
   class CargoBay extends Component {
       - type : String
+      - cargo: List<Cargo>
       + setType(t: String) : void
   }
 
@@ -208,23 +225,10 @@ package "Model" {
 
 
 package "Controller" {
-  class GameManager {
-      - players : List<Player>
-      - flightBoard : FlightBoard
-      - adventureDeck : List<AdventureCard>
-      - turnNumber : int
-      - state: String
-      - currentPlayer: Player
-      - credits: Map<Player, int>
-      + startGame() : void
-      + endGame() : void
-      + playTurn() : void
-      + calculatePoints() : int
-      + loadAdventureCard() : AdventureCard
-      + updateState(newState: String) : void
-      + getCurrentPlayer() : Player
-      + setCredits(player: Player, amount: int) : void
-  }
+    class GameController {
+        - game : GameModel
+        + manageGame() : void
+    }
 }
 
 
@@ -247,12 +251,13 @@ package "View" {
   }
 }
 
-
-GameManager "1" -- "*" Player : players
-GameManager "1" -- "1" FlightBoard : flightBoard
+GameController "1" -- "1" GameModel : game
+GameModel "1" -- "*" Player : players
+GameModel "1" -- "1" FlightBoard : flightBoard
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
 Player "1" -- "*" Cargo : cargo
-Player "1" -- "*" Crew : crew
+Cabin "1" -- "1" Crew : crew
 
 @enduml
+
