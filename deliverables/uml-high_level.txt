@@ -1,0 +1,258 @@
+@startuml
+
+enum Direction {
+  NORTH
+  EAST
+  SOUTH
+  WEST
+}
+
+enum CargoColor {
+  RED
+  BLUE
+  GREEN
+  YELLOW
+}
+
+enum AlienType {
+  PURPLE
+  BROWN
+}
+
+class Position {
+  + x: int
+  + y: int
+}
+
+
+package "Model" {
+
+  class Timer {
+      - currentTime: int
+      + start() : void
+      + stop() : void
+      + reset() : void
+  }
+
+  class Dice {
+      + roll() : int
+  }
+
+  class Player {
+      - nickName : String
+      - ship : ShipBuilder
+      - isStillThere : boolean
+      - cargo: List<Cargo>
+      - crew: List<Crew>
+      + assembleShip() : void
+      + takeTurn() : void
+      + addComponent(c: Component) : void
+      + loadCargo(c: Cargo) : void
+      + unloadCargo(c: Cargo) : void
+      + pickCard() : void
+  }
+
+  abstract class Crew {
+      - type : String
+      - count : int
+      + getCount() : int
+      + setCount(c: int) : void
+  }
+
+  class HumanCrew extends Crew {
+      + getCount() : int
+  }
+
+  abstract class Alien extends Crew {
+      - alienType : AlienType
+      + applyAbility(ship: ShipBuilder) : void
+  }
+
+  class PurpleAlien extends Alien {
+      + applyAbility(ship: ShipBuilder) : void
+      + getCannonBonus() : int
+  }
+
+  class BrownAlien extends Alien {
+      + applyAbility(ship: ShipBuilder) : void
+      + getEngineBonus() : int
+  }
+
+  class Cargo {
+      + value : int
+      + color : CargoColor
+      + amount : int
+      - setColor(c: CargoColor) : void
+      - setValue(v: int) : void
+      - setAmount(a: int) : void
+  }
+
+  class ShipBuilder {
+      - position : int
+      - components : Map<Component, Position>
+      - isAssembled : boolean
+      + addComponent(c: Component, pos: Position) : void
+      + getCompByPosition(pos: Position) : Component
+      + removeComponent(c: Component) : void
+      + validateShip() : boolean
+      + mapPosition(pos: Position) : void
+  }
+
+  class FlightBoard {
+      - positions : Map<Player, Integer>
+      + updatePosition(p: Player, spaces: int) : void
+  }
+
+  abstract class Component {
+      - numberOfConnections : int
+      - isUniversal : boolean
+      - connectorDirection : Direction
+      - componentDirection: Direction
+      - exposedConnection : boolean
+      - validateConnection : boolean
+      - validateDirection: boolean
+      - attachedComponents : Map<Component, Direction>
+      + connectTo(c: Component, dir: Direction) : boolean
+      + disconnect() : void
+      + getType() : String
+      + getConnectedTo(c: Component) : Component
+      + getComponentDirection() : Direction
+      + getConnectorDirection() : Direction
+  }
+
+  class Cabin extends Component {
+      - type : String
+      + setType(t: String) : void
+  }
+
+  class Engine extends Component {
+      - type : String
+      + setType(t: String) : void
+  }
+
+  class Cannon extends Component {
+      - type : String
+      + setType(t: String) : void
+  }
+
+  class BatteryCompartment extends Component {
+      - amount : int
+      - type : String
+      + setAmount(a: int) : void
+      + setType(t: String) : void
+      + getAmount() : int
+  }
+
+  class ShieldGenerator extends Component {
+  }
+
+  class CargoBay extends Component {
+      - type : String
+      + setType(t: String) : void
+  }
+
+  class StructuralModule extends Component {
+  }
+
+  class LifeSupport extends Component {
+  }
+
+  abstract class AdventureCard {
+      - additionalPts() : int
+      - resolveEvent(p: Player) : void
+      + effect() : void
+      - copies : int
+      - duration : int
+      + setCopies(c: int) : void
+  }
+
+  class Planets extends AdventureCard {
+  }
+
+  class AbandonedStation extends AdventureCard {
+  }
+
+  class AbandonedShip extends AdventureCard {
+  }
+
+  class Smugglers extends AdventureCard {
+  }
+
+  class OpenSpace extends AdventureCard {
+  }
+
+  class MeteorSwarm extends AdventureCard {
+  }
+
+  class CombatZone extends AdventureCard {
+  }
+
+  class Stardust extends AdventureCard {
+  }
+
+  class BigMeteorSwarm extends AdventureCard {
+  }
+
+  class Slavers extends AdventureCard {
+  }
+
+  class Pirates extends AdventureCard {
+  }
+
+  class Epidemic extends AdventureCard {
+  }
+
+  class Sabotage extends AdventureCard {
+  }
+}
+
+
+package "Controller" {
+  class GameManager {
+      - players : List<Player>
+      - flightBoard : FlightBoard
+      - adventureDeck : List<AdventureCard>
+      - turnNumber : int
+      - state: String
+      - currentPlayer: Player
+      - credits: Map<Player, int>
+      + startGame() : void
+      + endGame() : void
+      + playTurn() : void
+      + calculatePoints() : int
+      + loadAdventureCard() : AdventureCard
+      + updateState(newState: String) : void
+      + getCurrentPlayer() : Player
+      + setCredits(player: Player, amount: int) : void
+  }
+}
+
+
+package "View" {
+  class GameView {
+      + displayGameState() : void
+      + updateUI() : void
+  }
+
+  class PlayerView {
+      + displayPlayerInfo(p: Player) : void
+  }
+
+  class ShipView {
+      + renderShip(ship: ShipBuilder) : void
+  }
+
+  class FlightBoardView {
+      + renderBoard(board: FlightBoard) : void
+  }
+}
+
+
+GameManager "1" -- "*" Player : players
+GameManager "1" -- "1" FlightBoard : flightBoard
+Player "1" -- "1" ShipBuilder : ship
+ShipBuilder "1" -- "*" Component : components
+Player "1" -- "*" Cargo : cargo
+Player "1" -- "*" Crew : crew
+
+@enduml
