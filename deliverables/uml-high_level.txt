@@ -250,7 +250,9 @@ package "View" {
 
 GameController "1" -- "1" GameModel : game
 GameModel "1" -- "*" Player : players
+GameModel "1" -- "*" AdventureCard : card
 GameModel "1" -- "1" FlightBoard : flightBoard
+Component "1" -- "1...4" Connector: connecition
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
 CargoBay "1" -- "*" Cargo : cargo
