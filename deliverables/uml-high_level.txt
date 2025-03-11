@@ -62,8 +62,6 @@ class GameModel {
       - isStillThere : boolean
       + assembleShip() : void
       + takeTurn() : void
-      + loadCargo(c: Cargo) : void
-      + unloadCargo(c: Cargo) : void
       + pickCard() : void
   }
 
@@ -105,6 +103,7 @@ class GameModel {
   class ShipBuilder {
       - position : int
       - components : Map<Component, Position>
+      - liks:
       - isAssembled : boolean
       + addComponent(c: Component, pos: Position) : void
       + getCompByPosition(pos: Position) : Component
@@ -119,20 +118,16 @@ class GameModel {
   }
 
   abstract class Component {
-      - numberOfConnections : int
-      - isUniversal : boolean
-      - connectorDirection : Direction
+      - conn : List<Connector>
       - componentDirection: Direction
-      - exposedConnection : boolean
-      - validateConnection : boolean
-      - validateDirection: boolean
-      - attachedComponents : Map<Component, Direction>
-      + connectTo(c: Component, dir: Direction) : boolean
-      + disconnect() : void
-      + getType() : String
-      + getConnectedTo(c: Component) : Component
-      + getComponentDirection() : Direction
-      + getConnectorDirection() : Direction
+      + connectTo???(c: Component, dir: Direction) : boolean
+      + disconnect()??? : void
+      + getConnectedTo(c: Component)?? : Component
+  }
+
+  class Connector {
+      - direction : Direction
+      - type : enum
   }
 
   class Cabin extends Component {
@@ -166,6 +161,8 @@ class GameModel {
       - type : String
       - cargo: List<Cargo>
       + setType(t: String) : void
+      + loadCargo(c: Cargo) : void
+      + unloadCargo(c: Cargo) : void
   }
 
   class StructuralModule extends Component {
@@ -256,7 +253,7 @@ GameModel "1" -- "*" Player : players
 GameModel "1" -- "1" FlightBoard : flightBoard
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
-Player "1" -- "*" Cargo : cargo
+CargoBay "1" -- "*" Cargo : cargo
 Cabin "1" -- "1" Crew : crew
 
 @enduml
