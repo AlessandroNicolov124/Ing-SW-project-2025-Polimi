@@ -14,4 +14,25 @@ public class ShipBuilder {
         this.isAssembled = false;
     }
 
+    public void addComponent(Component c, Position p){
+
+    }
+
+    public Component getCompByPosition(Position pos){
+        return null;
+    }
+
+    public void removeComponent(Component c){
+
+    }
+
+    public boolean validateShip(){
+        return false;
+    }
+
+    public void mapPosition(Position pos){
+
+    }
+
+
 }
