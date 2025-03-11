@@ -8,6 +8,7 @@ public class Player {
     private String nickName;
     private boolean active;
     private List<Cargo> cargoList;
+    private ShipBuilder ship;
     //Crew yet to be added
 
 
