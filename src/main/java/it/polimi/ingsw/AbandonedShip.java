@@ -6,11 +6,20 @@ public class AbandonedShip extends AdventureCard{
         super(copies, duration);
     }
 
+    @Override
     int additionalPls(){
         return 0;
     }
 
+    @Override
+    void resolveEvent(Player p) {
+
+    }
+
+    @Override
     void effect(){
 
     }
+
+
 }
