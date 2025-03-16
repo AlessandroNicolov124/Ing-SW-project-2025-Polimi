@@ -2,6 +2,10 @@ package it.polimi.ingsw;
 
 public class BigMeteorSwarm extends AdventureCard {
 
+    public BigMeteorSwarm() {
+
+    }
+
     public BigMeteorSwarm(int copies, int duration) {
         super(copies, duration);
     }

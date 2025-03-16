@@ -2,6 +2,7 @@ package it.polimi.ingsw;
 
 public class Pirates extends AdventureCard {
 
+    public Pirates() {}
     public Pirates(int copies, int duration) {
         super(copies, duration);
     }

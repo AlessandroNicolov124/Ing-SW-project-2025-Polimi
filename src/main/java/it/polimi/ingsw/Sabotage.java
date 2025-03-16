@@ -2,6 +2,9 @@ package it.polimi.ingsw;
 
 public class Sabotage extends AdventureCard {
 
+    public Sabotage() {
+
+    }
     public Sabotage(int copies, int duration) {
         super(copies, duration);
     }

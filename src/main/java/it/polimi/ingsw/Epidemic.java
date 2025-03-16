@@ -2,6 +2,7 @@ package it.polimi.ingsw;
 
 public class Epidemic extends AdventureCard {
 
+    public Epidemic() {}
     public Epidemic(int copies, int duration) {
         super(copies, duration);
     }

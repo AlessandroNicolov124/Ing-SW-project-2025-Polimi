@@ -7,16 +7,15 @@ public class Player {
     private int id;
     private String nickName;
     private boolean active;
-    private List<Cargo> cargoList;
     private ShipBuilder ship;
+    private AdventureCard pickedCard; // Carta pescata dal giocatore
 
     public Player() {}
 
-    public Player(int id, String nickName, boolean active, List<Cargo> cargoList, ShipBuilder ship) {
+    public Player(int id, String nickName, boolean active, ShipBuilder ship) {
         this.id = id;
         this.nickName = nickName;
         this.active = active;
-        this.cargoList = cargoList;
         this.ship = ship;
     }
 
@@ -44,16 +43,10 @@ public class Player {
         this.active = active;
     }
 
-    public List<Cargo> getCargoList() {
-        return cargoList;
-    }
-
-    public void setCargoList(List<Cargo> cargoList) {
-        this.cargoList = cargoList;
-    }
     public ShipBuilder getShip() {
         return ship;
     }
+
     public void setShip(ShipBuilder ship) {
         this.ship = ship;
     }
@@ -66,7 +59,17 @@ public class Player {
 
     }
 
-    public void pickCard(){
+    public void pickCard(GameModel gameModel) {
+        AdventureCard card = gameModel.pickAdventureCard(); // Pescare una carta dal GameModel
+        if (card != null) {
+            this.pickedCard = card; // Assegna la carta pescata al giocatore
+            System.out.println(nickName + " ha pescato una carta: " + card.getClass().getSimpleName());
 
+
+            //  metodo per applicare l'effetto della carta, se necessario
+            card.effect(); // Esempio di applicazione dell'effetto della carta
+        } else {
+            System.out.println("Nessuna carta disponibile da pescare.");
+        }
     }
 }

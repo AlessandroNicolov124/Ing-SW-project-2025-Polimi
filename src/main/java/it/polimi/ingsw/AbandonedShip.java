@@ -2,6 +2,9 @@ package it.polimi.ingsw;
 
 public class AbandonedShip extends AdventureCard{
 
+    public AbandonedShip(){
+
+    }
     public AbandonedShip(int copies, int duration) {
         super(copies, duration);
     }

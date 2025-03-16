@@ -2,6 +2,9 @@ package it.polimi.ingsw;
 
 public class Planets extends AdventureCard{
 
+    public Planets(){
+
+    }
 
     public Planets(int copies, int duration) {
         super(copies, duration);

@@ -2,6 +2,7 @@ package it.polimi.ingsw;
 
 public class MeteorSwarm extends AdventureCard {
 
+    public MeteorSwarm() {}
     public MeteorSwarm(int copies, int duration) {
         super(copies, duration);
     }
