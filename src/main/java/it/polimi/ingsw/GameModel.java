@@ -26,14 +26,6 @@ public class GameModel {
         return null; // Nessuna carta disponibile
     }
 
-    // Metodo per pescare una carta dall'avventura
-    public AdventureCard pickAdventureCard() {
-        if (!deck.isEmpty()) {
-            return deck.remove(0); // Rimuove e restituisce la prima carta
-        }
-        return null; // Nessuna carta disponibile
-    }
-
     public void startGame(){
 
     }
