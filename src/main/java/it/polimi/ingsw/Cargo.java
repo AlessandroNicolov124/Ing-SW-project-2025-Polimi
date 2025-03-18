@@ -15,6 +15,13 @@ public class Cargo {
     public void setColor(String Color) {
         this.Color = Color;
     }
+    public void decrementAmount() {
+        amount--;
+    }
+    public void decrementAmount(int quantity) {
+        amount -= quantity;
+    }
 
     public Cargo() {}
 }
+
