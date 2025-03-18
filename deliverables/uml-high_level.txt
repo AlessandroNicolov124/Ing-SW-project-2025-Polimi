@@ -1,22 +1,16 @@
 @startuml
 
 enum Direction {
-  NORTH
-  EAST
-  SOUTH
-  WEST
+    NORTH
+    EAST
+    SOUTH
+    WEST
 }
 
-enum CargoColor {
-  RED
-  BLUE
-  GREEN
-  YELLOW
-}
-
-enum AlienType {
-  PURPLE
-  BROWN
+enum ConnectorType {
+    SINGLE
+    DOUBLE
+    UNIVERSAL
 }
 
 class Position {
@@ -66,38 +60,43 @@ class GameModel {
   }
 
   abstract class Crew {
-      - type : String
-      - count : int
-      + getCount() : int
-      + setCount(c: int) : void
   }
 
   class HumanCrew extends Crew {
-      + getCount() : int
   }
 
   abstract class Alien extends Crew {
-      - alienType : AlienType
       + applyAbility(ship: ShipBuilder) : void
   }
 
   class PurpleAlien extends Alien {
-      + applyAbility(ship: ShipBuilder) : void
       + getCannonBonus() : int
   }
 
   class BrownAlien extends Alien {
-      + applyAbility(ship: ShipBuilder) : void
       + getEngineBonus() : int
   }
 
-  class Cargo {
+  class LifeSupportSystem extends Component{
+        - type: enum
+        + getType()
+        + setType()
+  }
+
+
+  abstract class Cargo {
       - value : int
-      - color : CargoColor
-      - amount : int
-      + setColor(c: CargoColor) : void
       + setValue(v: int) : void
-      + setAmount(a: int) : void
+      + getValue(v: int) : int
+  }
+
+  class BlueCargo extends Cargo {
+  }
+  class RedCargo extends Cargo {
+  }
+  class GreenCargo extends Cargo {
+  }
+  class YellowCargo extends Cargo {
   }
 
   class ShipBuilder {
@@ -130,34 +129,52 @@ class GameModel {
       - type : enum
   }
 
-  class Cabin extends Component {
-      - type : String
+  abstract class Cabin extends Component {
       - crew: List<Crew>
       + setType(t: String) : void
   }
 
-  class Engine extends Component {
-      - type : String
-      + setType(t: String) : void
+  class StartingCabin extends Cabin {}
+
+  class StandardCabin extends Cabin {}
+
+  abstract class Engine extends Component {
+        - power : int
+        - energyConsumption : int
   }
 
-  class Cannon extends Component {
-      - type : String
-      + setType(t: String) : void
+  class SingleEngine extends Engine {
+  }
+
+  class DoubleEngine extends Engine {
+  }
+
+  abstract class Cannon extends Component {
+        - firePower
+        - energyConsumption
+  }
+
+  class SingleCannon extends Cannon {
+  }
+
+  class DoubleCannon extends Cannon {
   }
 
   class BatteryCompartment extends Component {
       - amount : int
       - type : String
+      - chargeLevel : int
       + setAmount(a: int) : void
       + setType(t: String) : void
       + getAmount() : int
+      + getChargeLevel() : int
+      + updateChargeLevel(c: int) : void
   }
 
   class ShieldGenerator extends Component {
   }
 
-  class CargoBay extends Component {
+  class CargoHolds extends Component {
       - type : String
       - cargo: List<Cargo>
       + setType(t: String) : void
@@ -166,9 +183,6 @@ class GameModel {
   }
 
   class StructuralModule extends Component {
-  }
-
-  class LifeSupport extends Component {
   }
 
   abstract class AdventureCard {
@@ -252,11 +266,9 @@ GameController "1" -- "1" GameModel : game
 GameModel "1" -- "*" Player : players
 GameModel "1" -- "*" AdventureCard : card
 GameModel "1" -- "1" FlightBoard : flightBoard
-Component "1" -- "1...4" Connector: connecition
+Component "1" -- "1...4" Connector: connection
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
-CargoBay "1" -- "*" Cargo : cargo
-Cabin "1" -- "1" Crew : crew
-
+CargoHolds "1" -- "*" Cargo : cargo
+Crew "1" -- "1" Cabin: cabin
 @enduml
-
