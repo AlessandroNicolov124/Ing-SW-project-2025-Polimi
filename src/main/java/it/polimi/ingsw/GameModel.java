@@ -16,6 +16,8 @@ public class GameModel {
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
+
+        loadAdventureCard();
     }
 
     // Metodo per pescare una carta dall'avventura
@@ -26,23 +28,11 @@ public class GameModel {
         return null; // Nessuna carta disponibile
     }
 
-    public void startGame(){
-
-    }
-
-    public void endGame(){
-
-    }
-
-    public void playTurn(){
-
-    }
-
     public int calculatesPoints(){
         return 0;
     }
 
-    public void loadAdventureCard(){
+    private void loadAdventureCard(){
         deck.add(new Planets());
         deck.add(new AbandonedStation());
         deck.add(new AbandonedShip());
@@ -57,7 +47,6 @@ public class GameModel {
         deck.add(new Sabotage());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
-
     }
 
     public void updateState(String newState){
