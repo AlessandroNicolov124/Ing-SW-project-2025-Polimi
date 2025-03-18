@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
+import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class Cannon extends Component {

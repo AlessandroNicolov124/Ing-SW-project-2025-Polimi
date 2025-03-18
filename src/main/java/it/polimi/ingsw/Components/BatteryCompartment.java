@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
+import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class BatteryCompartment extends Component {
@@ -35,5 +36,9 @@ public class BatteryCompartment extends Component {
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
+    }
+
+    public int getAmount() {
+        return amount;
     }
 }

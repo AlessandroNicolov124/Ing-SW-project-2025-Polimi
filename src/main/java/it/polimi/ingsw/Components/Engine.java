@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
+import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class Engine extends Component {
@@ -16,7 +17,7 @@ public class Engine extends Component {
 
     @Override
     public void connectTo(Component c, Direction dir) {
-        connections.add(new Connector(dir, this));
+        connections.add(new Connector(dir, c));
         System.out.println("Motore connesso a " + c.getClass().getSimpleName() + " nella direzione " + dir);
     }
 

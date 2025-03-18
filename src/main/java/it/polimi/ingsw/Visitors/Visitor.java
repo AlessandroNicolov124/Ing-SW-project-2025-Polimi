@@ -1,4 +1,4 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.Visitors;
 
 import it.polimi.ingsw.Components.*;
 
