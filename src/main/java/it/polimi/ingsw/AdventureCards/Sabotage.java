@@ -1,4 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
+
+import it.polimi.ingsw.Player;
 
 public class Sabotage extends AdventureCard {
 
@@ -20,7 +22,7 @@ public class Sabotage extends AdventureCard {
     }
 
     @Override
-    void effect() {
+    public void effect() {
 
     }
 }

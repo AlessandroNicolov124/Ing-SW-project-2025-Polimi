@@ -1,7 +1,6 @@
 package it.polimi.ingsw;
 
-import javax.swing.*;
-import java.util.List;
+import it.polimi.ingsw.AdventureCards.*;
 
 public class Player {
     private int id;

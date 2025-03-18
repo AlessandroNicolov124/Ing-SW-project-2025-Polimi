@@ -1,6 +1,8 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
 
-public class CombactZone extends AdventureCard{
+import it.polimi.ingsw.Player;
+
+public class CombactZone extends AdventureCard {
 
     public CombactZone(){
 
@@ -20,7 +22,7 @@ public class CombactZone extends AdventureCard{
     }
 
     @Override
-    void effect(){
+    public void effect(){
 
     }
 

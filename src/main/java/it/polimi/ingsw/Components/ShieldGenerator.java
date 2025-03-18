@@ -1,10 +1,10 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.Components;
 
-// Classe Engine
-public class Engine extends Component {
-    private String type;
+import it.polimi.ingsw.*;
 
-    public Engine() {
+public class ShieldGenerator extends Component {
+    
+    public ShieldGenerator() {
         super();
     }
 
@@ -20,7 +20,10 @@ public class Engine extends Component {
         System.out.println("Motore disconnesso.");
     }
 
-    public void setType(String type) {
-        this.type = type;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
+
 }
+

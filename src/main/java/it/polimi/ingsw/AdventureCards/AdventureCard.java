@@ -1,4 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
+
+import it.polimi.ingsw.Player;
 
 public abstract class AdventureCard {
     private int copies;
@@ -18,7 +20,7 @@ public abstract class AdventureCard {
 
     abstract void resolveEvent(Player p);
 
-    abstract void effect();
+    public abstract void effect();
 
     public void setCopies(int copies) {
         this.copies = copies;

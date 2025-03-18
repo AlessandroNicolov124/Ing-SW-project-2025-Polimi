@@ -1,4 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.Components;
+
+import it.polimi.ingsw.*;
 
 // Classe Cabin
 public class Cabin extends Component {
@@ -6,6 +8,10 @@ public class Cabin extends Component {
 
     public Cabin() {
         super();
+    }
+    public Cabin(String type) {
+        super();
+        this.type = type;
     }
 
     @Override
@@ -22,7 +28,16 @@ public class Cabin extends Component {
         System.out.println("Cabina disconnessa.");
     }
 
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
     public void setType(String type) {
         this.type = type;
+    }
+
+    public String getType() {
+        return type;
     }
 }

@@ -1,8 +1,10 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.Components;
+
+import it.polimi.ingsw.*;
 
 import java.util.*;
 
-public class CargoBay extends Component{
+public class CargoBay extends Component {
 
     private String type;
     private List<Cargo> cargos;
@@ -12,6 +14,7 @@ public class CargoBay extends Component{
     }
 
     public CargoBay(String type, List<Cargo> cargos) {
+        super();
         this.type=type;
         this.cargos=cargos;
     }
@@ -51,5 +54,10 @@ public class CargoBay extends Component{
     @Override
     public void disconnect() {
 
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
 }

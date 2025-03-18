@@ -1,5 +1,7 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.Components.Component;
+
 // Classe Connector
 public class Connector {
     private Direction direction;

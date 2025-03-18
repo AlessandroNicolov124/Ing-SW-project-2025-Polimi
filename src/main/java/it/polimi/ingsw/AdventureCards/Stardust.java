@@ -1,4 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
+
+import it.polimi.ingsw.Player;
 
 public class Stardust extends AdventureCard {
 
@@ -18,7 +20,7 @@ public class Stardust extends AdventureCard {
     }
 
     @Override
-    void effect() {
+    public void effect() {
 
     }
 }

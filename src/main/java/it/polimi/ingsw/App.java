@@ -1,5 +1,10 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.Components.*;
+import it.polimi.ingsw.AdventureCards.*;
+
+import java.util.ArrayList;
+
 /**
  * Hello world!
  *
@@ -27,9 +32,12 @@ public class App {
         Engine engine = new Engine();
         engine.setType("Motore a reazione");
 
+        Component cargo = new CargoBay("Storage", new ArrayList<>());
+
         // Aggiunta di componenti alla nave
         shipBuilder.addComponent(cabin, new Position(0, 0));
         shipBuilder.addComponent(engine, new Position(1, 0));
+        shipBuilder.addComponent(cargo, new Position(0, 1));
 
         // Validazione della nave
         if (shipBuilder.validateShip()) {
@@ -40,5 +48,13 @@ public class App {
 
         // Rimozione di un componente
         shipBuilder.removeComponent(engine);
+
+
+
+        //test visitor
+        Visitor diagnosticVisitor = new DiagnosticVisitor();
+        engine.accept(diagnosticVisitor);
+        cabin.accept(diagnosticVisitor);
+        cargo.accept(diagnosticVisitor);
     }
 }

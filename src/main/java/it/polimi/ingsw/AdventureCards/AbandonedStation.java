@@ -1,6 +1,8 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
 
-public class AbandonedStation extends AdventureCard{
+import it.polimi.ingsw.Player;
+
+public class AbandonedStation extends AdventureCard {
 
     public AbandonedStation(){
 
@@ -21,7 +23,7 @@ public class AbandonedStation extends AdventureCard{
     }
 
     @Override
-    void effect(){
+    public void effect(){
 
     }
 }

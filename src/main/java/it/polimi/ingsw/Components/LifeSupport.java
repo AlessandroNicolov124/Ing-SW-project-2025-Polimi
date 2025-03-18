@@ -1,10 +1,10 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.Components;
 
-// Classe Engine
-public class Cannon extends Component {
-    private String type;
+import it.polimi.ingsw.*;
 
-    public Cannon() {
+public class LifeSupport extends Component {
+
+    public LifeSupport() {
         super();
     }
 
@@ -20,7 +20,9 @@ public class Cannon extends Component {
         System.out.println("Motore disconnesso.");
     }
 
-    public void setType(String type) {
-        this.type = type;
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
     }
+
 }

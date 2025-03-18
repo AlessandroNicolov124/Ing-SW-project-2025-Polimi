@@ -1,6 +1,8 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
 
-public class Planets extends AdventureCard{
+import it.polimi.ingsw.Player;
+
+public class Planets extends AdventureCard {
 
     public Planets(){
 
@@ -21,7 +23,7 @@ public class Planets extends AdventureCard{
     }
 
     @Override
-    void effect(){
+    public void effect(){
 
     }
 }

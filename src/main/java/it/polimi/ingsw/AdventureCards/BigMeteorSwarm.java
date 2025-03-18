@@ -1,4 +1,6 @@
-package it.polimi.ingsw;
+package it.polimi.ingsw.AdventureCards;
+
+import it.polimi.ingsw.Player;
 
 public class BigMeteorSwarm extends AdventureCard {
 
@@ -21,7 +23,7 @@ public class BigMeteorSwarm extends AdventureCard {
     }
 
     @Override
-    void effect() {
+    public void effect() {
 
     }
 }
