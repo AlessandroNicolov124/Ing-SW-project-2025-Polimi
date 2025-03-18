@@ -2,6 +2,7 @@ package it.polimi.ingsw;
 
 public class GameController {
     private GameModel gameModel;
+    private GameView gameView;
 
     public GameController() {
         gameModel = new GameModel();
@@ -22,13 +23,8 @@ public class GameController {
         }
     }
 
+    public void updateView(){}
 
-    public void endGame(){
 
-    }
-
-    public void playTurn(){
-
-    }
 
 }
