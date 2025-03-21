@@ -26,9 +26,6 @@ public abstract class Component {
         return componentDirection;
     }
 
-    public abstract void connectTo(Component c, Direction dir);
-    public abstract void disconnect();
-
     // Add this method to accept visitors
     public abstract void accept(Visitor visitor);
 

@@ -1,42 +1,32 @@
 package it.polimi.ingsw.Components;
 
-import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
-public class Engine extends Component {
-    private String type;
+public abstract class Engine extends Component {
+    private int power;
+    private int energyConsumption;
 
-    public Engine() {
+    public Engine(int power, int energyConsumption) {
         super();
-    }
-    public Engine(String type) {
-        super();
-        this.type = type;
+        this.power = power;
+        this.energyConsumption = energyConsumption;
     }
 
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        connections.add(new Connector(dir, c));
-        System.out.println("Motore connesso a " + c.getClass().getSimpleName() + " nella direzione " + dir);
+    public int getPower() {
+        return power;
     }
 
-    @Override
-    public void disconnect() {
-        connections.clear();
-        System.out.println("Motore disconnesso.");
+    public int getEnergyConsumption() {
+        return energyConsumption;
     }
+
+    public abstract String getType();
 
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
 
-    public String getType() {
-        return type;
-    }
 }

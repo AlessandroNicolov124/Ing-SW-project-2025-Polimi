@@ -51,13 +51,13 @@ public class ShipValueVisitor implements Visitor {
     }
 
     @Override
-    public void visit(CargoBay cargoBay) {
+    public void visit(CargoHolds cargoBay) {
         // Value based on cargo capacity and content
         totalValue += 75 + (cargoBay.getCargos().size() * 25);
     }
 
     @Override
-    public void visit(LifeSupport lifeSupport) {
+    public void visit(LifeSupportSystem lifeSupportSystem) {
         // Essential component
         totalValue += 150;
     }

@@ -29,14 +29,14 @@ public class DiagnosticVisitor implements Visitor {
     }
 
     @Override
-    public void visit(CargoBay cargoBay) {
+    public void visit(CargoHolds cargoBay) {
         System.out.println("Performing diagnostic on Cargo Bay of type: " + cargoBay.getType());
         System.out.println("Cargo items: " + cargoBay.getCargos().size());
         // Add specific diagnostic logic
     }
 
     @Override
-    public void visit(LifeSupport lifeSupport) {
+    public void visit(LifeSupportSystem lifeSupportSystem) {
         System.out.println("Performing diagnostic on Life Support System");
         // Add specific diagnostic logic
     }
