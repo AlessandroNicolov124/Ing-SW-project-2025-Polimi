@@ -1,12 +1,14 @@
 package it.polimi.ingsw.Components;
 
-import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
-public class LifeSupport extends Component {
+public class LifeSupportSystem extends Component {
 
-    public LifeSupport() {
+    private LifeSupportSystemType type;
+
+    public LifeSupportSystem(LifeSupportSystemType type) {
         super();
+        this.type = type;
     }
 
     @Override

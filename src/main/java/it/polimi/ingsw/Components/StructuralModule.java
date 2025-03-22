@@ -9,7 +9,6 @@ public class StructuralModule extends Component {
         super();
     }
 
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);

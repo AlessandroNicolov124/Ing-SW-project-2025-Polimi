@@ -54,7 +54,7 @@ public class App {
 
         //test visitor
         // Create components
-        Component engine = new Engine("Fusion");
+        Component engine = new SingleEngine();
         Component cabin = new Cabin("Command");
         Component cannon = new SingleCannon();
         Component battery = new BatteryCompartment(100, "High Capacity");

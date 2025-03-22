@@ -7,8 +7,8 @@ public interface Visitor {
     void visit(Cabin cabin);
     void visit(Cannon cannon);
     void visit(BatteryCompartment batteryCompartment);
-    void visit(CargoBay cargoBay);
-    void visit(LifeSupport lifeSupport);
+    void visit(CargoHolds cargoBay);
+    void visit(LifeSupportSystem lifeSupportSystem);
     void visit(ShieldGenerator shieldGenerator);
     void visit(StructuralModule structuralModule);
     // Add more visit methods for other components as needed

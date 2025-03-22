@@ -38,6 +38,7 @@ public abstract class Cannon extends Component {
         visitor.visit(this);
     }
 
+    public abstract String getType();
 }
 
 

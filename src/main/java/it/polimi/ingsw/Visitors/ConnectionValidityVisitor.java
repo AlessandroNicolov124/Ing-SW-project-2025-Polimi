@@ -1,7 +1,7 @@
 package it.polimi.ingsw.Visitors;
 
 import it.polimi.ingsw.Components.*;
-import it.polimi.ingsw.Connector;
+import it.polimi.ingsw.Components.Connector;
 
 import java.util.List;
 
@@ -39,13 +39,13 @@ public class ConnectionValidityVisitor implements Visitor {
     }
 
     @Override
-    public void visit(CargoBay cargoBay) {
+    public void visit(CargoHolds cargoBay) {
         validateConnections(cargoBay, "Cargo Bay");
     }
 
     @Override
-    public void visit(LifeSupport lifeSupport) {
-        validateConnections(lifeSupport, "Life Support");
+    public void visit(LifeSupportSystem lifeSupportSystem) {
+        validateConnections(lifeSupportSystem, "Life SupportSystem");
     }
 
     @Override

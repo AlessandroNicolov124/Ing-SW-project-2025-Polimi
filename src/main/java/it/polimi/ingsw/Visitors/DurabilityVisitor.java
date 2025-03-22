@@ -40,12 +40,12 @@ public class DurabilityVisitor implements Visitor {
     }
 
     @Override
-    public void visit(CargoBay cargoBay) {
+    public void visit(CargoHolds cargoBay) {
         structuralIntegrity += 4;  // Cargo bays are reinforced
     }
 
     @Override
-    public void visit(LifeSupport lifeSupport) {
+    public void visit(LifeSupportSystem lifeSupportSystem) {
         structuralIntegrity += 2;
     }
 

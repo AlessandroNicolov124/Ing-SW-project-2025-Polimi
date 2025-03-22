@@ -8,4 +8,8 @@ public class SingleCannon extends Cannon {
         super(firePower, energyConsumption);
     }
 
+    @Override
+    public String getType() {
+        return "SingleCannon";
+    }
 }

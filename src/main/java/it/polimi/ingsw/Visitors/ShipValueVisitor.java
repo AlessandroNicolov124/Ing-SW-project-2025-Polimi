@@ -13,13 +13,13 @@ public class ShipValueVisitor implements Visitor {
     @Override
     public void visit(Engine engine) {
         // Engines are valuable components
-        if ("Fusion".equals(engine.getType())) {
-            totalValue += 300;
-        } else if ("Ion".equals(engine.getType())) {
-            totalValue += 200;
-        } else {
-            totalValue += 100;  // Standard engine
-        }
+//        if ("Fusion".equals(engine.getType())) {
+//            totalValue += 300;
+//        } else if ("Ion".equals(engine.getType())) {
+//            totalValue += 200;
+//        } else {
+//            totalValue += 100;  // Standard engine
+//      }
     }
 
     @Override
@@ -35,13 +35,13 @@ public class ShipValueVisitor implements Visitor {
     @Override
     public void visit(Cannon cannon) {
         // Cannons provide defense
-        if ("Heavy".equals(cannon.getType())) {
-            totalValue += 200;
-        } else if ("Double".equals(cannon.getType())) {
-            totalValue += 180;
-        } else {
-            totalValue += 100;
-        }
+//        if ("Heavy".equals(cannon.getType())) {
+//            totalValue += 200;
+//        } else if ("Double".equals(cannon.getType())) {
+//            totalValue += 180;
+//        } else {
+//            totalValue += 100;
+//        }
     }
 
     @Override
@@ -51,13 +51,13 @@ public class ShipValueVisitor implements Visitor {
     }
 
     @Override
-    public void visit(CargoBay cargoBay) {
+    public void visit(CargoHolds cargoBay) {
         // Value based on cargo capacity and content
         totalValue += 75 + (cargoBay.getCargos().size() * 25);
     }
 
     @Override
-    public void visit(LifeSupport lifeSupport) {
+    public void visit(LifeSupportSystem lifeSupportSystem) {
         // Essential component
         totalValue += 150;
     }

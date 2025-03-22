@@ -8,4 +8,9 @@ public class DoubleCannon extends Cannon {
         super(firePower, energyConsumption);
     }
 
+    @Override
+    public String getType() {
+        return "DoubleCannon";
+    }
+
 }
