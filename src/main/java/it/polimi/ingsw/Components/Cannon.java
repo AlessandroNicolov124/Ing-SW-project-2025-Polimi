@@ -4,27 +4,33 @@ import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
-public class Cannon extends Component {
-    private String type;
+public abstract class Cannon extends Component {
+    private int firePower;
+    private int energyConsumption;
 
     public Cannon() {
         super();
+        this.firePower = 0;
+        this.energyConsumption = 0;
     }
-    public Cannon(String type) {
+    public Cannon(int firePower, int energyConsumption) {
         super();
-        this.type = type;
+        this.firePower = firePower;
+        this.energyConsumption = energyConsumption;
     }
 
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        connections.add(new Connector(dir, this));
-        System.out.println("Motore connesso a " + c.getClass().getSimpleName() + " nella direzione " + dir);
+    public int getFirePower() {
+        return firePower;
     }
 
-    @Override
-    public void disconnect() {
-        connections.clear();
-        System.out.println("Motore disconnesso.");
+    public void setFirePower(int firePower) {
+        this.firePower = firePower;
+    }
+    public int getEnergyConsumption() {
+        return energyConsumption;
+    }
+    public void setEnergyConsumption(int energyConsumption) {
+        this.energyConsumption = energyConsumption;
     }
 
     @Override
@@ -32,13 +38,6 @@ public class Cannon extends Component {
         visitor.visit(this);
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
-    }
 }
 
 

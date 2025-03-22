@@ -4,8 +4,8 @@ public class HumanCrew extends Crew{
     public HumanCrew() {
         super();
     }
-    public HumanCrew(String type, int count) {
-        super(type, count);
+    public HumanCrew(int count) {
+        super(count);
     }
 
 }

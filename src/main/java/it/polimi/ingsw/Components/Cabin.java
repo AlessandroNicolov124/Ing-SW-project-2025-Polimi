@@ -3,30 +3,23 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 // Classe Cabin
 public class Cabin extends Component {
     private String type;
+    private List<Crew> crew;
 
     public Cabin() {
         super();
+        crew = new ArrayList<>();
     }
+
     public Cabin(String type) {
         super();
         this.type = type;
-    }
-
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        // Logica per connettere la cabina a un altro componente
-        connections.add(new Connector(dir, this));
-        System.out.println("Cabina connessa a " + c.getClass().getSimpleName() + " nella direzione " + dir);
-    }
-
-    @Override
-    public void disconnect() {
-        // Logica per disconnettere la cabina
-        connections.clear();
-        System.out.println("Cabina disconnessa.");
+        this.crew = new ArrayList<>();
     }
 
     @Override
@@ -40,5 +33,9 @@ public class Cabin extends Component {
 
     public String getType() {
         return type;
+    }
+
+    public Crew getCrewByIndex(int index) {
+        return crew.get(index);
     }
 }

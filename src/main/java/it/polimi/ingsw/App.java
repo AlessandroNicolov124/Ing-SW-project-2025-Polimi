@@ -56,17 +56,17 @@ public class App {
         // Create components
         Component engine = new Engine("Fusion");
         Component cabin = new Cabin("Command");
-        Component cannon = new Cannon("Heavy");
+        Component cannon = new SingleCannon();
         Component battery = new BatteryCompartment(100, "High Capacity");
         Component structure = new StructuralModule();
 
         //!!!!occorre inserire le connection nei component
 
-        // Connect components (simplified for demo)
-        engine.connectTo(structure, Direction.NORTH);
-        cabin.connectTo(structure, Direction.SOUTH);
-        cannon.connectTo(structure, Direction.EAST);
-        battery.connectTo(structure, Direction.WEST);
+//        // Connect components (simplified for demo)
+//        engine.connectTo(structure, Direction.NORTH);
+//        cabin.connectTo(structure, Direction.SOUTH);
+//        cannon.connectTo(structure, Direction.EAST);
+//        battery.connectTo(structure, Direction.WEST);
 
         // Create a list of all components
         List<Component> shipComponents = new ArrayList<>();

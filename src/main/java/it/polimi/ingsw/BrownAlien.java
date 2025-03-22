@@ -7,7 +7,7 @@ public class BrownAlien extends Alien{
 
     }
 
-    public int getCannonBonus(){
+    public int getEngineBonus(){
         return 2;
     }
 }

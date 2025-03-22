@@ -5,7 +5,7 @@ import it.polimi.ingsw.Visitors.Visitor;
 
 import java.util.*;
 
-public class CargoBay extends Component {
+public class CargoBay extends Component{
 
     private String type;
     private List<Cargo> cargos;
@@ -14,8 +14,12 @@ public class CargoBay extends Component {
         super();
     }
 
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visit(this);
+    }
+
     public CargoBay(String type, List<Cargo> cargos) {
-        super();
         this.type=type;
         this.cargos=cargos;
     }
@@ -46,19 +50,5 @@ public class CargoBay extends Component {
 
     public Cargo getCargo(int pos){
         return cargos.get(pos);
-    }
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        
-    }
-
-    @Override
-    public void disconnect() {
-
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
     }
 }
