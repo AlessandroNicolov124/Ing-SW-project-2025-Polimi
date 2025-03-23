@@ -27,4 +27,15 @@ public class Connector {
     public void setDirection(Direction direction) {
         this.direction = direction;
     }
+
+    //Verifica se questo connettore è compatibile con un altro
+    public boolean isCompatibleWith(Connector other) {
+        if (other == null) {
+            return false;
+        }
+
+        return connectorType == ConnectorType.UNIVERSAL ||
+                other.connectorType == ConnectorType.UNIVERSAL ||
+                connectorType == other.connectorType;
+    }
 }

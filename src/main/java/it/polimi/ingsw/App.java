@@ -55,9 +55,9 @@ public class App {
         //test visitor
         // Create components
         Component engine = new SingleEngine();
-        Component cabin = new Cabin("Command");
+        Component cabin = new Cabin();
         Component cannon = new SingleCannon();
-        Component battery = new BatteryCompartment(100, "High Capacity");
+        Component battery = new BatteryCompartment();
         Component structure = new StructuralModule();
 
         //!!!!occorre inserire le connection nei component

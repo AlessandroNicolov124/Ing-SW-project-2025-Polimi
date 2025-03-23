@@ -12,22 +12,27 @@ public class BatteryCompartment extends Component {
     public BatteryCompartment() {
         super();
     }
+
     public BatteryCompartment(int amount, String type, int chargeLevel) {
         super();
         this.amount = amount;
         this.type = type;
         this.chargeLevel = chargeLevel;
+        initializeConnectors();
     }
 
-    public void setType(String type) {
-        this.type = type;
+    @Override
+    public void initializeConnectors() {
+        // Batteria ha connettori universali su tutti i lati
+        connections.add(new Connector(Direction.NORTH, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.EAST, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.SOUTH, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.WEST, ConnectorType.UNIVERSAL));
     }
+
     public void updateChargeLevel(int chargeLevel) {
         this.chargeLevel = chargeLevel;
         //this.chargeLevel += charge;
-    }
-    public void setAmount(int amount) {
-        this.amount = amount;
     }
 
 
@@ -39,10 +44,26 @@ public class BatteryCompartment extends Component {
     public int getAmount() {
         return amount;
     }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
     public String getType() {
         return type;
     }
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public int getChargeLevel() {
         return chargeLevel;
+    }
+
+    public boolean useCharge(int value) {
+        if (amount >= value) {
+            amount -= value;
+            return true;
+        }
+        return false;
     }
 }

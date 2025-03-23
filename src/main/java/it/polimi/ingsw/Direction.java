@@ -13,6 +13,7 @@ public enum Direction {
         }
     }
 
+    //restituisce la posizione adiacente a quella specificata, in base alla direzione
     public Position getAdjacentPosition(Position position) {
         switch (this) {
             case NORTH: return new Position(position.getX(), position.getY() - 1);

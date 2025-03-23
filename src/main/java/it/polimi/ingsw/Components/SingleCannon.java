@@ -2,14 +2,12 @@ package it.polimi.ingsw.Components;
 
 public class SingleCannon extends Cannon {
     public SingleCannon() {
-        super();
-    }
-    public SingleCannon(int firePower, int energyConsumption) {
-        super(firePower, energyConsumption);
+        super(1,1);
     }
 
     @Override
     public String getType() {
         return "SingleCannon";
     }
+
 }

@@ -8,18 +8,21 @@ import java.util.List;
 
 // Classe Cabin
 public class Cabin extends Component {
-    private String type;
     private List<Crew> crew;
+
+    @Override
+    public void initializeConnectors() {
+        // Cabina standard ha connettori universali su tutti i lati
+        connections.add(new Connector(Direction.NORTH, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.EAST, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.SOUTH, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.WEST, ConnectorType.UNIVERSAL));
+    }
 
     public Cabin() {
         super();
-        crew = new ArrayList<>();
-    }
-
-    public Cabin(String type) {
-        super();
-        this.type = type;
         this.crew = new ArrayList<>();
+        initializeConnectors();
     }
 
     @Override
@@ -27,15 +30,11 @@ public class Cabin extends Component {
         visitor.visit(this);
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
-    }
-
     public Crew getCrewByIndex(int index) {
         return crew.get(index);
+    }
+
+    public List<Crew> getCrew() {
+        return crew;
     }
 }
