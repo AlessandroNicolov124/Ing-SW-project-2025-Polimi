@@ -20,16 +20,8 @@ public class BatteryCompartment extends Component {
         this.chargeLevel = chargeLevel;
     }
 
-    public void initializeConnectors() {
-        connections.add(new Connector(Direction.NORTH, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.EAST, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.SOUTH, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.WEST, ConnectorType.UNIVERSAL));
-    }
-
     public void updateChargeLevel(int chargeLevel) {
         this.chargeLevel = chargeLevel;
-        //this.chargeLevel += charge;
     }
 
     @Override

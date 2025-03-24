@@ -1,22 +1,16 @@
 @startuml
 
 enum Direction {
-  NORTH
-  EAST
-  SOUTH
-  WEST
+    NORTH
+    EAST
+    SOUTH
+    WEST
 }
 
-enum CargoColor {
-  RED
-  BLUE
-  GREEN
-  YELLOW
-}
-
-enum AlienType {
-  PURPLE
-  BROWN
+enum ConnectorType {
+    SINGLE
+    DOUBLE
+    UNIVERSAL
 }
 
 class Position {
@@ -66,38 +60,46 @@ class GameModel {
   }
 
   abstract class Crew {
-      - type : String
-      - count : int
-      + getCount() : int
-      + setCount(c: int) : void
+      + type : CrewType;
+      - canLiveIn(Cabin cabin) : boolean
+      - applyAbility(ShipBuilder ship) : void
   }
 
   class HumanCrew extends Crew {
-      + getCount() : int
+        + applyAbility(ship: ShipBuilder) : void
   }
 
-  abstract class Alien extends Crew {
-      - alienType : AlienType
-      + applyAbility(ship: ShipBuilder) : void
-  }
-
-  class PurpleAlien extends Alien {
-      + applyAbility(ship: ShipBuilder) : void
-      + getCannonBonus() : int
-  }
-
-  class BrownAlien extends Alien {
-      + applyAbility(ship: ShipBuilder) : void
+  class BrownAlienCrew extends Crew {
       + getEngineBonus() : int
   }
 
-  class Cargo {
+  class PurpleAlienCrew extends Alien {
+      + getEngineBonus() : int
+  }
+
+enum LifeSupportSystemType {
+    BROWN
+    PURPLE
+}
+
+  class LifeSupportSystem extends Component{
+        - type: LifeSupportSystemType
+  }
+
+
+  abstract class Cargo {
       - value : int
-      - color : CargoColor
-      - amount : int
-      + setColor(c: CargoColor) : void
       + setValue(v: int) : void
-      + setAmount(a: int) : void
+      + getValue(v: int) : int
+  }
+
+  class BlueCargo extends Cargo {
+  }
+  class RedCargo extends Cargo {
+  }
+  class GreenCargo extends Cargo {
+  }
+  class YellowCargo extends Cargo {
   }
 
   class ShipBuilder {
@@ -118,46 +120,83 @@ class GameModel {
   }
 
   abstract class Component {
-      - conn : List<Connector>
+      - connections : List<Connector>
       - componentDirection: Direction
-      + connectTo???(c: Component, dir: Direction) : boolean
-      + disconnect()??? : void
-      + getConnectedTo(c: Component)?? : Component
+      - componentPosition: Position
+      - damaged : boolean
+      + initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) void
+      + areConnectorCompatible(Connector c1, Connector c2) : boolean
+      + canConnectTo(Component other, Direction direction) : boolean
+
+  }
+
+  enum ConnectorType{
+    SINGLE
+    DOUBLE
+    UNIVERSAL
+    NULL
   }
 
   class Connector {
       - direction : Direction
-      - type : enum
+      - connectorType : ConnectorType
+      - isCompatibleWith(Connector c1, Connector c2): boolean
   }
 
   class Cabin extends Component {
-      - type : String
       - crew: List<Crew>
+      - isStartingCabin : boolean
+      - connectedLifeSupports : Set<LifeSupportSystemType>
       + setType(t: String) : void
+      + initializeConnectors()
+      + connectLifeSupport(LifeSupportSystemType type) : void
+      + hasConnectedLifeSupport(LifeSupportSystemType type) : boolean
+      + addCrew(Crew crewMember) : boolean
+      + canAddAlien(CrewType alienType) : boolean
   }
 
-  class Engine extends Component {
-      - type : String
-      + setType(t: String) : void
+  abstract class Engine extends Component {
+        - power : int
+        - energyConsumption : int
   }
 
-  class Cannon extends Component {
-      - type : String
-      + setType(t: String) : void
+  class SingleEngine extends Engine {
+  }
+
+  class DoubleEngine extends Engine {
+  }
+
+  abstract class Cannon extends Component {
+        - firePower: int
+        - energyConsumption : int
+        - firingDirection : Direction
+        - isCharged : boolean
+        + validateFiringDirection() : void
+        + charge(BatteryCompartment battery) : boolean
+        + fire() : boolean
+  }
+
+  class SingleCannon extends Cannon {
+  }
+
+  class DoubleCannon extends Cannon {
   }
 
   class BatteryCompartment extends Component {
       - amount : int
       - type : String
+      - chargeLevel : int
       + setAmount(a: int) : void
       + setType(t: String) : void
       + getAmount() : int
+      + getChargeLevel() : int
+      + updateChargeLevel(c: int) : void
   }
 
   class ShieldGenerator extends Component {
   }
 
-  class CargoBay extends Component {
+  class CargoHolds extends Component {
       - type : String
       - cargo: List<Cargo>
       + setType(t: String) : void
@@ -166,9 +205,6 @@ class GameModel {
   }
 
   class StructuralModule extends Component {
-  }
-
-  class LifeSupport extends Component {
   }
 
   abstract class AdventureCard {
@@ -252,11 +288,9 @@ GameController "1" -- "1" GameModel : game
 GameModel "1" -- "*" Player : players
 GameModel "1" -- "*" AdventureCard : card
 GameModel "1" -- "1" FlightBoard : flightBoard
-Component "1" -- "1...4" Connector: connecition
+Component "1" -- "1...4" Connector: connection
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
-CargoBay "1" -- "*" Cargo : cargo
-Cabin "1" -- "1" Crew : crew
-
+CargoHolds "1" -- "*" Cargo : cargo
+Crew "1" -- "1" Cabin: cabin
 @enduml
-

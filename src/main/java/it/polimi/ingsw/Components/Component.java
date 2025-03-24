@@ -76,13 +76,7 @@ public abstract class Component {
     }
 
     private boolean areConnectorsCompatible(Connector c1, Connector c2) {
-        // Il connettore universale può connettersi a qualsiasi tipo
-        if (c1.getConnectorType() == ConnectorType.UNIVERSAL ||
-                c2.getConnectorType() == ConnectorType.UNIVERSAL) {
-            return true;
-        }
-        // I connettori devono essere dello stesso tipo
-        return c1.getConnectorType() == c2.getConnectorType();
+        return c1.isCompatibleWith(c2);
     }
 
     public void initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) {
