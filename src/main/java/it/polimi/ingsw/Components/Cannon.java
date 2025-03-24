@@ -3,7 +3,6 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
-// Classe Engine
 public abstract class Cannon extends Component {
     private int firePower;
     private int energyConsumption;
@@ -16,28 +15,22 @@ public abstract class Cannon extends Component {
         this.energyConsumption = energyConsumption;
         this.isCharged = false;
         this.firingDirection = firingDirection;
-        initializeConnectors();
     }
 
-    @Override
-    public void initializeConnectors() {
-        // Il cannone ha connettori in tutte le direzioni tranne quella in cui spara
-        for (Direction dir : Direction.values()) {
-            if (dir != firingDirection) {
-                connections.add(new Connector(dir, ConnectorType.UNIVERSAL));
+    public boolean validateFiringDirection() {
+        for(Connector conn : connections){
+            if(conn.getDirection() == firingDirection && conn.getConnectorType() != ConnectorType.NULL){
+                    return false;
             }
         }
+        return true;
     }
 
     public void setFiringDirection(Direction firingDirection) {
-        this.firingDirection  = firingDirection;
-
-        // Aggiorna i connettori in base alla nuova direzione di sparo
-        connections.clear();
-        for (Direction dir : Direction.values()) {
-            if (dir != firingDirection) {
-                connections.add(new Connector(dir, ConnectorType.UNIVERSAL));
-            }
+        if(validateFiringDirection()){
+            this.firingDirection = firingDirection;
+        }else{
+            System.out.println("Firing direction is not valid");
         }
     }
 

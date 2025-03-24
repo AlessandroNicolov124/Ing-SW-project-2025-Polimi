@@ -11,11 +11,10 @@ public abstract class Component {
     protected Position componentPosition;
     protected boolean damaged; // Stato del componente (danneggiato o no)
 
-    public abstract void initializeConnectors();
-
     public Component() {
         this.connections = new ArrayList<>();
         damaged = false;
+        componentDirection = Direction.NORTH;
     }
 
     public Position getPosition() {
@@ -84,6 +83,13 @@ public abstract class Component {
         }
         // I connettori devono essere dello stesso tipo
         return c1.getConnectorType() == c2.getConnectorType();
+    }
+
+    public void initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) {
+        connections.add(new Connector(Direction.NORTH, n));
+        connections.add(new Connector(Direction.EAST, e));
+        connections.add(new Connector(Direction.SOUTH, s));
+        connections.add(new Connector(Direction.WEST, w));
     }
 
     // Add this method to accept visitors

@@ -5,9 +5,9 @@ import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class BatteryCompartment extends Component {
-    private int amount;
-    private String type;
-    private int chargeLevel;
+    private int amount; // numero di batterie
+    private String type; // tipo doppio o triplo
+    private int chargeLevel; // carica totale
 
     public BatteryCompartment() {
         super();
@@ -18,12 +18,9 @@ public class BatteryCompartment extends Component {
         this.amount = amount;
         this.type = type;
         this.chargeLevel = chargeLevel;
-        initializeConnectors();
     }
 
-    @Override
     public void initializeConnectors() {
-        // Batteria ha connettori universali su tutti i lati
         connections.add(new Connector(Direction.NORTH, ConnectorType.UNIVERSAL));
         connections.add(new Connector(Direction.EAST, ConnectorType.UNIVERSAL));
         connections.add(new Connector(Direction.SOUTH, ConnectorType.UNIVERSAL));
@@ -34,7 +31,6 @@ public class BatteryCompartment extends Component {
         this.chargeLevel = chargeLevel;
         //this.chargeLevel += charge;
     }
-
 
     @Override
     public void accept(Visitor visitor) {

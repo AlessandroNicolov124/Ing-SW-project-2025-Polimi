@@ -19,16 +19,6 @@ public class ShipBuilder {
         this.width = width;
         this.height = height;
     }
-//
-//    // Convalida la posizione per assicurarsi che non ci siano sovrapposizioni
-//    private boolean validatePosition(Position pos) {
-//        for (Position existingPos : components.values()) {
-//            if (existingPos.getX() == pos.getX() && existingPos.getY() == pos.getY()) {
-//                return false; // Posizione già occupata
-//            }
-//        }
-//        return true; // Posizione valida
-//    }
 
     //posizione allinterno della plancia
     public boolean isPositionValid(Position position) {
@@ -234,5 +224,21 @@ public class ShipBuilder {
         return height;
     }
 
+    //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
+    private void updateLifeSupportConnections(LifeSupportSystem lifeSupport) {
+        Position position = lifeSupport.getPosition();
+        LifeSupportSystemType type = lifeSupport.getType();
+
+        // Check adjacent positions for cabins
+        for (Direction dir : Direction.values()) {
+            Position adjacentPos = dir.getAdjacentPosition(position);
+            Component adjacentComponent = getComponentAt(adjacentPos);
+
+            if (adjacentComponent instanceof Cabin) {
+                Cabin cabin = (Cabin)adjacentComponent;
+                cabin.connectLifeSupport(type);
+            }
+        }
+    }
 
 }

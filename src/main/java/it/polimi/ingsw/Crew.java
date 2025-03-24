@@ -1,17 +1,25 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.Components.*;
+
+// Base class for all crew members
 public abstract class Crew {
-    private int count;
+    protected CrewType type;
 
-    public Crew(int count) {
-        this.count = count;
-    }
-    public Crew(){
-        this.count = 0;
+    public Crew(CrewType type) {
+        this.type = type;
     }
 
-    public int getCount() {
-        return count;
+    public CrewType getType() {
+        return type;
     }
 
+    // Abstract method to be implemented by specific crew types
+    public abstract boolean canLiveIn(Cabin cabin);
+
+    public abstract void applyAbility(ShipBuilder ship);
 }
+
+
+
+

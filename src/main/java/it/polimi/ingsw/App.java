@@ -55,7 +55,7 @@ public class App {
         //test visitor
         // Create components
         Component engine = new SingleEngine();
-        Component cabin = new Cabin();
+        Component cabin = new Cabin( true);
         Component cannon = new SingleCannon();
         Component battery = new BatteryCompartment();
         Component structure = new StructuralModule();
