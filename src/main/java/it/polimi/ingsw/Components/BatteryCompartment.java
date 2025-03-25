@@ -6,14 +6,14 @@ import it.polimi.ingsw.Visitors.Visitor;
 // Classe Engine
 public class BatteryCompartment extends Component {
     private int amount; // numero di batterie
-    private String type; // tipo doppio o triplo
+    private BatteryType type;
     private int chargeLevel; // carica totale
 
     public BatteryCompartment() {
         super();
     }
 
-    public BatteryCompartment(int amount, String type, int chargeLevel) {
+    public BatteryCompartment(int amount, BatteryType type, int chargeLevel) {
         super();
         this.amount = amount;
         this.type = type;
@@ -36,10 +36,10 @@ public class BatteryCompartment extends Component {
     public void setAmount(int amount) {
         this.amount = amount;
     }
-    public String getType() {
+    public BatteryType getType() {
         return type;
     }
-    public void setType(String type) {
+    public void setType(BatteryType type) {
         this.type = type;
     }
 
