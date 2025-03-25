@@ -25,11 +25,11 @@ public class ShipValueVisitor implements Visitor {
     @Override
     public void visit(Cabin cabin) {
         // Cabins house crew
-        if ("Command".equals(cabin.getType())) {
-            totalValue += 150;  // Command cabins are more valuable
-        } else {
-            totalValue += 100;
-        }
+//        if ("Command".equals(cabin.getType())) {
+//            totalValue += 150;  // Command cabins are more valuable
+//        } else {
+//            totalValue += 100;
+//        }
     }
 
     @Override

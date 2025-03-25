@@ -61,7 +61,7 @@ public class ShipBuilder {
         }
 
         // Posiziona il componente
-        component.setPosition(position);
+        //component.setPosition(position);
         components.put(component, position);
         return true;
     }
@@ -226,7 +226,8 @@ public class ShipBuilder {
 
     //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
     private void updateLifeSupportConnections(LifeSupportSystem lifeSupport) {
-        Position position = lifeSupport.getPosition();
+        //Position position = lifeSupport.getPosition();
+        Position position = getPositionOf(lifeSupport);
         LifeSupportSystemType type = lifeSupport.getType();
 
         // Check adjacent positions for cabins

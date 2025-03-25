@@ -12,7 +12,7 @@ public class DiagnosticVisitor implements Visitor {
 
     @Override
     public void visit(Cabin cabin) {
-        System.out.println("Performing diagnostic on Cabin of type: " + cabin.getType());
+        System.out.println("Performing diagnostic on Cabin of type: " + cabin.isStartingCabin());
         // Add specific diagnostic logic for cabins
     }
 

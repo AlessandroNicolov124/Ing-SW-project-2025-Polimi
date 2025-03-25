@@ -53,13 +53,6 @@ public abstract class Cannon extends Component {
         return firingDirection;
     }
 
-    public Position getTargetPosition() {
-        if (componentPosition == null || componentDirection == null) {
-            return null;
-        }
-        return componentDirection.getAdjacentPosition(componentPosition);
-    }
-
     public boolean charge(BatteryCompartment battery) {
         if (battery == null || damaged || isCharged) {
             return false;

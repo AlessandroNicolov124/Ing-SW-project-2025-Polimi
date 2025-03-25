@@ -8,21 +8,13 @@ import java.util.*;
 public abstract class Component {
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
-    protected Position componentPosition;
+    //protected Position componentPosition;
     protected boolean damaged; // Stato del componente (danneggiato o no)
 
     public Component() {
         this.connections = new ArrayList<>();
         damaged = false;
         componentDirection = Direction.NORTH;
-    }
-
-    public Position getPosition() {
-        return componentPosition;
-    }
-
-    public void setPosition(Position position) {
-        componentPosition = position;
     }
 
     public boolean isDamaged() {

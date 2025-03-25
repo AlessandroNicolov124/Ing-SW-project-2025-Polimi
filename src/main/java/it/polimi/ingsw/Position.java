@@ -32,4 +32,15 @@ public class Position {
         Position other = (Position) obj;
         return x == other.x && y == other.y;
     }
+
+    //restituisce la posizione adiacente a quella specificata, in base alla direzione
+    public Position getAdjacentPosition(Direction direction) {
+        switch (direction) {
+            case NORTH: return new Position(this.getX(), this.getY() - 1);
+            case SOUTH: return new Position(this.getX(), this.getY() + 1);
+            case EAST: return new Position(this.getX() + 1, this.getY());
+            case WEST: return new Position(this.getX() - 1, this.getY());
+            default: throw new IllegalStateException("Unknown direction");
+        }
+    }
 }
