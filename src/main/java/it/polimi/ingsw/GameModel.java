@@ -58,7 +58,7 @@ public class GameModel {
         deck.add(new Pirates());
         deck.add(new Epidemic());
         deck.add(new Sabotage());
-        deck.add(new CombactZone());
+        deck.add(new CombatZone());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
 
