@@ -45,6 +45,7 @@ public class Cabin extends Component {
     public List<Crew> getCrew() {
         return crew;
     }
+
     public void removeCrew(Crew crew) {
         this.crew.remove(crew);
     }
@@ -109,6 +110,8 @@ public class Cabin extends Component {
             default -> false; // Not an alien type
         };
     }
+
+
 
 }
 

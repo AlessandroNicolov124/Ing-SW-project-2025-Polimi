@@ -5,17 +5,17 @@ import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class BatteryCompartment extends Component {
-    private int amount; // numero di batterie
+    private int maxCapacity; // numero di batterie
     private BatteryType type;
-    private int chargeLevel; // carica totale
+    private int chargeLevel; // carica
 
     public BatteryCompartment() {
         super();
     }
 
-    public BatteryCompartment(int amount, BatteryType type, int chargeLevel) {
+    public BatteryCompartment(int maxCapacity, BatteryType type, int chargeLevel) {
         super();
-        this.amount = amount;
+        this.maxCapacity = maxCapacity;
         this.type = type;
         this.chargeLevel = chargeLevel;
     }
@@ -29,12 +29,12 @@ public class BatteryCompartment extends Component {
         visitor.visit(this);
     }
 
-    public int getAmount() {
-        return amount;
+    public int getMaxCapacity() {
+        return maxCapacity;
     }
 
-    public void setAmount(int amount) {
-        this.amount = amount;
+    public void setMaxCapacity(int maxCapacity) {
+        this.maxCapacity = maxCapacity;
     }
     public BatteryType getType() {
         return type;
@@ -47,9 +47,18 @@ public class BatteryCompartment extends Component {
         return chargeLevel;
     }
 
-    public boolean useCharge(int value) {
-        if (amount >= value) {
-            amount -= value;
+    public void setChargeLevel(int chargeLevel) {
+        this.chargeLevel = chargeLevel;
+    }
+
+    // Metodo per ricaricare la batteria
+    public void recharge() {
+        chargeLevel = maxCapacity;
+    }
+
+    public boolean useCharge(int requiredCharge) {
+        if (chargeLevel >= requiredCharge) {
+            chargeLevel -= requiredCharge;
             return true;
         }
         return false;

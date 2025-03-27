@@ -16,7 +16,10 @@ public class PurpleAlienCrew extends Crew {
     }
 
     public void applyAbility(ShipBuilder ship) {
-
+        // Adds +2 to fire power if ship already has fire power
+//        if (ship.getFirePower() > 0) {
+//            ship.modifyFirePower(2);
+//        }
     }
 
     public int getCannonBonus(){

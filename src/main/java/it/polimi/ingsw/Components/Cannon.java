@@ -17,7 +17,11 @@ public abstract class Cannon extends Component {
         this.firingDirection = firingDirection;
     }
 
-    public boolean validateFiringDirection() {
+    public Cannon(int power, int energyConsumption) {
+        this(power, energyConsumption, Direction.NORTH); // Default direction
+    }
+
+    public boolean validateFiringDirection(Direction firingDirection) {
         for(Connector conn : connections){
             if(conn.getDirection() == firingDirection && conn.getConnectorType() != ConnectorType.NULL){
                     return false;
@@ -27,7 +31,7 @@ public abstract class Cannon extends Component {
     }
 
     public void setFiringDirection(Direction firingDirection) {
-        if(validateFiringDirection()){
+        if(validateFiringDirection(firingDirection)){
             this.firingDirection = firingDirection;
         }else{
             System.out.println("Firing direction is not valid");
@@ -54,7 +58,7 @@ public abstract class Cannon extends Component {
     }
 
     public boolean charge(BatteryCompartment battery) {
-        if (battery == null || damaged || isCharged) {
+        if (battery == null || damaged || isCharged || battery.getChargeLevel() < energyConsumption) {
             return false;
         }
 

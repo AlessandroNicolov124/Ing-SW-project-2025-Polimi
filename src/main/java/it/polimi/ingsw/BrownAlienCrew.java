@@ -17,7 +17,10 @@ public class BrownAlienCrew extends Crew {
 
     @Override
     public void applyAbility(ShipBuilder ship) {
-
+    // Adds +2 to engine power if ship already has engine power
+//        if (ship.getEnginePower() > 0) {
+//            ship.modifyEnginePower(2);
+//        }
     }
 
 

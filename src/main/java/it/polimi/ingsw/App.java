@@ -28,13 +28,13 @@ public class App {
 
         // Creazione di componenti
         Cabin startingCabin = new Cabin(true); // cabina di comando
-        Component engine = new SingleEngine();
+        Engine engine = new SingleEngine();
         engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL);
-        Component cannon = new SingleCannon();
+        Cannon cannon = new SingleCannon();
         cannon.initializeConnectors(ConnectorType.NULL, ConnectorType.NULL, ConnectorType.SINGLE, ConnectorType.NULL);
-        Component battery = new BatteryCompartment();
+        BatteryCompartment battery = new BatteryCompartment();
         battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL);
-        Component lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         lifeSupportSystem.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL);
 
 
@@ -61,45 +61,49 @@ public class App {
             System.out.println("La nave non è assemblata correttamente.");
         }
 
-        // Create a list of all components
-        List<Component> shipComponents = new ArrayList<>();
-        shipComponents.add(engine);
-        shipComponents.add(startingCabin);
-        shipComponents.add(cannon);
-        shipComponents.add(battery);
-        shipComponents.add(lifeSupportSystem);
+        // Carica il cannone
+        boolean charged = cannon.charge(battery);  // true
+        boolean fired = cannon.fire();  // true
 
-        // Use visitors to analyze the ship
-        ShipValueVisitor valueVisitor = new ShipValueVisitor();
-        DurabilityVisitor durabilityVisitor = new DurabilityVisitor();
-        VulnerabilityVisitor vulnerabilityVisitor = new VulnerabilityVisitor();
-        ConnectionValidityVisitor validityVisitor = new ConnectionValidityVisitor();
-
-        // Apply visitors to all components
-        for (Component component : shipComponents) {
-            component.accept(valueVisitor);
-            component.accept(durabilityVisitor);
-            component.accept(vulnerabilityVisitor);
-            component.accept(validityVisitor);
-        }
-
-        // Display results
-        System.out.println("SHIP ANALYSIS");
-        System.out.println("Total ship value: " + valueVisitor.getTotalValue() + " credits");
-        System.out.println("\nDurability Analysis:");
-        System.out.println("- Structural integrity: " + durabilityVisitor.getStructuralIntegrity());
-        System.out.println("- Shield strength: " + durabilityVisitor.getShieldStrength());
-        System.out.println("- Total durability: " + durabilityVisitor.getTotalDurability());
-
-        System.out.println("\nVulnerability Analysis:");
-        System.out.println("- Meteor vulnerability: " + vulnerabilityVisitor.getMeteorVulnerability());
-        System.out.println("- Pirate vulnerability: " + vulnerabilityVisitor.getPirateVulnerability());
-        System.out.println("- Cosmic dust vulnerability: " + vulnerabilityVisitor.getCosmicDustVulnerability());
-
-        System.out.println("\nConnection Validity:");
-        System.out.println("- Is ship valid: " + validityVisitor.isValid());
-        if (!validityVisitor.isValid()) {
-            System.out.println("- Validation errors: " + validityVisitor.getValidationReport());
-        }
+//        // Create a list of all components
+//        List<Component> shipComponents = new ArrayList<>();
+//        shipComponents.add(engine);
+//        shipComponents.add(startingCabin);
+//        shipComponents.add(cannon);
+//        shipComponents.add(battery);
+//        shipComponents.add(lifeSupportSystem);
+//
+//        // Use visitors to analyze the ship
+//        ShipValueVisitor valueVisitor = new ShipValueVisitor();
+//        DurabilityVisitor durabilityVisitor = new DurabilityVisitor();
+//        VulnerabilityVisitor vulnerabilityVisitor = new VulnerabilityVisitor();
+//        ConnectionValidityVisitor validityVisitor = new ConnectionValidityVisitor();
+//
+//        // Apply visitors to all components
+//        for (Component component : shipComponents) {
+//            component.accept(valueVisitor);
+//            component.accept(durabilityVisitor);
+//            component.accept(vulnerabilityVisitor);
+//            component.accept(validityVisitor);
+//        }
+//
+//        // Display results
+//        System.out.println("SHIP ANALYSIS");
+//        System.out.println("Total ship value: " + valueVisitor.getTotalValue() + " credits");
+//        System.out.println("\nDurability Analysis:");
+//        System.out.println("- Structural integrity: " + durabilityVisitor.getStructuralIntegrity());
+//        System.out.println("- Shield strength: " + durabilityVisitor.getShieldStrength());
+//        System.out.println("- Total durability: " + durabilityVisitor.getTotalDurability());
+//
+//        System.out.println("\nVulnerability Analysis:");
+//        System.out.println("- Meteor vulnerability: " + vulnerabilityVisitor.getMeteorVulnerability());
+//        System.out.println("- Pirate vulnerability: " + vulnerabilityVisitor.getPirateVulnerability());
+//        System.out.println("- Cosmic dust vulnerability: " + vulnerabilityVisitor.getCosmicDustVulnerability());
+//
+//        System.out.println("\nConnection Validity:");
+//        System.out.println("- Is ship valid: " + validityVisitor.isValid());
+//        if (!validityVisitor.isValid()) {
+//            System.out.println("- Validation errors: " + validityVisitor.getValidationReport());
+//        }
     }
 }

@@ -6,18 +6,18 @@ import it.polimi.ingsw.Components.*;
 public abstract class Crew {
     protected CrewType type;
 
-    public Crew(CrewType type) {
-        this.type = type;
-    }
-
-    public CrewType getType() {
-        return type;
+    public Crew(CrewType crewType) {
+        this.type = crewType;
     }
 
     // Abstract method to be implemented by specific crew types
     public abstract boolean canLiveIn(Cabin cabin);
 
     public abstract void applyAbility(ShipBuilder ship);
+
+    public CrewType getType() {
+        return type;
+    }
 }
 
 

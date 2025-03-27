@@ -1,6 +1,8 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
+import it.polimi.ingsw.Components.Cabin;
+import it.polimi.ingsw.Components.Component;
 
 public class Player {
     private int id;
