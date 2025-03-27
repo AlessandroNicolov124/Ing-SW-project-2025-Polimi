@@ -1,5 +1,7 @@
 @startuml
 
+package "Model" {
+
 enum Direction {
     NORTH
     EAST
@@ -17,9 +19,6 @@ class Position {
   + x: int
   + y: int
 }
-
-
-package "Model" {
 
 class GameModel {
     - players : List<Player>
@@ -60,27 +59,30 @@ class GameModel {
   }
 
   abstract class Crew {
+      + type : CrewType;
+      - canLiveIn(Cabin cabin) : boolean
+      - applyAbility(ShipBuilder ship) : void
   }
 
   class HumanCrew extends Crew {
+        + applyAbility(ship: ShipBuilder) : void
   }
 
-  abstract class Alien extends Crew {
-      + applyAbility(ship: ShipBuilder) : void
-  }
-
-  class PurpleAlien extends Alien {
-      + getCannonBonus() : int
-  }
-
-  class BrownAlien extends Alien {
+  class BrownAlienCrew extends Crew {
       + getEngineBonus() : int
   }
 
+  class PurpleAlienCrew extends Crew {
+      + getEngineBonus() : int
+  }
+
+enum LifeSupportSystemType {
+    BROWN
+    PURPLE
+}
+
   class LifeSupportSystem extends Component{
-        - type: enum
-        + getType()
-        + setType()
+        - type: LifeSupportSystemType
   }
 
 
@@ -100,15 +102,22 @@ class GameModel {
   }
 
   class ShipBuilder {
-      - position : int
+      - startingPosition: Position
+      - width : int
+      - height : int
       - components : Map<Component, Position>
-      - liks:
       - isAssembled : boolean
-      + addComponent(c: Component, pos: Position) : void
-      + getCompByPosition(pos: Position) : Component
+      + isPositionValid(Position position) : boolean
+      + isPositionOccupied(Position position) : boolean
+      + placeComponent(c: Component, pos: Position) : boolean
+      + wouldDisconnectShip(Component componentToRemove) : boolean
+      + getComponentAt(pos: Position) : Component
+      + getPositionOf(component : Component)
       + removeComponent(c: Component) : void
+      + areAllComponentsConnected() : boolean
+      + updateLifeSupportConnections(LifeSupportSystem lifeSupport) : void
       + validateShip() : boolean
-      + mapPosition(pos: Position) : void
+      + mapPosition(pos: Position)????? : void
   }
 
   class FlightBoard {
@@ -117,26 +126,40 @@ class GameModel {
   }
 
   abstract class Component {
-      - conn : List<Connector>
+      - connections : List<Connector>
       - componentDirection: Direction
-      + connectTo???(c: Component, dir: Direction) : boolean
-      + disconnect()??? : void
-      + getConnectedTo(c: Component)?? : Component
+      - componentPosition: Position
+      - damaged : boolean
+      + initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) void
+      + areConnectorCompatible(Connector c1, Connector c2) : boolean
+      + canConnectTo(Component other, Direction direction) : boolean
+
+  }
+
+  enum ConnectorType{
+    SINGLE
+    DOUBLE
+    UNIVERSAL
+    NULL
   }
 
   class Connector {
       - direction : Direction
-      - type : enum
+      - connectorType : ConnectorType
+      - isCompatibleWith(Connector c1, Connector c2): boolean
   }
 
-  abstract class Cabin extends Component {
+  class Cabin extends Component {
       - crew: List<Crew>
+      - isStartingCabin : boolean
+      - connectedLifeSupports : Set<LifeSupportSystemType>
       + setType(t: String) : void
+      + initializeConnectors()
+      + connectLifeSupport(LifeSupportSystemType type) : void
+      + hasConnectedLifeSupport(LifeSupportSystemType type) : boolean
+      + addCrew(Crew crewMember) : boolean
+      + canAddAlien(CrewType alienType) : boolean
   }
-
-  class StartingCabin extends Cabin {}
-
-  class StandardCabin extends Cabin {}
 
   abstract class Engine extends Component {
         - power : int
@@ -150,8 +173,13 @@ class GameModel {
   }
 
   abstract class Cannon extends Component {
-        - firePower
-        - energyConsumption
+        - firePower: int
+        - energyConsumption : int
+        - firingDirection : Direction
+        - isCharged : boolean
+        + validateFiringDirection() : void
+        + charge(BatteryCompartment battery) : boolean
+        + fire() : boolean
   }
 
   class SingleCannon extends Cannon {
@@ -270,5 +298,6 @@ Component "1" -- "1...4" Connector: connection
 Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
 CargoHolds "1" -- "*" Cargo : cargo
-Crew "1" -- "1" Cabin: cabin
+Crew "*" -- "1" Cabin: cabin
+Component"1" -- "1" Position: compPos
 @enduml
