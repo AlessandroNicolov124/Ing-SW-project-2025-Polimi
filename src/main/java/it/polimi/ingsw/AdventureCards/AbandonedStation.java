@@ -1,6 +1,7 @@
 package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.Player;
+import it.polimi.ingsw.GameModel;
 
 /**
  * Abandoned Station
@@ -20,13 +21,17 @@ import it.polimi.ingsw.Player;
  */
 
 public class AbandonedStation extends AdventureCard{
+    private int minCrewRequired;
+    private int flightDaysCost;
+    private int goodsToLoad;
+    private boolean opportunityUsed;
 
-    public AbandonedStation(){
-
-    }
-
-    public AbandonedStation(int copies, int duration) {
+    public AbandonedStation(int copies, int duration, int minCrewRequired, int flightDaysCost, int goodsToLoad) {
         super(copies, duration);
+        this.minCrewRequired = minCrewRequired;
+        this.flightDaysCost = flightDaysCost;
+        this.goodsToLoad = goodsToLoad;
+        this.opportunityUsed = false;
     }
 
     @Override
@@ -36,11 +41,59 @@ public class AbandonedStation extends AdventureCard{
 
     @Override
     void resolveEvent(Player p) {
-
+        // Implementation depends on how player choice is handled in the game
     }
 
     @Override
     public void effect(){
-
+        // This would be called when the card is drawn
+    }
+    
+    /**
+     * Allow a player to dock at the abandoned station
+     * @param player The player who wants to dock
+     * @param gameModel The current game state
+     * @return true if docking was successful, false otherwise
+     */
+    public boolean dockAtStation(Player player, GameModel gameModel) {
+        if (opportunityUsed) {
+            return false; // Opportunity already used by another player
+        }
+        
+        // Check if player has enough crew
+        ShipBuilder ship = player.getShip();
+        // Logic to check crew count would go here
+        // For example: int crewCount = ship.getCrewCount();
+        int crewCount = 0; // Placeholder
+        
+        if (crewCount < minCrewRequired) {
+            return false; // Not enough crew
+        }
+        
+        // Load goods on player's ship
+        // Logic to add goods to player's inventory here
+        
+        // Apply flight day cost
+        gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+        
+        opportunityUsed = true;
+        return true;
+    }
+    
+    // Getters and setters
+    public int getMinCrewRequired() {
+        return minCrewRequired;
+    }
+    
+    public int getFlightDaysCost() {
+        return flightDaysCost;
+    }
+    
+    public int getGoodsToLoad() {
+        return goodsToLoad;
+    }
+    
+    public boolean isOpportunityUsed() {
+        return opportunityUsed;
     }
 }
