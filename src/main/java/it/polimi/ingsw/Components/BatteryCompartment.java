@@ -5,32 +5,23 @@ import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class BatteryCompartment extends Component {
-    private int amount;
-    private String type;
+    private int amount; // numero di batterie
+    private String type; // tipo doppio o triplo
+    private int chargeLevel; // carica totale
 
     public BatteryCompartment() {
         super();
     }
-    public BatteryCompartment(int amount, String type) {
+
+    public BatteryCompartment(int amount, String type, int chargeLevel) {
         super();
         this.amount = amount;
         this.type = type;
+        this.chargeLevel = chargeLevel;
     }
 
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        connections.add(new Connector(dir, this));
-        System.out.println("Motore connesso a " + c.getClass().getSimpleName() + " nella direzione " + dir);
-    }
-
-    @Override
-    public void disconnect() {
-        connections.clear();
-        System.out.println("Motore disconnesso.");
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    public void updateChargeLevel(int chargeLevel) {
+        this.chargeLevel = chargeLevel;
     }
 
     @Override
@@ -40,5 +31,27 @@ public class BatteryCompartment extends Component {
 
     public int getAmount() {
         return amount;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public int getChargeLevel() {
+        return chargeLevel;
+    }
+
+    public boolean useCharge(int value) {
+        if (amount >= value) {
+            amount -= value;
+            return true;
+        }
+        return false;
     }
 }

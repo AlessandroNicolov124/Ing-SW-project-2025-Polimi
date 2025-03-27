@@ -3,28 +3,75 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 import it.polimi.ingsw.Visitors.Visitor;
 
-// Classe Engine
-public class Cannon extends Component {
-    private String type;
+public abstract class Cannon extends Component {
+    private int firePower;
+    private int energyConsumption;
+    private Direction firingDirection;
+    private boolean isCharged; // Stato di carica del cannone
 
-    public Cannon() {
+    public Cannon(int power, int energyConsumption, Direction firingDirection) {
         super();
-    }
-    public Cannon(String type) {
-        super();
-        this.type = type;
-    }
-
-    @Override
-    public void connectTo(Component c, Direction dir) {
-        connections.add(new Connector(dir, this));
-        System.out.println("Motore connesso a " + c.getClass().getSimpleName() + " nella direzione " + dir);
+        this.firePower = power;
+        this.energyConsumption = energyConsumption;
+        this.isCharged = false;
+        this.firingDirection = firingDirection;
     }
 
-    @Override
-    public void disconnect() {
-        connections.clear();
-        System.out.println("Motore disconnesso.");
+    public boolean validateFiringDirection() {
+        for(Connector conn : connections){
+            if(conn.getDirection() == firingDirection && conn.getConnectorType() != ConnectorType.NULL){
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public void setFiringDirection(Direction firingDirection) {
+        if(validateFiringDirection()){
+            this.firingDirection = firingDirection;
+        }else{
+            System.out.println("Firing direction is not valid");
+        }
+    }
+
+
+    public int getFirePower() {
+        return firePower;
+    }
+
+    public void setFirePower(int firePower) {
+        this.firePower = firePower;
+    }
+    public int getEnergyConsumption() {
+        return energyConsumption;
+    }
+    public void setEnergyConsumption(int energyConsumption) {
+        this.energyConsumption = energyConsumption;
+    }
+
+    public Direction getFiringDirection() {
+        return firingDirection;
+    }
+
+    public boolean charge(BatteryCompartment battery) {
+        if (battery == null || damaged || isCharged) {
+            return false;
+        }
+
+        boolean success = battery.useCharge(energyConsumption);
+        if (success) {
+            isCharged = true;
+        }
+        return success;
+    }
+
+    public boolean fire() {
+        if (!isCharged || damaged) {
+            return false;
+        }
+
+        isCharged = false;
+        return true;
     }
 
     @Override
@@ -32,13 +79,7 @@ public class Cannon extends Component {
         visitor.visit(this);
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getType() {
-        return type;
-    }
+    public abstract String getType();
 }
 
 

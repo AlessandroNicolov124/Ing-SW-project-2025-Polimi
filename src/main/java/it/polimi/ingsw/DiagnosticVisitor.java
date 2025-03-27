@@ -6,19 +6,19 @@ import it.polimi.ingsw.Visitors.Visitor;
 public class DiagnosticVisitor implements Visitor {
     @Override
     public void visit(Engine engine) {
-        System.out.println("Performing diagnostic on Engine of type: " + engine.getType());
+        System.out.println("Performing diagnostic on Engine: Power:" + engine.getPower() + " Consumption:" + engine.getEnergyConsumption());
         // Add specific diagnostic logic for engines
     }
 
     @Override
     public void visit(Cabin cabin) {
-        System.out.println("Performing diagnostic on Cabin of type: " + cabin.getType());
+        System.out.println("Performing diagnostic on Cabin of type: " + cabin.isStartingCabin());
         // Add specific diagnostic logic for cabins
     }
 
     @Override
     public void visit(Cannon cannon) {
-        System.out.println("Performing diagnostic on Cannon of type: " + cannon.getType());
+        System.out.println("Performing diagnostic on Cannon: Power:" + cannon.getFirePower() + " Consumption:" + cannon.getEnergyConsumption());
         // Add specific diagnostic logic for cannons
     }
 

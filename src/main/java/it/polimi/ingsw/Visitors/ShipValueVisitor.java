@@ -13,35 +13,35 @@ public class ShipValueVisitor implements Visitor {
     @Override
     public void visit(Engine engine) {
         // Engines are valuable components
-        if ("Fusion".equals(engine.getType())) {
-            totalValue += 300;
-        } else if ("Ion".equals(engine.getType())) {
-            totalValue += 200;
-        } else {
-            totalValue += 100;  // Standard engine
-        }
+//        if ("Fusion".equals(engine.getType())) {
+//            totalValue += 300;
+//        } else if ("Ion".equals(engine.getType())) {
+//            totalValue += 200;
+//        } else {
+//            totalValue += 100;  // Standard engine
+//      }
     }
 
     @Override
     public void visit(Cabin cabin) {
         // Cabins house crew
-        if ("Command".equals(cabin.getType())) {
-            totalValue += 150;  // Command cabins are more valuable
-        } else {
-            totalValue += 100;
-        }
+//        if ("Command".equals(cabin.getType())) {
+//            totalValue += 150;  // Command cabins are more valuable
+//        } else {
+//            totalValue += 100;
+//        }
     }
 
     @Override
     public void visit(Cannon cannon) {
         // Cannons provide defense
-        if ("Heavy".equals(cannon.getType())) {
-            totalValue += 200;
-        } else if ("Double".equals(cannon.getType())) {
-            totalValue += 180;
-        } else {
-            totalValue += 100;
-        }
+//        if ("Heavy".equals(cannon.getType())) {
+//            totalValue += 200;
+//        } else if ("Double".equals(cannon.getType())) {
+//            totalValue += 180;
+//        } else {
+//            totalValue += 100;
+//        }
     }
 
     @Override

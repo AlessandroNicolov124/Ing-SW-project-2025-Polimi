@@ -1,5 +1,6 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Visitors.*;
 
@@ -12,69 +13,61 @@ import java.util.List;
  */
 public class App {
     public static void main(String[] args) {
-        //GameModel gameModel = new GameModel();
+        GameModel gameModel = new GameModel();
 
-        // Aggiungi alcune carte all'adventureDeck
-//        gameModel.getAdventureDeck().add(new Planets());
-//        gameModel.getAdventureDeck().add(new AbandonedStation());
-//
-//        Player player1 = new Player(0,"Giocatore 1",true,null);
-//        gameModel.getPlayers().add(player1);
-//
-//        // Il giocatore pesca una carta
-//        player1.pickCard(gameModel);
-//
-//        ShipBuilder shipBuilder = new ShipBuilder();
-//
-//        // Creazione di componenti
-//        Cabin cabin = new Cabin();
-//        cabin.setType("Cabina di comando");
-//
-//        Engine engine = new Engine();
-//        engine.setType("Motore a reazione");
-//
-//        Component cargo = new CargoBay("Storage", new ArrayList<>());
-//
-//        // Aggiunta di componenti alla nave
-//        shipBuilder.addComponent(cabin, new Position(0, 0));
-//        shipBuilder.addComponent(engine, new Position(1, 0));
-//        shipBuilder.addComponent(cargo, new Position(0, 1));
-//
-//        // Validazione della nave
-//        if (shipBuilder.validateShip()) {
-//            System.out.println("La nave è assemblata correttamente.");
-//        } else {
-//            System.out.println("La nave non è assemblata correttamente.");
-//        }
-//
-//        // Rimozione di un componente
-//        shipBuilder.removeComponent(engine);
-//
+        //Aggiungi alcune carte all'adventureDeck
+        gameModel.getAdventureDeck().add(new Planets());
+        gameModel.getAdventureDeck().add(new AbandonedStation());
+
+        ShipBuilder shipBuilder1 = new ShipBuilder(6,6);
+        Player player1 = new Player(0,"Giocatore 1",true, shipBuilder1);
+        gameModel.getPlayers().add(player1);
+
+        // Il giocatore pesca una carta
+        player1.pickCard(gameModel);
+
+        // Creazione di componenti
+        Cabin startingCabin = new Cabin(true); // cabina di comando
+        Component engine = new SingleEngine();
+        engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL);
+        Component cannon = new SingleCannon();
+        cannon.initializeConnectors(ConnectorType.NULL, ConnectorType.NULL, ConnectorType.SINGLE, ConnectorType.NULL);
+        Component battery = new BatteryCompartment();
+        battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL);
+        Component lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
+        lifeSupportSystem.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL);
 
 
-        //test visitor
-        // Create components
-        Component engine = new Engine("Fusion");
-        Component cabin = new Cabin("Command");
-        Component cannon = new Cannon("Heavy");
-        Component battery = new BatteryCompartment(100, "High Capacity");
-        Component structure = new StructuralModule();
+        Position pos1 = player1.getShip().getStartingPosition();
+        player1.getShip().placeComponent(startingCabin, pos1);
 
-        //!!!!occorre inserire le connection nei component
+        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
+        player1.getShip().placeComponent(engine, pos1);
 
-        // Connect components (simplified for demo)
-        engine.connectTo(structure, Direction.NORTH);
-        cabin.connectTo(structure, Direction.SOUTH);
-        cannon.connectTo(structure, Direction.EAST);
-        battery.connectTo(structure, Direction.WEST);
+        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
+        player1.getShip().placeComponent(cannon, pos1);
+
+        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
+        player1.getShip().placeComponent(battery, pos1);
+
+        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
+        player1.getShip().placeComponent(lifeSupportSystem, pos1);
+
+
+        // Validazione della nave
+        if (player1.getShip().validateShip()) {
+            System.out.println("La nave è assemblata correttamente.");
+        } else {
+            System.out.println("La nave non è assemblata correttamente.");
+        }
 
         // Create a list of all components
         List<Component> shipComponents = new ArrayList<>();
         shipComponents.add(engine);
-        shipComponents.add(cabin);
+        shipComponents.add(startingCabin);
         shipComponents.add(cannon);
         shipComponents.add(battery);
-        shipComponents.add(structure);
+        shipComponents.add(lifeSupportSystem);
 
         // Use visitors to analyze the ship
         ShipValueVisitor valueVisitor = new ShipValueVisitor();

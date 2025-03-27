@@ -21,12 +21,11 @@ public abstract class Engine extends Component {
         return energyConsumption;
     }
 
-    public abstract String getType();
-
     @Override
     public void accept(Visitor visitor) {
         visitor.visit(this);
     }
 
 
+    public abstract String getType();
 }

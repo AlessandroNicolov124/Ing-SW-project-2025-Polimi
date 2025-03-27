@@ -9,8 +9,6 @@ public class Player {
     private ShipBuilder ship;
     private AdventureCard pickedCard; // Carta pescata dal giocatore
 
-    public Player() {}
-
     public Player(int id, String nickName, boolean active, ShipBuilder ship) {
         this.id = id;
         this.nickName = nickName;

@@ -16,4 +16,13 @@ public class LifeSupportSystem extends Component {
         visitor.visit(this);
     }
 
+    public LifeSupportSystemType getType() {
+        return type;
+    }
+
+    public void setType(LifeSupportSystemType type) {
+        this.type = type;
+    }
+
+
 }
