@@ -25,29 +25,29 @@ public class ShipValueVisitor implements Visitor {
     @Override
     public void visit(Cabin cabin) {
         // Cabins house crew
-//        if ("Command".equals(cabin.getType())) {
-//            totalValue += 150;  // Command cabins are more valuable
-//        } else {
-//            totalValue += 100;
-//        }
+        if (cabin.isStartingCabin()) {
+            totalValue += 150;  // Command cabins are more valuable
+        } else {
+            totalValue += 100;
+        }
     }
 
     @Override
     public void visit(Cannon cannon) {
         // Cannons provide defense
-//        if ("Heavy".equals(cannon.getType())) {
-//            totalValue += 200;
-//        } else if ("Double".equals(cannon.getType())) {
-//            totalValue += 180;
-//        } else {
-//            totalValue += 100;
-//        }
+        if ("HeavyCannon".equals(cannon.getType())) {
+            totalValue += 200;
+        } else if ("DoubleCannon".equals(cannon.getType())) {
+            totalValue += 180;
+        } else {
+            totalValue += 100;
+        }
     }
 
     @Override
     public void visit(BatteryCompartment batteryCompartment) {
         // Value based on battery capacity
-        totalValue += 50 + (batteryCompartment.getAmount() * 10);
+        totalValue += 50 + (batteryCompartment.getChargeLevel() * 10);
     }
 
     @Override
