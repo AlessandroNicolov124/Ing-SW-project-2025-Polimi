@@ -66,7 +66,6 @@ public class Planets extends AdventureCard{
     @Override
     public void effect(){
         // This would be called when the card is drawn
-        // The actual implementation depends on game flow and UI
     }
     
     /**

@@ -35,15 +35,6 @@ public class Smugglers extends AdventureCard {
     private int flightDaysCost;
     private boolean isDefeated;
 
-    public Smugglers() {
-        super();
-        this.smugglerStrength = 4; // Default smuggler strength
-        this.goodsLostOnDefeat = 2; // Default goods lost
-        this.goodsGainedOnVictory = 3; // Default goods gained
-        this.flightDaysCost = 2; // Default flight days cost
-        this.isDefeated = false;
-    }
-    
     public Smugglers(int copies, int duration, int smugglerStrength, int goodsLostOnDefeat, 
                      int goodsGainedOnVictory, int flightDaysCost) {
         super(copies, duration);
@@ -67,7 +58,6 @@ public class Smugglers extends AdventureCard {
     @Override
     public void effect() {
         // This would be called when the card is drawn
-        // The actual implementation depends on game flow and UI
     }
     
     /**
