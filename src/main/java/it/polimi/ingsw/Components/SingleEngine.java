@@ -9,9 +9,5 @@ public class SingleEngine extends Engine {
     public SingleEngine() {
         super(0,0);
     }
-    @Override
-    public String getType() {
-        return "SingleEngine";
-    }
 
 }

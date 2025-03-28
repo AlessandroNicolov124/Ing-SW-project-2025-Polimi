@@ -1,7 +1,6 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
-import it.polimi.ingsw.Visitors.Visitor;
 
 import java.util.*;
 
@@ -77,9 +76,6 @@ public abstract class Component {
         connections.add(new Connector(Direction.SOUTH, s));
         connections.add(new Connector(Direction.WEST, w));
     }
-
-    // Add this method to accept visitors
-    public abstract void accept(Visitor visitor);
 
 
 }

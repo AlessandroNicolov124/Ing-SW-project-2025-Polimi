@@ -1,7 +1,6 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
-import it.polimi.ingsw.Visitors.Visitor;
 
 import java.util.*;
 
@@ -31,11 +30,6 @@ public class Cabin extends Component {
         if (isStartingCabin) {
             initializeConnectors();
         }
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
     }
 
     public Crew getCrewByIndex(int index) {
@@ -110,8 +104,6 @@ public class Cabin extends Component {
             default -> false; // Not an alien type
         };
     }
-
-
 
 }
 

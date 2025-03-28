@@ -2,10 +2,6 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.*;
-import it.polimi.ingsw.Visitors.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Hello world!

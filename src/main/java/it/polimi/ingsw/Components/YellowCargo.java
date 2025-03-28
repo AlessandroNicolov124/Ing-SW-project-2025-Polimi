@@ -6,9 +6,5 @@ public class YellowCargo extends Cargo {
         super(value);
     }
 
-    @Override
-    public String getType() {
-        return "Yellow";
-    }
 
 }

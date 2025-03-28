@@ -10,10 +10,6 @@ public class DoubleCannon extends Cannon {
     public DoubleCannon(Direction firingDirection) {
         super(2, 2, firingDirection);
     }
-    @Override
-    public String getType() {
-        return "DoubleCannon";
-    }
 
 }
 

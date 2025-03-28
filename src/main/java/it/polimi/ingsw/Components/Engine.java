@@ -1,7 +1,5 @@
 package it.polimi.ingsw.Components;
 
-import it.polimi.ingsw.Visitors.Visitor;
-
 // Classe Engine
 public abstract class Engine extends Component {
     private int power;
@@ -21,11 +19,4 @@ public abstract class Engine extends Component {
         return energyConsumption;
     }
 
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-
-    public abstract String getType();
 }

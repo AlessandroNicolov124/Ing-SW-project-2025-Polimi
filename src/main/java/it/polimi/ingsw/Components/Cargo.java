@@ -16,6 +16,4 @@ public abstract class Cargo {
         return value;
     }
 
-    public abstract String getType();
-
 }

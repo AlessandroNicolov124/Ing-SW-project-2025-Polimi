@@ -1,7 +1,5 @@
 package it.polimi.ingsw.Components;
 
-import it.polimi.ingsw.Visitors.Visitor;
-
 import java.util.*;
 
 public class CargoHolds extends Component {
@@ -28,10 +26,6 @@ public class CargoHolds extends Component {
 
     public CargoHoldsType getType() {
         return cargoHoldsType;
-    }
-
-    public void setCategory(CargoHoldsType category) {
-        this.cargoHoldsType = category;
     }
 
     public int getCapacity() {
@@ -91,8 +85,4 @@ public class CargoHolds extends Component {
         return totalValue;
     }
 
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
 }
