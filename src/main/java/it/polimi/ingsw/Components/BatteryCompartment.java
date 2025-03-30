@@ -1,7 +1,6 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
-import it.polimi.ingsw.Visitors.Visitor;
 
 // Classe Engine
 public class BatteryCompartment extends Component {
@@ -22,11 +21,6 @@ public class BatteryCompartment extends Component {
 
     public void updateChargeLevel(int chargeLevel) {
         this.chargeLevel = chargeLevel;
-    }
-
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
     }
 
     public int getMaxCapacity() {

@@ -10,9 +10,5 @@ public class SingleCannon extends Cannon {
     public SingleCannon(Direction firingDirection) {
         super(1, 1, firingDirection);
     }
-    @Override
-    public String getType() {
-        return "SingleCannon";
-    }
 
 }

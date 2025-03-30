@@ -6,9 +6,4 @@ public class DoubleEngine extends Engine {
         super(power, energyConsumption);
     }
 
-    @Override
-    public String getType() {
-        return "DoubleEngine";
-    }
-
 }

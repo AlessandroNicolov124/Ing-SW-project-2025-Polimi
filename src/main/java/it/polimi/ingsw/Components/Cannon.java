@@ -1,7 +1,6 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
-import it.polimi.ingsw.Visitors.Visitor;
 
 public abstract class Cannon extends Component {
     private int firePower;
@@ -78,12 +77,6 @@ public abstract class Cannon extends Component {
         return true;
     }
 
-    @Override
-    public void accept(Visitor visitor) {
-        visitor.visit(this);
-    }
-
-    public abstract String getType();
 }
 
 

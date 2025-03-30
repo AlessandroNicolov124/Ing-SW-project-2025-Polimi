@@ -6,9 +6,4 @@ public class BlueCargo extends Cargo {
         super(value);
     }
 
-    @Override
-    public String getType() {
-        return "Blue";
-    }
-
 }

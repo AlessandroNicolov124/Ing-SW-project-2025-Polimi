@@ -1,7 +1,6 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.*;
-import it.polimi.ingsw.AdventureCards.*;
 
 import java.util.*;
 
