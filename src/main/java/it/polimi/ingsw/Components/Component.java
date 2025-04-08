@@ -3,7 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 
 import java.util.*;
-
+ 
 public abstract class Component {
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
