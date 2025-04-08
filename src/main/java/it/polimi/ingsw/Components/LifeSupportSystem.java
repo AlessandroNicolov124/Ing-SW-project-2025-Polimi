@@ -17,5 +17,4 @@ public class LifeSupportSystem extends Component {
         this.type = type;
     }
 
-
 }

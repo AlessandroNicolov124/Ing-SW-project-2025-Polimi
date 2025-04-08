@@ -1,9 +1,9 @@
 package it.polimi.ingsw.Components;
 
-public class DoubleEngine extends Engine {
+public final class DoubleEngine extends Engine {
 
-    public DoubleEngine(int power, int energyConsumption) {
-        super(power, energyConsumption);
+    public DoubleEngine() {
+        super(2, 1);
     }
 
 }
