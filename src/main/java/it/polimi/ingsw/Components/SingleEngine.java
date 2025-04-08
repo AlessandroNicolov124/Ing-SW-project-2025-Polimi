@@ -1,6 +1,6 @@
 package it.polimi.ingsw.Components;
 
-public class SingleEngine extends Engine {
+public final class SingleEngine extends Engine {
 
     public SingleEngine(int power, int energyConsumption) {
         super(power, energyConsumption);

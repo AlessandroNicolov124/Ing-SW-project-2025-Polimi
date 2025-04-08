@@ -5,7 +5,7 @@ import it.polimi.ingsw.*;
 import java.util.*;
 
 // Classe Cabin
-public class Cabin extends Component {
+public final class Cabin extends Component {
     private List<Crew> crew;
     private boolean isStartingCabin;
     private Set<LifeSupportSystemType> connectedLifeSupports;
@@ -40,8 +40,8 @@ public class Cabin extends Component {
         return crew;
     }
 
-    public void removeCrew(Crew crew) {
-        this.crew.remove(crew);
+    public boolean removeCrew(Crew crew) {
+        return this.crew.remove(crew);
     }
 
     public boolean isStartingCabin() {
@@ -103,6 +103,14 @@ public class Cabin extends Component {
             case BROWN_ALIEN -> connectedLifeSupports.contains(LifeSupportSystemType.BROWN);
             default -> false; // Not an alien type
         };
+    }
+
+    public boolean initializeCrewStartingCabin() {
+        if (isStartingCabin) {
+            return addCrew(new HumanCrew()) &&
+                    addCrew(new HumanCrew());
+        }
+        return false;
     }
 
 }

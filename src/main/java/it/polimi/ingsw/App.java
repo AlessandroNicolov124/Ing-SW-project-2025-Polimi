@@ -49,13 +49,15 @@ public class App {
         pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
         player1.getShip().placeComponent(lifeSupportSystem, pos1);
 
-
         // Validazione della nave
         if (player1.getShip().validateShip()) {
             System.out.println("La nave è assemblata correttamente.");
         } else {
             System.out.println("La nave non è assemblata correttamente.");
         }
+
+        //inserisci equipaggio nelle cabine
+        player1.getShip().distributeCrewAutomatically();
 
         // Carica il cannone
         boolean charged = cannon.charge(battery);  // true

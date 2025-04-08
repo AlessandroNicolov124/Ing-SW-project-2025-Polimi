@@ -2,7 +2,7 @@ package it.polimi.ingsw.Components;
 
 import java.util.*;
 
-public class CargoHolds extends Component {
+public final class CargoHolds extends Component {
 
     private CargoHoldsSize cargoHoldsSize;
     private CargoHoldsType cargoHoldsType;
