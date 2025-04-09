@@ -2,67 +2,39 @@ package it.polimi.ingsw.Components;
 
 import java.util.*;
 
-public final class CargoHolds extends Component {
+public sealed abstract class CargoHolds extends Component permits
+        NormalCargoHolds, SpecialCargoHolds {
 
-    private CargoHoldsSize cargoHoldsSize;
-    private CargoHoldsType cargoHoldsType;
-    private List<Cargo> cargos;
+    private int capacity;
+    private List<Cargo> cargos = new ArrayList<>();
 
-    public CargoHolds() {
+    public CargoHolds(int capacity) {
         super();
-        this.cargos = new ArrayList<>();
-    }
-
-    public CargoHolds(CargoHoldsSize cargoHoldsSize, CargoHoldsType cargoHoldsType) {
-        super();
-        this.cargoHoldsSize = cargoHoldsSize;
-        this.cargoHoldsType = cargoHoldsType;
-        this.cargos = new ArrayList<>();
-    }
-
-    public CargoHoldsSize getSize() {
-        return cargoHoldsSize;
-    }
-
-    public CargoHoldsType getType() {
-        return cargoHoldsType;
+        this.capacity = capacity;
     }
 
     public int getCapacity() {
-        return cargoHoldsSize.getCapacity();
+        return capacity;
     }
 
     public List<Cargo> getCargos() {
         return new ArrayList<>(cargos.stream().toList());
     }
 
-    public boolean canContainCargo(Cargo cargo) {
-        if (cargoHoldsType == CargoHoldsType.NORMAL) {
-            return !(cargo instanceof RedCargo);
-        } else if (cargoHoldsType == CargoHoldsType.SPECIAL) {
-            return cargo instanceof RedCargo;
-        }
-        return false;
-    }
+    public abstract boolean canContainCargo(Cargo cargo);
 
     public void loadCargo(Cargo cargo) {
-        if (cargoHoldsSize == null) {
-            throw new IllegalStateException("Cargo holds size is not set");
-        }
-
-        if (cargos.size() >= getCapacity()) {
+        if (cargos.size() >= capacity) {
             throw new IllegalStateException("Cargo holds is at full capacity");
         }
-
         if (!canContainCargo(cargo)) {
-            throw new IllegalArgumentException("This cargo type is not compatible with this cargo hold category");
+            throw new IllegalArgumentException("This cargo type is not compatible with this cargo hold");
         }
-
         cargos.add(cargo);
     }
 
     public boolean isFull() {
-        return cargoHoldsSize != null && cargos.size() >= getCapacity();
+        return cargos.size() >= capacity;
     }
 
     public boolean isEmpty() {
@@ -70,7 +42,7 @@ public final class CargoHolds extends Component {
     }
 
     public int getAvailableSpace() {
-        return getCapacity() - cargos.size();
+        return capacity - cargos.size();
     }
 
     public void unloadCargo(Cargo cargo) {
@@ -78,11 +50,7 @@ public final class CargoHolds extends Component {
     }
 
     public int sumCargoValue() {
-        int totalValue = 0;
-        for (Cargo cargo : cargos) {
-            totalValue += cargo.getValue();
-        }
-        return totalValue;
+        return cargos.stream().mapToInt(Cargo::getValue).sum();
     }
 
 }
