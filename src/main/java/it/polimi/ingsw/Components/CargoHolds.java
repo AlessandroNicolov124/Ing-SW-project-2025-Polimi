@@ -2,8 +2,7 @@ package it.polimi.ingsw.Components;
 
 import java.util.*;
 
-public sealed abstract class CargoHolds extends Component permits
-        NormalCargoHolds, SpecialCargoHolds {
+public sealed abstract class CargoHolds extends Component permits NormalCargoHolds, SpecialCargoHolds {
 
     private int capacity;
     private List<Cargo> cargos = new ArrayList<>();

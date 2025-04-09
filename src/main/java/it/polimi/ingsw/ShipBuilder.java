@@ -451,4 +451,47 @@ public class ShipBuilder {
                 .filter(singleCannon -> !singleCannon.isDamaged())
                 .collect(Collectors.toList());
     }
+
+    public void rotateComponentClockwise(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
+    public void rotateComponentCounterClockwise(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getCounterClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
+    public void rotateComponentOpposite(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getOpposite();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getOpposite();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
 }

@@ -2,7 +2,6 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
-// Classe Engine
 public final class BatteryCompartment extends Component {
     private int maxCapacity; // numero di batterie
     private BatteryType type;
