@@ -77,6 +77,8 @@ public abstract class Cannon extends Component {
         return true;
     }
 
+    public boolean isDoubleCannon() {return false;}
+
 }
 
 

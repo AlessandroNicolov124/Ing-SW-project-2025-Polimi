@@ -10,4 +10,6 @@ public class SingleEngine extends Engine {
         super(0,0);
     }
 
+    public boolean isDoubleEngine() {return false;}
+
 }

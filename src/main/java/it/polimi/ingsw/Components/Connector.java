@@ -3,7 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.Direction;
 
 // Classe Connector
-public class Connector {
+public class Connector extends Component{
     private Direction direction;
     private ConnectorType connectorType;
 

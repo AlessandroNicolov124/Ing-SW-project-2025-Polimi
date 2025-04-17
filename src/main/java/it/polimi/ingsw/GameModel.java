@@ -23,11 +23,14 @@ public class GameModel {
     }
 
     // Metodo per pescare una carta dall'avventura
-    public AdventureCard pickAdventureCard() {
+    public void pickAdventureCardForPlayer(Player player) {
         if (!deck.isEmpty()) {
-            return deck.remove(0); // Rimuove e restituisce la prima carta
+            player.pickCard(deck.remove(0));
+            //return deck.remove(0); // Rimuove e restituisce la prima carta
         }
-        return null; // Nessuna carta disponibile
+        else
+            player.pickCard(null);
+        //return null; // Nessuna carta disponibile
     }
 
     public int calculatesPoints(){
@@ -36,18 +39,18 @@ public class GameModel {
 
     private void loadAdventureCard(){
         deck.add(new Planets());
-        deck.add(new AbandonedStation());
-        deck.add(new AbandonedShip());
-        deck.add(new Smugglers());
+        //deck.add(new AbandonedStation());
+        //deck.add(new AbandonedShip());
+        //deck.add(new Smugglers());
         deck.add(new OpenSpace());
         deck.add(new MeteorSwarm());
         deck.add(new Stardust());
-        deck.add(new BigMeteorSwarm());
+        //deck.add(new BigMeteorSwarm());
         deck.add(new Slavers());
         deck.add(new Pirates());
         deck.add(new Epidemic());
         deck.add(new Sabotage());
-        deck.add(new CombatZone());
+        //deck.add(new CombatZone());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
     }
@@ -74,6 +77,10 @@ public class GameModel {
 
     public List<Player> getPlayers(){
         return this.players;
+    }
+
+    public FlightBoard getFlightBoard(){
+        return this.flightBoard;
     }
 
 }

@@ -9,21 +9,27 @@ import it.polimi.ingsw.Components.*;
  */
 public class App {
     public static void main(String[] args) {
-        GameModel gameModel = new GameModel();
+        //GameModel gameModel = new GameModel();
+
+        // THIS APP.java is pretending to be the view right now
+        GameController controller = new GameController();
 
         //Aggiungi alcune carte all'adventureDeck
-        gameModel.getAdventureDeck().add(new Planets());
-        gameModel.getAdventureDeck().add(new AbandonedStation());
+        //gameModel.getAdventureDeck().add(new Planets());
+        //gameModel.getAdventureDeck().add(new AbandonedStation());
 
-        ShipBuilder shipBuilder1 = new ShipBuilder(6,6);
-        Player player1 = new Player(0,"Giocatore 1",true, shipBuilder1);
-        gameModel.getPlayers().add(player1);
+        //ShipBuilder shipBuilder1 = new ShipBuilder(6,6);
+        Player player1 = new Player(0,"Giocatore 1",true);
+        //gameModel.getPlayers().add(player1);
+
+        controller.addPlayer(player1);
+        controller.pickCardForPlayer(player1);
 
         // Il giocatore pesca una carta
-        player1.pickCard(gameModel);
+        //player1.pickCard(gameModel);
 
         // Creazione di componenti
-        Cabin startingCabin = new Cabin(true); // cabina di comando
+        Component startingCabin = new Cabin(true); // cabina di comando
         Engine engine = new SingleEngine();
         engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL);
         Cannon cannon = new SingleCannon();
@@ -34,11 +40,12 @@ public class App {
         lifeSupportSystem.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL);
 
 
-        Position pos1 = player1.getShip().getStartingPosition();
-        player1.getShip().placeComponent(startingCabin, pos1);
+        Position pos1 = new Position(1,1); //Magic numbers will be removed
 
-        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
-        player1.getShip().placeComponent(engine, pos1);
+        controller.addComponentForPlayer(player1, startingCabin, pos1);
+        //player1.getShip().placeComponent(startingCabin, pos1);
+
+        //pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
 
         pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
         player1.getShip().placeComponent(cannon, pos1);
@@ -61,45 +68,5 @@ public class App {
         boolean charged = cannon.charge(battery);  // true
         boolean fired = cannon.fire();  // true
 
-//        // Create a list of all components
-//        List<Component> shipComponents = new ArrayList<>();
-//        shipComponents.add(engine);
-//        shipComponents.add(startingCabin);
-//        shipComponents.add(cannon);
-//        shipComponents.add(battery);
-//        shipComponents.add(lifeSupportSystem);
-//
-//        // Use visitors to analyze the ship
-//        ShipValueVisitor valueVisitor = new ShipValueVisitor();
-//        DurabilityVisitor durabilityVisitor = new DurabilityVisitor();
-//        VulnerabilityVisitor vulnerabilityVisitor = new VulnerabilityVisitor();
-//        ConnectionValidityVisitor validityVisitor = new ConnectionValidityVisitor();
-//
-//        // Apply visitors to all components
-//        for (Component component : shipComponents) {
-//            component.accept(valueVisitor);
-//            component.accept(durabilityVisitor);
-//            component.accept(vulnerabilityVisitor);
-//            component.accept(validityVisitor);
-//        }
-//
-//        // Display results
-//        System.out.println("SHIP ANALYSIS");
-//        System.out.println("Total ship value: " + valueVisitor.getTotalValue() + " credits");
-//        System.out.println("\nDurability Analysis:");
-//        System.out.println("- Structural integrity: " + durabilityVisitor.getStructuralIntegrity());
-//        System.out.println("- Shield strength: " + durabilityVisitor.getShieldStrength());
-//        System.out.println("- Total durability: " + durabilityVisitor.getTotalDurability());
-//
-//        System.out.println("\nVulnerability Analysis:");
-//        System.out.println("- Meteor vulnerability: " + vulnerabilityVisitor.getMeteorVulnerability());
-//        System.out.println("- Pirate vulnerability: " + vulnerabilityVisitor.getPirateVulnerability());
-//        System.out.println("- Cosmic dust vulnerability: " + vulnerabilityVisitor.getCosmicDustVulnerability());
-//
-//        System.out.println("\nConnection Validity:");
-//        System.out.println("- Is ship valid: " + validityVisitor.isValid());
-//        if (!validityVisitor.isValid()) {
-//            System.out.println("- Validation errors: " + validityVisitor.getValidationReport());
-//        }
     }
 }

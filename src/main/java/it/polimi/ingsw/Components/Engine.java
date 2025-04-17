@@ -15,6 +15,8 @@ public abstract class Engine extends Component {
         return power;
     }
 
+    public boolean isDoubleEngine(){return false;}
+
     public int getEnergyConsumption() {
         return energyConsumption;
     }

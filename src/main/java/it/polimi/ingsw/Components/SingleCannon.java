@@ -11,4 +11,8 @@ public class SingleCannon extends Cannon {
         super(1, 1, firingDirection);
     }
 
+    @Override
+    public boolean isDoubleCannon() {return false;}
+
+
 }
