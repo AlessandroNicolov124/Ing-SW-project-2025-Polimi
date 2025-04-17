@@ -1,11 +1,21 @@
 package it.polimi.ingsw;
 
-public class HumanCrew extends Crew{
+import it.polimi.ingsw.Components.Cabin;
+
+public class HumanCrew extends Crew {
+
     public HumanCrew() {
-        super();
-    }
-    public HumanCrew(String type, int count) {
-        super(type, count);
+        super(CrewType.HUMAN);
     }
 
+    @Override
+    public boolean canLiveIn(Cabin cabin) {
+        // Humans can live in any cabin (they wear spacesuits)
+        return true;
+    }
+
+    @Override
+    public void applyAbility(ShipBuilder ship) {
+
+    }
 }

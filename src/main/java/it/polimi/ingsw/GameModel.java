@@ -1,5 +1,7 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.AdventureCards.*;
+
 import java.util.*;
 
 public class GameModel {
@@ -45,6 +47,7 @@ public class GameModel {
         deck.add(new Pirates());
         deck.add(new Epidemic());
         deck.add(new Sabotage());
+        deck.add(new CombatZone());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
     }

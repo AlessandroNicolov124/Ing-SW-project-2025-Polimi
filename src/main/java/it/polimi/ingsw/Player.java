@@ -1,7 +1,6 @@
 package it.polimi.ingsw;
 
-import javax.swing.*;
-import java.util.List;
+import it.polimi.ingsw.AdventureCards.*;
 
 public class Player {
     private int id;
@@ -9,8 +8,6 @@ public class Player {
     private boolean active;
     private ShipBuilder ship;
     private AdventureCard pickedCard; // Carta pescata dal giocatore
-
-    public Player() {}
 
     public Player(int id, String nickName, boolean active, ShipBuilder ship) {
         this.id = id;
