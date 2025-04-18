@@ -1,0 +1,16 @@
+title User tries to access a match
+
+rbox left of Client: Client is actually the player
+
+Client->Server:Request to join match
+alt case 1
+Server-->Client:Request nickname
+Client->Server:Send nickname
+Server-->Client:Match join confirm
+else case 2
+Server-->Client:Request nickname
+Client->Server:Send nickname
+Server-->Client:Reject request to join
+else case 3
+Server-->Client:Reject request to join
+end
