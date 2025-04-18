@@ -14,6 +14,8 @@ public abstract sealed class Engine extends Component permits SingleEngine, Doub
         return power;
     }
 
+    public boolean isDoubleEngine(){return false;}
+
     public int getEnergyConsumption() {
         return energyConsumption;
     }

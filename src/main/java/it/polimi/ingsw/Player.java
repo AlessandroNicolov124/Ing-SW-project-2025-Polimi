@@ -9,12 +9,13 @@ public class Player {
     private ShipBuilder ship;
     private AdventureCard pickedCard; // Carta pescata dal giocatore
 
-    public Player(int id, String nickName, boolean active, ShipBuilder ship) {
+    public Player(int id, String nickName, boolean active) {
         this.id = id;
         this.nickName = nickName;
         this.active = active;
-        this.ship = ship;
+        this.ship = new ShipBuilder(10, 10);
     }
+
 
     public int getId() {
         return id;
@@ -56,8 +57,7 @@ public class Player {
 
     }
 
-    public void pickCard(GameModel gameModel) {
-        AdventureCard card = gameModel.pickAdventureCard(); // Pescare una carta dal GameModel
+    public void pickCard(AdventureCard card) {
         if (card != null) {
             this.pickedCard = card; // Assegna la carta pescata al giocatore
             System.out.println(nickName + " ha pescato una carta: " + card.getClass().getSimpleName());

@@ -6,4 +6,7 @@ public final class DoubleEngine extends Engine {
         super(2, 1);
     }
 
+    @Override
+    public boolean isDoubleEngine(){return true;}
+
 }

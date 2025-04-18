@@ -18,103 +18,41 @@ public class GameModel {
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
-    }
 
-    public void setTurnNumber(int turnNumber) {
-        this.turnNumber = turnNumber;
-    }
-
-    public void incrementTurnNumber() {
-        turnNumber++;
+        loadAdventureCard();
     }
 
     // Metodo per pescare una carta dall'avventura
-    public AdventureCard pickAdventureCard() {
+    public void pickAdventureCardForPlayer(Player player) {
         if (!deck.isEmpty()) {
-            return deck.remove(0); // Rimuove e restituisce la prima carta
+            player.pickCard(deck.remove(0));
+            //return deck.remove(0); // Rimuove e restituisce la prima carta
         }
-        return null; // Nessuna carta disponibile
+        else
+            player.pickCard(null);
+        //return null; // Nessuna carta disponibile
     }
 
-
-    public void startGame() {
-        // Carica le carte avventura
-        loadAdventureCard();
-
-        // Imposta la distanza massima per il round corrente
-        if (turnNumber == 1) {
-            flightBoard.setMaxDistance(8);
-        } else if (turnNumber == 2) {
-            flightBoard.setMaxDistance(12);
-        } else if (turnNumber == 3) {
-            flightBoard.setMaxDistance(16);
-        }
-
-        // Aggiungi tutti i giocatori al FlightBoard
-        for (Player player : players) {
-            flightBoard.addPlayer(player);
-        }
-
-        // Altre inizializzazioni...
+    public int calculatesPoints(){
+        return 0;
     }
 
-    public void playTurn() {
-        // Logica per determinare la potenza del motore del giocatore corrente
-        int enginePower = currentPlayer.getShip().calculateEnginePower();
-
-        // Aggiorna la posizione del giocatore sulla FlightBoard
-        flightBoard.updatePosition(currentPlayer, enginePower);
-
-        // Ottieni la posizione attuale del giocatore
-        int position = flightBoard.getPosition(currentPlayer);
-        System.out.println("Nuova posizine " + currentPlayer.getNickName() + ": " + position);
-
-//        // Controlla se il volo è completato
-//        if (isFlightComplete()) {
-//            // Calcola i bonus di posizione per il punteggio
-//            Map<Player, Integer> bonuses = flightBoard.calculateFlightBonuses(turnNumber);
-//
-//            // Aggiungi i bonus ai crediti dei giocatori
-//            for (Map.Entry<Player, Integer> entry : bonuses.entrySet()) {
-//                Player player = entry.getKey();
-//                int bonus = entry.getValue();
-//                setCredits(player, getCredits(player) + bonus);
-//            }
-//
-//            // ...
-//        }
-    }
-
-    public boolean isFlightComplete() {
-        if(players.stream().filter(p -> p.isActive()).count()==1 || getAdventureDeck().isEmpty()){
-            return true;
-        }
-        return false;
-
-    }
-
-
-    public void endGame(){
-
-    }
-
-    public void loadAdventureCard(){
+    private void loadAdventureCard(){
         deck.add(new Planets());
-        deck.add(new AbandonedStation());
-        deck.add(new AbandonedShip());
-        deck.add(new Smugglers());
+        //deck.add(new AbandonedStation());
+        //deck.add(new AbandonedShip());
+        //deck.add(new Smugglers());
         deck.add(new OpenSpace());
         deck.add(new MeteorSwarm());
         deck.add(new Stardust());
-        deck.add(new BigMeteorSwarm());
+        //deck.add(new BigMeteorSwarm());
         deck.add(new Slavers());
         deck.add(new Pirates());
         deck.add(new Epidemic());
         deck.add(new Sabotage());
-        deck.add(new CombactZone());
+        //deck.add(new CombatZone());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
-
     }
 
     public void updateState(String newState){
@@ -123,10 +61,6 @@ public class GameModel {
 
     public Player getCurrentPlayer(){
         return currentPlayer;
-    }
-
-    public void setCurrentPlayer(Player p){
-        this.currentPlayer = p;
     }
 
     public void setCredits(Player p, int amount){
@@ -145,16 +79,8 @@ public class GameModel {
         return this.players;
     }
 
-    public void addPlayer(Player p){
-        players.add(p);
-    }
-
     public FlightBoard getFlightBoard(){
         return this.flightBoard;
-    }
-
-    public int getTurnNumber(){
-        return this.turnNumber;
     }
 
 }
