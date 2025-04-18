@@ -79,7 +79,7 @@ public class FlightBoard {
 
         // Trova la prima posizione non occupata
         while (position > 0 && isPositionOccupied(position, currentPlayer)) {
-            position--;
+            position++;
         }
 
         return position;
@@ -112,7 +112,7 @@ public class FlightBoard {
 
         // Verifica se la nuova posizione è occupata
         if (isPositionOccupied(newPosition, player)) {
-            // Trova la prima posizione disponibile prima della posizione calcolata
+            // Trova la prima posizione disponibile
             newPosition = findFirstAvailablePosition(newPosition, player);
         }
 
@@ -252,41 +252,6 @@ public class FlightBoard {
     }
 
     /**
-     * Determina se tutti i giocatori hanno completato il volo
-     *
-     * @return true se tutti i giocatori hanno raggiunto la fine o sono stati eliminati
-     */
-    public boolean isFlightComplete() {
-        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            Player player = entry.getKey();
-            if (player.isActive() && entry.getValue() < maxDistance) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * Ottiene i giocatori che hanno raggiunto il traguardo
-     *
-     * @return Lista di giocatori che hanno completato il volo
-     */
-    public List<Player> getFinishedPlayers() {
-        List<Player> finishedPlayers = new ArrayList<>();
-
-        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            if (entry.getValue() >= maxDistance && entry.getKey().isActive()) {
-                finishedPlayers.add(entry.getKey());
-            }
-        }
-
-        // Ordina per ordine di arrivo (assumendo che quelli con posizioni più alte siano arrivati prima)
-        finishedPlayers.sort((p1, p2) -> positions.get(p2) - positions.get(p1));
-
-        return finishedPlayers;
-    }
-
-    /**
      * Ottiene i giocatori in una posizione specifica sul tabellone
      *
      * @param position La posizione da controllare
@@ -318,7 +283,7 @@ public class FlightBoard {
      */
     public Map<Player, Integer> calculateFlightBonuses(int roundNumber) {
         Map<Player, Integer> bonuses = new HashMap<>();
-        List<Player> finishedPlayers = getFinishedPlayers();
+        List<Player> finishedPlayers = positions.keySet().stream().toList();
 
         // Il primo giocatore ottiene il bonus più grande, e così via
         for (int i = 0; i < finishedPlayers.size(); i++) {

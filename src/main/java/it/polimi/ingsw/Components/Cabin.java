@@ -12,10 +12,10 @@ public final class Cabin extends Component {
 
     public void initializeConnectors() {
         // Cabina di partenza ha connettori universali su tutti i lati
-        connections.add(new Connector(Direction.NORTH, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.EAST, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.SOUTH, ConnectorType.UNIVERSAL));
-        connections.add(new Connector(Direction.WEST, ConnectorType.UNIVERSAL));
+        connections.add(new Connector(Direction.NORTH, new UniversalConnectorType()));
+        connections.add(new Connector(Direction.EAST, new UniversalConnectorType()));
+        connections.add(new Connector(Direction.SOUTH, new UniversalConnectorType()));
+        connections.add(new Connector(Direction.WEST, new UniversalConnectorType()));
     }
 
     public Cabin() {

@@ -20,6 +20,14 @@ public class GameModel {
         flightBoard = new FlightBoard();
     }
 
+    public void setTurnNumber(int turnNumber) {
+        this.turnNumber = turnNumber;
+    }
+
+    public void incrementTurnNumber() {
+        turnNumber++;
+    }
+
     // Metodo per pescare una carta dall'avventura
     public AdventureCard pickAdventureCard() {
         if (!deck.isEmpty()) {
@@ -32,9 +40,6 @@ public class GameModel {
     public void startGame() {
         // Carica le carte avventura
         loadAdventureCard();
-
-        // Inizializza il FlightBoard
-        flightBoard = new FlightBoard();
 
         // Imposta la distanza massima per il round corrente
         if (turnNumber == 1) {
@@ -62,35 +67,35 @@ public class GameModel {
 
         // Ottieni la posizione attuale del giocatore
         int position = flightBoard.getPosition(currentPlayer);
+        System.out.println("Nuova posizine " + currentPlayer.getNickName() + ": " + position);
 
-        // Usa la posizione per determinare quale carta avventura il giocatore affronta
-        if (position < deck.size()) {
-            AdventureCard currentCard = deck.get(position);
-            // Gestisci l'effetto della carta avventura...
-        }
-
-        // Controlla se il volo è completato
-        if (flightBoard.isFlightComplete()) {
-            // Calcola i bonus di posizione per il punteggio
-            Map<Player, Integer> bonuses = flightBoard.calculateFlightBonuses(turnNumber);
-
-            // Aggiungi i bonus ai crediti dei giocatori
-            for (Map.Entry<Player, Integer> entry : bonuses.entrySet()) {
-                Player player = entry.getKey();
-                int bonus = entry.getValue();
-                setCredits(player, getCredits(player) + bonus);
-            }
-
-            // ...
-        }
+//        // Controlla se il volo è completato
+//        if (isFlightComplete()) {
+//            // Calcola i bonus di posizione per il punteggio
+//            Map<Player, Integer> bonuses = flightBoard.calculateFlightBonuses(turnNumber);
+//
+//            // Aggiungi i bonus ai crediti dei giocatori
+//            for (Map.Entry<Player, Integer> entry : bonuses.entrySet()) {
+//                Player player = entry.getKey();
+//                int bonus = entry.getValue();
+//                setCredits(player, getCredits(player) + bonus);
+//            }
+//
+//            // ...
+//        }
     }
+
+    public boolean isFlightComplete() {
+        if(players.stream().filter(p -> p.isActive()).count()==1 || getAdventureDeck().isEmpty()){
+            return true;
+        }
+        return false;
+
+    }
+
 
     public void endGame(){
 
-    }
-
-    public int calculatesPoints(){
-        return 0;
     }
 
     public void loadAdventureCard(){
@@ -120,6 +125,10 @@ public class GameModel {
         return currentPlayer;
     }
 
+    public void setCurrentPlayer(Player p){
+        this.currentPlayer = p;
+    }
+
     public void setCredits(Player p, int amount){
         credits.put(p, amount);
     }
@@ -134,6 +143,18 @@ public class GameModel {
 
     public List<Player> getPlayers(){
         return this.players;
+    }
+
+    public void addPlayer(Player p){
+        players.add(p);
+    }
+
+    public FlightBoard getFlightBoard(){
+        return this.flightBoard;
+    }
+
+    public int getTurnNumber(){
+        return this.turnNumber;
     }
 
 }

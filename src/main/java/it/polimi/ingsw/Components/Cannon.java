@@ -22,8 +22,13 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
 
     public boolean validateFiringDirection(Direction firingDirection) {
         for(Connector conn : connections){
-            if(conn.getDirection() == firingDirection && conn.getConnectorType() != ConnectorType.NULL){
-                    return false;
+            if(conn.getDirection() == firingDirection){
+                switch(conn.getConnectorType()){
+                    case NullConnectorType nct:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
         return true;

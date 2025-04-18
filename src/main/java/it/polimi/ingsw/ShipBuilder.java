@@ -497,7 +497,8 @@ public class ShipBuilder {
     public int calculateEnginePower() {
         return components.keySet().stream()
                 .mapToInt(component -> switch(component){
-                    case Engine e -> e.getPower();
+                    case SingleEngine e -> e.getPower();
+                    case DoubleEngine e -> e.getPower();
                     default -> 0;
                 })
                 .sum();
