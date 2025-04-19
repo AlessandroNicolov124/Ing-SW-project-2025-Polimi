@@ -83,5 +83,14 @@ public class GameModel {
         return this.flightBoard;
     }
 
+    public boolean isGameStartable(){
+        for (Player p : this.players){
+            if (!p.getReady()){
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
 

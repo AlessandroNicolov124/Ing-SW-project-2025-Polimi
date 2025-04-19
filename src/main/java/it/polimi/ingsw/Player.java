@@ -8,12 +8,14 @@ public class Player {
     private boolean active;
     private ShipBuilder ship;
     private AdventureCard pickedCard; // Carta pescata dal giocatore
+    private boolean readyToStart;
 
     public Player(int id, String nickName, boolean active) {
         this.id = id;
         this.nickName = nickName;
         this.active = active;
         this.ship = new ShipBuilder(10, 10);
+        this.readyToStart = false;
     }
 
 
@@ -47,6 +49,16 @@ public class Player {
 
     public void setShip(ShipBuilder ship) {
         this.ship = ship;
+    }
+
+    public void setReady(boolean ready)
+    {
+        this.readyToStart = ready;
+    }
+
+    public boolean getReady ()
+    {
+        return this.readyToStart;
     }
 
     public void assembleShip(){

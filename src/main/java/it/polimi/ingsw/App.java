@@ -23,10 +23,20 @@ public class App {
         //gameModel.getPlayers().add(player1);
 
         controller.addPlayer(player1);
-        controller.pickCardForPlayer(player1);
 
-        // Il giocatore pesca una carta
-        //player1.pickCard(gameModel);
+        if (!controller.startMatchIfPossible()){
+            System.out.println("Impossible to start mathc, player(s) not ready yet.");
+        }
+
+        controller.setPlayerReady(player1);
+
+        if (controller.startMatchIfPossible()) {
+
+            System.out.println("Game started correctly");
+        }
+
+
+        controller.pickCardForPlayer(player1);
 
         // Creazione di componenti
         Component startingCabin = new Cabin(true); // cabina di comando
@@ -41,24 +51,30 @@ public class App {
 
 
         Position pos1 = new Position(1,1); //Magic numbers will be removed
+        Position pos2 = new Position(2,1);
+        Position pos3 = new Position(3,1);
+        Position pos4 = new Position(4,1);
 
         controller.addComponentForPlayer(player1, startingCabin, pos1);
+        controller.addComponentForPlayer(player1, cannon, pos2);
+        controller.addComponentForPlayer(player1, battery, pos3);
+        controller.addComponentForPlayer(player1, lifeSupportSystem, pos4);
         //player1.getShip().placeComponent(startingCabin, pos1);
 
-        //pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
-
-        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
-        player1.getShip().placeComponent(cannon, pos1);
-
-        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
-        player1.getShip().placeComponent(battery, pos1);
-
-        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
-        player1.getShip().placeComponent(lifeSupportSystem, pos1);
+//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
+//
+//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
+//        player1.getShip().placeComponent(cannon, pos1);
+//
+//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
+//        player1.getShip().placeComponent(battery, pos1);
+//
+//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
+//        player1.getShip().placeComponent(lifeSupportSystem, pos1);
 
 
         // Validazione della nave
-        if (player1.getShip().validateShip()) {
+        if (controller.validateShipForPlayer(player1)){
             System.out.println("La nave è assemblata correttamente.");
         } else {
             System.out.println("La nave non è assemblata correttamente.");
