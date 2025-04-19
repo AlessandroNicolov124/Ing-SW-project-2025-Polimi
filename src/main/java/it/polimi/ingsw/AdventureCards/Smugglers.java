@@ -119,13 +119,13 @@ public class Smugglers extends AdventureCard {
         for (Component component : components) {
             if (component instanceof Cannon) {
                 Cannon cannon = (Cannon) component;
-                strength += 1;
+                strength += cannon.getFirePower();
                 
                 // Double cannons provide extra strength if powered
-                if (cannon.isDoubleCannon()) {
-                    // Assuming player chooses to power double cannons when fighting smugglers
-                    strength += 1;
-                }
+//                if (cannon.isDoubleCannon()) {
+//                    // Assuming player chooses to power double cannons when fighting smugglers
+//                    strength += 1;
+//                }
             }
         }
         

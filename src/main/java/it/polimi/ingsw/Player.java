@@ -16,6 +16,12 @@ public class Player {
         this.ship = new ShipBuilder(10, 10);
     }
 
+    public Player(int id, String nickName, boolean active, ShipBuilder ship) {
+        this.id = id;
+        this.nickName = nickName;
+        this.active = active;
+        this.ship = ship;
+    }
 
     public int getId() {
         return id;

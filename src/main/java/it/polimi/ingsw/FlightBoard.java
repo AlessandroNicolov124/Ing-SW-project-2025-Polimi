@@ -16,25 +16,10 @@ public class FlightBoard {
     private Map<Player, Integer> positions;
 
     /**
-     * max distance for the flight
-     */
-    private int maxDistance;
-
-    /**
      * Constructor for the FlightBoard
      */
     public FlightBoard() {
         this.positions = new HashMap<>();
-        this.maxDistance = 8; // Lunghezza predefinita per il primo round
-    }
-
-    /**
-     * Set maxDistance for the flight
-     *
-     * @param maxDistance the value of maxDistance for this flight
-     */
-    public void setMaxDistance(int maxDistance) {
-        this.maxDistance = maxDistance;
     }
 
     /**
@@ -103,11 +88,6 @@ public class FlightBoard {
         // Applica la posizione minima (0)
         if (newPosition < 0) {
             newPosition = 0;
-        }
-
-        // Applica la posizione massima (fine del percorso di volo)
-        if (newPosition > maxDistance) {
-            newPosition = maxDistance;
         }
 
         // Verifica se la nuova posizione è occupata
@@ -264,15 +244,6 @@ public class FlightBoard {
             }
         }
         return null;
-    }
-
-    /**
-     * Ottiene la distanza massima per questo volo
-     *
-     * @return Il valore della distanza massima
-     */
-    public int getMaxDistance() {
-        return maxDistance;
     }
 
     /**
