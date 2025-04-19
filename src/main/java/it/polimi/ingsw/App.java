@@ -19,7 +19,8 @@ public class App {
         //gameModel.getAdventureDeck().add(new AbandonedStation());
 
         //ShipBuilder shipBuilder1 = new ShipBuilder(6,6);
-        Player player1 = new Player(0,"Giocatore 1",true);
+        Player player1 = new Player(0,"Pippo",true);
+        Player player2 = new Player(1,"Pluto",true);
         //gameModel.getPlayers().add(player1);
 
         controller.addPlayer(player1);
@@ -29,14 +30,12 @@ public class App {
         }
 
         controller.setPlayerReady(player1);
+        controller.setPlayerReady(player2);
 
         if (controller.startMatchIfPossible()) {
 
             System.out.println("Game started correctly");
         }
-
-
-        controller.pickCardForPlayer(player1);
 
         // Creazione di componenti
         Component startingCabin = new Cabin(true); // cabina di comando
@@ -59,6 +58,11 @@ public class App {
         controller.addComponentForPlayer(player1, cannon, pos2);
         controller.addComponentForPlayer(player1, battery, pos3);
         controller.addComponentForPlayer(player1, lifeSupportSystem, pos4);
+
+        controller.addComponentForPlayer(player2, startingCabin, pos4);
+        controller.addComponentForPlayer(player2, cannon, pos3);
+        controller.addComponentForPlayer(player2, battery, pos2);
+        controller.addComponentForPlayer(player2, lifeSupportSystem, pos1);
         //player1.getShip().placeComponent(startingCabin, pos1);
 
 //        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
@@ -75,14 +79,25 @@ public class App {
 
         // Validazione della nave
         if (controller.validateShipForPlayer(player1)){
-            System.out.println("La nave è assemblata correttamente.");
+            System.out.println("Pl1: La nave è assemblata correttamente.");
         } else {
-            System.out.println("La nave non è assemblata correttamente.");
+            System.out.println("Pl1: La nave non è assemblata correttamente.");
+        }
+
+        if (controller.validateShipForPlayer(player2)){
+            System.out.println("Pl2 :La nave è assemblata correttamente.");
+        } else {
+            System.out.println("Pl2: La nave non è assemblata correttamente.");
         }
 
         // Carica il cannone
         boolean charged = cannon.charge(battery);  // true
         boolean fired = cannon.fire();  // true
+
+
+
+        controller.pickCardForPlayer(player1);
+        controller.pickCardForPlayer(player2);
 
     }
 }

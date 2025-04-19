@@ -27,6 +27,7 @@ public class GameModel {
         if (!deck.isEmpty()) {
             player.pickCard(deck.remove(0));
             //return deck.remove(0); // Rimuove e restituisce la prima carta
+            //TODO implent different card picking
         }
         else
             player.pickCard(null);
