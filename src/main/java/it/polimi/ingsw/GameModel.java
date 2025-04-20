@@ -144,6 +144,7 @@ public class GameModel {
         System.out.println("Nuova posizine " + currentPlayer.getNickName() + ": " + position);
     }
 
+    //il gioco è completato quando o è rimasto un solo giocatore oppure tutte le carte avventura sono state risolte
     public boolean isFlightComplete() {
         if(players.stream().filter(p -> p.isActive()).count()==1 || getAdventureDeck().isEmpty()){
             return true;
