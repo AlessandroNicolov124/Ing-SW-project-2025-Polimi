@@ -3,6 +3,8 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ShipBuilder {
 
@@ -10,6 +12,7 @@ public class ShipBuilder {
     private int width, height; //dimensioni plancia
     private Map<Component, Position> components;
     private boolean isAssembled;
+    private Map<CrewType, Integer> crewCount = new HashMap<>(); // tiene conto del numero di umani e alieni sulla navicella
 
     public ShipBuilder(int width, int height) {
         this.startingPosition = new Position(width/2, height/2); // Posizione iniziale
@@ -60,7 +63,6 @@ public class ShipBuilder {
         }
 
         // Posiziona il componente
-        //component.setPosition(position);
         components.put(component, position);
         return true;
     }
@@ -70,7 +72,7 @@ public class ShipBuilder {
             return false; // Only one component, can't disconnect
         }
 
-        Position positionToRemove = components.get(componentToRemove);
+        //Position positionToRemove = components.get(componentToRemove);
         Map<Component, Position> tempComponents = new HashMap<>(components);
         tempComponents.remove(componentToRemove);
 
@@ -149,8 +151,10 @@ public class ShipBuilder {
                 Component adjacentComponent = getComponentAt(adjacentPos);
 
                 if (adjacentComponent != null && !visited.contains(adjacentComponent)) {
-                    visited.add(adjacentComponent);
-                    queue.add(adjacentComponent);
+                    if (current.canConnectTo(adjacentComponent, direction)){
+                        visited.add(adjacentComponent);
+                        queue.add(adjacentComponent);
+                    }
                 }
             }
         }
@@ -170,12 +174,49 @@ public class ShipBuilder {
             return false;
         }
 
-        // 2. Check for required components
-        boolean hasEngine = components.keySet().stream().anyMatch(c -> c instanceof Engine);
-        boolean hasCabin = components.keySet().stream().anyMatch(c -> c instanceof Cabin);
+        // 2. Check for Cannon
+        boolean validationCannonFire = checkCannonFire();
 
-        isAssembled = hasEngine && hasCabin; // La nave è assemblata se ha almeno un motore e una cabina
+        // 3. Check for required components
+        //boolean hasEngine = components.keySet().stream().anyMatch(c -> c instanceof Engine);
+        //boolean hasCabin = components.keySet().stream().anyMatch(c -> c instanceof Cabin);
+        //isAssembled = hasEngine && hasCabin && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
+
+
+        long hasEngine = components.keySet().stream()
+                .flatMap(component -> switch(component){
+                    case Engine e -> Stream.of(e);
+                    default -> Stream.empty();
+                })
+                .count();
+        long hasCabin = components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case Cabin c -> Stream.of(c);
+                    default -> Stream.empty();
+                })
+                .count();
+
+        isAssembled = hasEngine>0 && hasCabin>0 && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
+
         return isAssembled;
+    }
+
+    public boolean checkCannonFire() {
+        List<SingleCannon> singleCannons = getOperationalSingleCannons();
+        List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
+        for (SingleCannon singleCannon : singleCannons) {
+            Position inFiringDirection = getPositionOf(singleCannon).getAdjacentPosition(singleCannon.getFiringDirection());
+            if(getAllPositions().contains(inFiringDirection)) {
+                return false;
+            }
+        }
+        for (DoubleCannon dc : doubleCannons) {
+            Position inFiringDirection = getPositionOf(dc).getAdjacentPosition(dc.getFiringDirection());
+            if(getAllPositions().contains(inFiringDirection)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // Restituisce i componenti della nave
@@ -225,7 +266,6 @@ public class ShipBuilder {
 
     //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
     private void updateLifeSupportConnections(LifeSupportSystem lifeSupport) {
-        //Position position = lifeSupport.getPosition();
         Position position = getPositionOf(lifeSupport);
         LifeSupportSystemType type = lifeSupport.getType();
 
@@ -234,11 +274,233 @@ public class ShipBuilder {
             Position adjacentPos = dir.getAdjacentPosition(position);
             Component adjacentComponent = getComponentAt(adjacentPos);
 
-            if (adjacentComponent instanceof Cabin) {
-                Cabin cabin = (Cabin)adjacentComponent;
-                cabin.connectLifeSupport(type);
+            switch (adjacentComponent) {
+                case Cabin cabin -> {
+                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
+                        cabin.connectLifeSupport(type);
+                    }
+                }
+                default -> {}
             }
         }
     }
 
+    public boolean addCrewToCabin(Crew crew, Cabin cabin) {
+        // Verifica limiti a livello di nave per gli alieni
+        if (crew.getType() != CrewType.HUMAN) {
+            if (crewCount.getOrDefault(crew.getType(), 0) >= 1) {
+                return false;
+            }
+        }
+
+        // Prova ad aggiungere l'equipaggio
+        if (cabin.addCrew(crew)) {
+            if (crew.getType() != CrewType.HUMAN) {
+                crewCount.put(crew.getType(), crewCount.getOrDefault(crew.getType(), 0) + 1);
+            }
+            return true;
+        }
+
+        return false;
+    }
+
+    public int getHumanCount() {
+        return crewCount.getOrDefault(CrewType.HUMAN, 0);
+    }
+
+    public int getAlienCount() {
+        return getTotalCrewCount() - getHumanCount();
+    }
+
+    public int getCrewCount(CrewType type) {
+        return crewCount.getOrDefault(type, 0);
+    }
+
+    public int getTotalCrewCount() {
+        return crewCount.values().stream().mapToInt(Integer::intValue).sum();
+    }
+
+    public boolean removeCrewFromCabin(Crew crew, Cabin cabin) {
+        if (cabin.removeCrew(crew)) {
+            int currentCount = crewCount.getOrDefault(crew.getType(), 0);
+            if (currentCount > 0) {
+                crewCount.put(crew.getType(), currentCount - 1);
+            }
+            return true;
+        }
+        return false;
+    }
+
+
+    public void distributeCrewAutomatically() {
+        for (Component component : components.keySet()) {
+            switch (component) {
+                case Cabin cabin -> {
+                    if (!cabin.initializeCrewStartingCabin()) {
+                        // Logica per distribuire l'equipaggio...
+                        boolean crewAdded = false;
+
+                        // Prova con alieno viola
+                        if (cabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE) &&
+                                crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) == 0) {
+                            crewAdded = addCrewToCabin(new PurpleAlienCrew(), cabin);
+                        }
+
+                        // Prova con alieno marrone
+                        if (!crewAdded && cabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN) &&
+                                crewCount.getOrDefault(CrewType.BROWN_ALIEN, 0) == 0) {
+                            crewAdded = addCrewToCabin(new BrownAlienCrew(), cabin);
+                        }
+
+                        // Se non è stato aggiunto un alieno, aggiungi umani
+                        if (!crewAdded) {
+                            addCrewToCabin(new HumanCrew(), cabin);
+                            addCrewToCabin(new HumanCrew(), cabin);
+                        }
+                    }
+                }
+                default -> {                }
+            }
+        }
+    }
+
+    //Carica i cannoni doppi della nave usando le batterie disponibili.
+    public int chargeWeapons() {
+        int chargedCannons = 0;
+        List<BatteryCompartment> availableBatteries = getChargedBatteries();
+
+        if (availableBatteries.isEmpty()) {
+            return 0;
+        }
+
+        List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
+        for (DoubleCannon cannon : doubleCannons) {
+            // Trovo una batteria con carica sufficiente
+            for (BatteryCompartment battery : availableBatteries) {
+                if (cannon.charge(battery)) {
+                    chargedCannons++;
+                    break;
+                }
+            }
+        }
+
+//        List<SingleCannon> singleCannons = getOperationalSingleCannons();
+//        for (SingleCannon cannon : singleCannons) {
+//            for (BatteryCompartment battery : availableBatteries) {
+//                if (cannon.charge(battery)) {
+//                    chargedCannons++;
+//                    break;
+//                }
+//            }
+//        }
+
+        return chargedCannons;
+    }
+
+    public double calculateFirePower() {
+        double totalFirePower = 0.0;
+
+//        for (Component component : components.keySet()) {
+//            if (component instanceof Cannon cannon) {
+//                totalFirePower += cannon.getEffectivePower();
+//            }
+//        }
+
+        totalFirePower = components.keySet().stream()
+                .mapToDouble(component -> switch(component){
+                    case Cannon c -> c.getEffectivePower();
+                    default -> 0.0;
+                })
+                .sum();
+
+        // Bonus dell'alieno viola
+//        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
+//            totalFirePower += 2.0;
+//        }
+
+        return totalFirePower;
+    }
+
+    //lista di tutte le batterie cariche e funzionanti sulla nave.
+    private List<BatteryCompartment> getChargedBatteries() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case BatteryCompartment bc -> Stream.of(bc);
+                    default -> Stream.empty();
+                })
+                .filter(bc -> !bc.isDamaged() && bc.getChargeLevel() > 0)
+                .collect(Collectors.toList());
+    }
+
+    //Ottiene la lista di cannoni doppi funzionanti.
+    private List<DoubleCannon> getOperationalDoubleCannons() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case DoubleCannon doubleCannon when !doubleCannon.isDamaged() -> Stream.of(doubleCannon);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
+
+    private List<SingleCannon> getOperationalSingleCannons() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case SingleCannon singleCannon -> Stream.of(singleCannon);
+                    default -> Stream.empty();
+                })
+                .filter(singleCannon -> !singleCannon.isDamaged())
+                .collect(Collectors.toList());
+    }
+
+    public void rotateComponentClockwise(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
+    public void rotateComponentCounterClockwise(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getCounterClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
+    public void rotateComponentOpposite(Component component) {
+        component = getComponentAt(components.get(component));
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getOpposite();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getOpposite();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+    }
+
+    public int calculateEnginePower() {
+        return components.keySet().stream()
+                .mapToInt(component -> switch(component){
+                    case SingleEngine e -> e.getPower();
+                    case DoubleEngine e -> e.getPower();
+                    default -> 0;
+                })
+                .sum();
+    }
 }

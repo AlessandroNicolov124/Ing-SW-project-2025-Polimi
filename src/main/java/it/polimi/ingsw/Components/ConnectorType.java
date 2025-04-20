@@ -1,5 +1,7 @@
 package it.polimi.ingsw.Components;
 
-public enum ConnectorType{
-    SINGLE, DOUBLE, UNIVERSAL, NULL
+public sealed abstract class ConnectorType permits SingleConnectorType, DoubleConnectorType, UniversalConnectorType, NullConnectorType {
+
+    public abstract boolean isCompatibleWith(ConnectorType connectorType);
+        
 }

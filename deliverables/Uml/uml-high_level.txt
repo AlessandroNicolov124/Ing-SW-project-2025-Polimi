@@ -62,6 +62,7 @@ class GameModel {
       + type : CrewType;
       - canLiveIn(Cabin cabin) : boolean
       - applyAbility(ShipBuilder ship) : void
+      - getType : CrewType
   }
 
   class HumanCrew extends Crew {
@@ -83,7 +84,8 @@ enum LifeSupportSystemType {
 
   class LifeSupportSystem extends Component{
         - type: LifeSupportSystemType
-  }
+        - getType : LifeSupportSystemType
+}
 
 
   abstract class Cargo {
@@ -107,6 +109,7 @@ enum LifeSupportSystemType {
       - height : int
       - components : Map<Component, Position>
       - isAssembled : boolean
+      - crewCount : Map<CrewType, Integer>
       + isPositionValid(Position position) : boolean
       + isPositionOccupied(Position position) : boolean
       + placeComponent(c: Component, pos: Position) : boolean
@@ -117,8 +120,21 @@ enum LifeSupportSystemType {
       + areAllComponentsConnected() : boolean
       + updateLifeSupportConnections(LifeSupportSystem lifeSupport) : void
       + validateShip() : boolean
-      + mapPosition(pos: Position)????? : void
-  }
+      + checkCannonFire() : boolean
+      + getComponentAt(Position position) : Component
+      + getPositionOf(Component c) Position
+      + getAllPositions() : List<Position>
+      + addCrewToCabin(Crew crew, Cabin cabin) : boolean
+      + getHumanCount() : int
+      + getCrewCount(CrewType type) :  int
+      + removeCrewFromCabin(Crew crew, Cabin cabin) : boolean
+      + distributeCrewAutomatically() : void
+      + chargeWeapons() : int
+      + calculateFirePower() : double
+      + getChargedBatteries() : List<BatteryCompartment>
+      + getOperationalDoubleCannons() : List<DoubleCannon>
+      + getOperationalSingleCannons() : List<SingleCannon>
+}
 
   class FlightBoard {
       - positions : Map<Player, Integer>
@@ -128,7 +144,6 @@ enum LifeSupportSystemType {
   abstract class Component {
       - connections : List<Connector>
       - componentDirection: Direction
-      - componentPosition: Position
       - damaged : boolean
       + initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) void
       + areConnectorCompatible(Connector c1, Connector c2) : boolean
@@ -153,12 +168,13 @@ enum LifeSupportSystemType {
       - crew: List<Crew>
       - isStartingCabin : boolean
       - connectedLifeSupports : Set<LifeSupportSystemType>
-      + setType(t: String) : void
       + initializeConnectors()
+      + removeCrew(Crew crew) : boolean
       + connectLifeSupport(LifeSupportSystemType type) : void
       + hasConnectedLifeSupport(LifeSupportSystemType type) : boolean
       + addCrew(Crew crewMember) : boolean
       + canAddAlien(CrewType alienType) : boolean
+      + initializeCrewStartingCabin() : boolean
   }
 
   abstract class Engine extends Component {
@@ -178,8 +194,11 @@ enum LifeSupportSystemType {
         - firingDirection : Direction
         - isCharged : boolean
         + validateFiringDirection() : void
-        + charge(BatteryCompartment battery) : boolean
         + fire() : boolean
+        + getEffectivePower() : double
+        + calculateBasePower() : double
+        + calculatePowerWithBattery() : double
+        + charge(BatteryCompartment battery) : boolean
   }
 
   class SingleCannon extends Cannon {
@@ -189,15 +208,17 @@ enum LifeSupportSystemType {
   }
 
   class BatteryCompartment extends Component {
-      - amount : int
-      - type : String
+      - maxCapacity : int
+      - type : BatteryType
       - chargeLevel : int
-      + setAmount(a: int) : void
-      + setType(t: String) : void
-      + getAmount() : int
       + getChargeLevel() : int
       + updateChargeLevel(c: int) : void
+      + useCharge(int requiredCharge) : boolean
   }
+
+enum BatteryType {
+    DOUBLE, TRIPLE
+}
 
   class ShieldGenerator extends Component {
   }
@@ -299,5 +320,4 @@ Player "1" -- "1" ShipBuilder : ship
 ShipBuilder "1" -- "*" Component : components
 CargoHolds "1" -- "*" Cargo : cargo
 Crew "*" -- "1" Cabin: cabin
-Component"1" -- "1" Position: compPos
 @enduml

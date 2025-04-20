@@ -18,6 +18,12 @@ public class Player {
         this.readyToStart = false;
     }
 
+    public Player(int id, String nickName, boolean active, ShipBuilder ship) {
+        this.id = id;
+        this.nickName = nickName;
+        this.active = active;
+        this.ship = ship;
+    }
 
     public int getId() {
         return id;
@@ -73,7 +79,6 @@ public class Player {
         if (card != null) {
             this.pickedCard = card; // Assegna la carta pescata al giocatore
             System.out.println(nickName + " ha pescato una carta: " + card.getClass().getSimpleName());
-
 
             //  metodo per applicare l'effetto della carta, se necessario
             card.effect(); // Esempio di applicazione dell'effetto della carta

@@ -2,11 +2,11 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
-public abstract class Cannon extends Component {
+public sealed abstract class Cannon extends Component permits SingleCannon, DoubleCannon {
     private int firePower;
-    private int energyConsumption;
     private Direction firingDirection;
     private boolean isCharged; // Stato di carica del cannone
+    private int energyConsumption;
 
     public Cannon(int power, int energyConsumption, Direction firingDirection) {
         super();
@@ -22,8 +22,13 @@ public abstract class Cannon extends Component {
 
     public boolean validateFiringDirection(Direction firingDirection) {
         for(Connector conn : connections){
-            if(conn.getDirection() == firingDirection && conn.getConnectorType() != ConnectorType.NULL){
-                    return false;
+            if(conn.getDirection() == firingDirection){
+                switch(conn.getConnectorType()){
+                    case NullConnectorType nct:
+                        return true;
+                    default:
+                        return false;
+                }
             }
         }
         return true;
@@ -41,7 +46,6 @@ public abstract class Cannon extends Component {
     public int getFirePower() {
         return firePower;
     }
-
     public void setFirePower(int firePower) {
         this.firePower = firePower;
     }
@@ -54,6 +58,10 @@ public abstract class Cannon extends Component {
 
     public Direction getFiringDirection() {
         return firingDirection;
+    }
+
+    public boolean isCharged() {
+        return isCharged;
     }
 
     public boolean charge(BatteryCompartment battery) {
@@ -77,7 +85,22 @@ public abstract class Cannon extends Component {
         return true;
     }
 
-    public boolean isDoubleCannon() {return false;}
+    public abstract double calculateBasePower();
+    public abstract double calculatePowerWithBattery();
+
+    public double getEffectivePower() {
+        if (damaged) {
+            return 0.0;
+        }
+
+        boolean isForwardFacing = getFiringDirection() == Direction.NORTH;
+
+        if (isCharged) {
+            return isForwardFacing ? calculatePowerWithBattery() : calculatePowerWithBattery() / 2.0;
+        } else {
+            return isForwardFacing ? calculateBasePower() : calculateBasePower() / 2.0;
+        }
+    }
 
 }
 
