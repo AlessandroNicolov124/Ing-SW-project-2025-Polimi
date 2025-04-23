@@ -1,6 +1,7 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.Component;
+import java.util.*;
 
 public class GameController {
     private GameModel gameModel;
@@ -14,12 +15,30 @@ public class GameController {
         return gameModel.getPlayers().contains(player);
     }
 
-    public void startGame(){
-        //Set private method??
+    private void startGame(){
+
+        gameModel.setNewGameState(GameModel.eGameState.GAME_BUILD_SHIP);
+
+        //Update view...
     }
-    //TODO Consider intatiating a new player and returning it..
+    //TODO Consider instatiating a new player and returning it..
     public void addPlayer(Player player){
         gameModel.getPlayers().add(player);
+    }
+
+    public void removePlayer(Player player){}
+
+    public boolean moveToShipValidation(){
+        List<Player> players = gameModel.getPlayers();
+
+        for (Player player : players) {
+            if(!player.getShip().isAssembled()){
+                return false;
+            }
+        }
+
+        gameModel.setNewGameState(GameModel.eGameState.GAME_VALIDATE_SHIP);
+        return true;
     }
 
     public void addComponentForPlayer(Player player, Component component, Position pos) {

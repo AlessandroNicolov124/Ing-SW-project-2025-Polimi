@@ -4,8 +4,11 @@ import it.polimi.ingsw.AdventureCards.*;
 
 import java.util.*;
 
+import static it.polimi.ingsw.GameModel.eGameState.eGAME_MAX_ENUM;
+
 public class GameModel {
     private FlightBoard flightBoard;
+    private eGameState gameState;
     private int turnNumber;
     private String state;
     private Player currentPlayer;
@@ -18,8 +21,19 @@ public class GameModel {
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
+        gameState = eGameState.GAME_IDLE;
 
         loadAdventureCard();
+    }
+
+    public void setNewGameState(eGameState gameState) {
+        if (this.gameState != gameState) {
+            this.gameState = gameState;
+        }
+    }
+
+    public eGameState getGameState() {
+        return gameState;
     }
 
     // Metodo per pescare una carta dall'avventura
@@ -91,6 +105,15 @@ public class GameModel {
             }
         }
         return true;
+    }
+
+    public enum eGameState {
+        GAME_IDLE,
+        GAME_BUILD_SHIP,
+        GAME_VALIDATE_SHIP,
+        GAME_PLAYING,
+        GAME_FINISHED,
+        eGAME_MAX_ENUM
     }
 
 }
