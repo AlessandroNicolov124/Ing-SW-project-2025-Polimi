@@ -76,6 +76,14 @@ public class App {
 //        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
 //        player1.getShip().placeComponent(lifeSupportSystem, pos1);
 
+        if (controller.moveToShipValidation())
+        {
+            System.out.println("OK ship bilding finished, moving to ship validation");
+        }
+        else
+        {
+            System.out.println("Fatal error, moving to ship validation");
+        }
 
         // Validazione della nave
         if (controller.validateShipForPlayer(player1)){
