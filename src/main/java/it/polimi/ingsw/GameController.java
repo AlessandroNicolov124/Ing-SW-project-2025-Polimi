@@ -145,6 +145,17 @@ public class GameController {
             }
         }
 
+        if(gameModel.isFlightComplete()){
+            Map<Player, Integer> points = gameModel.getFlightBoard().calculateFlightBonuses(gameModel.getTurnNumber());
+            for(Player player : gameModel.getPlayers()){
+                if(points.containsKey(player)){
+                    System.out.println("Punti giocatore: " + gameModel.getCredits(player) + points.get(player));
+                }else{
+                    System.out.println("Punti giocatore: " + gameModel.getCredits(player));
+                }
+            }
+        }
+
     }
 
     /**
