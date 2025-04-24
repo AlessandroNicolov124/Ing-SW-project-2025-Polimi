@@ -3,6 +3,7 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.*;
 
 import java.util.List;
+import java.util.Map;
 
 public class GameController {
     private GameModel gameModel;
@@ -119,6 +120,17 @@ public class GameController {
                 // Simula l'esecuzione del turno
                 System.out.println("Potenza motore: " + player.getShip().calculateEnginePower());
                 gameModel.playTurn();
+            }
+        }
+
+        if(gameModel.isFlightComplete()){
+            Map<Player, Integer> points = gameModel.getFlightBoard().calculateFlightBonuses(gameModel.getTurnNumber());
+            for(Player player : gameModel.getPlayers()){
+                if(points.containsKey(player)){
+                    System.out.println("Punti giocatore: " + gameModel.getCredits(player) + points.get(player));
+                }else{
+                    System.out.println("Punti giocatore: " + gameModel.getCredits(player));
+                }
             }
         }
 

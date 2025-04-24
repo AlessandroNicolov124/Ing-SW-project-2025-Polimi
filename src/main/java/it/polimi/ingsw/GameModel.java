@@ -163,6 +163,9 @@ public class GameModel {
 
     }
 
+    public int getTurnNumber(){
+        return this.turnNumber;
+    }
 
     public void endGame(){
 
