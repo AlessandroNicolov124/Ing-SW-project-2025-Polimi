@@ -13,7 +13,7 @@ public class App {
 
         //Aggiungi alcune carte all'adventureDeck
         gameModel.getAdventureDeck().add(new Planets());
-        gameModel.getAdventureDeck().add(new AbandonedStation());
+        //gameModel.getAdventureDeck().add(new AbandonedStation());
 
         ShipBuilder shipBuilder1 = new ShipBuilder(6,6);
         Player player1 = new Player(0,"Giocatore 1",true, shipBuilder1);

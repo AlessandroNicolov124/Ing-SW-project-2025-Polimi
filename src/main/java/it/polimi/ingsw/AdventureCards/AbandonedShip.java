@@ -73,7 +73,7 @@ public class AbandonedShip extends AdventureCard {
         
         // Apply flight day cost
         // This would involve updating the flight board
-        gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+        //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
         
         opportunityUsed = true;
         return true;

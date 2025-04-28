@@ -46,18 +46,18 @@ public class GameModel {
 
     public void loadAdventureCard(){
         deck.add(new Planets());
-        deck.add(new AbandonedStation());
-        deck.add(new AbandonedShip());
-        deck.add(new Smugglers());
+        //deck.add(new AbandonedStation());
+        //deck.add(new AbandonedShip());
+        //deck.add(new Smugglers());
         deck.add(new OpenSpace());
         deck.add(new MeteorSwarm());
         deck.add(new Stardust());
-        deck.add(new BigMeteorSwarm());
+        //deck.add(new BigMeteorSwarm());
         deck.add(new Slavers());
         deck.add(new Pirates());
         deck.add(new Epidemic());
         deck.add(new Sabotage());
-        deck.add(new CombatZone());
+        //deck.add(new CombatZone());
 
         System.out.println("Tutte le carte avventura sono state caricate.");
 

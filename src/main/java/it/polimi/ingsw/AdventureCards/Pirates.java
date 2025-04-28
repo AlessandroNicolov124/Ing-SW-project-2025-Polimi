@@ -106,10 +106,10 @@ public class Pirates extends AdventureCard {
                 strength += 1;
                 
                 // Double cannons provide extra strength if powered
-                if (cannon.isDoubleCannon()) {
-                    // Assuming player chooses to power double cannons when fighting pirates
-                    strength += 1;
-                }
+                //if (cannon.isDoubleCannon()) {
+                //    // Assuming player chooses to power double cannons when fighting pirates
+                //    strength += 1;
+                //}
             }
         }
         
@@ -133,7 +133,7 @@ public class Pirates extends AdventureCard {
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
             // Move player back on flight board
-            gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }
