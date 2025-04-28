@@ -31,16 +31,4 @@ class PositionTest {
         // assertNotEquals(pos1.hashCode(), pos3.hashCode()); // Not a strict requirement
     }
 
-    // Add tests for getAdjacentPosition if needed, although it wasn't directly used in the final App.java code
-    /*
-    @Test
-    void testGetAdjacentPosition() {
-        Position center = new Position(2, 2);
-        assertEquals(new Position(1, 2), center.getAdjacentPosition(Direction.NORTH));
-        assertEquals(new Position(3, 2), center.getAdjacentPosition(Direction.SOUTH));
-        assertEquals(new Position(2, 3), center.getAdjacentPosition(Direction.EAST));
-        assertEquals(new Position(2, 1), center.getAdjacentPosition(Direction.WEST));
-    }
-    */
-
 } 

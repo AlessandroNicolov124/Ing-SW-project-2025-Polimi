@@ -39,7 +39,7 @@ class GameControllerTest {
         assertFalse(controller.startMatchIfPossible(), "Should not start with less than minimum players.");
     }
 
-     @Test
+    @Test
     void testStartMatchIfPossible_PlayersNotReady() {
         controller.addPlayer(player1);
         controller.addPlayer(player2);
@@ -57,7 +57,7 @@ class GameControllerTest {
         assertTrue(controller.startMatchIfPossible(), "Match should start when both players are ready.");
     }
 
-     @Test
+    @Test
     void testAddComponentForPlayer() {
         controller.addPlayer(player1);
         controller.addPlayer(player2);
@@ -114,7 +114,7 @@ class GameControllerTest {
         assertTrue(controller.validateShipForPlayer(player1), "A simple valid ship (Cabin + Engine) should be valid.");
     }
 
-     @Test
+    @Test
     void testValidateShipForPlayer_Invalid_NoCabin() {
         controller.addPlayer(player1);
         controller.addPlayer(player2);
@@ -159,6 +159,4 @@ class GameControllerTest {
          // assertEquals(1, player1.getAdventureHand().size()); // Need getter for hand
 
     }
-
-
 } 

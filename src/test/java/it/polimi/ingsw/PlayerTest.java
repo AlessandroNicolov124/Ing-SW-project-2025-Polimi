@@ -29,5 +29,4 @@ class PlayerTest {
         assertNotNull(player.getShip());
     }
 
-     // Add more tests if Player class evolves, e.g., for readiness state, resource management, etc.
-} 
+}

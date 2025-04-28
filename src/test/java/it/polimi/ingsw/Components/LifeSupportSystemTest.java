@@ -12,7 +12,7 @@ class LifeSupportSystemTest {
         assertEquals(LifeSupportSystemType.PURPLE, lifeSupport.getType()); // Assuming a getType method
     }
 
-     @Test
+    @Test
     void testInitializeConnectors() {
         LifeSupportSystem lifeSupport = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         // Verify connectors are set (requires getters or checking behavior)
