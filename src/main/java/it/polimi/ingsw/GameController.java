@@ -25,7 +25,7 @@ public class GameController {
     }
     //TODO Consider instatiating a new player and returning it..
     public void addPlayer(Player player){
-        gameModel.getPlayers().add(player);
+        gameModel.addPlayer(player);
     }
 
     public void setCredits(Player player, int credits){
@@ -49,14 +49,15 @@ public class GameController {
 
     public void addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
-            player.getShip().placeComponent(component, pos);
+            if(!player.placeComponent(component, pos)){
+                System.out.println("Error placing component");
+            }
         }
     }
 
     public void removeComponentForPlayer(Player player, Component component) {
-
         if (isPlayerThere(player)) {
-            player.getShip().removeComponent(component);
+            player.removeComponent(component);
         }
     }
 
@@ -81,114 +82,106 @@ public class GameController {
     }
 
     public boolean validateShipForPlayer(Player player) {
-        return player.getShip().validateShip();
+        return player.validateShip();
     }
-
-
-
-
-
-
-
-    //public void
 
     public void updateView(){}
 
-
-    // Metodi di supporto
-
-    public void testGameRound() {
-        System.out.println("=== TEST SIMULAZIONE ROUND DI GIOCO ===");
-
-        // Crea alcuni giocatori con navi
-        Player player1 = createTestPlayer(1, "Giocatore1", createTestShip());
-        Player player2 = createTestPlayer(2, "Giocatore3", createTestShip());
-        Player player3 = createTestPlayer(3, "Giocatore3", createTestShip());
-
-        // Aggiungi i giocatori alla flight board
-        addPlayer(player1);
-        addPlayer(player2);
-        addPlayer(player3);
-
-        // Imposta i crediti iniziali
-        setCredits(player1, 10);
-        setCredits(player2, 10);
-        setCredits(player3, 10);
-
-        System.out.println("Stato iniziale del tabellone:");
-        printBoardStatus();
-
-        // Imposta il turno di gioco
-        gameModel.setTurnNumber(1);
-
-        // Inizia il gioco
-        System.out.println("Inizializzazione del gioco...");
-        gameModel.startGame();
-
-        // Stampa informazioni sul mazzo di carte
-        System.out.println("Carte avventura caricate: " + gameModel.getAdventureDeck().size());
-
-        // Simula l'esecuzione di alcuni voli
-        System.out.print("\nSimulazione di alcuni voli:");
-        for (int i = 0; i < 3; i++) {
-            System.out.println("\nVOLO : " + i);
-            for (Player player : gameModel.getPlayers()) {
-                System.out.println("\nTurno di " + player.getNickName());
-                gameModel.setCurrentPlayer(player);
-
-                // Simula una carta pescata
-                pickCardForPlayer(player);
-
-                // Simula l'esecuzione del turno
-                System.out.println("Potenza motore: " + player.getShip().calculateEnginePower());
-                gameModel.playTurn();
-            }
-        }
-
-        if(gameModel.isFlightComplete()){
-            Map<Player, Integer> points = gameModel.getFlightBoard().calculateFlightBonuses(gameModel.getTurnNumber());
-            for(Player player : gameModel.getPlayers()){
-                if(points.containsKey(player)){
-                    System.out.println("Punti giocatore: " + gameModel.getCredits(player) + points.get(player));
-                }else{
-                    System.out.println("Punti giocatore: " + gameModel.getCredits(player));
-                }
-            }
-        }
-
-    }
-
-    /**
-     * Crea un giocatore di test
-     */
-    static Player createTestPlayer(int id, String name, ShipBuilder ship) {
-        return new Player(id, name, true, ship);
-    }
-
-    /**
-     * Crea una nave di test con la potenza del motore specificata
-     */
-    ShipBuilder createTestShip() {
-        ShipBuilder ship = new ShipBuilder(10, 10);
-
-        // Aggiungi una cabina alla posizione iniziale
-        Position startPos = ship.getStartingPosition();
-        Cabin cabin = new Cabin(true);
-        if(!ship.placeComponent(cabin, startPos)){
-            System.out.println("ERROR placing component cabin");
-        }
-
-        // Aggiungi un motore
-        Engine engine = new SingleEngine();
-        engine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(),new NullConnectorType(),new NullConnectorType());
-        Position enginePos = new Position(startPos.getX(), startPos.getAdjacentPosition(Direction.SOUTH).getY());
-        if(!ship.placeComponent(engine, enginePos)){
-            System.out.println("ERROR placing component engine");
-        }
-
-        return ship;
-    }
-
+//
+//    // Metodi di supporto
+//
+//    public void testGameRound() {
+//        System.out.println("=== TEST SIMULAZIONE ROUND DI GIOCO ===");
+//
+//        // Crea alcuni giocatori con navi
+//        Player player1 = createTestPlayer(1, "Giocatore1", createTestShip());
+//        Player player2 = createTestPlayer(2, "Giocatore3", createTestShip());
+//        Player player3 = createTestPlayer(3, "Giocatore3", createTestShip());
+//
+//        // Aggiungi i giocatori alla flight board
+//        addPlayer(player1);
+//        addPlayer(player2);
+//        addPlayer(player3);
+//
+//        // Imposta i crediti iniziali
+//        setCredits(player1, 10);
+//        setCredits(player2, 10);
+//        setCredits(player3, 10);
+//
+//        System.out.println("Stato iniziale del tabellone:");
+//        printBoardStatus();
+//
+//        // Imposta il turno di gioco
+//        gameModel.setTurnNumber(1);
+//
+//        // Inizia il gioco
+//        System.out.println("Inizializzazione del gioco...");
+//        gameModel.startGame();
+//
+//        // Stampa informazioni sul mazzo di carte
+//        System.out.println("Carte avventura caricate: " + gameModel.getAdventureDeck().size());
+//
+//        // Simula l'esecuzione di alcuni voli
+//        System.out.print("\nSimulazione di alcuni voli:");
+//        for (int i = 0; i < 3; i++) {
+//            System.out.println("\nVOLO : " + i);
+//            for (Player player : gameModel.getPlayers()) {
+//                System.out.println("\nTurno di " + player.getNickName());
+//                gameModel.setCurrentPlayer(player);
+//
+//                // Simula una carta pescata
+//                pickCardForPlayer(player);
+//
+//                // Simula l'esecuzione del turno
+//                System.out.println("Potenza motore: " + player.getShip().calculateEnginePower());
+//                gameModel.playTurn();
+//            }
+//        }
+//
+//        if(gameModel.isFlightComplete()){
+//            Map<Player, Integer> points = gameModel.getFlightBoard().calculateFlightBonuses(gameModel.getTurnNumber());
+//            for(Player player : gameModel.getPlayers()){
+//                if(points.containsKey(player)){
+//                    System.out.println("Punti giocatore: " + gameModel.getCredits(player) + points.get(player));
+//                }else{
+//                    System.out.println("Punti giocatore: " + gameModel.getCredits(player));
+//                }
+//            }
+//        }
+//
+//    }
+//
+//    /**
+//     * Crea un giocatore di test
+//     */
+//    static Player createTestPlayer(int id, String name, ShipBuilder ship) {
+//        return new Player(id, name, true, ship);
+//    }
+//
+//    /**
+//     * Crea una nave di test con la potenza del motore specificata
+//     */
+//    ShipBuilder createTestShip() {
+//        ShipBuilder ship = new ShipBuilder(10, 10);
+//
+//        // Aggiungi una cabina alla posizione iniziale
+//        Position startPos = ship.getStartingPosition();
+//        Cabin cabin = new Cabin(true);
+//        if(!ship.placeComponent(cabin, startPos)){
+//            System.out.println("ERROR placing component cabin");
+//        }
+//
+//        // Aggiungi un motore
+//        Engine engine = new SingleEngine();
+//        engine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(),new NullConnectorType(),new NullConnectorType());
+//        Position enginePos = new Position(startPos.getX(), startPos.getAdjacentPosition(Direction.SOUTH).getY());
+//        if(!ship.placeComponent(engine, enginePos)){
+//            System.out.println("ERROR placing component engine");
+//        }
+//
+//        return ship;
+//    }
+//
     /**
      * Stampa lo stato attuale della plancia di volo
      */
@@ -198,5 +191,20 @@ public class GameController {
             int position = gameModel.getFlightBoard().getPosition(player);
             System.out.println(player.getNickName() + " è alla posizione " + position);
         }
+    }
+
+    /**
+     * Stampa lo stato delle navicelle
+     */
+    void printShipStatus() {
+        List<Player> players = gameModel.getFlightBoard().getPlayersInFlightOrder();
+        for (Player p : players) {
+            System.out.println("this is the " + p.getNickName() + " ship");
+            Map<Component, Position> components = p.getShip().getComponents();
+            for (Component component : components.keySet()) {
+                System.out.println("Pos: " + components.get(component).toString() + " : " + component.toString());
+            }
+        }
+
     }
 }

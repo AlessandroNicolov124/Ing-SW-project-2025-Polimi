@@ -16,6 +16,11 @@ public class GameModel {
     private List<AdventureCard> deck;
     private HashMap<Player, Integer> credits;
 
+    public void addPlayer(Player player) {
+        players.add(player);
+        flightBoard.addPlayer(player);
+    }
+
     public GameModel() {
         players = new ArrayList<>();
         deck = new ArrayList<>();
@@ -179,9 +184,8 @@ public class GameModel {
 
     }
 
-
-    public void endGame(){
-
+    public int getTurnNumber() {
+        return turnNumber;
     }
 
     public enum eGameState {

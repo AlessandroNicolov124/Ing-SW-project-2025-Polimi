@@ -43,4 +43,9 @@ public class Position {
             default: throw new IllegalStateException("Unknown direction");
         }
     }
+
+    @Override
+    public String toString() {
+        return "Position [x=" + x + ", y=" + y + "]";
+    }
 }

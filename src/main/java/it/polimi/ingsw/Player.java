@@ -1,6 +1,7 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
+import it.polimi.ingsw.Components.Component;
 
 public class Player {
     private int id;
@@ -68,7 +69,7 @@ public class Player {
     }
 
     public void assembleShip(){
-
+        ship.setAssembled(true);
     }
 
     public void takeTurn(){
@@ -85,5 +86,21 @@ public class Player {
         } else {
             System.out.println("Nessuna carta disponibile da pescare.");
         }
+    }
+
+    public boolean placeComponent(Component component, Position pos) {
+        return ship.placeComponent(component, pos);
+    }
+
+    public void removeComponent(Component component) {
+        ship.removeComponent(component);
+    }
+
+    public boolean validateShip() {
+        return ship.validateShip();
+    }
+
+    public void shipAssembled(){
+        assembleShip();
     }
 }

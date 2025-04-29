@@ -24,6 +24,7 @@ public class App {
         //gameModel.getPlayers().add(player1);
 
         controller.addPlayer(player1);
+        controller.addPlayer(player2);
 
         if (!controller.startMatchIfPossible()){
             System.out.println("Impossible to start mathc, player(s) not ready yet.");
@@ -38,47 +39,52 @@ public class App {
         }
 
         // Creazione di componenti
+
         Component startingCabin = new Cabin(true); // cabina di comando
         Engine engine = new SingleEngine();
-        engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL);
+        engine.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(),new NullConnectorType());
         Cannon cannon = new SingleCannon();
-        cannon.initializeConnectors(ConnectorType.NULL, ConnectorType.NULL, ConnectorType.SINGLE, ConnectorType.NULL);
+        cannon.initializeConnectors(new NullConnectorType(), new NullConnectorType(), new SingleConnectorType(), new NullConnectorType());
         BatteryCompartment battery = new BatteryCompartment();
-        battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL);
+        battery.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new NullConnectorType());
         LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
-        lifeSupportSystem.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL);
+        lifeSupportSystem.initializeConnectors(new UniversalConnectorType(), new NullConnectorType(), new NullConnectorType(), new UniversalConnectorType());
 
+        Position pos = player1.getShip().getStartingPosition();
+        controller.addComponentForPlayer(player1, startingCabin, pos);
+        pos = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
+        controller.addComponentForPlayer(player1, cannon, pos);
+        pos = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
+        controller.addComponentForPlayer(player1, engine, pos);
+        pos = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
+        controller.addComponentForPlayer(player1, battery, pos);
+        pos = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
+        controller.addComponentForPlayer(player1, lifeSupportSystem, pos);
 
-        Position pos1 = new Position(1,1); //Magic numbers will be removed
-        Position pos2 = new Position(2,1);
-        Position pos3 = new Position(3,1);
-        Position pos4 = new Position(4,1);
+        pos = player2.getShip().getStartingPosition();
+        controller.addComponentForPlayer(player2, startingCabin, pos);
+        pos = player2.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
+        controller.addComponentForPlayer(player2, engine, pos);
+        pos = player2.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
+        controller.addComponentForPlayer(player2, cannon, pos);
+        pos = player2.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
+        controller.addComponentForPlayer(player2, battery, pos);
+        pos = player2.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
+        controller.addComponentForPlayer(player2, lifeSupportSystem, pos);
 
-        controller.addComponentForPlayer(player1, startingCabin, pos1);
-        controller.addComponentForPlayer(player1, cannon, pos2);
-        controller.addComponentForPlayer(player1, battery, pos3);
-        controller.addComponentForPlayer(player1, lifeSupportSystem, pos4);
+//        controller.addComponentForPlayer(player2, startingCabin, player2.getShip().getStartingPosition());
+//        controller.addComponentForPlayer(player2, cannon, pos3);
+//        controller.addComponentForPlayer(player2, battery, pos2);
+//        controller.addComponentForPlayer(player2, lifeSupportSystem, pos1);
 
-        controller.addComponentForPlayer(player2, startingCabin, pos4);
-        controller.addComponentForPlayer(player2, cannon, pos3);
-        controller.addComponentForPlayer(player2, battery, pos2);
-        controller.addComponentForPlayer(player2, lifeSupportSystem, pos1);
-        //player1.getShip().placeComponent(startingCabin, pos1);
+        player1.shipAssembled();
+        player2.shipAssembled();
 
-//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.SOUTH);
-//
-//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
-//        player1.getShip().placeComponent(cannon, pos1);
-//
-//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.WEST);
-//        player1.getShip().placeComponent(battery, pos1);
-//
-//        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
-//        player1.getShip().placeComponent(lifeSupportSystem, pos1);
+        controller.printBoardStatus();
+        controller.printShipStatus();
 
-        if (controller.moveToShipValidation())
-        {
-            System.out.println("OK ship bilding finished, moving to ship validation");
+        if (controller.moveToShipValidation()) {
+            System.out.println("OK ship building finished, moving to ship validation");
         }
         else
         {

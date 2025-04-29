@@ -22,6 +22,10 @@ public class ShipBuilder {
         this.height = height;
     }
 
+    public void setAssembled(boolean isAssembled) {
+        this.isAssembled = isAssembled;
+    }
+
     //posizione allinterno della plancia
     public boolean isPositionValid(Position position) {
         return position.getX() >= 0 && position.getX() < width &&
@@ -166,11 +170,13 @@ public class ShipBuilder {
     // Convalida la nave per assicurarsi che tutti i componenti necessari siano presenti
     public boolean validateShip() {
         if (components.isEmpty()) {
+            System.out.println("    no components");
             return false;
         }
 
         // 1. Check if all components are connected
         if (!areAllComponentsConnected()) {
+            System.out.println("    Components not connected");
             return false;
         }
 
@@ -181,7 +187,6 @@ public class ShipBuilder {
         //boolean hasEngine = components.keySet().stream().anyMatch(c -> c instanceof Engine);
         //boolean hasCabin = components.keySet().stream().anyMatch(c -> c instanceof Cabin);
         //isAssembled = hasEngine && hasCabin && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
-
 
         long hasEngine = components.keySet().stream()
                 .flatMap(component -> switch(component){
@@ -196,9 +201,10 @@ public class ShipBuilder {
                 })
                 .count();
 
-        isAssembled = hasEngine>0 && hasCabin>0 && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
+        boolean isValid = hasEngine>0 && hasCabin>0 && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
 
-        return isAssembled;
+        System.out.println("    isValid: " + isValid);
+        return isValid;
     }
 
     public boolean checkCannonFire() {
