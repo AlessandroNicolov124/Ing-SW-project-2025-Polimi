@@ -11,28 +11,35 @@ public class App {
     public static void main(String[] args) {
 
         GameController controller = new GameController();
-        controller.testGameRound();
-//        Player player1 = new Player(0,"Giocatore 1",true);
-//
-//        controller.addPlayer(player1);
-//        controller.pickCardForPlayer(player1);
-//
-//        // Creazione di componenti
-//        Component startingCabin = new Cabin(true); // cabina di comando
-//        Engine engine = new SingleEngine();
-//        engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL);
-//        Cannon cannon = new SingleCannon();
-//        cannon.initializeConnectors(ConnectorType.NULL, ConnectorType.NULL, ConnectorType.SINGLE, ConnectorType.NULL);
-//        BatteryCompartment battery = new BatteryCompartment();
-//        battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL);
-//        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
-//        lifeSupportSystem.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL);
-//
-//
-//        Position pos1 = new Position(1,1); //Magic numbers will be removed
-//
-//        controller.addComponentForPlayer(player1, startingCabin, pos1);
-//
+        //controller.testGameRound();
+
+        System.out.println("=== TEST SIMULAZIONE ROUND DI GIOCO ===");
+
+        Player player1 = new Player(0,"Giocatore 1",true);
+
+        controller.addPlayer(player1);
+
+        // Creazione di componenti
+        Component startingCabin = new Cabin(true); // cabina di comando
+        Engine engine = new SingleEngine();
+        NullConnectorType nullConn = new  NullConnectorType();
+        engine.initializeConnectors(new SingleConnectorType(), nullConn, nullConn, nullConn);
+        Cannon cannon = new SingleCannon();
+        cannon.initializeConnectors(nullConn, nullConn, new SingleConnectorType(), nullConn);
+        BatteryCompartment battery = new BatteryCompartment();
+        battery.initializeConnectors(nullConn, new UniversalConnectorType(), new UniversalConnectorType(), nullConn);
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
+        lifeSupportSystem.initializeConnectors(new UniversalConnectorType(), nullConn, nullConn, new UniversalConnectorType());
+
+
+        Position pos1 = new Position(1,1); //Magic numbers will be removed
+        Position pos2 = new Position(2,2);
+        Position pos3 = new Position(3,2);
+        controller.addComponentForPlayer(player1, startingCabin, pos1);
+        controller.addComponentForPlayer(player1, cannon, pos2);
+        controller.addComponentForPlayer(player1, battery, pos3);
+
+
 //        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.NORTH);
 //        player1.getShip().placeComponent(cannon, pos1);
 //
@@ -41,14 +48,25 @@ public class App {
 //
 //        pos1 = player1.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST);
 //        player1.getShip().placeComponent(lifeSupportSystem, pos1);
-//
-//
-//        // Validazione della nave
-//        if (player1.getShip().validateShip()) {
-//            System.out.println("La nave è assemblata correttamente.");
-//        } else {
-//            System.out.println("La nave non è assemblata correttamente.");
-//        }
+
+
+        // Validazione della nave
+
+
+        controller.setPlayerReady(player1);
+        controller.validateShipForPlayer(player1);
+
+        if(controller.startMatchIfPossible())
+        {
+            System.out.println("Match started correctly.");
+            controller.pickCardForPlayer(player1);
+            controller.setCredits(player1, 10);
+            controller.setCurrentPlayer(player1);
+            controller.playTurn();
+
+            controller.pickCardForPlayer(player1);
+
+        }
     }
 
 }

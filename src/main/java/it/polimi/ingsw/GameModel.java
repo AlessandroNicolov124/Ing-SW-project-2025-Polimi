@@ -18,6 +18,7 @@ public class GameModel {
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
+        this.turnNumber = 1;
     }
 
     // Metodo per pescare una carta dall'avventura
