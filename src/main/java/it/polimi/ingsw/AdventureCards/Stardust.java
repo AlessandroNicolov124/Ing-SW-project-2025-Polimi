@@ -2,7 +2,6 @@ package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
-import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*;
 import java.util.*;

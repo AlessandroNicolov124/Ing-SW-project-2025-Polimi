@@ -161,7 +161,7 @@ public class Slavers extends AdventureCard {
      */
     private int getCrewCount(Player player) {
         // This would need to count crew based on the game's implementation
-        return 0 ; // Placeholder for crew count
+        return ; // Placeholder for crew count
     }
     
     // Getters

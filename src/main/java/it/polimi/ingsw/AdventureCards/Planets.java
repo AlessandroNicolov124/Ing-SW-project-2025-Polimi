@@ -100,7 +100,7 @@ public class Planets extends AdventureCard{
         
         for (Player player : landedPlayersList) {
             // Move player back on flight board
-            gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
         }
     }
     

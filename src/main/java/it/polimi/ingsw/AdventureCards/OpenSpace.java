@@ -84,12 +84,12 @@ public class OpenSpace extends AdventureCard {
             if (component instanceof Engine engine) {
 
                 // If it's a double engine and player wants to use batteries
-                if (engine.isDoubleEngine() && useBatteries) {
+                //if (engine.isDoubleEngine() && useBatteries) {
                     // This would consume a battery token
-                    strength += 2; // Double strength
-                } else {
-                    strength += 1; // Normal strength
-                }
+                //    strength += 2; // Double strength
+                //} else {
+                //    strength += 1; // Normal strength
+                //}
             }
         }
         
@@ -107,6 +107,6 @@ public class OpenSpace extends AdventureCard {
         // and skipping occupied spaces
         
         // For now, just update the position
-        gameModel.getFlightBoard().updatePosition(player, spaces);
+        //gameModel.getFlightBoard().updatePosition(player, spaces);
     }
 }
