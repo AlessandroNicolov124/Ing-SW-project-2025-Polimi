@@ -17,6 +17,8 @@ public class SocketServer implements Runnable {
 
     public SocketServer(int port, Controller ctrl) { this.port = port; this.controller = ctrl; }
 
+    public SocketServer(int port) { this.port = port;}
+
     @Override public void run() {
         try (ServerSocket srv = new ServerSocket(port)) {
             ss = srv;

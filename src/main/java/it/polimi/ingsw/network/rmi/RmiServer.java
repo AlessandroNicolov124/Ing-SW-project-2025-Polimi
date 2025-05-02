@@ -25,6 +25,13 @@ public class RmiServer extends UnicastRemoteObject
         this.dispatcher = startDispatcher();
     }
 
+    public RmiServer(Registry registry) throws RemoteException {
+        super();
+        //this.controller = controller;
+        this.registry   = registry;
+        this.dispatcher = startDispatcher();
+    }
+
     // Thread which dispatches updates to all clients
     private Thread startDispatcher() {
         Thread t = new Thread(() -> {
