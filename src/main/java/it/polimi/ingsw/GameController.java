@@ -204,7 +204,7 @@ public class GameController {
             System.out.println("this is the " + p.getNickName() + " ship");
             Map<Component, Position> components = p.getShip().getComponents();
             for (Component component : components.keySet()) {
-                System.out.println("Pos: " + components.get(component).toString() + " : " + component.toString());
+                System.out.println(components.get(component).toString() + " : " + component.getClass().getSimpleName());
             }
         }
 

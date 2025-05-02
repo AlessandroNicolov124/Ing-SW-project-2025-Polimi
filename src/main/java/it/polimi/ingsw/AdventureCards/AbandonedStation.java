@@ -62,10 +62,7 @@ public class AbandonedStation extends AdventureCard{
         }
         
         // Check if player has enough crew
-        //ShipBuilder ship = player.getShip();
-        // Logic to check crew count would go here
-        // For example: int crewCount = ship.getCrewCount();
-        int crewCount = 0; // Placeholder
+        int crewCount = player.getShip().getTotalCrewCount();
         
         if (crewCount < minCrewRequired) {
             return false; // Not enough crew
@@ -75,7 +72,7 @@ public class AbandonedStation extends AdventureCard{
         // Logic to add goods to player's inventory here
         
         // Apply flight day cost
-        //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+        gameModel.updatePosition(player, -flightDaysCost);
         
         opportunityUsed = true;
         return true;

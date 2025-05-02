@@ -129,7 +129,7 @@ public class Slavers extends AdventureCard {
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
             // Move player back on flight board
-            gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }
@@ -161,7 +161,7 @@ public class Slavers extends AdventureCard {
      */
     private int getCrewCount(Player player) {
         // This would need to count crew based on the game's implementation
-        return ; // Placeholder for crew count
+        return player.getShip().getTotalCrewCount(); // Placeholder for crew count
     }
     
     // Getters

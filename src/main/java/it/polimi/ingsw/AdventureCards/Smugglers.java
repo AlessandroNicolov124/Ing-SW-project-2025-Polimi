@@ -147,7 +147,7 @@ public class Smugglers extends AdventureCard {
             // Load goods on player's ship
 
             // Move player back on flight board
-            gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }

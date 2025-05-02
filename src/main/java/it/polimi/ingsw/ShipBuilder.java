@@ -62,6 +62,7 @@ public class ShipBuilder {
             }
 
             if (!isConnected) {
+                System.out.print(" not connected, ");
                 return false;
             }
         }
@@ -203,7 +204,7 @@ public class ShipBuilder {
 
         boolean isValid = hasEngine>0 && hasCabin>0 && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
 
-        System.out.println("    isValid: " + isValid);
+        //System.out.println("    Ship Validation: " + isValid);
         return isValid;
     }
 

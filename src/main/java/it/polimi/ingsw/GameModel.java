@@ -188,6 +188,10 @@ public class GameModel {
         return turnNumber;
     }
 
+    public void updatePosition(Player player, int i) {
+        flightBoard.updatePosition(player, i);
+    }
+
     public enum eGameState {
         GAME_IDLE,
         GAME_BUILD_SHIP,
