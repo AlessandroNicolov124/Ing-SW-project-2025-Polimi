@@ -2,6 +2,7 @@ package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
+import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*;
 import java.util.*;
@@ -85,16 +86,22 @@ public class Stardust extends AdventureCard {
     private int countExposedConnectors(Player player) {
         ShipBuilder ship = player.getShip();
         List<Component> components = ship.getAllComponents();
-        Set<Component> exposedConnectors = new HashSet<>();
+        Set<Connector> exposedConnectors = new HashSet<>();
         
         // Identify exposed connectors
         for (Component component : components) {
-            if (component instanceof Connector) {
-                Connector connector = (Connector) component;
+            List<Connector> conn = component.getConnections();
+            for (Connector connector : conn) {
                 if (isExposed(connector, ship)) {
                     exposedConnectors.add(connector);
                 }
             }
+//            if (component instanceof Connector) {
+//                Connector connector = (Connector) component;
+//                if (isExposed(connector, ship)) {
+//                    exposedConnectors.add(connector);
+//                }
+//            }
         }
         
         return exposedConnectors.size();
@@ -111,12 +118,12 @@ public class Stardust extends AdventureCard {
         // For now, return a placeholder implementation
         
         // Get position of the connector
-        Position connectorPosition = ship.getPositionOf(connector);
+        // Position connectorPosition = ship.getPositionOf(connector);
         
         // Check if all connector endpoints are connected to other components
         // Depends on how connectors and connections are implemented
         // For example, checking adjacent positions for other components
         
-        return ;
+        return false;
     }
 }

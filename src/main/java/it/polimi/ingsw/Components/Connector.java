@@ -2,7 +2,6 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
-// Classe Connector
 public class Connector {
     private Direction direction;
     private ConnectorType connectorType;
@@ -28,14 +27,10 @@ public class Connector {
         this.direction = direction;
     }
 
-    //Verifica se questo connettore è compatibile con un altro
     public boolean isCompatibleWith(Connector other) {
-        if (other == null) {
+        if (other == null){
             return false;
         }
-
-        return connectorType == ConnectorType.UNIVERSAL ||
-                other.connectorType == ConnectorType.UNIVERSAL ||
-                connectorType == other.connectorType;
+        return this.connectorType.isCompatibleWith(other.connectorType);
     }
 }

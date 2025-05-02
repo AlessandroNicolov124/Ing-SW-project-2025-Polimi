@@ -81,9 +81,8 @@ public class OpenSpace extends AdventureCard {
         
         // Find all engines and count their strength
         for (Component component : components) {
-            if (component instanceof Engine) {
-                Engine engine = (Engine) component;
-                
+            if (component instanceof Engine engine) {
+
                 // If it's a double engine and player wants to use batteries
                 if (engine.isDoubleEngine() && useBatteries) {
                     // This would consume a battery token

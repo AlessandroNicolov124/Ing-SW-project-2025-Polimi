@@ -1,0 +1,14 @@
+title User pick a card from table
+
+
+rbox left of Client: Client is actually the player
+
+Client->Client: Pick Card from table
+Client->Server: Send pick card notification
+Server->Server: Validate move(card)
+
+alt Success
+Server-->Client: Notify card picked
+else Failure
+Server-->Client: Notify card pick error
+end

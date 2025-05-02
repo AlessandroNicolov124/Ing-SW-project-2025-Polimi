@@ -104,12 +104,13 @@ public class Pirates extends AdventureCard {
             if (component instanceof Cannon) {
                 Cannon cannon = (Cannon) component;
                 strength += 1;
-                
+
+                //TODO FIX THE ISSUE WITH THE isDoubleCannon METHOD...
                 // Double cannons provide extra strength if powered
-                if (cannon.isDoubleCannon()) {
+                //if (cannon.isDoubleCannon()) {
                     // Assuming player chooses to power double cannons when fighting pirates
-                    strength += 1;
-                }
+                    //strength += 1;
+                //}
             }
         }
         

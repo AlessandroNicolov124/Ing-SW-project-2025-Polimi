@@ -98,13 +98,14 @@ public class Slavers extends AdventureCard {
         for (Component component : components) {
             if (component instanceof Cannon) {
                 Cannon cannon = (Cannon) component;
-                strength += 1;
+                strength += cannon.getFirePower();
                 
                 // Double cannons provide extra strength if powered
-                if (cannon.isDoubleCannon()) {
-                    // Assuming player chooses to power double cannons when fighting slavers
-                    strength += 1;
-                }
+
+//                if (cannon.isDoubleCannon()) {
+//                    // Assuming player chooses to power double cannons when fighting slavers
+//                    strength += 1;
+//                }
             }
         }
         
@@ -160,7 +161,7 @@ public class Slavers extends AdventureCard {
      */
     private int getCrewCount(Player player) {
         // This would need to count crew based on the game's implementation
-        return; // Placeholder for crew count
+        return 0 ; // Placeholder for crew count
     }
     
     // Getters

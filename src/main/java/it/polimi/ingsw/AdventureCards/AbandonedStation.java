@@ -2,6 +2,7 @@ package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
+import it.polimi.ingsw.ShipBuilder;
 
 /**
  * Abandoned Station

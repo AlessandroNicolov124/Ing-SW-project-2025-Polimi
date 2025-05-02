@@ -1,7 +1,6 @@
 package it.polimi.ingsw.Components;
 
-// Classe Engine
-public abstract class Engine extends Component {
+public abstract sealed class Engine extends Component permits SingleEngine, DoubleEngine {
     private int power;
     private int energyConsumption;
 
@@ -14,6 +13,8 @@ public abstract class Engine extends Component {
     public int getPower() {
         return power;
     }
+
+    public boolean isDoubleEngine(){return false;}
 
     public int getEnergyConsumption() {
         return energyConsumption;
