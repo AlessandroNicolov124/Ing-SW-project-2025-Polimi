@@ -2,8 +2,7 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
-// Classe Engine
-public class BatteryCompartment extends Component {
+public final class BatteryCompartment extends Component {
     private int maxCapacity; // numero di batterie
     private BatteryType type;
     private int chargeLevel; // carica
@@ -27,14 +26,8 @@ public class BatteryCompartment extends Component {
         return maxCapacity;
     }
 
-    public void setMaxCapacity(int maxCapacity) {
-        this.maxCapacity = maxCapacity;
-    }
     public BatteryType getType() {
         return type;
-    }
-    public void setType(BatteryType type) {
-        this.type = type;
     }
 
     public int getChargeLevel() {

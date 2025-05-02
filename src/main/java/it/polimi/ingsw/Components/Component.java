@@ -4,10 +4,9 @@ import it.polimi.ingsw.*;
 
 import java.util.*;
 
-public abstract class Component {
+public sealed abstract class Component permits BatteryCompartment, Cabin, Cannon, CargoHolds, Engine, LifeSupportSystem, ShieldGenerator, StructuralModule {
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
-    //protected Position componentPosition;
     protected boolean damaged; // Stato del componente (danneggiato o no)
 
     public Component() {

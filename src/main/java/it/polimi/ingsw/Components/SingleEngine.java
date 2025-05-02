@@ -1,13 +1,11 @@
 package it.polimi.ingsw.Components;
 
-public class SingleEngine extends Engine {
-
-    public SingleEngine(int power, int energyConsumption) {
-        super(power, energyConsumption);
-    }
+public final class SingleEngine extends Engine {
 
     public SingleEngine() {
-        super(0,0);
+        super(1, 0);
     }
+
+    public boolean isDoubleEngine() {return false;}
 
 }

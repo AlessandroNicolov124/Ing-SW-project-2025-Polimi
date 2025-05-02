@@ -52,7 +52,6 @@ public class AbandonedShip extends AdventureCard {
     /**
      * Allow a player to use the abandoned ship opportunity
      * @param player The player who wants to use the opportunity
-     * @param gameModel The current game state
      * @return true if the opportunity was successfully used, false otherwise
      */
     public boolean useOpportunity(Player player, GameModel gameModel) {

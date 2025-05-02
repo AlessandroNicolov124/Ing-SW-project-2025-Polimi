@@ -1,6 +1,6 @@
 package it.polimi.ingsw.Components;
 
-public class LifeSupportSystem extends Component {
+public final class LifeSupportSystem extends Component {
 
     private LifeSupportSystemType type;
 
@@ -12,10 +12,5 @@ public class LifeSupportSystem extends Component {
     public LifeSupportSystemType getType() {
         return type;
     }
-
-    public void setType(LifeSupportSystemType type) {
-        this.type = type;
-    }
-
 
 }

@@ -1,0 +1,9 @@
+title Attach Componet to ship
+
+
+rbox left of Client: Client is actually the player
+
+Client->Client: Attach a new component
+Client->Server: Send component attached to board
+Server-->Client: Notify component attached
+Server-->Client: Send serialized object

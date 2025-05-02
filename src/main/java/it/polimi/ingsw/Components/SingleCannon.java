@@ -2,13 +2,22 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
-public class SingleCannon extends Cannon {
+public final class SingleCannon extends Cannon {
     public SingleCannon() {
-        super(1,1);
+        super(1,0);
     }
 
     public SingleCannon(Direction firingDirection) {
-        super(1, 1, firingDirection);
+        super(1, 0, firingDirection);
     }
 
+    @Override
+    public double calculateBasePower() {
+        return this.getFirePower();
+    }
+
+    @Override
+    public double calculatePowerWithBattery() {
+        return this.getFirePower(); // cannone singolo non beneficia della batteria
+    }
 }
