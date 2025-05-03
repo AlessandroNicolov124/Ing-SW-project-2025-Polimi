@@ -27,7 +27,7 @@ public class RmiServer extends UnicastRemoteObject
 
     public RmiServer(Registry registry) throws RemoteException {
         super();
-        //this.controller = controller;
+        this.controller = null;
         this.registry   = registry;
         this.dispatcher = startDispatcher();
     }

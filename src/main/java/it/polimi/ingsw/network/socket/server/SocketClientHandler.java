@@ -45,6 +45,7 @@ public class SocketClientHandler implements Runnable, VirtualView {
         try {
             while (true) {
                 Object o = in.readObject();
+                System.out.println("new obj recieved" + o);
                 ((GenericMessage) o).handle(this);
             }
         } catch (EOFException | java.net.SocketException e) {

@@ -2,16 +2,20 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.*;
+import it.polimi.ingsw.network.GeneralServer;
+import it.polimi.ingsw.network.socket.client.SocketClient;
+
+import java.io.IOException;
 
 /**
  * Hello world!
  *
  */
 public class App {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
-        GameController controller = new GameController();
-        controller.testGameRound();
+        //GameController controller = new GameController();
+        //controller.testGameRound();
 //        Player player1 = new Player(0,"Giocatore 1",true);
 //
 //        controller.addPlayer(player1);
@@ -49,6 +53,11 @@ public class App {
 //        } else {
 //            System.out.println("La nave non è assemblata correttamente.");
 //        }
+
+        GeneralServer srv = new GeneralServer();
+        srv.serverRun();
+        //SocketClient client = new SocketClient("localhost",7777);
+        //new Thread(client).start();
     }
 
 }

@@ -2,9 +2,10 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.*;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class GameController {
+public class GameController implements Serializable {
     private GameModel gameModel;
     private GameView gameView;
 

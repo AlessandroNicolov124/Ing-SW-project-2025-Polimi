@@ -18,7 +18,7 @@ public class GeneralServer {
 
     public void serverRun()
     {
-        socketServer.run();
-        //rmiServer.startDispatcher();
+        new Thread(this.socketServer).start();
+        //new Thread(this.rmiServer).start();
     }
 }

@@ -12,7 +12,6 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
     private final ObjectInputStream  in;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private final VirtualSocketServer proxy;
-
     public SocketClient(String host,int port) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
@@ -46,6 +45,11 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
 
     public void sendY() throws IOException { 
         proxy.y(); 
+    }
+
+    public void sendObject(Object o) throws IOException {
+        out.writeObject(o);
+        out.flush();
     }
 
     @Override public void showUpdate(String m){ 

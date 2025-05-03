@@ -1,20 +1,34 @@
 package it.polimi.ingsw.view.tui.components;
 
+import it.polimi.ingsw.GameController;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
 
 public class GalaxyTruckerTUI implements Runnable {
 
-    private final ConsoleManager console = new ConsoleManager();
-    private TuiState state = TuiState.INTRO;
+    private final ConsoleManager console;
+    private GameController controller;
+    private TuiState state;
 
     private String username;
     private String connectionType;
     private String serverAddress;
-    private int    serverPort;
+    private int serverPort;
 
     private Object client;
+    private RmiClient rmiClient;
+    private SocketClient socketClient;
+
+    public GalaxyTruckerTUI()
+    {
+        this.rmiClient = null;
+        this.socketClient = null;
+        this.controller = new GameController();
+        this.console = new ConsoleManager();
+        this.state = TuiState.INTRO;
+    }
 
     @Override
     public void run() {
@@ -65,17 +79,26 @@ public class GalaxyTruckerTUI implements Runnable {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
 
             if ("rmi".equals(connectionType)) {
-                RmiClient rmi = RmiClient.connectTo(serverAddress);
-                if (rmi == null)
+                rmiClient = RmiClient.connectTo(serverAddress);
+                if (rmiClient == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
             
-                client = rmi;                       
+                client = rmiClient;
             
-            } else {                                
-                SocketClient socket = new SocketClient(serverAddress, serverPort);
-                client = socket;
-                new Thread(socket).start();         
+            } else {
+                socketClient = new SocketClient(serverAddress, serverPort);
+                client = socketClient;
+                new Thread(socketClient).start();
             }
+
+
+//            if (rmiClient == null)
+//            {
+//                //In case of socket connection
+//                Player pl = new Player(1, username, true);
+//                controller.addPlayer(pl);
+//                socketClient.sendObject(controller);
+//            }
 
             console.printMessage("Connected as " + username + "!");
             state = TuiState.RUNNING;
