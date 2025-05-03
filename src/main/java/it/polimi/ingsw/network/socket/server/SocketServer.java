@@ -6,16 +6,17 @@ import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.network.rmi.Controller;
 
 public class SocketServer implements Runnable {
     
     private final int port;
-    private final Controller controller;
+    private final GameController controller;
     private final List<SocketClientHandler> clients = new CopyOnWriteArrayList<>();
     private ServerSocket ss;
 
-    public SocketServer(int port, Controller ctrl) { this.port = port; this.controller = ctrl; }
+    public SocketServer(int port, GameController ctrl) { this.port = port; this.controller = ctrl; }
 
     public SocketServer(int port) { this.port = port; controller = null; }
 

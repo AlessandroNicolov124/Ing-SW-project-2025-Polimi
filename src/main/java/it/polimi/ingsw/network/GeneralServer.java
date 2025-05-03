@@ -17,7 +17,7 @@ public class GeneralServer {
         Registry reg = LocateRegistry.createRegistry(1099);
         this.controller = new GameController();
         this.rmiServer = new RmiServer(this.controller, reg);
-        this.socketServer = new SocketServer(7777);
+        this.socketServer = new SocketServer(7777, this.controller);
     }
 
     public void serverRun()
