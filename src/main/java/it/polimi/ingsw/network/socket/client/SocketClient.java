@@ -35,7 +35,7 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
                 if(o instanceof String s) incoming.offer(s);
             }
         } catch(Exception e){ 
-            System.out.println("Connecction closed: "+e.getMessage()); 
+            System.out.println("Connection closed: "+e.getMessage()); 
         }
     }
 

@@ -9,6 +9,6 @@ public class XMessage implements GenericMessage {
     private static final long serialVersionUID = 1L;
 
     @Override public void handle(SocketClientHandler h) throws IOException { 
-        h.executeX(); 
+         
     }
 }

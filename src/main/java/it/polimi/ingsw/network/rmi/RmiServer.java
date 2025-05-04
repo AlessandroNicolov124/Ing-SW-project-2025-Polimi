@@ -1,6 +1,8 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.GameController;
+import it.polimi.ingsw.Player;
+import it.polimi.ingsw.Components.Component;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -10,6 +12,8 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.UUID;
 
 public class RmiServer extends UnicastRemoteObject
                        implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
@@ -27,13 +31,6 @@ public class RmiServer extends UnicastRemoteObject
         this.dispatcher = startDispatcher();
     }
 
-//    public RmiServer(Registry registry) throws RemoteException {
-//        super();
-//        this.controller = null;
-//        this.registry   = registry;
-//        this.dispatcher = startDispatcher();
-//    }
-
     // Thread which dispatches updates to all clients
     private Thread startDispatcher() {
         Thread t = new Thread(() -> {
@@ -50,7 +47,7 @@ public class RmiServer extends UnicastRemoteObject
                     }
                 }
             } catch (InterruptedException ignored) {
-                System.out.println("Dispatcher thread ifnterrupted, exiting...");
+                System.out.println("Dispatcher thread if iterrupted, exiting...");
                 }
         }, "Update-Dispatcher");
         t.setDaemon(true);
@@ -63,14 +60,6 @@ public class RmiServer extends UnicastRemoteObject
 
         System.out.println("GalaxyTruckerServer RMI ready (port 1099)");
 
-        // Gracefully shutdown the server on exit
-//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//            try {
-//                server.close();
-//            } catch (Exception ignored) {
-//                System.out.println("Error while closing server: " + ignored.getMessage());
-//            }
-//        }));
     }
 
     @Override
@@ -80,15 +69,14 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public void x() throws RemoteException {
-        //int v = controller.x();
-        //updates.offer("X executed, incremented value: " + v);
-    }
-
-    @Override
-    public void y() throws RemoteException {
-        //controller.y();
-        //updates.offer("Y executed, value set to 0");
+    public int addPlayer(String username) throws RemoteException {
+        int min = 1;
+        int max = 1000;
+        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
+        Player p  = new Player(newId, username, true);
+        controller.addPlayer(p);
+        updates.offer("Player " + username + " joined (id = " + newId + ")");
+        return newId;
     }
 
     @Override
