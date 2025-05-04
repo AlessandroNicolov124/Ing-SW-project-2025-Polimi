@@ -1,5 +1,10 @@
 package it.polimi.ingsw.network.socket.client;
 
+import it.polimi.ingsw.Player;
+import it.polimi.ingsw.network.commands.AddPlayerCommand;
+import it.polimi.ingsw.network.commands.PlayerDTO;
+import it.polimi.ingsw.network.commands.PlayerReadyCommand;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
@@ -12,7 +17,6 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
     private final ObjectInputStream  in;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private final VirtualSocketServer proxy;
-
     public SocketClient(String host,int port) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
@@ -36,7 +40,25 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
                 if(o instanceof String s) incoming.offer(s);
             }
         } catch(Exception e){ 
-            System.out.println("Connecction closed: "+e.getMessage()); 
+            System.out.println("Connecction closed: "+e.getMessage());
+        }
+    }
+
+    public void socketAddPlayer(PlayerDTO player) {
+        AddPlayerCommand cmd = new AddPlayerCommand(player);
+        try {
+            out.writeObject(cmd);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public void socketSetPlayerReady(PlayerReadyCommand cmd) {
+        try {
+            out.writeObject(cmd);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -46,6 +68,11 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
 
     public void sendY() throws IOException { 
         proxy.y(); 
+    }
+
+    public void sendObject(Object o) throws IOException {
+        out.writeObject(o);
+        out.flush();
     }
 
     @Override public void showUpdate(String m){ 

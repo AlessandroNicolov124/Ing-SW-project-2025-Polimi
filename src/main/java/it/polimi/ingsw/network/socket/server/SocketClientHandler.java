@@ -1,5 +1,7 @@
 package it.polimi.ingsw.network.socket.server;
 
+import it.polimi.ingsw.GameController;
+import it.polimi.ingsw.network.commands.Command;
 import it.polimi.ingsw.network.rmi.Controller;
 import it.polimi.ingsw.network.socket.client.VirtualView;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
@@ -11,13 +13,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class SocketClientHandler implements Runnable, VirtualView {
     private final Socket socket;
-    private final Controller controller;
+    private final GameController controller;
     private final SocketServer server;
     private final ObjectInputStream  in;
     private final ObjectOutputStream out;
     private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
 
-    public SocketClientHandler(Socket s, Controller c, SocketServer srv) throws IOException {
+    public SocketClientHandler(Socket s, GameController c, SocketServer srv) throws IOException {
         socket = s; controller = c; server = srv;
         out = new ObjectOutputStream(socket.getOutputStream());
         out.flush();
@@ -45,7 +47,11 @@ public class SocketClientHandler implements Runnable, VirtualView {
         try {
             while (true) {
                 Object o = in.readObject();
-                ((GenericMessage) o).handle(this);
+                System.out.println("new obj recieved" + o);
+                if (o instanceof Command) {
+                    ((Command) o).execute(controller);
+                    }
+                //((GenericMessage) o).handle(this);
             }
         } catch (EOFException | java.net.SocketException e) {
             System.out.println("Client disconnected" + socket.getRemoteSocketAddress());
@@ -56,11 +62,11 @@ public class SocketClientHandler implements Runnable, VirtualView {
     }
 
     public void executeX() {
-        int v = controller.x();
-        server.broadcast("X exectued, new value: "+v);
+        //int v = controller.x();
+        server.broadcast("X exectued, new value");
     }
     public void executeY() {
-        controller.y();
+        //controller.y();
         server.broadcast("Y executed, value set to 0");
     }
 

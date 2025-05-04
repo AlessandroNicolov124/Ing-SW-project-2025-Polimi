@@ -2,10 +2,11 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.*;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public class GameController {
+public class  GameController {
     private GameModel gameModel;
     private GameView gameView;
 
@@ -32,6 +33,19 @@ public class GameController {
     }
     public void setCurrentPlayer(Player player){
         gameModel.setCurrentPlayer(player);
+    }
+
+    public List<Player> getPlayers(){
+        return gameModel.getPlayers();
+    }
+
+    public Player getPlayerByNickName (String nickName){
+        for (Player p : gameModel.getPlayers()){
+            if (p.getNickName().equals(nickName)){
+                return p;
+            }
+        }
+        return null;
     }
 
     public void addComponentForPlayer(Player player, Component component, Position pos) {

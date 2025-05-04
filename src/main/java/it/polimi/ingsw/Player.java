@@ -3,7 +3,9 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.Component;
 
-public class Player {
+import java.io.Serializable;
+
+public class Player implements Serializable {
     private int id;
     private String nickName;
     private boolean active;

@@ -1,5 +1,7 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.GameController;
+
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -10,27 +12,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class RmiServer extends UnicastRemoteObject
-                       implements VirtualServer, Unreferenced, AutoCloseable {
+                       implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
 
-    private final Controller controller;
+    private final GameController controller;
     private final List<VirtualView> clients = new CopyOnWriteArrayList<>();
     private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
 
-    public RmiServer(Controller controller, Registry registry) throws RemoteException {
+    public RmiServer(GameController controller, Registry registry) throws RemoteException {
         super();
         this.controller = controller;
         this.registry   = registry;
         this.dispatcher = startDispatcher();
     }
 
-    public RmiServer(Registry registry) throws RemoteException {
-        super();
-        //this.controller = controller;
-        this.registry   = registry;
-        this.dispatcher = startDispatcher();
-    }
+//    public RmiServer(Registry registry) throws RemoteException {
+//        super();
+//        this.controller = null;
+//        this.registry   = registry;
+//        this.dispatcher = startDispatcher();
+//    }
 
     // Thread which dispatches updates to all clients
     private Thread startDispatcher() {
@@ -57,6 +59,20 @@ public class RmiServer extends UnicastRemoteObject
         return t;
     }
 
+    public void run() {
+
+        System.out.println("GalaxyTruckerServer RMI ready (port 1099)");
+
+        // Gracefully shutdown the server on exit
+//        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//            try {
+//                server.close();
+//            } catch (Exception ignored) {
+//                System.out.println("Error while closing server: " + ignored.getMessage());
+//            }
+//        }));
+    }
+
     @Override
     public void connect(VirtualView client) throws RemoteException {
         clients.add(client);
@@ -65,14 +81,14 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public void x() throws RemoteException {
-        int v = controller.x();
-        updates.offer("X executed, incremented value: " + v);
+        //int v = controller.x();
+        //updates.offer("X executed, incremented value: " + v);
     }
 
     @Override
     public void y() throws RemoteException {
-        controller.y();
-        updates.offer("Y executed, value set to 0");
+        //controller.y();
+        //updates.offer("Y executed, value set to 0");
     }
 
     @Override

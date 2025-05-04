@@ -2,6 +2,7 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class GameModel {
