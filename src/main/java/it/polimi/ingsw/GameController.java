@@ -5,7 +5,7 @@ import it.polimi.ingsw.Components.*;
 import java.io.Serializable;
 import java.util.List;
 
-public class GameController implements Serializable {
+public class  GameController {
     private GameModel gameModel;
     private GameView gameView;
 

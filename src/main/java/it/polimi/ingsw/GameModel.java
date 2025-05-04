@@ -5,7 +5,7 @@ import it.polimi.ingsw.AdventureCards.*;
 import java.io.Serializable;
 import java.util.*;
 
-public class GameModel implements Serializable {
+public class GameModel {
     private FlightBoard flightBoard;
     private int turnNumber;
     private String state;
