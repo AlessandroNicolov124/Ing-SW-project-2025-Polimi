@@ -6,6 +6,7 @@ public enum TuiState {
     ASK_NET,              // ask socket / rmi
     ASK_ADDRESS,          // ask host:port
     CONNECTING,           // create client
+    WAIT_PLAYER_READY,    // Wait for player to be ready
     RUNNING,              // execute game commands
     TERMINATED            // exit
 }

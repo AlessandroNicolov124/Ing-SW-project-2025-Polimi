@@ -31,6 +31,19 @@ public class  GameController {
         gameModel.setCredits(player, credits);
     }
 
+    public List<Player> getPlayers(){
+        return gameModel.getPlayers();
+    }
+
+    public Player getPlayerByNickName (String nickName){
+        for (Player p : gameModel.getPlayers()){
+            if (p.getNickName().equals(nickName)){
+                return p;
+            }
+        }
+        return null;
+    }
+
     public void addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
             player.getShip().placeComponent(component, pos);

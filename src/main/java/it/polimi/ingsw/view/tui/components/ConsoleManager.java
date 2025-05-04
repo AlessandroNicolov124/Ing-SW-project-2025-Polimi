@@ -86,6 +86,11 @@ public class ConsoleManager {
         System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
     }
 
+    public void AskAreYouReadyQuestion() {
+        System.out.println("Press enter to continue start the game when you are ready.");
+        String input = scanner.nextLine().trim();
+    }
+
     public void close() {
         scanner.close();
     }
