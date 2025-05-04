@@ -4,11 +4,8 @@ import it.polimi.ingsw.AdventureCards.*;
 
 import java.util.*;
 
-import static it.polimi.ingsw.GameModel.eGameState.eGAME_MAX_ENUM;
-
 public class GameModel {
     private FlightBoard flightBoard;
-    private eGameState gameState;
     private int turnNumber;
     private String state;
     private Player currentPlayer;
@@ -26,19 +23,7 @@ public class GameModel {
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
-        gameState = eGameState.GAME_IDLE;
-
-        loadAdventureCard();
-    }
-
-    public void setNewGameState(eGameState gameState) {
-        if (this.gameState != gameState) {
-            this.gameState = gameState;
-        }
-    }
-
-    public eGameState getGameState() {
-        return gameState;
+        this.turnNumber = 1;
     }
 
     // Metodo per pescare una carta dall'avventura
@@ -53,7 +38,7 @@ public class GameModel {
         //return null; // Nessuna carta disponibile
     }
 
-    private void loadAdventureCard(){
+    private void loadAdventureCardTurn1(){
         deck.add(new Planets());
         //deck.add(new AbandonedStation());
         //deck.add(new AbandonedShip());
@@ -128,7 +113,7 @@ public class GameModel {
 
         // Carica le carte avventura
         if (turnNumber == 1) {
-            loadAdventureCard();
+            loadAdventureCardTurn1();
             //navi piccole e mazzo avventura composto da 8 carte di livello I
 //            "Open Space" (Spazio aperto)
 //            "Planets" (Pianeti)
@@ -191,16 +176,6 @@ public class GameModel {
     public void updatePosition(Player player, int i) {
         flightBoard.updatePosition(player, i);
     }
-
-    public enum eGameState {
-        GAME_IDLE,
-        GAME_BUILD_SHIP,
-        GAME_VALIDATE_SHIP,
-        GAME_PLAYING,
-        GAME_FINISHED,
-        eGAME_MAX_ENUM
-    }
-
 
 }
 
