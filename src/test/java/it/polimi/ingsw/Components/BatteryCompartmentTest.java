@@ -17,6 +17,6 @@ class BatteryCompartmentTest {
         BatteryCompartment battery = new BatteryCompartment();
         // Verify connectors are set (requires getters or checking behavior)
         // For now, just ensure method runs without error
-        assertDoesNotThrow(() -> battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL));
+        assertDoesNotThrow(() -> battery.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new NullConnectorType()));
     }
 } 

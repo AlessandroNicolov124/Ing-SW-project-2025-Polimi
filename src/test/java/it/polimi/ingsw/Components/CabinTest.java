@@ -25,6 +25,7 @@ class CabinTest {
         Cabin cabin = new Cabin(true);
         // Verify connectors are set (requires getters or checking behavior)
         // For now, just ensure method runs without error
-        assertDoesNotThrow(() -> cabin.initializeConnectors(ConnectorType.SINGLE, ConnectorType.TRIPLE, ConnectorType.NULL, ConnectorType.UNIVERSAL));
+        // Assuming TRIPLE corresponds to DoubleConnectorType
+        assertDoesNotThrow(() -> cabin.initializeConnectors(new SingleConnectorType(), new DoubleConnectorType(), new NullConnectorType(), new UniversalConnectorType()));
     }
 } 

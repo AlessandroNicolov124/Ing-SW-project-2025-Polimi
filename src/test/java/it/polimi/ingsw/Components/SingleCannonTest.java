@@ -8,14 +8,16 @@ class SingleCannonTest {
 
     private SingleCannon cannon;
     private BatteryCompartment battery; // Assuming BatteryCompartment is needed for charging
+    private DoubleConnectorType tripleConnector; // Example instance if needed
 
     @BeforeEach
     void setUp() {
         cannon = new SingleCannon();
         battery = new BatteryCompartment();
+        tripleConnector = new DoubleConnectorType(); // Initialize if needed globally
         // Initialize connectors if necessary for basic functionality or charging logic
-        cannon.initializeConnectors(ConnectorType.NULL, ConnectorType.NULL, ConnectorType.SINGLE, ConnectorType.NULL);
-        battery.initializeConnectors(ConnectorType.NULL, ConnectorType.UNIVERSAL, ConnectorType.UNIVERSAL, ConnectorType.NULL);
+        cannon.initializeConnectors(new NullConnectorType(), new NullConnectorType(), new SingleConnectorType(), new NullConnectorType());
+        battery.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new NullConnectorType());
         // Simulate placing them adjacent if needed for charge/fire logic? Depends on implementation.
     }
 
@@ -30,7 +32,8 @@ class SingleCannonTest {
     void testInitializeConnectors() {
         // Verify connectors are set (requires getters or checking behavior)
         // For now, just ensure method runs without error
-        assertDoesNotThrow(() -> cannon.initializeConnectors(ConnectorType.SINGLE, ConnectorType.TRIPLE, ConnectorType.NULL, ConnectorType.UNIVERSAL));
+        // Assuming TRIPLE corresponds to DoubleConnectorType
+        assertDoesNotThrow(() -> cannon.initializeConnectors(new SingleConnectorType(), new DoubleConnectorType(), new NullConnectorType(), new UniversalConnectorType()));
     }
 
     @Test

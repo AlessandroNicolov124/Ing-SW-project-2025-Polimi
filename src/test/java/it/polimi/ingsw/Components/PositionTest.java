@@ -1,5 +1,7 @@
 package it.polimi.ingsw.Components;
 
+import it.polimi.ingsw.Direction;
+import it.polimi.ingsw.Position;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 

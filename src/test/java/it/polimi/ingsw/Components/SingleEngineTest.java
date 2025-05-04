@@ -17,6 +17,6 @@ class SingleEngineTest {
         SingleEngine engine = new SingleEngine();
         // Verify connectors are set (requires getters or checking behavior)
         // For now, just ensure method runs without error
-        assertDoesNotThrow(() -> engine.initializeConnectors(ConnectorType.SINGLE, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.NULL));
+        assertDoesNotThrow(() -> engine.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType()));
     }
 } 
