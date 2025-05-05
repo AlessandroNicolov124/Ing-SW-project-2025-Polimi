@@ -62,10 +62,6 @@ public class Player implements Serializable {
         return this.readyToStart;
     }
 
-    public void assembleShip(){
-        ship.setAssembled(true);
-    }
-
     public void takeTurn(){
 
     }
@@ -94,7 +90,4 @@ public class Player implements Serializable {
         return ship.validateShip();
     }
 
-    public void shipAssembled(){
-        assembleShip();
-    }
 }

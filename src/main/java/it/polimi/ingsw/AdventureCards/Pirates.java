@@ -134,7 +134,7 @@ public class Pirates extends AdventureCard {
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
             // Move player back on flight board
-            gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }
