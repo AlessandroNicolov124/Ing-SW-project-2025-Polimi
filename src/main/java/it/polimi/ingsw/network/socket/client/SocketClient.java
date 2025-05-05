@@ -1,10 +1,5 @@
 package it.polimi.ingsw.network.socket.client;
 
-import it.polimi.ingsw.Player;
-import it.polimi.ingsw.network.commands.AddPlayerCommand;
-import it.polimi.ingsw.network.commands.PlayerDTO;
-import it.polimi.ingsw.network.commands.PlayerReadyCommand;
-
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
@@ -40,25 +35,7 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
                 if(o instanceof String s) incoming.offer(s);
             }
         } catch(Exception e){ 
-            System.out.println("Connecction closed: "+e.getMessage());
-        }
-    }
-
-    public void socketAddPlayer(PlayerDTO player) {
-        AddPlayerCommand cmd = new AddPlayerCommand(player);
-        try {
-            out.writeObject(cmd);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    public void socketSetPlayerReady(PlayerReadyCommand cmd) {
-        try {
-            out.writeObject(cmd);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            System.out.println("Connection closed: "+e.getMessage()); 
         }
     }
 

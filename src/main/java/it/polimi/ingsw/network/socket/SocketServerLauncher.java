@@ -1,7 +1,6 @@
 package it.polimi.ingsw.network.socket;
 
 import it.polimi.ingsw.GameController;
-import it.polimi.ingsw.network.rmi.Controller;
 import it.polimi.ingsw.network.socket.server.SocketServer;
 
 public class SocketServerLauncher {

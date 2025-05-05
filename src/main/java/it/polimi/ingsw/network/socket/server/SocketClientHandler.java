@@ -1,8 +1,6 @@
 package it.polimi.ingsw.network.socket.server;
 
 import it.polimi.ingsw.GameController;
-import it.polimi.ingsw.network.commands.Command;
-import it.polimi.ingsw.network.rmi.Controller;
 import it.polimi.ingsw.network.socket.client.VirtualView;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 
@@ -48,10 +46,7 @@ public class SocketClientHandler implements Runnable, VirtualView {
             while (true) {
                 Object o = in.readObject();
                 System.out.println("new obj recieved" + o);
-                if (o instanceof Command) {
-                    ((Command) o).execute(controller);
-                    }
-                //((GenericMessage) o).handle(this);
+                ((GenericMessage) o).handle(this);
             }
         } catch (EOFException | java.net.SocketException e) {
             System.out.println("Client disconnected" + socket.getRemoteSocketAddress());
@@ -61,14 +56,9 @@ public class SocketClientHandler implements Runnable, VirtualView {
         }
     }
 
-    public void executeX() {
-        //int v = controller.x();
-        server.broadcast("X exectued, new value");
-    }
-    public void executeY() {
-        //controller.y();
-        server.broadcast("Y executed, value set to 0");
-    }
+    //something
+
+    
 
     private void close() {
         server.removeClient(this);
