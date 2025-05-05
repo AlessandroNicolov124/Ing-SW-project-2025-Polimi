@@ -13,7 +13,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.UUID;
 
 public class RmiServer extends UnicastRemoteObject
                        implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
@@ -58,6 +57,13 @@ public class RmiServer extends UnicastRemoteObject
 
     public void run() {
 
+//      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+//          try {
+//              server.close();
+//          } catch (Exception ignored) {
+//              System.out.println("Error while closing server: " + ignored.getMessage());
+//          }
+//      }));
         System.out.println("GalaxyTruckerServer RMI ready (port 1099)");
 
     }

@@ -3,12 +3,12 @@ package it.polimi.ingsw.view.tui.components;
 import it.polimi.ingsw.network.client.GameClient;
 
 
-public class CommandExecutor {
+public class TuiController {
     private final GameClient client;
     private final ConsoleManager console;
     private final int playerId;
 
-    public CommandExecutor(GameClient client, ConsoleManager console, int playerId) {
+    public TuiController(GameClient client, ConsoleManager console, int playerId) {
         this.client = client;
         this.console = console;
         this.playerId = playerId;

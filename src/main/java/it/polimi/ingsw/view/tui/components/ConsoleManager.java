@@ -76,8 +76,8 @@ public class ConsoleManager {
 
     public void printHelp() {
         System.out.println("Available commands:");
-        System.out.println("  help  - Show this help message");
-        System.out.println("  quit  - Exit the application");
+        System.out.println("help  - Show this help message");
+        System.out.println("quit  - Exit the application");
     }
 
     public void printConnectingMessage(String type, String address, int port) {
