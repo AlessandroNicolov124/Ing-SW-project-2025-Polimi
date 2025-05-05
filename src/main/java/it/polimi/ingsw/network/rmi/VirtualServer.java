@@ -9,6 +9,10 @@ public interface VirtualServer extends Remote {
 
     void stopServer() throws RemoteException;
 
+    void x() throws RemoteException;
+
+    void y() throws RemoteException;
+
     int addPlayer(String username) throws RemoteException;
 
 }

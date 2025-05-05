@@ -21,7 +21,7 @@ public class GeneralServer {
         this.controller = new GameController();
         this.rmiServer = new RmiServer(this.controller, reg);
         Naming.rebind("GalaxyTruckerServer", rmiServer);
-        this.socketServer = new SocketServer(7777);
+        this.socketServer = new SocketServer(7777, this.controller);
     }
 
     public void serverRun()

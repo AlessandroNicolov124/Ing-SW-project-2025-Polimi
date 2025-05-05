@@ -1,9 +1,5 @@
 package it.polimi.ingsw.network.rmi;
 
-import java.rmi.Naming;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
-
 public class RmiServerLauncher {
     public static void main(String[] args) throws Exception {
 //        System.setProperty("java.rmi.server.hostname", "127.0.0.1");

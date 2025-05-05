@@ -1,12 +1,17 @@
 package it.polimi.ingsw.network.socket.client;
 
+import it.polimi.ingsw.Player;
+import it.polimi.ingsw.network.commands.AddPlayerCommand;
+import it.polimi.ingsw.network.commands.PlayerDTO;
+import it.polimi.ingsw.network.commands.PlayerReadyCommand;
+
 import java.io.*;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class SocketClient implements Runnable, VirtualView, AutoCloseable {
-    
+
     private final Socket socket;
     private final ObjectOutputStream out;
     private final ObjectInputStream  in;
@@ -14,7 +19,7 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
     private final VirtualSocketServer proxy;
     public SocketClient(String host,int port) throws IOException {
         socket = new Socket(host,port);
-        out = new ObjectOutputStream(socket.getOutputStream()); 
+        out = new ObjectOutputStream(socket.getOutputStream());
         out.flush();
         in  = new ObjectInputStream (socket.getInputStream());
         proxy = new VirtualSocketServer(out);
@@ -34,17 +39,35 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
                 Object o = in.readObject();
                 if(o instanceof String s) incoming.offer(s);
             }
-        } catch(Exception e){ 
-            System.out.println("Connection closed: "+e.getMessage()); 
+        } catch(Exception e){
+            System.out.println("Connecction closed: "+e.getMessage());
         }
     }
 
-    public void sendX() throws IOException { 
-        proxy.x(); 
+    public void socketAddPlayer(PlayerDTO player) {
+        AddPlayerCommand cmd = new AddPlayerCommand(player);
+        try {
+            out.writeObject(cmd);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
-    public void sendY() throws IOException { 
-        proxy.y(); 
+    public void socketSetPlayerReady(PlayerReadyCommand cmd) {
+        try {
+            out.writeObject(cmd);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void sendX() throws IOException {
+        proxy.x();
+    }
+
+    public void sendY() throws IOException {
+        proxy.y();
     }
 
     public void sendObject(Object o) throws IOException {
@@ -52,12 +75,12 @@ public class SocketClient implements Runnable, VirtualView, AutoCloseable {
         out.flush();
     }
 
-    @Override public void showUpdate(String m){ 
-        incoming.offer(m); 
+    @Override public void showUpdate(String m){
+        incoming.offer(m);
     }
 
-    @Override public void close() throws Exception { 
-        socket.close(); 
+    @Override public void close() throws Exception {
+        socket.close();
     }
-    
+
 }

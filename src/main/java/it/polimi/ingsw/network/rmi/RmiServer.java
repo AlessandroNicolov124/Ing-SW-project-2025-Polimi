@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.UUID;
 
 public class RmiServer extends UnicastRemoteObject
-                       implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
+        implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
 
     private final GameController controller;
     private final List<VirtualView> clients = new CopyOnWriteArrayList<>();
@@ -38,17 +38,17 @@ public class RmiServer extends UnicastRemoteObject
                 while (true) {
                     String msg = updates.take();
                     for (VirtualView c : clients) {
-                        try { 
-                            c.showUpdate(msg); 
+                        try {
+                            c.showUpdate(msg);
                         }
-                        catch (RemoteException e) { 
-                            clients.remove(c); 
+                        catch (RemoteException e) {
+                            clients.remove(c);
                         }
                     }
                 }
             } catch (InterruptedException ignored) {
                 System.out.println("Dispatcher thread if iterrupted, exiting...");
-                }
+            }
         }, "Update-Dispatcher");
         t.setDaemon(true);
         t.start();
@@ -81,13 +81,23 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public void stopServer() throws RemoteException {
-        new Thread(() -> { 
-            try { 
-                close(); 
+        new Thread(() -> {
+            try {
+                close();
             } catch (Exception ignored) {
                 System.out.println("Error while closing server: " + ignored.getMessage());
             }
         }).start();
+    }
+
+    @Override
+    public void x() throws RemoteException {
+
+    }
+
+    @Override
+    public void y() throws RemoteException {
+
     }
 
     @Override
@@ -100,11 +110,11 @@ public class RmiServer extends UnicastRemoteObject
 
     // Unreferenced method, called when the server is no longer referenced by any client
     // This is a fallback mechanism to ensure the server is closed when all clients disconnect
-    @Override public void unreferenced() { 
+    @Override public void unreferenced() {
         System.out.println("Unreferenced: " + this);
-        try { 
-            close(); 
-        } 
+        try {
+            close();
+        }
         catch (Exception ignored) {
             System.out.println("Error while closing server: " + ignored.getMessage());
         }

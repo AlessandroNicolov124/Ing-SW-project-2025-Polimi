@@ -9,7 +9,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import it.polimi.ingsw.GameController;
 
 public class SocketServer implements Runnable {
-    
+
     private final int port;
     private final GameController controller;
     private final List<SocketClientHandler> clients = new CopyOnWriteArrayList<>();
@@ -33,16 +33,16 @@ public class SocketServer implements Runnable {
         } catch (IOException e) { System.out.println("Server shutdown: "+e.getMessage()); }
     }
 
-    void broadcast(String m) { 
-        clients.forEach(c -> c.sendUpdate(m)); 
+    void broadcast(String m) {
+        clients.forEach(c -> c.sendUpdate(m));
     }
 
-    void removeClient(SocketClientHandler c) { 
-        clients.remove(c); 
+    void removeClient(SocketClientHandler c) {
+        clients.remove(c);
     }
 
-    public void shutdown() throws IOException { 
-        ss.close(); 
+    public void shutdown() throws IOException {
+        ss.close();
     }
 
 }
