@@ -1,10 +1,9 @@
 package it.polimi.ingsw.network.socket.messages;
 
-import java.io.IOException;
-
 import it.polimi.ingsw.network.socket.server.SocketClientHandler;
 
-public class AddPlayerMessage implements GenericMessage {
+public class AddPlayerMessage implements ServerMessage {
+
     private static final long serialVersionUID = 1L;
     private final String username;
 
@@ -17,9 +16,8 @@ public class AddPlayerMessage implements GenericMessage {
     }
 
     @Override
-    public void handle(SocketClientHandler h) throws IOException {
+    public void handleServer(SocketClientHandler h) {
         int id = h.createPlayer(username);
-        h.sendMessage(new PlayerAddedMessage(id, username));
-        //h.broadcast(username + " joined the game!");
+        h.sendUpdate(new PlayerAddedMessage(id, username));
     }
 }

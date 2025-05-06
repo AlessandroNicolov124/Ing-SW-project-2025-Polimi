@@ -4,11 +4,12 @@ import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.socket.client.VirtualView;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
+import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SocketClientHandler implements Runnable, VirtualView {
@@ -17,7 +18,7 @@ public class SocketClientHandler implements Runnable, VirtualView {
     private final SocketServer server;
     private final ObjectInputStream  in;
     private final ObjectOutputStream out;
-    private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
+    private final BlockingDeque<GenericMessage> updates = new LinkedBlockingDeque<>();
 
     public SocketClientHandler(Socket s, GameController c, SocketServer srv) throws IOException {
         socket = s; 
@@ -34,48 +35,44 @@ public class SocketClientHandler implements Runnable, VirtualView {
         Thread t = new Thread(() -> {
             try {
                 while (true) {
-                    String msg = updates.take();
-                    synchronized (out) { 
-                        out.writeObject(msg); 
-                        out.flush(); 
+                    GenericMessage msg = updates.take();
+                    synchronized (out) {
+                        out.writeObject(msg);
+                        out.flush();
                     }
                 }
-            } catch (InterruptedException | IOException ex) { 
-                close(); 
+            } catch (IOException | InterruptedException ignored) {
+            } finally {
+                close();
             }
-        }, "dispatcher-" + socket.getPort());
-        t.setDaemon(true); 
+        }, "dispatcher-" + socket.getInetAddress());
+        t.setDaemon(true);
         t.start();
     }
 
 
-    public void sendUpdate(String m) { 
+    public void sendUpdate(GenericMessage m) { 
         updates.offer(m); 
     }
 
-    @Override 
-    public void showUpdate(String m) { 
-        sendUpdate(m); 
+    @Override
+    public void showUpdate(String m) {
+        sendUpdate(new TextUpdateMessage(m));
     }
 
     // client -> server
-    @Override 
+    @Override
     public void run() {
         try {
-            while (true) {
-                Object o = in.readObject();
-                if (o instanceof GenericMessage message) {
-                    message.handle(this);
-                } else {
-                    System.out.println("Received unknown message type: " + o.getClass().getName());
+            while (!socket.isClosed()) {
+                Object obj = in.readObject();
+                if (obj instanceof GenericMessage g) {
+                    g.handleServer(this); 
                 }
             }
-        } catch (EOFException | java.net.SocketException e) {
-            System.out.println("Client disconnected: " + socket.getRemoteSocketAddress());
-        } catch (Exception e) { 
-            e.printStackTrace(); 
-        } finally { 
-            close(); 
+        } catch (Exception ignored) {
+        } finally {
+            close();
         }
     }
 
@@ -88,22 +85,17 @@ public class SocketClientHandler implements Runnable, VirtualView {
         return newId;
     }
 
-    public void sendMessage(Object o) throws IOException {
-        synchronized (out) { 
-            out.writeObject(o); 
-            out.flush(); 
-        }
-    }
-
-    public void broadcast(String msg) { 
+    public void broadcast(GenericMessage msg) { 
         server.broadcast(msg); 
     }
 
     private void close() {
+        try {
+            socket.close();
+        } catch (IOException ignored) {
+            
+        }
         server.removeClient(this);
-        try { 
-            socket.close(); 
-        } catch (IOException ignored) { }
     }
 
 }
