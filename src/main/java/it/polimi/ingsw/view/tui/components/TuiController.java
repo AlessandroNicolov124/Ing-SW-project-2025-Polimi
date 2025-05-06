@@ -1,20 +1,20 @@
 package it.polimi.ingsw.view.tui.components;
 
-import it.polimi.ingsw.network.rmi.RmiClient;
-import it.polimi.ingsw.network.socket.client.SocketClient;
+import it.polimi.ingsw.network.client.GameClient;
 
 
-public class CommandExecutor {
-    private final Object client;
+public class TuiController {
+    private final GameClient client;
     private final ConsoleManager console;
+    private final int playerId;
 
-    public CommandExecutor(Object client, ConsoleManager console) {
+    public TuiController(GameClient client, ConsoleManager console, int playerId) {
         this.client = client;
         this.console = console;
+        this.playerId = playerId;
     }
 
 
-    // Find a better way to handle commands avoding to use instanceof
     public boolean executeCommand(String command) {
         try {
             switch (command.toLowerCase()) {
@@ -36,9 +36,7 @@ public class CommandExecutor {
                     console.printHelp();
                     break;
                 case "quit":
-                    if (client instanceof AutoCloseable) {
-                        ((AutoCloseable) client).close();
-                    }
+                    client.close();
                     return false;
                 default:
                     console.printError("Unknown command. Type 'help' for available commands.");

@@ -15,9 +15,15 @@ public class SocketServer implements Runnable {
     private final List<SocketClientHandler> clients = new CopyOnWriteArrayList<>();
     private ServerSocket ss;
 
-    public SocketServer(int port, GameController ctrl) { this.port = port; this.controller = ctrl; }
+    public SocketServer(int port, GameController ctrl) { 
+        this.port = port; 
+        this.controller = ctrl; 
+    }
 
-    public SocketServer(int port) { this.port = port; controller = null; }
+    public SocketServer(int port) { 
+        this.port = port; 
+        controller = null; 
+    }
 
     @Override public void run() {
         try (ServerSocket srv = new ServerSocket(port)) {
@@ -28,7 +34,7 @@ public class SocketServer implements Runnable {
                 SocketClientHandler h = new SocketClientHandler(s, controller, this);
                 clients.add(h);
                 new Thread(h, "client-"+s.getPort()).start();
-                h.showUpdate("Welcome! Connection established.");
+                h.showUpdate("Welcome!");
             }
         } catch (IOException e) { System.out.println("Server shutdown: "+e.getMessage()); }
     }

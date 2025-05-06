@@ -1,9 +1,6 @@
 package it.polimi.ingsw.view.tui.components;
 
-import it.polimi.ingsw.GameController;
-import it.polimi.ingsw.Player;
-import it.polimi.ingsw.network.commands.PlayerDTO;
-import it.polimi.ingsw.network.commands.PlayerReadyCommand;
+import it.polimi.ingsw.network.client.GameClient;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
@@ -11,27 +8,22 @@ import it.polimi.ingsw.network.socket.client.SocketClient;
 public class GalaxyTruckerTUI implements Runnable {
 
     private final ConsoleManager console;
-    private GameController controller;
+    //private GameController controller;
     private TuiState state;
 
     private String username;
     private String connectionType;
     private String serverAddress;
     private int serverPort;
+    private GameClient client;
+    private int playerId;
 
-    private Object client;
-    private RmiClient rmiClient;
-    private SocketClient socketClient;
-    private PlayerDTO plDTO;
 
     public GalaxyTruckerTUI()
     {
-        this.rmiClient = null;
-        this.socketClient = null;
-        this.controller = new GameController();
+        //this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
-        this.plDTO = null;
     }
 
     @Override
@@ -51,7 +43,7 @@ public class GalaxyTruckerTUI implements Runnable {
                 case ASK_NET      -> handleConnectionTypeState();
                 case ASK_ADDRESS  -> handleAddressState();
                 case CONNECTING   -> handleConnectingState();
-                case WAIT_PLAYER_READY -> handlePlayerReady();
+                //case WAIT_PLAYER_READY -> handlePlayerReady();
                 case RUNNING      -> handleRunningState();
                 case TERMINATED   -> { return; }
             }
@@ -84,59 +76,44 @@ public class GalaxyTruckerTUI implements Runnable {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
 
             if ("rmi".equals(connectionType)) {
-                rmiClient = RmiClient.connectTo(serverAddress);
-                if (rmiClient == null)
+                client = RmiClient.connectTo(serverAddress);
+                if (client == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
-
-                client = rmiClient;
+                
+                playerId = client.addPlayer(username);
 
             } else {
-                socketClient = new SocketClient(serverAddress, serverPort);
+                SocketClient socketClient = new SocketClient(serverAddress, serverPort);
                 client = socketClient;
-                new Thread(socketClient).start();
-            }
 
-
-            if (rmiClient == null) {
-                //In case of socket connection
-                this.plDTO = new PlayerDTO(username);
-                //controller.addPlayer(pl);
-                socketClient.socketAddPlayer(this.plDTO);
-                //socketClient.sendObject(controller);
+                Thread clientThread = new Thread(socketClient, "socket-client");
+                clientThread.setDaemon(true);
+                clientThread.start();
+                playerId = socketClient.addPlayer(username);
             }
 
             console.printMessage("Connected as " + username + "!");
-            state = TuiState.WAIT_PLAYER_READY;
+            state = TuiState.RUNNING;
 
         } catch (Exception e) {
             console.printError("Connection failed: " + e.getMessage());
-            state = TuiState.ASK_NET;
-        }
-    }
-
-    public void handlePlayerReady() {
-        try {
-            console.AskAreYouReadyQuestion();
-            PlayerReadyCommand plRdCmd = new PlayerReadyCommand(this.plDTO);
-
-            if (rmiClient == null) {
-                socketClient.socketSetPlayerReady(plRdCmd);
+            if (client != null) {
+                try {
+                    client.close();
+                } catch (Exception ignored) {}
+                client = null;
             }
-            state = TuiState.RUNNING;
-        }
-        catch (Exception e) {
-            console.printError("Connection failed: " + e.getMessage());
             state = TuiState.ASK_NET;
         }
     }
 
     private void handleRunningState() {
-        console.printHelp();
-        CommandExecutor executor = new CommandExecutor(client, console);
+        console.printHelp();                       
+        TuiController tuiController = new TuiController(client, console, playerId);
 
         while (true) {
             String cmd = console.readCommand();
-            if (!executor.executeCommand(cmd)) {
+            if (!tuiController.executeCommand(cmd)) {
                 state = TuiState.TERMINATED;
                 return;
             }

@@ -76,8 +76,10 @@ public class ConsoleManager {
 
     public void printHelp() {
         System.out.println("Available commands:");
+        /////
         System.out.println("  x     - Increment the counter");
         System.out.println("  y     - Reset the counter to 0");
+        /////
         System.out.println("  help  - Show this help message");
         System.out.println("  quit  - Exit the application");
     }
@@ -86,11 +88,12 @@ public class ConsoleManager {
         System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
     }
 
+    ////////
     public void AskAreYouReadyQuestion() {
         System.out.println("Press enter to continue start the game when you are ready.");
         String input = scanner.nextLine().trim();
     }
-
+    /////////
     public void close() {
         scanner.close();
     }
