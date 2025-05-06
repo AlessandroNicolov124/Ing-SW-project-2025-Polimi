@@ -23,6 +23,7 @@ public class GalaxyTruckerTUI implements Runnable {
     private RmiClient rmiClient;
     private SocketClient socketClient;
     private PlayerDTO plDTO;
+    private Player currentPlayer;
 
     public GalaxyTruckerTUI()
     {
@@ -32,6 +33,7 @@ public class GalaxyTruckerTUI implements Runnable {
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
         this.plDTO = null;
+        this.currentPlayer = null;
     }
 
     @Override
@@ -46,14 +48,15 @@ public class GalaxyTruckerTUI implements Runnable {
     private void mainLoop() {
         while (true) {
             switch (state) {
-                case INTRO        -> handleIntroState();
-                case ASK_USERNAME -> handleUsernameState();
-                case ASK_NET      -> handleConnectionTypeState();
-                case ASK_ADDRESS  -> handleAddressState();
-                case CONNECTING   -> handleConnectingState();
-                case WAIT_PLAYER_READY -> handlePlayerReady();
-                case RUNNING      -> handleRunningState();
-                case TERMINATED   -> { return; }
+                case INTRO                -> handleIntroState();
+                case ASK_USERNAME         -> handleUsernameState();
+                case ASK_NET              -> handleConnectionTypeState();
+                case ASK_ADDRESS          -> handleAddressState();
+                case CONNECTING           -> handleConnectingState();
+                case WAIT_PLAYER_READY    -> handlePlayerReady();
+                case SHIP_BUILDING        -> handleShipBuildingState();
+                case RUNNING              -> handleRunningState();
+                case TERMINATED           -> { return; }
             }
         }
     }
@@ -65,6 +68,8 @@ public class GalaxyTruckerTUI implements Runnable {
 
     private void handleUsernameState() {
         username = console.askUsername();
+        this.currentPlayer = new Player(0, username, false);
+        controller.addPlayer(this.currentPlayer);
         state = TuiState.ASK_NET;
     }
 
@@ -83,26 +88,20 @@ public class GalaxyTruckerTUI implements Runnable {
         try {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
 
-            if ("rmi".equals(connectionType)) {
+            if ("rmi".equalsIgnoreCase(connectionType)) {
                 rmiClient = RmiClient.connectTo(serverAddress);
                 if (rmiClient == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
-            
                 client = rmiClient;
-            
-            } else {
+
+            } else if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort);
                 client = socketClient;
                 new Thread(socketClient).start();
-            }
-
-
-            if (rmiClient == null) {
-                //In case of socket connection
                 plDTO = new PlayerDTO(username);
-                //controller.addPlayer(pl);
                 socketClient.socketAddPlayer(plDTO);
-                //socketClient.sendObject(controller);
+            } else {
+                throw new IllegalArgumentException("Invalid connection type: " + connectionType);
             }
 
             console.printMessage("Connected as " + username + "!");
@@ -110,6 +109,7 @@ public class GalaxyTruckerTUI implements Runnable {
 
         } catch (Exception e) {
             console.printError("Connection failed: " + e.getMessage());
+            e.printStackTrace();
             state = TuiState.ASK_NET;
         }
     }
@@ -117,17 +117,41 @@ public class GalaxyTruckerTUI implements Runnable {
     public void handlePlayerReady() {
         try {
             console.AskAreYouReadyQuestion();
-            PlayerReadyCommand plRdCmd = new PlayerReadyCommand(this.plDTO);
+            String readyAnswer = console.readCommand().trim().toLowerCase();
 
-            if (rmiClient == null) {
-                socketClient.socketSetPlayerReady(plRdCmd);
+            if ("yes".equals(readyAnswer)) {
+                if (this.currentPlayer != null) {
+                    controller.setPlayerReady(this.currentPlayer);
+                }
+
+                PlayerReadyCommand plRdCmd = new PlayerReadyCommand(this.plDTO != null ? this.plDTO : new PlayerDTO(username));
+
+                if (socketClient != null) {
+                    socketClient.socketSetPlayerReady(plRdCmd);
+                } else if (rmiClient != null) {
+                }
+                console.printMessage("You are marked as ready. Waiting for game to start...");
+                state = TuiState.SHIP_BUILDING;
+            } else {
+                console.printMessage("Okay, not marking as ready yet.");
             }
-            state = TuiState.RUNNING;
+        } catch (Exception e) {
+            console.printError("Error setting player ready: " + e.getMessage());
+            state = TuiState.ASK_NET;
         }
-        catch (Exception e) {
-        console.printError("Connection failed: " + e.getMessage());
-        state = TuiState.ASK_NET;
+    }
+
+    private void handleShipBuildingState() {
+        if (this.currentPlayer == null) {
+            console.printError("Cannot start ship building: current player not set.");
+            state = TuiState.ASK_USERNAME;
+            return;
         }
+        ShipBuildingHandler shipBuilderUI = new ShipBuildingHandler(console, controller, this.currentPlayer);
+        shipBuilderUI.manageShipBuilding();
+        
+        console.printMessage("Ship building complete. Transitioning to next phase...");
+        state = TuiState.RUNNING; 
     }
 
     private void handleRunningState() {

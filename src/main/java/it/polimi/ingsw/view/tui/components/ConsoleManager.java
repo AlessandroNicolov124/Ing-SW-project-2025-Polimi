@@ -91,6 +91,11 @@ public class ConsoleManager {
         String input = scanner.nextLine().trim();
     }
 
+    public String askQuestion(String prompt) {
+        System.out.print(prompt + " ");
+        return scanner.nextLine().trim();
+    }
+
     public void close() {
         scanner.close();
     }

@@ -44,14 +44,14 @@ public class  GameController {
         return null;
     }
 
-    public void addComponentForPlayer(Player player, Component component, Position pos) {
+    public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
-            player.getShip().placeComponent(component, pos);
+            return player.getShip().placeComponent(component, pos);
         }
+        return false; // Player not found or other issue
     }
 
     public void removeComponentForPlayer(Player player, Component component) {
-
         if (isPlayerThere(player)) {
             player.getShip().removeComponent(component);
         }
@@ -82,6 +82,36 @@ public class  GameController {
     }
 
     //public void
+
+    public void rotateComponentClockwiseForPlayer(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                ship.rotateComponentClockwise(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+    }
+
+    public void rotateComponentCounterClockwiseForPlayer(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                ship.rotateComponentCounterClockwise(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+    }
+
+    public void rotateComponentOppositeForPlayer(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                ship.rotateComponentOpposite(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+    }
 
     public void updateView(){}
 
