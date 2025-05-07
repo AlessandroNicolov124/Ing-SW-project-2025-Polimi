@@ -77,10 +77,10 @@ public class SocketClientHandler implements Runnable, VirtualView {
     }
 
     public int createPlayer(String username) {
-        int min = 1;
-        int max = 1000;
-        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
-        Player p = new Player(newId, username, true);
+        int min = 1; // use an atomic integer or a uuid
+        int max = 1000; // use an atomic integer or a uuid
+        int newId = ThreadLocalRandom.current().nextInt(min, max + 1); // use an atomic integer or a uuid
+        Player p = new Player(newId, username, true); // move to controller
         controller.addPlayer(p);
         return newId;
     }

@@ -8,6 +8,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 import it.polimi.ingsw.network.client.GameClient;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
+import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
 
 
 public class SocketClient implements Runnable, VirtualView, GameClient {
@@ -36,7 +37,9 @@ public class SocketClient implements Runnable, VirtualView, GameClient {
                     cm.handleClient(this);
                 }
                 if (obj instanceof GenericMessage gm) {
-                    messages.offerLast(gm);
+                    if (!(gm instanceof TextUpdateMessage)){
+                        messages.offerLast(gm);
+                    }
                 }
             }
         } catch (Exception ignored) {

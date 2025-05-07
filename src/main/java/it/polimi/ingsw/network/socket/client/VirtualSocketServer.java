@@ -3,6 +3,7 @@ package it.polimi.ingsw.network.socket.client;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.TimeUnit;
 
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.AddPlayerMessage;
@@ -29,11 +30,14 @@ public class VirtualSocketServer implements VirtualServer {
 
     public <T extends GenericMessage> T waitFor(Class<T> type) throws InterruptedException {
         while (true) {
-            GenericMessage m = responses.takeFirst();
-            if (type.isInstance(m)) 
+            GenericMessage m = responses.poll(100, TimeUnit.MILLISECONDS);
+            if (m == null){
+                continue;
+            }
+            if (type.isInstance(m))
                 return type.cast(m);
-            responses.putFirst(m);
-            Thread.sleep(1);
+
+            responses.offerLast(m);
         }
     }
 
