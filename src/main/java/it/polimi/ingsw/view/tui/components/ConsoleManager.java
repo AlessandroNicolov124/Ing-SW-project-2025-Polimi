@@ -90,10 +90,16 @@ public class ConsoleManager {
 
     ////////
     public void AskAreYouReadyQuestion() {
-        System.out.println("Press enter to continue start the game when you are ready.");
-        String input = scanner.nextLine().trim();
+        System.out.println("Press 'yes' to continue start the game when you are ready.");
+        //String input = scanner.nextLine().trim();
     }
     /////////
+
+    public String askQuestion(String prompt) {
+        System.out.print(prompt + " ");
+        return scanner.nextLine().trim();
+    }
+
     public void close() {
         scanner.close();
     }
