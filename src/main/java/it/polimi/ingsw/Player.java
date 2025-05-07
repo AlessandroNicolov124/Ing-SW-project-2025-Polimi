@@ -82,8 +82,8 @@ public class Player implements Serializable {
         return ship.placeComponent(component, pos);
     }
 
-    public void removeComponent(Component component) {
-        ship.removeComponent(component);
+    public boolean removeComponent(Component component) {
+        return ship.removeComponent(component);
     }
 
     public boolean validateShip() {

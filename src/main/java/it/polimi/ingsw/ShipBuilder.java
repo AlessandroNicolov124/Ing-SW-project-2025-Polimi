@@ -125,7 +125,7 @@ public class ShipBuilder {
         }
 
         // Check if removing this component would disconnect the ship
-        if (components.size() > 1 && wouldDisconnectShip(component)) {
+        if (components.size() > 1 && wouldDisconnectShip(component) && !component.isDamaged()) {
             return false;
         }
 

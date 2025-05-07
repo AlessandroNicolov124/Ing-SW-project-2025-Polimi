@@ -2,7 +2,6 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.*;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -55,11 +54,12 @@ public class  GameController {
         return false; // Player not found or other issue
     }
 
-    public void removeComponentForPlayer(Player player, Component component) {
+    public boolean removeComponentForPlayer(Player player, Component component) {
 
         if (isPlayerThere(player)) {
-            player.removeComponent(component);
+            return player.removeComponent(component);
         }
+        return false;
     }
 
     public void pickCardForPlayer(Player player) {

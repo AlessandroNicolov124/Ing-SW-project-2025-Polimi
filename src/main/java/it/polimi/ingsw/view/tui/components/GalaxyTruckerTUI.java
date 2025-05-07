@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
+import it.polimi.ingsw.network.client.GameClient;
 import it.polimi.ingsw.network.commands.PlayerDTO;
 import it.polimi.ingsw.network.commands.PlayerReadyCommand;
 import it.polimi.ingsw.network.rmi.RmiClient;
@@ -20,7 +21,7 @@ public class GalaxyTruckerTUI implements Runnable {
     private int serverPort;
     private int playerId;
 
-    private Object client;
+    private GameClient client;
     private RmiClient rmiClient;
     private SocketClient socketClient;
     private PlayerDTO plDTO;
@@ -95,7 +96,7 @@ public class GalaxyTruckerTUI implements Runnable {
                     throw new IllegalStateException("Failed to connect to RMI server");
                 client = rmiClient;
 
-                playerId = client.addPlayer(username);
+                playerId = rmiClient.addPlayer(username);
 
             } else if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort);

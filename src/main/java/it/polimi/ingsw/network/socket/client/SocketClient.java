@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import it.polimi.ingsw.network.client.GameClient;
+import it.polimi.ingsw.network.commands.PlayerReadyCommand;
 import it.polimi.ingsw.network.socket.messages.PlayerAddedMessage;
 
 
@@ -76,6 +77,14 @@ public class SocketClient implements Runnable, VirtualView, GameClient {
     @Override
     public int addPlayer(String username) throws Exception {
         return proxy.addPlayer(username);
+    }
+
+    public void socketSetPlayerReady(PlayerReadyCommand cmd) {
+        try {
+            out.writeObject(cmd);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void setPlayerId(int id) {

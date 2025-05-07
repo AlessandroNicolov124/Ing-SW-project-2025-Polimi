@@ -148,15 +148,19 @@ public class ShipBuildingHandler {
         if (newComponent == null) {
             console.printError("Invalid component type or failed to initialize.");
             return;
+        }else if("cabin".equals(typeStr) && newComponent instanceof Cabin c) {
+                if (c.isStartingCabin()) {
+                    pos = currentPlayer.getShip().getStartingPosition();
+                }
         }
 
         // 4. Call controller
         boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, newComponent, pos);
         
         if (placementSuccess) {
-            console.printMessage(typeStr + " successfully placed at (" + x + "," + y + ").");
+            console.printMessage(typeStr + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
         } else {
-            console.printError("Failed to place " + typeStr + " at (" + x + "," + y + "). Check position and connections.");
+            console.printError("Failed to place " + typeStr + " at (" + pos.getX() + "," + pos.getX() + "). Check position and connections.");
         }
     }
 
@@ -217,8 +221,8 @@ public class ShipBuildingHandler {
         Component compToRemove = currentPlayer.getShip().getComponentAt(posToRemove);
 
         if (compToRemove != null) {
-            controller.removeComponentForPlayer(currentPlayer, compToRemove);
-            console.printMessage("Attempted to remove component at (" + x + "," + y + ").");
+            boolean res = controller.removeComponentForPlayer(currentPlayer, compToRemove);
+            console.printMessage("Attempted to remove component at (" + x + "," + y + "): result: " + res);
         } else {
             console.printError("No component found at (" + x + "," + y + ").");
         }
