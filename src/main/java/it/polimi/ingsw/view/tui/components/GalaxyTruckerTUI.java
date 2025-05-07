@@ -4,13 +4,10 @@ import it.polimi.ingsw.network.client.GameClient;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
-
 public class GalaxyTruckerTUI implements Runnable {
 
     private final ConsoleManager console;
-    //private GameController controller;
     private TuiState state;
-
     private String username;
     private String connectionType;
     private String serverAddress;
@@ -21,7 +18,6 @@ public class GalaxyTruckerTUI implements Runnable {
 
     public GalaxyTruckerTUI()
     {
-        //this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
     }
@@ -43,7 +39,6 @@ public class GalaxyTruckerTUI implements Runnable {
                 case ASK_NET      -> handleConnectionTypeState();
                 case ASK_ADDRESS  -> handleAddressState();
                 case CONNECTING   -> handleConnectingState();
-                //case WAIT_PLAYER_READY -> handlePlayerReady();
                 case RUNNING      -> handleRunningState();
                 case TERMINATED   -> { return; }
             }
@@ -79,7 +74,7 @@ public class GalaxyTruckerTUI implements Runnable {
                 client = RmiClient.connectTo(serverAddress);
                 if (client == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
-                
+
                 playerId = client.addPlayer(username);
 
             } else {
@@ -108,7 +103,7 @@ public class GalaxyTruckerTUI implements Runnable {
     }
 
     private void handleRunningState() {
-        console.printHelp();                       
+        console.printHelp();
         TuiController tuiController = new TuiController(client, console, playerId);
 
         while (true) {

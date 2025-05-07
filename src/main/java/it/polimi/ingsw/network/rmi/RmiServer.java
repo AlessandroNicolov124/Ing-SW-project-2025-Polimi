@@ -97,16 +97,6 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public void x() throws RemoteException {
-
-    }
-
-    @Override
-    public void y() throws RemoteException {
-
-    }
-
-    @Override
     public void close() throws Exception {
         dispatcher.interrupt();
         UnicastRemoteObject.unexportObject(this, true);

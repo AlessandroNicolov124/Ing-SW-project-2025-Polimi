@@ -60,14 +60,6 @@ public class SocketClient implements Runnable, VirtualView, GameClient {
         }
     }
 
-    public void sendX() throws IOException { 
-        proxy.x(); 
-    }
-
-    public void sendY() throws IOException { 
-        proxy.y(); 
-    }
-
     public void sendObject(Object o) throws IOException {
         out.writeObject(o);
         out.flush();

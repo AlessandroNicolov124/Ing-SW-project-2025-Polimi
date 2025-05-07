@@ -5,8 +5,7 @@ import java.io.ObjectOutputStream;
 import java.util.concurrent.BlockingQueue;
 
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
-import it.polimi.ingsw.network.socket.messages.XMessage;
-import it.polimi.ingsw.network.socket.messages.YMessage;
+import it.polimi.ingsw.network.socket.messages.AddPlayerMessage;
 import it.polimi.ingsw.network.socket.server.VirtualServer;
 import it.polimi.ingsw.network.socket.messages.PlayerAddedMessage;
 

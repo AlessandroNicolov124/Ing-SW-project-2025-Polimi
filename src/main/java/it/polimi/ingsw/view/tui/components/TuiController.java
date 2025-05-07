@@ -18,20 +18,20 @@ public class TuiController {
     public boolean executeCommand(String command) {
         try {
             switch (command.toLowerCase()) {
-                case "x":
-                    if (client instanceof RmiClient) {
-                        ((RmiClient) client).sendX();
-                    } else if (client instanceof SocketClient) {
-                        ((SocketClient) client).sendX();
-                    }
-                    break;
-                case "y":
-                    if (client instanceof RmiClient) {
-                        ((RmiClient) client).sendY();
-                    } else if (client instanceof SocketClient) {
-                        ((SocketClient) client).sendY();
-                    }
-                    break;
+//                case "x":
+//                    if (client instanceof RmiClient) {
+//                        ((RmiClient) client).sendX();
+//                    } else if (client instanceof SocketClient) {
+//                        ((SocketClient) client).sendX();
+//                    }
+//                    break;
+//                case "y":
+//                    if (client instanceof RmiClient) {
+//                        ((RmiClient) client).sendY();
+//                    } else if (client instanceof SocketClient) {
+//                        ((SocketClient) client).sendY();
+//                    }
+//                    break;
                 case "help":
                     console.printHelp();
                     break;
