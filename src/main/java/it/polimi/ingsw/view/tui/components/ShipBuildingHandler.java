@@ -8,8 +8,7 @@ import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
 
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class ShipBuildingHandler {
 
@@ -17,30 +16,76 @@ public class ShipBuildingHandler {
     private final GameController controller;
     private final Player currentPlayer; // Assuming we know the current player
 
+    private final Random random = new Random();
+    private Queue<Component> componentDeck; // La pila di componenti pescati casualmente
+
+
     public ShipBuildingHandler(ConsoleManager console, GameController controller, Player currentPlayer) {
         this.console = console;
         this.controller = controller;
         this.currentPlayer = currentPlayer;
+        this.componentDeck = new LinkedList<>();
     }
 
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
+        console.printMessage("Generating random component deck...");
+
+        // Inizializza il mazzo di componenti casuali
+        initializeComponentDeck();
+
         boolean buildingDone = false;
+
+        //il primo elemento è sempre la cabina di pilotaggio
+        Component currentComponent = null;
+        handlePlaceComponent(createCabin(true));
 
         while (!buildingDone) {
             displayShip();
-            printShipBuildingMenu();
+
+            // Se non abbiamo un componente corrente, peschiamone uno
+            if (currentComponent == null && !componentDeck.isEmpty()) {
+                currentComponent = componentDeck.poll();
+                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
+            } else if (currentComponent == null && componentDeck.isEmpty()) {
+                console.printMessage("\nNo more components available!");
+            }
+
+            if (currentComponent != null) {
+                console.printMessage("Current component: " + currentComponent.getClass().getSimpleName());
+            }
+
+            printShipBuildingMenu(currentComponent != null);
             String choice = console.readCommand().trim().toLowerCase();
 
             switch (choice) {
                 case "p": // Place component
-                    handlePlaceComponent();
+                    if (currentComponent != null) {
+                        handlePlaceComponent(currentComponent);
+                        // Se piazzato con successo, il componente diventa null per pescarne uno nuovo
+                        currentComponent = null;
+                    } else {
+                        console.printError("No component available to place!");
+                    }
                     break;
                 case "r": // Remove component
                     handleRemoveComponent();
                     break;
                 case "t": // Rotate component (t for turn)
-                    handleRotateComponent();
+                    //handleRotateComponent();
+                    if (currentComponent != null) {
+                        handleRotateComponent(currentComponent);
+                    } else {
+                        console.printError("No component to rotate!");
+                    }
+                    break;
+                case "s": // Skip current component
+                    if (currentComponent != null) {
+                        console.printMessage("Skipping " + currentComponent.getClass().getName());
+                        currentComponent = null;
+                    } else {
+                        console.printError("No component to skip!");
+                    }
                     break;
                 case "v": // Validate and finish
                     if (handleValidateAndFinish()) {
@@ -56,6 +101,32 @@ public class ShipBuildingHandler {
                     break;
             }
         }
+    }
+
+    private void initializeComponentDeck() {
+        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
+        // in base alle regole del gioco e alla rarità dei componenti.
+        List<Component> allComponents = new ArrayList<>();
+
+        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
+        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
+        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
+        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
+        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
+        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
+        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
+
+        // Mescola la lista e converti in coda
+        Collections.shuffle(allComponents);
+        componentDeck = new LinkedList<>(allComponents);
     }
 
     private void displayShip() {
@@ -117,95 +188,98 @@ public class ShipBuildingHandler {
     }
 
 
-    private void printShipBuildingMenu() {
+    private void printShipBuildingMenu(boolean hasComponent) {
         console.printMessage("\nShip Building Options:");
-        console.printMessage(" (p) Place Component");
-        console.printMessage(" (r) Remove Component");
-        console.printMessage(" (t) Rotate Component");
+        if (hasComponent) {
+            console.printMessage(" (p) Place Current Component");
+            console.printMessage(" (t) Rotate Current Component");
+            console.printMessage(" (s) Skip Current Component");
+        } else {
+            console.printMessage(" (p) [No component available]");
+            console.printMessage(" (t) [No component available]");
+            console.printMessage(" (s) [No component available]");
+        }
+        console.printMessage(" (r) Remove Component from Ship");
         console.printMessage(" (v) Validate and Finish Ship");
         console.printMessage(" (q) Quit Ship Building");
         console.printMessage("Enter your choice: ");
     }
 
-    private void handlePlaceComponent() {
+    private void handlePlaceComponent(Component component) {
         console.printMessage("--- Place Component ---");
         // 1. Ask for component type
-        String typeStr = console.askQuestion("Enter component type (e.g., Cabin, SingleEngine, DoubleCannon):");
+        //String typeStr = console.askQuestion("Enter component type (e.g., Cabin, SingleEngine, DoubleCannon):");
         
         // 2. Ask for position
         int x = -1, y = -1;
-        try {
-            x = Integer.parseInt(console.askQuestion("Enter X coordinate:"));
-            y = Integer.parseInt(console.askQuestion("Enter Y coordinate:"));
-        } catch (NumberFormatException e) {
-            console.printError("Invalid coordinates.");
-            return;
-        }
         Position pos = new Position(x, y);
 
-        // 3. Create and initialize component (This is crucial and complex)
-        Component newComponent = createAndInitializeComponent(typeStr);
-        if (newComponent == null) {
-            console.printError("Invalid component type or failed to initialize.");
-            return;
-        }else if("cabin".equals(typeStr) && newComponent instanceof Cabin c) {
-                if (c.isStartingCabin()) {
-                    pos = currentPlayer.getShip().getStartingPosition();
-                }
+        // Se è una cabina iniziale, usa la posizione iniziale
+        if (component instanceof Cabin cabin && cabin.isStartingCabin()) {
+            pos = currentPlayer.getShip().getStartingPosition();
+        }else{
+            try {
+                x = Integer.parseInt(console.askQuestion("Enter X coordinate:"));
+                y = Integer.parseInt(console.askQuestion("Enter Y coordinate:"));
+                pos = new Position(x, y);
+            } catch (NumberFormatException e) {
+                console.printError("Invalid coordinates.");
+                return;
+            }
         }
 
         // 4. Call controller
-        boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, newComponent, pos);
+        boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
         
         if (placementSuccess) {
-            console.printMessage(typeStr + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
+            console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
         } else {
-            console.printError("Failed to place " + typeStr + " at (" + pos.getX() + "," + pos.getX() + "). Check position and connections.");
+            console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getX() + "). Check position and connections.");
         }
     }
 
-    private Component createAndInitializeComponent(String typeStr) {
-        // This is a simplified factory. A more robust solution would use a proper factory pattern
-        // or reflection, and handle connector initialization more dynamically.
-        // For now, using default/sensible connector setups.
-        Component component = null;
-        switch (typeStr.toLowerCase()) {
-            case "cabin":
-                boolean isStartingCabin = currentPlayer.getShip().getComponents().isEmpty(); // First component is starting cabin
-                component = new Cabin(isStartingCabin);
-                // Cabins usually have universal connectors or manage them internally
-                break;
-            case "singleengine":
-                Engine singleEngine = new SingleEngine();
-                // Example: Default for a single engine might be Double on NORTH, Null elsewhere
-                singleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-                component = singleEngine;
-                break;
-            case "doubleengine":
-                Engine doubleEngine = new DoubleEngine();
-                // Example: Default for a double engine
-                doubleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-                component = doubleEngine;
-                break;
-            case "singlecannon":
-                SingleCannon singleCannon = new SingleCannon(Direction.NORTH); // Default firing NORTH
-                // Cannons might need specific connector setups based on design
-                singleCannon.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-                component = singleCannon;
-                break;
-            case "doublecannon":
-                DoubleCannon doubleCannon = new DoubleCannon(Direction.NORTH); // Default firing NORTH
-                doubleCannon.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-                component = doubleCannon;
-                break;
-            // Add more cases for other components (CargoHolds, BatteryCompartment, etc.)
-            // Each will require specific initialization, especially for connectors.
-            default:
-                console.printError("Unknown component type: " + typeStr);
-                return null;
-        }
-        return component;
-    }
+//    private Component createAndInitializeComponent(String typeStr) {
+//        // This is a simplified factory. A more robust solution would use a proper factory pattern
+//        // or reflection, and handle connector initialization more dynamically.
+//        // For now, using default/sensible connector setups.
+//        Component component = null;
+//        switch (typeStr.toLowerCase()) {
+//            case "cabin":
+//                boolean isStartingCabin = currentPlayer.getShip().getComponents().isEmpty(); // First component is starting cabin
+//                component = new Cabin(isStartingCabin);
+//                // Cabins usually have universal connectors or manage them internally
+//                break;
+//            case "singleengine":
+//                Engine singleEngine = new SingleEngine();
+//                // Example: Default for a single engine might be Double on NORTH, Null elsewhere
+//                singleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
+//                component = singleEngine;
+//                break;
+//            case "doubleengine":
+//                Engine doubleEngine = new DoubleEngine();
+//                // Example: Default for a double engine
+//                doubleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
+//                component = doubleEngine;
+//                break;
+//            case "singlecannon":
+//                SingleCannon singleCannon = new SingleCannon(Direction.NORTH); // Default firing NORTH
+//                // Cannons might need specific connector setups based on design
+//                singleCannon.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
+//                component = singleCannon;
+//                break;
+//            case "doublecannon":
+//                DoubleCannon doubleCannon = new DoubleCannon(Direction.NORTH); // Default firing NORTH
+//                doubleCannon.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
+//                component = doubleCannon;
+//                break;
+//            // Add more cases for other components (CargoHolds, BatteryCompartment, etc.)
+//            // Each will require specific initialization, especially for connectors.
+//            default:
+//                console.printError("Unknown component type: " + typeStr);
+//                return null;
+//        }
+//        return component;
+//    }
 
     private void handleRemoveComponent() {
         console.printMessage("--- Remove Component ---");
@@ -228,41 +302,68 @@ public class ShipBuildingHandler {
         }
     }
 
-    private void handleRotateComponent() {
+    private void handleRotateComponent(Component component) {
         console.printMessage("--- Rotate Component ---");
-        int x = -1, y = -1;
-        try {
-            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
-            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
-        } catch (NumberFormatException e) {
-            console.printError("Invalid coordinates.");
-            return;
-        }
-        Position posToRotate = new Position(x,y);
-        Component compToRotate = currentPlayer.getShip().getComponentAt(posToRotate);
-
-        if (compToRotate == null) {
-            console.printError("No component found at (" + x + "," + y + ").");
-            return;
-        }
-
         String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+
+        // Salva lo stato attuale del componente per verificare le modifiche
+        // Nota: potrebbe essere necessario implementare una funzione di copia profonda
+
         switch (rotationType) {
             case "c":
-                controller.rotateComponentClockwiseForPlayer(currentPlayer, compToRotate);
+                controller.rotateComponentClockwiseForPlayer(currentPlayer, component);
                 break;
             case "a":
-                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, compToRotate);
+                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, component);
                 break;
             case "o":
-                controller.rotateComponentOppositeForPlayer(currentPlayer, compToRotate);
+                controller.rotateComponentOppositeForPlayer(currentPlayer, component);
                 break;
             default:
                 console.printError("Invalid rotation type.");
                 return;
         }
-        console.printMessage("Attempted to rotate component at (" + x + "," + y + ").");
+
+        console.printMessage("Component rotated " +
+                (rotationType.equals("c") ? "clockwise" :
+                        rotationType.equals("a") ? "anti-clockwise" : "opposite"));
     }
+
+//    private void handleRotateComponent() {
+//        console.printMessage("--- Rotate Component ---");
+//        int x = -1, y = -1;
+//        try {
+//            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
+//            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
+//        } catch (NumberFormatException e) {
+//            console.printError("Invalid coordinates.");
+//            return;
+//        }
+//        Position posToRotate = new Position(x,y);
+//        Component compToRotate = currentPlayer.getShip().getComponentAt(posToRotate);
+//
+//        if (compToRotate == null) {
+//            console.printError("No component found at (" + x + "," + y + ").");
+//            return;
+//        }
+//
+//        String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+//        switch (rotationType) {
+//            case "c":
+//                controller.rotateComponentClockwiseForPlayer(currentPlayer, compToRotate);
+//                break;
+//            case "a":
+//                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, compToRotate);
+//                break;
+//            case "o":
+//                controller.rotateComponentOppositeForPlayer(currentPlayer, compToRotate);
+//                break;
+//            default:
+//                console.printError("Invalid rotation type.");
+//                return;
+//        }
+//        console.printMessage("Attempted to rotate component at (" + x + "," + y + ").");
+//    }
 
     private boolean handleValidateAndFinish() {
         console.printMessage("Validating ship...");
@@ -276,5 +377,114 @@ public class ShipBuildingHandler {
             // For example: Ensure all parts are connected, has engine and cabin, cannons not blocked.
             return false;
         }
+    }
+
+    // Factory methods per creare i diversi tipi di componenti
+    private Cabin createCabin(boolean isStarting) {
+        Cabin cabin = new Cabin(isStarting);
+        // Inizializza i connettori in modo casuale o predefinito
+        initializeRandomConnectors(cabin);
+        return cabin;
+    }
+
+    private SingleEngine createSingleEngine() {
+        SingleEngine engine = new SingleEngine();
+        initializeRandomConnectors(engine);
+        return engine;
+    }
+
+    private DoubleEngine createDoubleEngine() {
+        DoubleEngine engine = new DoubleEngine();
+        initializeRandomConnectors(engine);
+        return engine;
+    }
+
+    private SingleCannon createSingleCannon() {
+        Direction direction = getRandomDirection();
+        SingleCannon cannon = new SingleCannon(direction);
+        initializeRandomConnectors(cannon);
+        return cannon;
+    }
+
+    private DoubleCannon createDoubleCannon() {
+        Direction direction = getRandomDirection();
+        DoubleCannon cannon = new DoubleCannon(direction);
+        initializeRandomConnectors(cannon);
+        return cannon;
+    }
+
+    private CargoHolds createNormalDoubleCargoHolds() {
+        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+    private CargoHolds createNormalTripleCargoHolds() {
+        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+
+    private CargoHolds createSpecialDoubleCargoHolds() {
+        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+    private CargoHolds createSpecialTripleCargoHolds() {
+        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.TRIPLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+
+    private BatteryCompartment createBatteryCompartment() {
+        BatteryCompartment battery = new BatteryCompartment();
+        initializeRandomConnectors(battery);
+        return battery;
+    }
+
+    private ShieldGenerator createShieldGenerator() {
+        ShieldGenerator shield = new ShieldGenerator();
+        initializeRandomConnectors(shield);
+        return shield;
+    }
+
+    private LifeSupportSystem createPurpleLifeSupportSystem() {
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
+        initializeRandomConnectors(lifeSupportSystem);
+        return lifeSupportSystem;
+    }
+    private LifeSupportSystem createBrownLifeSupportSystem() {
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
+        initializeRandomConnectors(lifeSupportSystem);
+        return lifeSupportSystem;
+    }
+
+    private StructuralModule createStructuralModule() {
+        StructuralModule structuralModule = new StructuralModule();
+        initializeRandomConnectors(structuralModule);
+        return structuralModule;
+    }
+
+    private Direction getRandomDirection() {
+        Direction[] directions = Direction.values();
+        return directions[random.nextInt(directions.length)];
+    }
+
+    private void initializeRandomConnectors(Component component) {
+        // Inizializza i connettori in modo casuale
+        // Questa è una versione semplificata, potresti voler implementare
+        // regole più complesse per la generazione dei connettori
+        ConnectorType[] possibleConnectors = {
+                new SingleConnectorType(),
+                new DoubleConnectorType(),
+                new UniversalConnectorType(),
+                new NullConnectorType()
+        };
+
+        ConnectorType north = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType east = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType south = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType west = possibleConnectors[random.nextInt(possibleConnectors.length)];
+
+        component.initializeConnectors(north, east, south, west);
     }
 } 
