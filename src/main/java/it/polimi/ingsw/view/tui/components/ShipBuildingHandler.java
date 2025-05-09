@@ -8,6 +8,7 @@ import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
 
+import java.sql.Connection;
 import java.util.*;
 
 public class ShipBuildingHandler {
@@ -37,8 +38,10 @@ public class ShipBuildingHandler {
         boolean buildingDone = false;
 
         //il primo elemento è sempre la cabina di pilotaggio
-        Component currentComponent = null;
-        handlePlaceComponent(createCabin(true));
+        Component currentComponent = createCabin(true);
+        displayComponent(currentComponent);
+        handlePlaceComponent(currentComponent);
+        currentComponent = null;
 
         while (!buildingDone) {
             displayShip();
@@ -53,6 +56,7 @@ public class ShipBuildingHandler {
 
             if (currentComponent != null) {
                 console.printMessage("Current component: " + currentComponent.getClass().getSimpleName());
+                displayComponent(currentComponent);
             }
 
             printShipBuildingMenu(currentComponent != null);
@@ -103,6 +107,43 @@ public class ShipBuildingHandler {
         }
     }
 
+    private void displayComponent(Component currentComponent) {
+        // Create a grid
+        String[][] grid = new String[3][3];
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                grid[i][j] = "[  ]"; // Empty slot
+            }
+        }
+        grid[1][1] = "[" + getComponentSymbol(currentComponent) + "]";
+        grid[1][0] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.NORTH))  + "]";
+        grid[1][2] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.SOUTH))  + "]";
+        grid[2][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.EAST))  + "]";
+        grid[0][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.WEST))  + "]";
+
+
+        // Print grid
+        console.printMessage("--------------------");
+        for (int i = 0; i < 3; i++) {
+            StringBuilder rowStr = new StringBuilder();
+            for (int j = 0; j < 3; j++) {
+                rowStr.append(grid[i][j]);
+            }
+            console.printMessage(rowStr.toString());
+        }
+        console.printMessage("--------------------");
+    }
+
+    private String getConnectionSymbol(Connector connector) {
+        return switch (connector.getConnectorType()){
+            case SingleConnectorType s -> "SC";
+            case DoubleConnectorType s -> "DC";
+            case UniversalConnectorType s -> "UC";
+            case NullConnectorType s -> "NC";
+            default -> "??";
+        };
+    }
+
     private void initializeComponentDeck() {
         // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
         // in base alle regole del gioco e alla rarità dei componenti.
@@ -146,7 +187,7 @@ public class ShipBuildingHandler {
         String[][] grid = new String[height][width];
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                grid[i][j] = "[ ]"; // Empty slot
+                grid[i][j] = "[  ]"; // Empty slot
             }
         }
 
@@ -159,9 +200,9 @@ public class ShipBuildingHandler {
                 grid[pos.getY()][pos.getX()] = "[" + compSymbol + "]";
             }
         }
-        
+
         // Add cooordinates
-        console.printMessage("  X:0  1  2  3  4  5  6  7  8  9"); // Assuming max width 10 for now
+        console.printMessage("  X:  0   1   2   3   4   5   6   7   8   9"); // Assuming max width 10 for now
         // Print grid
         for (int i = 0; i < height; i++) {
             StringBuilder rowStr = new StringBuilder("Y:" + i + " ");
@@ -174,17 +215,30 @@ public class ShipBuildingHandler {
     }
 
     private String getComponentSymbol(Component component) {
-        if (component instanceof Cabin) return "C";
-        if (component instanceof SingleEngine) return "E";
-        if (component instanceof DoubleEngine) return "E"; // Could be E2
-        if (component instanceof SingleCannon) return "S"; // S for single cannon
-        if (component instanceof DoubleCannon) return "D"; // D for double cannon
-        if (component instanceof CargoHolds) return "H"; // H for holds
-        if (component instanceof BatteryCompartment) return "B";
-        if (component instanceof ShieldGenerator) return "G";
-        if (component instanceof LifeSupportSystem) return "L";
-        if (component instanceof StructuralModule) return "X"; // For structural
-        return "?"; // Unknown
+        return switch (component) {
+            case Cabin c -> "CA";
+            case SingleCannon sc -> "C1"; // S1 for single cannon
+            case DoubleCannon dc -> "C2";
+            case SingleEngine se -> "E1";
+            case DoubleEngine de -> "E2";
+            case CargoHolds c -> "CH";
+            case BatteryCompartment b -> "BC";
+            case ShieldGenerator sg -> "SG";
+            case LifeSupportSystem ls -> "LS";
+            case StructuralModule sm -> "SM";
+            default -> "??";
+        };
+//        if (component instanceof Cabin) return "C";
+//        if (component instanceof SingleEngine) return "E";
+//        if (component instanceof DoubleEngine) return "E"; // Could be E2
+//        if (component instanceof SingleCannon) return "S"; // S for single cannon
+//        if (component instanceof DoubleCannon) return "D"; // D for double cannon
+//        if (component instanceof CargoHolds) return "H"; // H for holds
+//        if (component instanceof BatteryCompartment) return "B";
+//        if (component instanceof ShieldGenerator) return "G";
+//        if (component instanceof LifeSupportSystem) return "L";
+//        if (component instanceof StructuralModule) return "X"; // For structural
+//        return "?"; // Unknown
     }
 
 
@@ -209,10 +263,10 @@ public class ShipBuildingHandler {
         console.printMessage("--- Place Component ---");
         // 1. Ask for component type
         //String typeStr = console.askQuestion("Enter component type (e.g., Cabin, SingleEngine, DoubleCannon):");
-        
+
         // 2. Ask for position
         int x = -1, y = -1;
-        Position pos = new Position(x, y);
+        Position pos;
 
         // Se è una cabina iniziale, usa la posizione iniziale
         if (component instanceof Cabin cabin && cabin.isStartingCabin()) {
@@ -230,11 +284,12 @@ public class ShipBuildingHandler {
 
         // 4. Call controller
         boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
-        
+
         if (placementSuccess) {
             console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
         } else {
-            console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getX() + "). Check position and connections.");
+            console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Check position and connections.");
+            handlePlaceComponent(component);
         }
     }
 
@@ -382,8 +437,10 @@ public class ShipBuildingHandler {
     // Factory methods per creare i diversi tipi di componenti
     private Cabin createCabin(boolean isStarting) {
         Cabin cabin = new Cabin(isStarting);
-        // Inizializza i connettori in modo casuale o predefinito
-        initializeRandomConnectors(cabin);
+        if(!isStarting){
+            // Inizializza i connettori in modo casuale o predefinito
+            initializeRandomConnectors(cabin);
+        }
         return cabin;
     }
 
@@ -400,16 +457,28 @@ public class ShipBuildingHandler {
     }
 
     private SingleCannon createSingleCannon() {
-        Direction direction = getRandomDirection();
-        SingleCannon cannon = new SingleCannon(direction);
+        //il cannone punta con il costruttore sempre verso nord
+        SingleCannon cannon = new SingleCannon();
         initializeRandomConnectors(cannon);
+        while(!cannon.validateFiringDirection(cannon.getFiringDirection())){
+            cannon.deleteConnection();
+            initializeRandomConnectors(cannon);
+        }
         return cannon;
     }
 
     private DoubleCannon createDoubleCannon() {
-        Direction direction = getRandomDirection();
-        DoubleCannon cannon = new DoubleCannon(direction);
+//        Direction direction = getRandomDirection();
+//        DoubleCannon cannon = new DoubleCannon(direction);
+//        initializeRandomConnectors(cannon);
+//        return cannon;
+        //il cannone punta con il costruttore sempre verso nord
+        DoubleCannon cannon = new DoubleCannon();
         initializeRandomConnectors(cannon);
+        while(!cannon.validateFiringDirection(cannon.getFiringDirection())){
+            cannon.deleteConnection();
+            initializeRandomConnectors(cannon);
+        }
         return cannon;
     }
 

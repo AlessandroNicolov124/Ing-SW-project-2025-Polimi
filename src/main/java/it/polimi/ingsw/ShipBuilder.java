@@ -39,6 +39,7 @@ public class ShipBuilder {
     public boolean placeComponent(Component component, Position position) {
         // Verifica se la posizione è già occupata
         if (isPositionOccupied(position)) {
+            System.out.println("  position occupied");
             return false;
         }
 

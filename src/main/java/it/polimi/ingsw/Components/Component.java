@@ -15,6 +15,10 @@ public sealed abstract class Component permits BatteryCompartment, Cabin, Cannon
         componentDirection = Direction.NORTH;
     }
 
+    public void deleteConnection(){
+        connections.clear();
+    }
+
     public boolean isDamaged() {
         return damaged;
     }
@@ -34,6 +38,10 @@ public sealed abstract class Component permits BatteryCompartment, Cabin, Cannon
     // Get connections for visitor operations
     public List<Connector> getConnections() {
         return new ArrayList<>(connections);
+    }
+
+    public Connector getConnectorByDirection(Direction direction) {
+        return connections.stream().filter(c -> c.getDirection() == direction).findFirst().orElse(null);
     }
 
     public void setConnections(List<Connector> connections) {
