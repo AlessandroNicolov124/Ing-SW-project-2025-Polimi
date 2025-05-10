@@ -11,7 +11,7 @@ import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
 
 
-public class SocketClient implements Runnable, VirtualView, GameClient {
+public class SocketClient implements Runnable, VirtualView {
     
     private final Socket socket;
     private final ObjectOutputStream out;
@@ -48,7 +48,7 @@ public class SocketClient implements Runnable, VirtualView, GameClient {
 
     @Override
     public void showUpdate(String text) {
-        System.out.println("[update] " + text);
+        System.out.println("[Server] " + text);
     }
 
     @Override public void close() throws Exception { 
@@ -56,7 +56,7 @@ public class SocketClient implements Runnable, VirtualView, GameClient {
     }
 
     @Override
-    public int addPlayer(String username) throws Exception {
+    public int addPlayer(String username) throws IOException {
         return proxy.addPlayer(username);
     }
     

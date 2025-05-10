@@ -17,7 +17,7 @@ public class AddPlayerMessage implements ServerMessage {
 
     @Override
     public void handleServer(SocketClientHandler h) {
-        int id = h.createPlayer(username);
+        int id = h.addPlayer(username);
         h.sendUpdate(new PlayerAddedMessage(id, username));
     }
 }

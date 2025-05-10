@@ -28,6 +28,7 @@ public class VirtualSocketServer implements VirtualServer {
         }
     }
 
+    // use a Timeout to avoid blocking forever
     public <T extends GenericMessage> T waitFor(Class<T> type) throws InterruptedException {
         while (true) {
             GenericMessage m = responses.poll(100, TimeUnit.MILLISECONDS);
@@ -52,9 +53,10 @@ public class VirtualSocketServer implements VirtualServer {
         }
     }
 
-    @Override 
-    public void stopServer() throws IOException { 
-        out.close(); 
+    @Override
+    public void close() throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'close'");
     }
 
 }

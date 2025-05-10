@@ -76,7 +76,8 @@ public class SocketClientHandler implements Runnable, VirtualView {
         }
     }
 
-    public int createPlayer(String username) {
+    @Override
+    public int addPlayer(String username) {
         int min = 1; // use an atomic integer or a uuid
         int max = 1000; // use an atomic integer or a uuid
         int newId = ThreadLocalRandom.current().nextInt(min, max + 1); // use an atomic integer or a uuid
@@ -89,7 +90,8 @@ public class SocketClientHandler implements Runnable, VirtualView {
         server.broadcast(msg); 
     }
 
-    private void close() {
+    @Override
+    public void close() {
         try {
             socket.close();
         } catch (IOException ignored) {

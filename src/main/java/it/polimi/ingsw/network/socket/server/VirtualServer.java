@@ -2,10 +2,11 @@ package it.polimi.ingsw.network.socket.server;
 
 import java.io.IOException;
 
-public interface VirtualServer {
+import it.polimi.ingsw.network.client.GameClient;
 
+public interface VirtualServer extends GameClient {
+
+    @Override
     int addPlayer(String username) throws IOException;
-
-    void stopServer() throws IOException;
 
 }

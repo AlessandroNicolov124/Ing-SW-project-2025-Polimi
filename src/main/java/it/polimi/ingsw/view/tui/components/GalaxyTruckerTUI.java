@@ -84,7 +84,7 @@ public class GalaxyTruckerTUI implements Runnable {
                 Thread clientThread = new Thread(socketClient, "socket-client");
                 clientThread.setDaemon(true);
                 clientThread.start();
-                playerId = socketClient.addPlayer(username);
+                playerId = socketClient.addPlayer(username); 
             }
             
             console.printMessage("Connected as " + username + "!");
