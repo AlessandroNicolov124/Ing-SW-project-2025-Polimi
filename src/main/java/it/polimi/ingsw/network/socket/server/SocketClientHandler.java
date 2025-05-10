@@ -4,11 +4,12 @@ import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.socket.client.VirtualView;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
+import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SocketClientHandler implements Runnable, VirtualView {
@@ -17,11 +18,11 @@ public class SocketClientHandler implements Runnable, VirtualView {
     private final SocketServer server;
     private final ObjectInputStream  in;
     private final ObjectOutputStream out;
-    private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
+    private final BlockingDeque<GenericMessage> updates = new LinkedBlockingDeque<>();
 
     public SocketClientHandler(Socket s, GameController c, SocketServer srv) throws IOException {
-        socket = s;
-        controller = c;
+        socket = s; 
+        controller = c; 
         server = srv;
         out = new ObjectOutputStream(socket.getOutputStream());
         out.flush();
@@ -34,73 +35,69 @@ public class SocketClientHandler implements Runnable, VirtualView {
         Thread t = new Thread(() -> {
             try {
                 while (true) {
-                    String msg = updates.take();
+                    GenericMessage msg = updates.take();
                     synchronized (out) {
                         out.writeObject(msg);
                         out.flush();
                     }
                 }
-            } catch (InterruptedException | IOException ex) {
+            } catch (IOException | InterruptedException ignored) {
+            } finally {
                 close();
             }
-        }, "dispatcher-" + socket.getPort());
+        }, "dispatcher-" + socket.getInetAddress());
         t.setDaemon(true);
         t.start();
     }
 
 
-    public void sendUpdate(String m) {
-        updates.offer(m);
+    public void sendUpdate(GenericMessage m) { 
+        updates.offer(m); 
     }
 
     @Override
     public void showUpdate(String m) {
-        sendUpdate(m);
+        sendUpdate(new TextUpdateMessage(m));
     }
 
     // client -> server
     @Override
     public void run() {
         try {
-            while (true) {
-                Object o = in.readObject();
-                System.out.println("new obj recieved" + o);
-                ((GenericMessage) o).handle(this);
+            while (!socket.isClosed()) {
+                Object obj = in.readObject();
+                if (obj instanceof GenericMessage g) {
+                    g.handleServer(this); 
+                }
             }
-        } catch (EOFException | java.net.SocketException e) {
-            System.out.println("Client disconnected: " + socket.getRemoteSocketAddress());
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ignored) {
         } finally {
-            close(); 
+            close();
         }
     }
 
-    public int createPlayer(String username) {
-        int min = 1;
-        int max = 1000;
-        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
-        Player p = new Player(newId, username, true);
+    @Override
+    public int addPlayer(String username) {
+        int min = 1; // use an atomic integer or a uuid
+        int max = 1000; // use an atomic integer or a uuid
+        int newId = ThreadLocalRandom.current().nextInt(min, max + 1); // use an atomic integer or a uuid
+        Player p = new Player(newId, username, true); // move to controller
         controller.addPlayer(p);
         return newId;
     }
 
-    public void sendMessage(Object o) throws IOException {
-        synchronized (out) {
-            out.writeObject(o);
-            out.flush();
-        }
+    public void broadcast(GenericMessage msg) { 
+        server.broadcast(msg); 
     }
 
-    public void broadcast(String msg) {
-        server.broadcast(msg);
-    }
-
-    private void close() {
-        server.removeClient(this);
+    @Override
+    public void close() {
         try {
             socket.close();
-        } catch (IOException ignored) { }
+        } catch (IOException ignored) {
+            
+        }
+        server.removeClient(this);
     }
 
 }

@@ -12,7 +12,7 @@ import it.polimi.ingsw.network.client.GameClient;;
 
 
 // This class is a RMI client implementation.
-// It takes care of user interactions and showing the current state of the
+// It takes care of user interactions and showing the current state of the 
 // application to the user.
 // It needs a reference to the server stub to send user input.
 // Also there will be the need to synchronize the state of the client with the server
@@ -20,7 +20,7 @@ import it.polimi.ingsw.network.client.GameClient;;
 // causing a data race which interferes with the user input.
 
 // Asynchronous client stub for the RMI server.
-public class RmiClient extends UnicastRemoteObject implements VirtualView, GameClient {
+public class RmiClient extends UnicastRemoteObject implements VirtualView {
     private final VirtualServer server;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private int playerId = -1;
@@ -48,7 +48,8 @@ public class RmiClient extends UnicastRemoteObject implements VirtualView, GameC
     @Override
     public void showUpdate(String message) throws RemoteException {
         incoming.offer(message);    // put the message in the queue without verifying if it is full
-        // if the queue is full, the message will be discarded
+                                    // if the queue is full, the message will be discarded 
+        System.out.println("[Server] " + message);
     }
 
     // Consumer thread which takes messages from the queue and prints them on the TUI
@@ -56,8 +57,7 @@ public class RmiClient extends UnicastRemoteObject implements VirtualView, GameC
         Thread t = new Thread(() -> {
             try {
                 while (true) {
-                    String msg = incoming.take();
-                    System.out.println("[Server] " + msg);
+                    incoming.take();
                 }
             } catch (InterruptedException ignored) { }
         }, "TUI-Update");

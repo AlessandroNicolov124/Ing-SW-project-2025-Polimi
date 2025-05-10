@@ -28,9 +28,4 @@ public class PlayerAddedMessage implements ClientMessage {
         cli.showUpdate("Welcome " + username + " (id = " + playerId + ")");
     }
     
-    // Nothing to do here because this message is sent to the client
-    @Override
-    public void handle(SocketClientHandler handler) throws IOException {
-
-    }
 }
