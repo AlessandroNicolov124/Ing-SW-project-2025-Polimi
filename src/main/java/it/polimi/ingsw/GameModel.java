@@ -2,9 +2,10 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 
+import java.io.Serializable;
 import java.util.*;
 
-public class GameModel {
+public class GameModel implements Serializable {
     private FlightBoard flightBoard;
     private int turnNumber;
     private String state;

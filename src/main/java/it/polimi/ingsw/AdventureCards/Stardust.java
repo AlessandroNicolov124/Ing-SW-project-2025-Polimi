@@ -54,7 +54,7 @@ public class Stardust extends AdventureCard {
             
             // Move player back on flight board
             if (exposedConnectors > 0) {
-                gameModel.getFlightBoard().updatePosition(player, -exposedConnectors);
+                //gameModel.getFlightBoard().updatePosition(player, -exposedConnectors);
             }
         }
     }
