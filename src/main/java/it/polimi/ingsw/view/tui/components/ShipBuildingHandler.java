@@ -78,7 +78,7 @@ public class ShipBuildingHandler {
                 case "t": // Rotate component (t for turn)
                     //handleRotateComponent();
                     if (currentComponent != null) {
-                        handleRotateComponent(currentComponent);
+                        currentComponent = handleRotateComponent(currentComponent);
                     } else {
                         console.printError("No component to rotate!");
                     }
@@ -357,7 +357,7 @@ public class ShipBuildingHandler {
         }
     }
 
-    private void handleRotateComponent(Component component) {
+    private Component handleRotateComponent(Component component) {
         console.printMessage("--- Rotate Component ---");
         String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
 
@@ -366,22 +366,26 @@ public class ShipBuildingHandler {
 
         switch (rotationType) {
             case "c":
-                controller.rotateComponentClockwiseForPlayer(currentPlayer, component);
+                component = controller.rotateComponentClockwise(currentPlayer, component);
+                //controller.rotateComponentClockwiseForPlayer(currentPlayer, component);
                 break;
             case "a":
-                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, component);
+                component = controller.rotateComponentCounterClockwise(currentPlayer, component);
+                //controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, component);
                 break;
             case "o":
-                controller.rotateComponentOppositeForPlayer(currentPlayer, component);
+                component = controller.rotateComponentOpposite(currentPlayer, component);
+                //controller.rotateComponentOppositeForPlayer(currentPlayer, component);
                 break;
             default:
                 console.printError("Invalid rotation type.");
-                return;
+                break;
         }
 
         console.printMessage("Component rotated " +
                 (rotationType.equals("c") ? "clockwise" :
                         rotationType.equals("a") ? "anti-clockwise" : "opposite"));
+        return component;
     }
 
 //    private void handleRotateComponent() {

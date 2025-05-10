@@ -96,27 +96,60 @@ public class  GameController {
         if (isPlayerThere(player)) {
             ShipBuilder ship = player.getShip();
             if (ship != null && componentToRotate != null) {
-                ship.rotateComponentClockwise(componentToRotate);
+                ship.rotateComponentOfShipClockwise(componentToRotate);
                 // Consider calling updateView() or returning a status if needed
             }
         }
+    }
+
+    public Component rotateComponentClockwise(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                componentToRotate = ship.rotateComponentClockwise(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+        return componentToRotate;
     }
 
     public void rotateComponentCounterClockwiseForPlayer(Player player, Component componentToRotate) {
         if (isPlayerThere(player)) {
             ShipBuilder ship = player.getShip();
             if (ship != null && componentToRotate != null) {
-                ship.rotateComponentCounterClockwise(componentToRotate);
+                ship.rotateComponentOfShipCounterClockwise(componentToRotate);
                 // Consider calling updateView() or returning a status if needed
             }
         }
+    }
+
+    public Component rotateComponentCounterClockwise(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                componentToRotate = ship.rotateComponentCounterClockwise(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+        return componentToRotate;
+    }
+
+    public Component rotateComponentOpposite(Player player, Component componentToRotate) {
+        if (isPlayerThere(player)) {
+            ShipBuilder ship = player.getShip();
+            if (ship != null && componentToRotate != null) {
+                componentToRotate = ship.rotateComponentOpposite(componentToRotate);
+                // Consider calling updateView() or returning a status if needed
+            }
+        }
+        return componentToRotate;
     }
 
     public void rotateComponentOppositeForPlayer(Player player, Component componentToRotate) {
         if (isPlayerThere(player)) {
             ShipBuilder ship = player.getShip();
             if (ship != null && componentToRotate != null) {
-                ship.rotateComponentOpposite(componentToRotate);
+                ship.rotateComponentOfShipOpposite(componentToRotate);
                 // Consider calling updateView() or returning a status if needed
             }
         }
@@ -151,4 +184,6 @@ public class  GameController {
         }
 
     }
+
+
 }

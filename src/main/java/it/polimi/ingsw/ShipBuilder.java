@@ -50,14 +50,14 @@ public class ShipBuilder {
 
         // Se non è il primo componente, deve essere collegato a un componente esistente
         if (!components.isEmpty()) {
-            boolean isConnected = false;
+            boolean isConnected = true;
 
             for (Direction direction : Direction.values()) {
                 Position adjacentPosition = direction.getAdjacentPosition(position);
                 Component adjacentComponent = getComponentAt(adjacentPosition);
 
-                if (adjacentComponent != null && component.canConnectTo(adjacentComponent, direction)) {
-                    isConnected = true;
+                if (adjacentComponent != null && !component.canConnectTo(adjacentComponent, direction)) {
+                    isConnected = false;
                     break;
                 }
             }
@@ -460,7 +460,7 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
-    public void rotateComponentClockwise(Component component) {
+    public void rotateComponentOfShipClockwise(Component component) {
         component = getComponentAt(components.get(component));
         if (component != null) {
             Direction newDirection = component.getComponentDirection().getClockwise();
@@ -474,7 +474,21 @@ public class ShipBuilder {
         }
     }
 
-    public void rotateComponentCounterClockwise(Component component) {
+    public Component rotateComponentClockwise(Component component) {
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+        return component;
+    }
+
+    public void rotateComponentOfShipCounterClockwise(Component component) {
         component = getComponentAt(components.get(component));
         if (component != null) {
             Direction newDirection = component.getComponentDirection().getCounterClockwise();
@@ -488,7 +502,21 @@ public class ShipBuilder {
         }
     }
 
-    public void rotateComponentOpposite(Component component) {
+    public Component rotateComponentCounterClockwise(Component component) {
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getCounterClockwise();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+        return component;
+    }
+
+    public void rotateComponentOfShipOpposite(Component component) {
         component = getComponentAt(components.get(component));
         if (component != null) {
             Direction newDirection = component.getComponentDirection().getOpposite();
@@ -500,6 +528,20 @@ public class ShipBuilder {
                 connector.setDirection(newConnectorDirection);
             }
         }
+    }
+
+    public Component rotateComponentOpposite(Component component) {
+        if (component != null) {
+            Direction newDirection = component.getComponentDirection().getOpposite();
+            component.setComponentDirection(newDirection);
+
+            List<Connector> connectors = component.getConnections();
+            for (Connector connector : connectors) {
+                Direction newConnectorDirection = connector.getDirection().getOpposite();
+                connector.setDirection(newConnectorDirection);
+            }
+        }
+        return component;
     }
 
     public int calculateEnginePower() {

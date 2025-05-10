@@ -70,7 +70,9 @@ public sealed abstract class Component permits BatteryCompartment, Cabin, Cannon
         }
 
         // Verifica se i connettori sono compatibili
-        return areConnectorsCompatible(myConnector.get(), otherConnector.get());
+        boolean comp = areConnectorsCompatible(myConnector.get(), otherConnector.get());
+        System.out.println(" Connector are compatible: " + comp);
+        return comp;
     }
 
     private boolean areConnectorsCompatible(Connector c1, Connector c2) {
