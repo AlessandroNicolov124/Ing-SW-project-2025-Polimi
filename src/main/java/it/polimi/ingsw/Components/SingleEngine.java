@@ -5,7 +5,4 @@ public final class SingleEngine extends Engine {
     public SingleEngine() {
         super(1, 0);
     }
-
-    public boolean isDoubleEngine() {return false;}
-
 }

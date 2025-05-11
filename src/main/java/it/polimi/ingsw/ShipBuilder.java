@@ -203,7 +203,10 @@ public class ShipBuilder {
                 })
                 .count();
 
-        boolean isValid = hasEngine>0 && hasCabin>0 && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
+        boolean validationEngineFire = checkEngineFire();
+
+        // La nave è assemblata se ha almeno un motore e una cabina
+        boolean isValid = hasEngine>0 && hasCabin>0 && validationEngineFire && validationCannonFire;
 
         //System.out.println("    Ship Validation: " + isValid);
         return isValid;
@@ -213,14 +216,32 @@ public class ShipBuilder {
         List<SingleCannon> singleCannons = getOperationalSingleCannons();
         List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
         for (SingleCannon singleCannon : singleCannons) {
-            Position inFiringDirection = getPositionOf(singleCannon).getAdjacentPosition(singleCannon.getFiringDirection());
+            Position inFiringDirection = getPositionOf(singleCannon).getAdjacentPosition(singleCannon.getComponentDirection());
             if(getAllPositions().contains(inFiringDirection)) {
                 return false;
             }
         }
         for (DoubleCannon dc : doubleCannons) {
-            Position inFiringDirection = getPositionOf(dc).getAdjacentPosition(dc.getFiringDirection());
+            Position inFiringDirection = getPositionOf(dc).getAdjacentPosition(dc.getComponentDirection());
             if(getAllPositions().contains(inFiringDirection)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean checkEngineFire() {
+        List<SingleEngine> singleEngines = getOperationalSingleEngines();
+        List<DoubleEngine> doubleEngines = getOperationalDoubleEngines();
+        for (SingleEngine se : singleEngines) {
+            Position inOppositeDirection = getPositionOf(se).getAdjacentPosition(se.getComponentDirection().getOpposite());
+            if(getAllPositions().contains(inOppositeDirection)) {
+                return false;
+            }
+        }
+        for (DoubleEngine dc : doubleEngines) {
+            Position inOppositeDirection = getPositionOf(dc).getAdjacentPosition(dc.getComponentDirection().getOpposite());
+            if(getAllPositions().contains(inOppositeDirection)) {
                 return false;
             }
         }
@@ -457,6 +478,23 @@ public class ShipBuilder {
                     default -> Stream.empty();
                 })
                 .filter(singleCannon -> !singleCannon.isDamaged())
+                .collect(Collectors.toList());
+    }
+
+    private List<DoubleEngine> getOperationalDoubleEngines() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case DoubleEngine de when !de.isDamaged() -> Stream.of(de);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
+    private List<SingleEngine> getOperationalSingleEngines() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case SingleEngine de when !de.isDamaged() -> Stream.of(de);
+                    default -> Stream.empty();
+                })
                 .collect(Collectors.toList());
     }
 

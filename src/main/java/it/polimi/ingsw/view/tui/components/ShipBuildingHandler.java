@@ -451,12 +451,20 @@ public class ShipBuildingHandler {
     private SingleEngine createSingleEngine() {
         SingleEngine engine = new SingleEngine();
         initializeRandomConnectors(engine);
+        while(!engine.validateEngineDirection(engine.getComponentDirection())){
+            engine.deleteConnection();
+            initializeRandomConnectors(engine);
+        }
         return engine;
     }
 
     private DoubleEngine createDoubleEngine() {
         DoubleEngine engine = new DoubleEngine();
         initializeRandomConnectors(engine);
+        while(!engine.validateEngineDirection(engine.getComponentDirection())){
+            engine.deleteConnection();
+            initializeRandomConnectors(engine);
+        }
         return engine;
     }
 
@@ -464,7 +472,7 @@ public class ShipBuildingHandler {
         //il cannone punta con il costruttore sempre verso nord
         SingleCannon cannon = new SingleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getFiringDirection())){
+        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
             cannon.deleteConnection();
             initializeRandomConnectors(cannon);
         }
@@ -479,7 +487,7 @@ public class ShipBuildingHandler {
         //il cannone punta con il costruttore sempre verso nord
         DoubleCannon cannon = new DoubleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getFiringDirection())){
+        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
             cannon.deleteConnection();
             initializeRandomConnectors(cannon);
         }
