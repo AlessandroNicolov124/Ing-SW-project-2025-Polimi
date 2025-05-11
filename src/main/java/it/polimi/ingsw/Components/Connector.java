@@ -29,6 +29,7 @@ public class Connector {
 
     public boolean isCompatibleWith(Connector other) {
         if (other == null){
+            System.out.println("   other connector is null");
             return false;
         }
         return this.connectorType.isCompatibleWith(other.connectorType);

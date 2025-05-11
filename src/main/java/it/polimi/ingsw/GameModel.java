@@ -5,7 +5,7 @@ import it.polimi.ingsw.AdventureCards.*;
 import java.io.Serializable;
 import java.util.*;
 
-public class GameModel implements Serializable {
+public class GameModel {
     private FlightBoard flightBoard;
     private int turnNumber;
     private String state;
@@ -14,11 +14,17 @@ public class GameModel implements Serializable {
     private List<AdventureCard> deck;
     private HashMap<Player, Integer> credits;
 
+    public void addPlayer(Player player) {
+        players.add(player);
+        flightBoard.addPlayer(player);
+    }
+
     public GameModel() {
         players = new ArrayList<>();
         deck = new ArrayList<>();
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
+        this.turnNumber = 1;
     }
 
     // Metodo per pescare una carta dall'avventura
@@ -26,7 +32,7 @@ public class GameModel implements Serializable {
         if (!deck.isEmpty()) {
             player.pickCard(deck.remove(0));
             //return deck.remove(0); // Rimuove e restituisce la prima carta
-            //TODO implent different card picking
+            //TODO implement different card picking
         }
         else
             player.pickCard(null);
@@ -164,9 +170,12 @@ public class GameModel implements Serializable {
 
     }
 
+    public int getTurnNumber() {
+        return turnNumber;
+    }
 
-    public void endGame(){
-
+    public void updatePosition(Player player, int i) {
+        flightBoard.updatePosition(player, i);
     }
 
 }

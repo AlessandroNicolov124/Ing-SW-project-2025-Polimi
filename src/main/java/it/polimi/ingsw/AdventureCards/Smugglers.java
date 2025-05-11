@@ -122,10 +122,6 @@ public class Smugglers extends AdventureCard {
                 strength += cannon.getFirePower();
                 
                 // Double cannons provide extra strength if powered
-                //if (cannon.isDoubleCannon()) {
-                 //   // Assuming player chooses to power double cannons when fighting smugglers
-                //    strength += 1;
-                //}
 //                if (cannon.isDoubleCannon()) {
 //                    // Assuming player chooses to power double cannons when fighting smugglers
 //                    strength += 1;
@@ -151,7 +147,7 @@ public class Smugglers extends AdventureCard {
             // Load goods on player's ship
 
             // Move player back on flight board
-            //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }

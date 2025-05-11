@@ -101,10 +101,11 @@ public class Slavers extends AdventureCard {
                 strength += cannon.getFirePower();
                 
                 // Double cannons provide extra strength if powered
-                //if (cannon.isDoubleCannon()) {
-                //    // Assuming player chooses to power double cannons when fighting slavers
-                //    strength += 1;
-                //}
+
+//                if (cannon.isDoubleCannon()) {
+//                    // Assuming player chooses to power double cannons when fighting slavers
+//                    strength += 1;
+//                }
             }
         }
         
@@ -128,7 +129,7 @@ public class Slavers extends AdventureCard {
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
             // Move player back on flight board
-            //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
     }
@@ -160,7 +161,7 @@ public class Slavers extends AdventureCard {
      */
     private int getCrewCount(Player player) {
         // This would need to count crew based on the game's implementation
-        return 2; // Placeholder for crew count
+        return player.getShip().getTotalCrewCount(); // Placeholder for crew count
     }
     
     // Getters

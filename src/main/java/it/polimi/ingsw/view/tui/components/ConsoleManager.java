@@ -76,12 +76,28 @@ public class ConsoleManager {
 
     public void printHelp() {
         System.out.println("Available commands:");
-        System.out.println("help  - Show this help message");
-        System.out.println("quit  - Exit the application");
+        /////
+        System.out.println("  x     - Increment the counter");
+        System.out.println("  y     - Reset the counter to 0");
+        /////
+        System.out.println("  help  - Show this help message");
+        System.out.println("  quit  - Exit the application");
     }
 
     public void printConnectingMessage(String type, String address, int port) {
         System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
+    }
+
+    ////////
+    public void AskAreYouReadyQuestion() {
+        System.out.println("Press 'yes' to continue start the game when you are ready.");
+        //String input = scanner.nextLine().trim();
+    }
+    /////////
+
+    public String askQuestion(String prompt) {
+        System.out.print(prompt + " ");
+        return scanner.nextLine().trim();
     }
 
     public void close() {

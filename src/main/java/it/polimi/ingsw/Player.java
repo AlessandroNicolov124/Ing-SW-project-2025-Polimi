@@ -1,8 +1,11 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
+import it.polimi.ingsw.Components.Component;
 
-public class Player {
+import java.io.Serializable;
+
+public class Player implements Serializable {
     private int id;
     private String nickName;
     private boolean active;
@@ -29,16 +32,8 @@ public class Player {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
     public String getNickName() {
         return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
     }
 
     public boolean isActive() {
@@ -67,10 +62,6 @@ public class Player {
         return this.readyToStart;
     }
 
-    public void assembleShip(){
-
-    }
-
     public void takeTurn(){
 
     }
@@ -86,4 +77,17 @@ public class Player {
             System.out.println("Nessuna carta disponibile da pescare.");
         }
     }
+
+    public boolean placeComponent(Component component, Position pos) {
+        return ship.placeComponent(component, pos);
+    }
+
+    public boolean removeComponent(Component component) {
+        return ship.removeComponent(component);
+    }
+
+    public boolean validateShip() {
+        return ship.validateShip();
+    }
+
 }
