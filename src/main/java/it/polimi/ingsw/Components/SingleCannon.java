@@ -8,7 +8,8 @@ public final class SingleCannon extends Cannon {
     }
 
     public SingleCannon(Direction firingDirection) {
-        super(1, 0, firingDirection);
+        super(1, 0);
+        this.setComponentDirection(firingDirection);
     }
 
     @Override

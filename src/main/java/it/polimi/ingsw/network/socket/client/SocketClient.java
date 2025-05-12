@@ -10,6 +10,8 @@ import it.polimi.ingsw.network.commands.PlayerReadyCommand;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
+import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Position;
 
 
 public class SocketClient implements Runnable, VirtualView {
@@ -59,6 +61,13 @@ public class SocketClient implements Runnable, VirtualView {
     @Override
     public int addPlayer(String username) throws IOException {
         return proxy.addPlayer(username);
+    }
+
+    public void placeComponent(Component component, Position position) throws IOException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot place component before player ID is assigned.");
+        }
+        proxy.placeComponent(playerId, component, position);
     }
 
     public void socketSetPlayerReady(PlayerReadyCommand cmd) {

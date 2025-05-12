@@ -7,25 +7,29 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
+import it.polimi.ingsw.network.socket.client.SocketClient; // Added import
 
 import java.sql.Connection;
 import java.util.*;
+import java.io.IOException;
 
 public class ShipBuildingHandler {
 
     private final ConsoleManager console;
-    private final GameController controller;
+    // private final GameController controller; // Keep for local validation/display logic if needed, or remove
     private final Player currentPlayer; // Assuming we know the current player
+    private final SocketClient socketClient; // Added socket client
 
     private final Random random = new Random();
     private Queue<Component> componentDeck; // La pila di componenti pescati casualmente
 
 
-    public ShipBuildingHandler(ConsoleManager console, GameController controller, Player currentPlayer) {
+    public ShipBuildingHandler(ConsoleManager console, SocketClient socketClient, Player currentPlayer) {
         this.console = console;
-        this.controller = controller;
+        this.socketClient = socketClient;
         this.currentPlayer = currentPlayer;
         this.componentDeck = new LinkedList<>();
+        // this.controller = controller; // Remove if no longer needed
     }
 
     public void manageShipBuilding() {
@@ -282,15 +286,26 @@ public class ShipBuildingHandler {
             }
         }
 
-        // 4. Call controller
-        boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
-
-        if (placementSuccess) {
-            console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
-        } else {
-            console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Check position and connections.");
-            handlePlaceComponent(component);
+        // 4. Call network client to send message
+        try {
+             socketClient.placeComponent(component, pos);
+             console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
+             // Note: The actual success/failure message will come asynchronously
+             // via the ComponentPlacedMessage handled by SocketClient's run loop.
+             // The TUI should be updated based on that message.
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending placement request: " + e.getMessage());
+            // Optionally, allow the user to retry or handle the error
+            // handlePlaceComponent(component); // Example: Retry automatically (use with caution)
         }
+
+        // boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
+        // if (placementSuccess) {
+        //    console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
+        // } else {
+        //    console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Check position and connections.");
+        //    handlePlaceComponent(component); // Retry placing the same component
+        // }
     }
 
 //    private Component createAndInitializeComponent(String typeStr) {

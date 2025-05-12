@@ -152,7 +152,7 @@ public class GalaxyTruckerTUI implements Runnable {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        ShipBuildingHandler shipBuilderUI = new ShipBuildingHandler(console, controller, this.currentPlayer);
+        ShipBuildingHandler shipBuilderUI = new ShipBuildingHandler(console, socketClient, this.currentPlayer);
         shipBuilderUI.manageShipBuilding();
 
         console.printMessage("Ship building complete. Transitioning to next phase...");

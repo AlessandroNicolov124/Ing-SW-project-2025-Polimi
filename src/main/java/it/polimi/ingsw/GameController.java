@@ -47,6 +47,15 @@ public class  GameController {
         return null;
     }
 
+    public Player getPlayerById(int id) {
+        for (Player p : gameModel.getPlayers()) {
+            if (p.getId() == id) {
+                return p;
+            }
+        }
+        return null;
+    }
+
     public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
             return player.placeComponent(component, pos);

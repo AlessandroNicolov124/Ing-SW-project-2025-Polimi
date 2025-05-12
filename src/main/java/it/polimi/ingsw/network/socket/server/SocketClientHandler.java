@@ -30,6 +30,11 @@ public class SocketClientHandler implements Runnable, VirtualView {
         startDispatcher();
     }
 
+    // Added getter for the controller
+    public GameController getController() {
+        return controller;
+    }
+
     // server -> client
     private void startDispatcher() {
         Thread t = new Thread(() -> {
