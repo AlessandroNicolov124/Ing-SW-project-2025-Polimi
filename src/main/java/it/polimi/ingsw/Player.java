@@ -98,4 +98,7 @@ public class Player implements Serializable {
     public int removeCrewOfType(CrewType crewType, int requiredCount) {
         return ship.removeCrewOfType(crewType, requiredCount);
     }
+    public void dischargeBatteries(int batteriesNeeded) {
+        ship.dischargeBatteries(batteriesNeeded);
+    }
 }

@@ -66,11 +66,12 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
             return false;
         }
 
-        boolean success = battery.useCharge(energyConsumption);
-        if (success) {
+        int success = battery.discharge(energyConsumption);
+        if (success>0) {
             isCharged = true;
+            return true;
         }
-        return success;
+        return false;
     }
 
     public boolean fire() {

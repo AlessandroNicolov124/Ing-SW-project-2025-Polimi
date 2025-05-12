@@ -30,13 +30,13 @@ import java.util.*;
 
 public class Smugglers extends AdventureCard {
     private int smugglerStrength;
-    private int goodsLostOnDefeat;
-    private int goodsGainedOnVictory;
+    private List<Cargo> goodsLostOnDefeat;
+    private List<Cargo> goodsGainedOnVictory;
     private int flightDaysCost;
     private boolean isDefeated;
 
-    public Smugglers(int copies, int duration, int smugglerStrength, int goodsLostOnDefeat, 
-                     int goodsGainedOnVictory, int flightDaysCost) {
+    public Smugglers(int copies, int duration, int smugglerStrength, List<Cargo> goodsLostOnDefeat,
+                     List<Cargo> goodsGainedOnVictory, int flightDaysCost) {
         super(copies, duration);
         this.smugglerStrength = smugglerStrength;
         this.goodsLostOnDefeat = goodsLostOnDefeat;
@@ -69,11 +69,11 @@ public class Smugglers extends AdventureCard {
             return; // Smugglers already defeated
         }
         
-        List<Player> playersInOrder = getPlayersInOrder(gameModel);
+        List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
         
         for (Player player : playersInOrder) {
             // Calculate player's cannon strength
-            int playerStrength = calculateCannonStrength(player);
+            double playerStrength = player.getShip().calculateFirePower();
             
             // Compare strengths
             if (playerStrength > smugglerStrength) {
@@ -85,6 +85,7 @@ public class Smugglers extends AdventureCard {
                 offerReward(player, gameModel, true); // Assuming player accepts reward
                 
                 break; // Smugglers are defeated, no more attacks
+
             } else if (playerStrength < smugglerStrength) {
                 // Player is defeated by smugglers
                 applyPenalty(player);
@@ -92,44 +93,9 @@ public class Smugglers extends AdventureCard {
                 // Continue to next player
             } else {
                 // Tie - nothing happens, continue to next player
+
             }
         }
-    }
-    
-    /**
-     * Get players in order based on their position on the flight board
-     * @param gameModel The current game state
-     * @return Ordered list of players starting with the leader
-     */
-    private List<Player> getPlayersInOrder(GameModel gameModel) {
-        // This would need to get players in order based on their position
-        return new ArrayList<>(gameModel.getPlayers());
-    }
-    
-    /**
-     * Calculate the cannon strength of a player's ship
-     * @param player The player
-     * @return Total cannon strength
-     */
-    private int calculateCannonStrength(Player player) {
-        int strength = 0;
-        List<Component> components = player.getShip().getAllComponents();
-        
-        // Find all cannons and count their strength
-        for (Component component : components) {
-            if (component instanceof Cannon) {
-                Cannon cannon = (Cannon) component;
-                strength += cannon.getFirePower();
-                
-                // Double cannons provide extra strength if powered
-//                if (cannon.isDoubleCannon()) {
-//                    // Assuming player chooses to power double cannons when fighting smugglers
-//                    strength += 1;
-//                }
-            }
-        }
-        
-        return strength;
     }
     
     /**
@@ -145,11 +111,109 @@ public class Smugglers extends AdventureCard {
         
         if (acceptReward) {
             // Load goods on player's ship
-
+            loadGoods(player);
             // Move player back on flight board
             gameModel.updatePosition(player, -flightDaysCost);
         }
         // If player doesn't accept reward, nothing happens to their position
+    }
+
+    /**
+     * Load goods from a planet onto a player's ship
+     * @param player The player loading goods
+     */
+    private void loadGoods(Player player) {
+        // Implementation of how goods are tracked
+        // placeholder
+        List<Cargo> goodsToLoad = goodsLostOnDefeat;
+        // Logic to add goods to player's inventory here
+
+        // Ordine di priorità: rosso, giallo, verde, blu
+        Comparator<Cargo> cargoComparator = Comparator
+                .comparing((Cargo cargo) -> {
+                    switch(cargo) {
+                        case RedCargo c: return 1;
+                        case YellowCargo y: return 2;
+                        case GreenCargo g: return 3;
+                        case BlueCargo b: return 4;
+                        default: return 5;
+                    }
+                })
+                .thenComparing(Cargo::getValue, Comparator.reverseOrder());
+        // Ordina le merci disponibili
+        goodsToLoad.sort(cargoComparator);
+
+        // stive del giocatore
+        List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
+        // Calcola lo spazio totale disponibile
+        int totalAvailableSpace = playerCargoHolds.stream()
+                .mapToInt(CargoHolds::getAvailableSpace)
+                .sum();
+
+        // Cerca di caricare le merci
+        for (Cargo cargo : goodsToLoad) {
+            // Se non c'è più spazio, interrompi
+            if (totalAvailableSpace <= 0) {
+                break;
+            }
+
+            boolean loaded = false;
+
+            // Gestione speciale per i rossi
+            if (cargo.isRed()) {
+                // Prova prima nelle stive speciali rosse
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    switch (cargoHold) {
+                        case SpecialCargoHolds c:
+                            if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                                cargoHold.loadCargo(cargo);
+                                loaded = true;
+                                totalAvailableSpace--;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                // Se non caricato nelle speciali, prova nelle normali
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Per tutti gli altri colori
+            else {
+                // Prova a caricare nelle stive che possono contenere quel tipo di merce
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                        cargoHold.loadCargo(cargo);
+                        loaded = true;
+                        totalAvailableSpace--;
+                        break;
+                    }
+                }
+
+                // Se non caricato nelle stive appropriate,
+                // carica in qualsiasi stiva disponibile
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull()) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -160,25 +224,33 @@ public class Smugglers extends AdventureCard {
         // Take most valuable goods from player
         // If player has no goods, take batteries instead
 
-        // placeholder implementation:
-        int goodsCount = getGoodsCount(player);
-        
-        if (goodsCount > 0) {
-            // Remove goods
-        } else {
-            // Remove batteries instead
+        List<Cargo> allCargo = player.getShip().getAllCargo();
+        // Ordina le merci per valore decrescente
+        allCargo.sort(Comparator.comparing(Cargo::getValue).reversed());
+
+        int penaltyCount = 2; // Numero di merci da rimuovere
+        int removedCount = 0;
+
+        // Rimuovi le merci più preziose
+        for (int i = 0; i < allCargo.size() && removedCount < penaltyCount; i++) {
+            Cargo cargo = allCargo.get(i);
+
+            // Trova la stiva che contiene questa merce
+            for (CargoHolds cargoHold : player.getShip().getCargoHolds()) {
+                if (cargoHold.getCargos().contains(cargo)) {
+                    cargoHold.unloadCargo(cargo);
+                    removedCount++;
+                    break;
+                }
+            }
         }
-    }
-    
-    /**
-     * Get the goods count for a player
-     * @param player The player
-     * @return Number of goods
-     */
-    private int getGoodsCount(Player player) {
-        // This would need to count goods based on the game's implementation
-        // For now, return a placeholder value
-        return 2;
+
+        // Se non sono state rimosse abbastanza merci, rimuovi batterie
+        int batteriesNeeded = penaltyCount - removedCount;
+        if (batteriesNeeded > 0) {
+            // Assumendo che esista un metodo per rimuovere batterie
+            player.dischargeBatteries(batteriesNeeded);
+        }
     }
     
     // Getters
@@ -186,11 +258,11 @@ public class Smugglers extends AdventureCard {
         return smugglerStrength;
     }
     
-    public int getGoodsLostOnDefeat() {
+    public List<Cargo> getGoodsLostOnDefeat() {
         return goodsLostOnDefeat;
     }
     
-    public int getGoodsGainedOnVictory() {
+    public List<Cargo> getGoodsGainedOnVictory() {
         return goodsGainedOnVictory;
     }
     

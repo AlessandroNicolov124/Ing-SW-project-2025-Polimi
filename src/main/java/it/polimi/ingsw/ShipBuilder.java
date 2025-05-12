@@ -592,6 +592,47 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Scarica il numero specificato di unità di energia dalle batterie della nave.
+     * Se non c'è abbastanza energia, scarica tutta quella disponibile.
+     *
+     * @param energyToRemove Il numero di unità di energia da rimuovere
+     * @return La quantità di energia effettivamente rimossa
+     */
+    public int dischargeBatteries(int energyToRemove) {
+        if (energyToRemove <= 0) {
+            return 0;
+        }
+
+        int energyRemoved = 0;
+        List<BatteryCompartment> batteries = getAllBatteries();
+
+        // Scorri tutte le batterie e scaricale una per una
+        for (BatteryCompartment battery : batteries) {
+            if (energyRemoved >= energyToRemove) {
+                break;  // Energia rimossa a sufficienza
+            }
+
+            int currentCharge = battery.getChargeLevel();
+            int chargeToRemove = Math.min(currentCharge, energyToRemove - energyRemoved);
+            battery.discharge(chargeToRemove);
+            energyRemoved += chargeToRemove;
+        }
+
+        return energyRemoved;
+    }
+
+    //lista di tutte le batterie funzionanti sulla nave.
+    private List<BatteryCompartment> getAllBatteries() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case BatteryCompartment bc -> Stream.of(bc);
+                    default -> Stream.empty();
+                })
+                .filter(bc -> !bc.isDamaged())
+                .collect(Collectors.toList());
+    }
+
     //Ottiene la lista di cannoni doppi funzionanti.
     private List<DoubleCannon> getOperationalDoubleCannons() {
         return components.keySet().stream()
@@ -731,6 +772,15 @@ public class ShipBuilder {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case CargoHolds de when !de.isDamaged() -> Stream.of(de);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Cargo> getAllCargo() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case CargoHolds de -> de.getCargos().stream();
                     default -> Stream.empty();
                 })
                 .collect(Collectors.toList());
