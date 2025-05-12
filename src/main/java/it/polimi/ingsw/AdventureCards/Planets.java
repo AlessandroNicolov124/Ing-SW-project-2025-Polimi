@@ -1,5 +1,6 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
 import java.util.*;
@@ -47,9 +48,21 @@ public class Planets extends AdventureCard{
      */
     private List<Planet> createDefaultPlanets() {
         List<Planet> defaultPlanets = new ArrayList<>();
-        defaultPlanets.add(new Planet("Alpha", 2)); // Name and goods count
-        defaultPlanets.add(new Planet("Beta", 3));
-        defaultPlanets.add(new Planet("Gamma", 1));
+
+        List<Cargo> defaultCargo1 = new ArrayList<>();
+        defaultCargo1.add(new BlueCargo(2));
+        defaultCargo1.add(new RedCargo(1));
+
+        List<Cargo> defaultCargo2 = new ArrayList<>();
+        defaultCargo1.add(new BlueCargo(2));
+        defaultCargo1.add(new GreenCargo(2));
+
+        List<Cargo> defaultCargo3 = new ArrayList<>();
+        defaultCargo1.add(new YellowCargo(1));
+
+        defaultPlanets.add(new Planet("Alpha", defaultCargo1)); // Name and goods count
+        defaultPlanets.add(new Planet("Beta", defaultCargo2));
+        defaultPlanets.add(new Planet("Gamma", defaultCargo3));
         return defaultPlanets;
     }
 
@@ -73,7 +86,7 @@ public class Planets extends AdventureCard{
      * @param gameModel The current game state
      */
     public void processPlanets(GameModel gameModel) {
-        List<Player> playersInOrder = getPlayersInOrder(gameModel);
+        List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
         List<Player> landedPlayersList = new ArrayList<>();
         
         // First phase: players decide whether to land, in leader-first order
@@ -92,27 +105,18 @@ public class Planets extends AdventureCard{
         }
         
         // Second phase: move back players who landed, in back-to-front order
-        Collections.sort(landedPlayersList, (p1, p2) -> {
-            // This would need to compare player positions on the flight board
-            // For now, using the natural order
-            return 0;
+        Collections.sort(landedPlayersList, (p1, p2) ->{
+            int pos1 = gameModel.getFlightBoard().getPosition(p1);
+            int pos2 = gameModel.getFlightBoard().getPosition(p2);
+
+            // Ordina dal più indietro al più avanti (ordine crescente delle posizioni)
+            return Integer.compare(pos1, pos2);
         });
         
         for (Player player : landedPlayersList) {
             // Move player back on flight board
-            //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
+            gameModel.updatePosition(player, -flightDaysCost);
         }
-    }
-    
-    /**
-     * Get players in order based on their position on the flight board
-     * @param gameModel The current game state
-     * @return Ordered list of players starting with the leader
-     */
-    private List<Player> getPlayersInOrder(GameModel gameModel) {
-        // This would need to get players in order based on their position
-        // For now, return a copy of the players list
-        return new ArrayList<>(gameModel.getPlayers());
     }
     
     /**
@@ -151,25 +155,112 @@ public class Planets extends AdventureCard{
     private void loadGoods(Player player, Planet planet) {
         // Implementation of how goods are tracked
         // placeholder
-        int goodsCount = planet.getGoodsCount();
+        List<Cargo> goodsToLoad = planet.getGoodsToLoad();
         // Logic to add goods to player's inventory here
+
+        // Ordine di priorità: rosso, giallo, verde, blu
+        Comparator<Cargo> cargoComparator = Comparator
+                .comparing((Cargo cargo) -> {
+                    switch(cargo) {
+                        case RedCargo c: return 1;
+                        case YellowCargo y: return 2;
+                        case GreenCargo g: return 3;
+                        case BlueCargo b: return 4;
+                        default: return 5;
+                    }
+                })
+                .thenComparing(Cargo::getValue, Comparator.reverseOrder());
+        // Ordina le merci disponibili
+        Collections.sort(goodsToLoad, cargoComparator);
+
+        // stive del giocatore
+        List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
+        // Calcola lo spazio totale disponibile
+        int totalAvailableSpace = playerCargoHolds.stream()
+                .mapToInt(CargoHolds::getAvailableSpace)
+                .sum();
+
+        // Cerca di caricare le merci
+        for (Cargo cargo : goodsToLoad) {
+            // Se non c'è più spazio, interrompi
+            if (totalAvailableSpace <= 0) {
+                break;
+            }
+
+            boolean loaded = false;
+
+            // Gestione speciale per i rossi
+            if (cargo.isRed()) {
+                // Prova prima nelle stive speciali rosse
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    switch (cargoHold) {
+                        case SpecialCargoHolds c:
+                            if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                                cargoHold.loadCargo(cargo);
+                                loaded = true;
+                                totalAvailableSpace--;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                // Se non caricato nelle speciali, prova nelle normali
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Per tutti gli altri colori
+            else {
+                // Prova a caricare nelle stive che possono contenere quel tipo di merce
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                        cargoHold.loadCargo(cargo);
+                        loaded = true;
+                        totalAvailableSpace--;
+                        break;
+                    }
+                }
+
+                // Se non caricato nelle stive appropriate,
+                // carica in qualsiasi stiva disponibile
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull()) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public static class Planet {
         private String name;
-        private int goodsCount;
+        private List<Cargo> goodsToLoad;
         
-        public Planet(String name, int goodsCount) {
+        public Planet(String name, List<Cargo> goodsToLoad) {
             this.name = name;
-            this.goodsCount = goodsCount;
+            this.goodsToLoad = goodsToLoad;
         }
         
         public String getName() {
             return name;
         }
         
-        public int getGoodsCount() {
-            return goodsCount;
+        public List<Cargo> getGoodsToLoad() {
+            return goodsToLoad;
         }
     }
 }

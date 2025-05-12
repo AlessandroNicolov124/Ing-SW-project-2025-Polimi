@@ -4,6 +4,7 @@ import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.Component;
 
 import java.io.Serializable;
+import java.util.Map;
 
 public class Player implements Serializable {
     private int id;
@@ -90,4 +91,11 @@ public class Player implements Serializable {
         return ship.validateShip();
     }
 
+    public boolean removeCrewMembers(int crewRequired) {
+        return ship.removeCrewMembers(crewRequired) == crewRequired;
+    }
+
+    public int removeCrewOfType(CrewType crewType, int requiredCount) {
+        return ship.removeCrewOfType(crewType, requiredCount);
+    }
 }

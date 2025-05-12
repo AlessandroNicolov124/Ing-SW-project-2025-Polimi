@@ -2,6 +2,10 @@ package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.*;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * Abandoned Ship
@@ -21,14 +25,14 @@ import it.polimi.ingsw.*;
  */
 
 public class AbandonedShip extends AdventureCard {
-    private int crewRequired;
+    private Map<CrewType, Integer> crewTypeRequired;
     private int creditsGained;
     private int flightDaysCost;
     private boolean opportunityUsed;
 
-    public AbandonedShip(int copies, int duration, int crewRequired, int creditsGained, int flightDaysCost) {
+    public AbandonedShip(int copies, int duration, Map<CrewType, Integer> crewTypeRequired, int creditsGained, int flightDaysCost) {
         super(copies, duration);
-        this.crewRequired = crewRequired;
+        this.crewTypeRequired = crewTypeRequired;
         this.creditsGained = creditsGained;
         this.flightDaysCost = flightDaysCost;
         this.opportunityUsed = false;
@@ -62,25 +66,97 @@ public class AbandonedShip extends AdventureCard {
         // Implement crew figure check and exchange logic
         // This is a simplified implementation
         int currentCredits = gameModel.getCredits(player);
-        
-        // Check if player has enough crew to trade
-        ShipBuilder ship = player.getShip();
-        // Logic to check and remove crew would go here
-        
-        // If successful, update player's credits and mark opportunity as used
-        gameModel.setCredits(player, currentCredits + creditsGained);
-        
-        // Apply flight day cost
-        // This would involve updating the flight board
-        //gameModel.getFlightBoard().updatePosition(player, -flightDaysCost);
-        
-        opportunityUsed = true;
-        return true;
+
+        Map<CrewType, Integer> playerCrewCounts = player.getShip().getCrewCounts();
+        // Verify that player has enough crew of each required type
+        boolean hasEnoughCrew = true;
+        for (Map.Entry<CrewType, Integer> requirement : crewTypeRequired.entrySet()) {
+            CrewType requiredType = requirement.getKey();
+            int requiredCount = requirement.getValue();
+
+            int playerCount = playerCrewCounts.getOrDefault(requiredType, 0);
+            if (playerCount < requiredCount) {
+                hasEnoughCrew = false;
+                break;
+            }
+        }
+
+        if(hasEnoughCrew) {
+            // Try to remove the required crew
+            boolean allCrewRemoved = true;
+
+            // Keep track of successfully removed crew to revert if needed
+            Map<CrewType, Integer> removedCrew = new HashMap<>();
+
+            // Try to remove each type of required crew
+            for (Map.Entry<CrewType, Integer> requirement : crewTypeRequired.entrySet()) {
+                CrewType crewType = requirement.getKey();
+                int requiredCount = requirement.getValue();
+
+                int actuallyRemoved = player.removeCrewOfType(crewType, requiredCount);
+                removedCrew.put(crewType, actuallyRemoved);
+
+                if (actuallyRemoved < requiredCount) {
+                    allCrewRemoved = false;
+                    break;
+                }
+            }
+
+            if (allCrewRemoved) {
+                // If successful, update player's credits and mark opportunity as used
+                gameModel.setCredits(player, currentCredits + creditsGained);
+
+                // Apply flight day cost
+                gameModel.updatePosition(player, -flightDaysCost);
+
+                opportunityUsed = true;
+                return true;
+            } else {
+//                // Revert any removed crew if we couldn't remove all required crew
+//                for (Map.Entry<CrewType, Integer> removed : removedCrew.entrySet()) {
+//                    CrewType crewType = removed.getKey();
+//                    int count = removed.getValue();
+//
+//                    // Add back any crew we managed to remove before failing
+//                    if (count > 0) {
+//                        player.getShip().addCrewOfType(crewType, count);
+//                    }
+//                }
+                System.out.println( "ERROR to remove Crew Member ");
+                return false;
+            }
+
+        }else{
+            return false;
+        }
+
+
+//        // Check if player has enough crew to trade
+//        int crewNumber = player.getShip().getTotalCrewCount();
+//        // Logic to check and remove crew would go here
+//        if(crewNumber >= crewRequired){
+//            if(player.removeCrewMembers(crewRequired)){
+//                // If successful, update player's credits and mark opportunity as used
+//                gameModel.setCredits(player, currentCredits + creditsGained);
+//
+//                // Apply flight day cost
+//                // This would involve updating the flight board
+//                gameModel.updatePosition(player, -flightDaysCost);
+//
+//                opportunityUsed = true;
+//            }else{
+//                return false;
+//            }
+//
+//        }else{
+//            return false;
+//        }
+//        return true;
     }
 
     // Getters and setters
-    public int getCrewRequired() {
-        return crewRequired;
+    public Map<CrewType, Integer> getCrewTypeRequired() {
+        return crewTypeRequired;
     }
 
     public int getCreditsGained() {

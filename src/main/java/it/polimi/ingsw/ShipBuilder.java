@@ -360,6 +360,127 @@ public class ShipBuilder {
         return false;
     }
 
+    /**
+     * Rimuove un numero specificato di membri dell'equipaggio dalla nave.
+     * Rimuove equipaggio dalle cabine in modo sequenziale fino a raggiungere il numero richiesto.
+     *
+     * @param count Il numero di membri dell'equipaggio da rimuovere
+     * @return Il numero effettivo di membri dell'equipaggio rimossi
+     */
+    public int removeCrewMembers(int count) {
+        if (count <= 0) {
+            return 0;  // Nessun membro da rimuovere
+        }
+
+        int removedCount = 0;
+        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
+
+        for (Cabin cabin : cabinsWithCrew) {
+            if (removedCount >= count) {
+                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
+            }
+
+            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+            if (crewToRemove != null) {
+                for (Crew crew : crewToRemove) {
+                    if (removeCrewFromCabin(crew, cabin)) {
+                        removedCount++;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
+    /**
+     * Metodo di supporto che restituisce una lista di tutte le cabine che contengono equipaggio,
+     * prima quelle che contengono alieni poi umani
+     *
+     * @return Lista di cabine occupate da membri dell'equipaggio
+     */
+    private List<Cabin> getCabinsWithCrew() {
+        List<Cabin> cabinsWithCrew = new ArrayList<>();
+
+        // Assumo che tu abbia una collezione di cabine da qualche parte nella classe
+        // Sostituisci 'allCabins' con la tua variabile effettiva
+        List<Cabin> allCabins = getAllCabins();
+        for (Cabin cabin : allCabins) {
+            if (!cabin.getCrew().isEmpty()) {
+                cabinsWithCrew.add(cabin);
+            }
+        }
+
+        // Ordina la lista in base alla priorità di rimozione
+        // Ad esempio, per rimuovere prima gli alieni:
+        cabinsWithCrew.sort((cabin1, cabin2) -> {
+            CrewType type1 = cabin1.getCrew().getFirst().getType();
+            CrewType type2 = cabin2.getCrew().getFirst().getType();
+
+            if (type1 != CrewType.HUMAN && type2 == CrewType.HUMAN) {
+                return -1;  // Alieni prima
+            } else if (type1 == CrewType.HUMAN && type2 != CrewType.HUMAN) {
+                return 1;   // Umani dopo
+            }
+            return 0;       // Stesso tipo, ordine invariato
+        });
+
+        return cabinsWithCrew;
+    }
+
+    /**
+     * Rimuove il numero specificato di membri dell'equipaggio di un certo tipo
+     * @param crewType Il tipo di equipaggio da rimuovere
+     * @param count Il numero di membri da rimuovere
+     * @return Il numero effettivo di membri rimossi
+     */
+    public int removeCrewOfType(CrewType crewType, int count) {
+        if (count <= 0) {
+            return 0;
+        }
+
+        int removedCount = 0;
+        List<Cabin> cabinsWithCrewType = new ArrayList<>();
+
+        // Trova tutte le cabine con equipaggio del tipo specificato
+        List<Cabin> allCabins = getAllCabins();
+        for (Cabin cabin : allCabins) {
+            if (!cabin.getCrew().isEmpty() && cabin.getCrew().getFirst().getType() == crewType) {
+                cabinsWithCrewType.add(cabin);
+            }
+        }
+
+        // Rimuovi fino a 'count' membri dell'equipaggio del tipo specificato
+        for (Cabin cabin : cabinsWithCrewType) {
+            if (removedCount >= count) {
+                break;
+            }
+
+            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+            if (crewToRemove != null) {
+                for (Crew crew : crewToRemove) {
+                    if (removeCrewFromCabin(crew, cabin)) {
+                        removedCount++;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
+//    /**
+//     * Aggiunge membri dell'equipaggio del tipo specificato
+//     * Usato principalmente per ripristinare l'equipaggio rimosso erroneamente
+//     * @param crewType Il tipo di equipaggio da aggiungere
+//     * @param count Il numero di membri da aggiungere
+//     */
+//    public void addCrewOfType(CrewType crewType, int count) {
+//        // Implementazione che aggiunge nuovi membri dell'equipaggio in cabine vuote
+//
+//
+//    }
+
 
     public void distributeCrewAutomatically() {
         for (Component component : components.keySet()) {
@@ -448,6 +569,16 @@ public class ShipBuilder {
 //        }
 
         return totalFirePower;
+    }
+
+    private List<Cabin> getAllCabins() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case Cabin bc -> Stream.of(bc);
+                    default -> Stream.empty();
+                })
+                .filter(bc -> !bc.isDamaged())
+                .collect(Collectors.toList());
     }
 
     //lista di tutte le batterie cariche e funzionanti sulla nave.
@@ -590,5 +721,18 @@ public class ShipBuilder {
                     default -> 0;
                 })
                 .sum();
+    }
+
+    public Map<CrewType, Integer> getCrewCounts() {
+        return this.crewCount;
+    }
+
+    public List<CargoHolds> getCargoHolds() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case CargoHolds de when !de.isDamaged() -> Stream.of(de);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
     }
 }
