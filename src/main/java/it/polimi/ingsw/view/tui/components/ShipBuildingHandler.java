@@ -33,6 +33,12 @@ public class ShipBuildingHandler {
         // this.controller = controller; // Remove if no longer needed
     }
 
+    // Method to be called to redraw the ship display
+    public void refreshDisplay() {
+        console.printMessage("[DEBUG] Refreshing ship display due to network update..."); // Optional debug message
+        displayShip();
+    }
+
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
@@ -105,6 +111,10 @@ public class ShipBuildingHandler {
                 case "q": // Quit ship building (for now, just exits this phase)
                     console.printMessage("Exiting ship building...");
                     buildingDone = true;
+                    break;
+                case "debugskip": // DEBUG: Force skip ship building validation
+                    console.printMessage("[DEBUG] Forcing skip of ship validation. Proceeding to next phase.");
+                    buildingDone = true; // Exit the loop, bypassing validation
                     break;
                 default:
                     console.printError("Invalid choice. Please try again.");
@@ -248,21 +258,23 @@ public class ShipBuildingHandler {
     }
 
 
-    private void printShipBuildingMenu(boolean hasComponent) {
-        console.printMessage("\nShip Building Options:");
-        if (hasComponent) {
-            console.printMessage(" (p) Place Current Component");
-            console.printMessage(" (tc) Rotate Current (Held) Component");
-            console.printMessage(" (s) Skip Current Component");
+    private void printShipBuildingMenu(boolean hasCurrentComponent) {
+        console.printMessage("\n--- Ship Building Actions ---");
+        if (hasCurrentComponent) {
+            console.printMessage("P  - Place current component");
+            console.printMessage("TC - Rotate current component (clockwise)");
+            console.printMessage("S  - Skip current component (draw next)");
         } else {
-            console.printMessage(" (p) [No component available]");
-            console.printMessage(" (tc) [No component available]");
-            console.printMessage(" (s) [No component available]");
+            console.printMessage("No component to place/rotate. Draw one or manage ship.");
         }
-        console.printMessage(" (r) Remove Component from Ship");
-        console.printMessage(" (ts) Rotate Placed Component on Ship");
-        console.printMessage(" (v) Validate and Finish Ship");
-        console.printMessage(" (q) Quit Ship Building");
+        console.printMessage("R  - Remove component from ship");
+        console.printMessage("TS - Rotate component on ship");
+        console.printMessage("V  - Validate and Finish ship building");
+        console.printMessage("Q  - Quit ship building (temporary)");
+        console.printMessage("DS - Display Ship again");
+        console.printMessage("DC - Display Current component again");
+        console.printMessage("DEBUGSKIP - Force proceed (skip validation)"); // New debug option
+        console.printMessage("---------------------------");
         console.printMessage("Enter your choice: ");
     }
 

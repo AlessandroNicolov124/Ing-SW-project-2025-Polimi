@@ -7,8 +7,9 @@ public enum TuiState {
     ASK_ADDRESS,          // ask host:port
     CONNECTING,           // create client
     WAIT_PLAYER_READY,    // Wait for player to be ready
-    SELECT_STARTING_SPOT,
     SHIP_BUILDING,        // Added for ship building phase
+    CHOOSE_START_POSITION, // New state for choosing starting position
+    WAIT_FOR_ALL_PLAYERS_POSITIONED, // New state for waiting after this player chose position
     RUNNING,              // execute game commands
     TERMINATED            // exit
 }

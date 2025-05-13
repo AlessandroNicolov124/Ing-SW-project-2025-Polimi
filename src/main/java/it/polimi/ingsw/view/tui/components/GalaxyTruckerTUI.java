@@ -26,6 +26,7 @@ public class GalaxyTruckerTUI implements Runnable {
     private SocketClient socketClient;
     private PlayerDTO plDTO;
     private Player currentPlayer;
+    private ShipBuildingHandler activeShipBuildingHandler;
 
     public GalaxyTruckerTUI()
     {
@@ -36,6 +37,7 @@ public class GalaxyTruckerTUI implements Runnable {
         this.state = TuiState.INTRO;
         this.plDTO = null;
         this.currentPlayer = null;
+        this.activeShipBuildingHandler = null;
     }
 
     @Override
@@ -57,6 +59,8 @@ public class GalaxyTruckerTUI implements Runnable {
                 case CONNECTING           -> handleConnectingState();
                 case WAIT_PLAYER_READY    -> handlePlayerReady();
                 case SHIP_BUILDING        -> handleShipBuildingState();
+                case CHOOSE_START_POSITION -> handleChooseStartPositionState();
+                case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case RUNNING              -> handleRunningState();
                 case TERMINATED           -> { return; }
             }
@@ -70,8 +74,8 @@ public class GalaxyTruckerTUI implements Runnable {
 
     private void handleUsernameState() {
         username = console.askUsername();
-        this.currentPlayer = new Player(0, username, false);
-        controller.addPlayer(this.currentPlayer);
+        this.currentPlayer = new Player(0, username, false); // Initial local player, ID will be updated by server
+        // controller.addPlayer(this.currentPlayer); // Client doesn't add to its local controller directly
         state = TuiState.ASK_NET;
     }
 
@@ -90,26 +94,29 @@ public class GalaxyTruckerTUI implements Runnable {
         try {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
 
-            if ("rmi".equalsIgnoreCase(connectionType)) {
-                rmiClient = RmiClient.connectTo(serverAddress);
-                if (rmiClient == null)
-                    throw new IllegalStateException("Failed to connect to RMI server");
-                client = rmiClient;
-
-                playerId = rmiClient.addPlayer(username);
-
-            } else if ("socket".equalsIgnoreCase(connectionType)) {
-                socketClient = new SocketClient(serverAddress, serverPort);
+            if ("socket".equalsIgnoreCase(connectionType)) {
+                socketClient = new SocketClient(serverAddress, serverPort, this);
                 client = socketClient;
                 new Thread(socketClient).start();
                 plDTO = new PlayerDTO(username);
 
                 playerId = socketClient.addPlayer(username);
+                this.currentPlayer = new Player(playerId, username, false);
+                socketClient.setLocalPlayer(this.currentPlayer);
+
+            } else if ("rmi".equalsIgnoreCase(connectionType)) {
+                rmiClient = RmiClient.connectTo(serverAddress);
+                if (rmiClient == null)
+                    throw new IllegalStateException("Failed to connect to RMI server");
+                client = rmiClient;
+                playerId = rmiClient.addPlayer(username);
+                this.currentPlayer = new Player(playerId, username, false);
+
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
             }
 
-            console.printMessage("Connected as " + username + "!");
+            console.printMessage("Connected as " + username + " with Player ID: " + playerId + "!");
             state = TuiState.WAIT_PLAYER_READY;
 
         } catch (Exception e) {
@@ -152,11 +159,80 @@ public class GalaxyTruckerTUI implements Runnable {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        ShipBuildingHandler shipBuilderUI = new ShipBuildingHandler(console, socketClient, this.currentPlayer);
-        shipBuilderUI.manageShipBuilding();
+        activeShipBuildingHandler = new ShipBuildingHandler(console, socketClient, this.currentPlayer);
+        activeShipBuildingHandler.manageShipBuilding();
+        activeShipBuildingHandler = null;
 
-        console.printMessage("Ship building complete. Transitioning to next phase...");
-        state = TuiState.RUNNING;
+        console.printMessage("Ship building complete. Proceeding to choose starting position...");
+        state = TuiState.CHOOSE_START_POSITION;
+    }
+
+    private void handleChooseStartPositionState() {
+        if (this.currentPlayer == null) {
+            console.printError("Cannot choose starting position: current player not set.");
+            state = TuiState.ASK_USERNAME;
+            return;
+        }
+
+        console.printMessage("\n=== Choose Your Starting Position ===");
+
+        boolean positionChosen = false;
+        while (!positionChosen) {
+            java.util.List<Integer> availablePositions = controller.getAvailableStartingPositions();
+
+            if (availablePositions.isEmpty()) {
+                console.printError("No starting positions available. This shouldn't happen in a standard game. Waiting...");
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    console.printError("Interrupted while waiting.");
+                    state = TuiState.TERMINATED;
+                    return;
+                }
+                continue;
+            }
+
+            console.printMessage("Available starting positions: " + availablePositions.toString());
+            String input = console.askQuestion("Enter your desired starting position (1-4): ");
+
+            try {
+                int chosenPosition = Integer.parseInt(input);
+                if (controller.setPlayerInitialStartingPosition(this.currentPlayer, chosenPosition)) {
+                    positionChosen = true;
+                    console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
+                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+                } else {
+                    console.printError("Failed to set position. It might be taken or invalid. Please try again.");
+                }
+            } catch (NumberFormatException e) {
+                console.printError("Invalid input. Please enter a number.");
+            }
+        }
+    }
+
+    private void handleWaitForAllPlayersPositionedState() {
+        // This state just waits. The console.printMessage was moved to the end of handleChooseStartPositionState.
+        // The actual transition to RUNNING will be triggered by an external call to proceedToRunningState().
+        // To prevent busy-looping and consuming CPU, we can add a small sleep if no other mechanism
+        // is pausing the TUI thread. However, typically, the readCommand() in other states blocks.
+        // If the mainLoop continuously spins here, a Thread.sleep might be needed if this state can be active for a while.
+        // For now, we assume the loop will check state, print nothing if it's this state, and proceed.
+        // If there's a desire for a continuously updating message or a spinning cursor, that'd be more complex.
+    }
+
+    /**
+     * Called by the network client when the server signals that all players
+     * have chosen their positions and the game can proceed.
+     */
+    public synchronized void proceedToRunningState() {
+        if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+            console.printMessage("\nAll players have chosen their positions! Starting the game...");
+            this.state = TuiState.RUNNING;
+        } else {
+            // Log or handle unexpected state transition attempt
+            console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
+        }
     }
 
     private void handleRunningState() {
@@ -169,6 +245,12 @@ public class GalaxyTruckerTUI implements Runnable {
                 state = TuiState.TERMINATED;
                 return;
             }
+        }
+    }
+
+    public void triggerShipDisplayRefresh() {
+        if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
+            activeShipBuildingHandler.refreshDisplay();
         }
     }
 }

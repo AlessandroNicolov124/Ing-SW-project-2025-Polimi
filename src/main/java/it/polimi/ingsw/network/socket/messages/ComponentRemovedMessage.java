@@ -26,8 +26,7 @@ public class ComponentRemovedMessage implements ClientMessage {
     @Override
     public void handleClient(SocketClient client) {
         if (success) {
-            // Update local model if necessary
-            // client.getLocalGameModel().getPlayer(playerId).getShip().removeComponentAt(position);
+            client.handleLocalComponentRemoval(position, success);
             client.showUpdate("Component at " + position + " removed successfully for player " + playerId);
         } else {
             client.showUpdate("Failed to remove component at " + position + " for player " + playerId + ": " + errorMessage);

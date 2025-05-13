@@ -30,8 +30,7 @@ public class ComponentPlacedMessage implements ClientMessage {
     @Override
     public void handleClient(SocketClient client) {
         if (success) {
-            // Update the client's local representation of the ship
-            // client.getLocalGameModel().getPlayer(playerId).getShip().addComponent(...);
+            client.handleLocalComponentPlacement(component, position, success);
             client.showUpdate("Component " + component.getClass().getSimpleName() + " placed successfully at " + position + " for player " + playerId);
         } else {
             client.showUpdate("Failed to place component for player " + playerId + ": " + errorMessage);

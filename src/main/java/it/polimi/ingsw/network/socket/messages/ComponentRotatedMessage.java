@@ -30,8 +30,7 @@ public class ComponentRotatedMessage implements ClientMessage {
     @Override
     public void handleClient(SocketClient client) {
         if (success && rotatedComponentData != null) {
-            // Client needs to update its local representation of the component at 'position'
-            // client.getLocalGameModel().getPlayer(playerId).getShip().updateComponentAt(position, rotatedComponentData);
+            client.handleLocalComponentRotation(position, rotatedComponentData, success);
             client.showUpdate("Component at " + position + " rotated successfully for player " + playerId);
         } else {
             client.showUpdate("Failed to rotate component at " + position + " for player " + playerId + ": " + (errorMessage != null ? errorMessage : "Unknown error"));
