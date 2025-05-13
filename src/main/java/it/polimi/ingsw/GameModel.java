@@ -97,6 +97,30 @@ public class GameModel {
         return this.flightBoard;
     }
 
+    /**
+     * Sets the initial starting position for a given player.
+     *
+     * @param player The player choosing the position.
+     * @param position The chosen starting position (1-4).
+     * @return true if the position was set successfully, false otherwise.
+     */
+    public boolean setPlayerInitialStartingPosition(Player player, int position) {
+        if (players.contains(player)) {
+            return flightBoard.setInitialPosition(player, position);
+        }
+        System.err.println("Player not found in game model when trying to set initial position.");
+        return false;
+    }
+
+    /**
+     * Gets the list of available starting positions from the flight board.
+     *
+     * @return A list of integers representing available starting positions (1-4).
+     */
+    public List<Integer> getAvailableStartingPositions() {
+        return flightBoard.getAvailableStartingPositions();
+    }
+
     public boolean isGameStartable(){
         for (Player p : this.players){
             if (!p.getReady()){

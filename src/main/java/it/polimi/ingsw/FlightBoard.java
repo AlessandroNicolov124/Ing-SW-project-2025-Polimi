@@ -28,9 +28,61 @@ public class FlightBoard {
      * @param player The player to add to the board
      */
     public void addPlayer(Player player) {
-        positions.put(player, 0);
+        positions.put(player, 0); // Default to 0, will be updated by setInitialPosition
     }
 
+    /**
+     * Sets the initial position for a player on the flight board.
+     * The position must be between 1 and 4 (inclusive) and not occupied.
+     *
+     * @param player The player choosing the position.
+     * @param position The chosen position (1-4).
+     * @return true if the position was successfully set, false otherwise.
+     */
+    public boolean setInitialPosition(Player player, int position) {
+        if (position < 1 || position > 4) {
+            System.out.println("Invalid position. Please choose a position between 1 and 4.");
+            return false;
+        }
+
+        // Check if the position is occupied by any other active player
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            // We are checking if *any* player is in that spot.
+            // The player attempting to set the position shouldn't already have a non-zero position at this stage.
+            if (!entry.getKey().equals(player) && entry.getValue() == position && entry.getKey().isActive()) {
+                System.out.println("Position " + position + " is already occupied by " + entry.getKey().getNickName());
+                return false;
+            }
+        }
+
+        positions.put(player, position);
+        System.out.println(player.getNickName() + " has chosen starting position: " + position);
+        return true;
+    }
+
+    /**
+     * Gets a list of available starting positions (1-4).
+     * A position is available if it's not occupied by any active player.
+     *
+     * @return A list of integers representing available starting positions.
+     */
+    public List<Integer> getAvailableStartingPositions() {
+        List<Integer> availablePositions = new ArrayList<>();
+        for (int i = 1; i <= 4; i++) {
+            boolean occupied = false;
+            for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+                // Consider a position occupied if an active player is there and their position is not the default 0
+                if (entry.getValue() == i && entry.getKey().isActive() && positions.get(entry.getKey()) != 0) {
+                    occupied = true;
+                    break;
+                }
+            }
+            if (!occupied) {
+                availablePositions.add(i);
+            }
+        }
+        return availablePositions;
+    }
 
     /**
      * Verifica se una posizione è già occupata da un altro giocatore
@@ -45,7 +97,8 @@ public class FlightBoard {
             int playerPosition = entry.getValue();
 
             // Se non è il giocatore corrente e occupa la posizione richiesta
-            if (!player.equals(currentPlayer) && playerPosition == position && player.isActive()) {
+            // Also ensure the player occupying is active and not at the default unassigned position (0)
+            if (!player.equals(currentPlayer) && playerPosition == position && player.isActive() && playerPosition != 0) {
                 return true;
             }
         }
@@ -62,10 +115,13 @@ public class FlightBoard {
     private int findFirstAvailablePosition(int startPosition, Player currentPlayer) {
         int position = startPosition;
 
-        // Trova la prima posizione non occupata
+        // Trova la prima posizione non occupata (e greater than 0)
         while (position > 0 && isPositionOccupied(position, currentPlayer)) {
-            position++;
+            position++; // This logic might need review for edge cases if players can be pushed back to 0
         }
+        // If after incrementing, it's still occupied, or if the initial check was for pos 0.
+        // This method is generally for forward movement.
+        // For setting initial positions, getAvailableStartingPositions and setInitialPosition are more direct.
 
         return position;
     }
@@ -91,7 +147,7 @@ public class FlightBoard {
         }
 
         // Verifica se la nuova posizione è occupata
-        if (isPositionOccupied(newPosition, player)) {
+        if (newPosition > 0 && isPositionOccupied(newPosition, player)) {
             // Trova la prima posizione disponibile
             newPosition = findFirstAvailablePosition(newPosition, player);
         }
@@ -138,7 +194,14 @@ public class FlightBoard {
      */
     public List<Player> getPlayersInFlightOrder() {
         List<Player> sortedPlayers = new ArrayList<>(positions.keySet());
-        sortedPlayers.sort((p1, p2) -> positions.get(p2) - positions.get(p1));
+        // Filter out players at position 0 (uninitialized) before sorting for flight order
+        sortedPlayers.removeIf(p -> positions.get(p) == 0 && p.isActive());
+        sortedPlayers.sort((p1, p2) -> {
+            // Handle cases where a player might not be active or not yet positioned
+            Integer pos1 = positions.getOrDefault(p1, 0);
+            Integer pos2 = positions.getOrDefault(p2, 0);
+            return pos2.compareTo(pos1); // Descending order
+        });
         return sortedPlayers;
     }
 
@@ -171,7 +234,7 @@ public class FlightBoard {
         int maxPosition = -1;
 
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            if (entry.getValue() > maxPosition) {
+            if (entry.getKey().isActive() && entry.getValue() > maxPosition && entry.getValue() != 0) { // Ensure player is active and not at pos 0
                 maxPosition = entry.getValue();
                 leadingPlayer = entry.getKey();
             }
@@ -222,7 +285,8 @@ public class FlightBoard {
         int minPosition = Integer.MAX_VALUE;
 
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            if (entry.getKey().isActive() && entry.getValue() < minPosition) {
+            // Ensure player is active and actually on the board (not at pos 0)
+            if (entry.getKey().isActive() && entry.getValue() < minPosition && entry.getValue() != 0) {
                 minPosition = entry.getValue();
                 lastPlayer = entry.getKey();
             }
@@ -239,7 +303,8 @@ public class FlightBoard {
      */
     public Player getPlayerAtPosition(int position) {
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            if (entry.getValue() == position && entry.getKey().isActive()) {
+            // Ensure player is active and at the specified position (and position is not 0)
+            if (entry.getValue() == position && entry.getKey().isActive() && position != 0) {
                 return entry.getKey();
             }
         }
@@ -254,7 +319,7 @@ public class FlightBoard {
      */
     public Map<Player, Integer> calculateFlightBonuses(int roundNumber) {
         Map<Player, Integer> bonuses = new HashMap<>();
-        List<Player> finishedPlayers = positions.keySet().stream().toList();
+        List<Player> finishedPlayers = getPlayersInFlightOrder(); // Use the updated method
 
         // Il primo giocatore ottiene il bonus più grande, e così via
         for (int i = 0; i < finishedPlayers.size(); i++) {

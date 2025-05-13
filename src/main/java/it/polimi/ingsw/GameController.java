@@ -91,6 +91,29 @@ public class  GameController {
         player.setReady(true);
     }
 
+    /**
+     * Sets the initial starting position for the given player.
+     *
+     * @param player The player choosing the position.
+     * @param position The chosen starting position (1-4).
+     * @return true if the position was successfully set, false otherwise.
+     */
+    public boolean setPlayerInitialStartingPosition(Player player, int position) {
+        if (isPlayerThere(player)) {
+            return gameModel.setPlayerInitialStartingPosition(player, position);
+        }
+        return false; // Player not found
+    }
+
+    /**
+     * Gets the list of available starting positions from the game model.
+     *
+     * @return A list of integers representing available starting positions.
+     */
+    public List<Integer> getAvailableStartingPositions() {
+        return gameModel.getAvailableStartingPositions();
+    }
+
     public void playTurn() {
         gameModel.playTurn();
     }
