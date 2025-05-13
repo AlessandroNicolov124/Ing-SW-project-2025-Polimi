@@ -5,7 +5,7 @@ import java.net.Socket;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import it.polimi.ingsw.network.client.GeneralClient;
+import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
@@ -16,7 +16,7 @@ import it.polimi.ingsw.Player;
 import it.polimi.ingsw.view.tui.components.GalaxyTruckerTUI;
 
 
-public class SocketClient implements Runnable, VirtualView {
+public class SocketClient implements Runnable, GeneralClientIf {
     
     private final Socket socket;
     private final ObjectOutputStream out;
@@ -65,7 +65,7 @@ public class SocketClient implements Runnable, VirtualView {
 
 
     public int addPlayer(String username) throws IOException {
-        return proxy.addPlayer(username);
+        return proxy.sendSrvAddPlayerReqAndWaitResp(username);
     }
 
     public void placeComponent(Component component, Position position) throws IOException {

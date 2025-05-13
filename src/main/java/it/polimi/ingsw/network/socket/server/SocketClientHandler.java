@@ -97,7 +97,6 @@ public class SocketClientHandler implements Runnable, VirtualView {
         server.broadcast(msg); 
     }
 
-    @Override
     public void close() {
         try {
             socket.close();

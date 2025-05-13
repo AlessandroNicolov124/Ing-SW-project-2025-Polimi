@@ -2,7 +2,8 @@ package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.client.GeneralClientIf;
+
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -18,7 +19,7 @@ public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
 
     private final GameController controller;
-    private final List<VirtualView> clients = new CopyOnWriteArrayList<>();
+    private final List<RmiClient> clients = new CopyOnWriteArrayList<>();
     private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
@@ -36,12 +37,14 @@ public class RmiServer extends UnicastRemoteObject
             try {
                 while (true) {
                     String msg = updates.take();
-                    for (VirtualView c : clients) {
+                    for (GeneralClientIf c : clients) {
                         try {
                             c.showUpdate(msg);
                         }
                         catch (RemoteException e) {
                             clients.remove(c);
+                        }
+                        catch (Exception e) {
                         }
                     }
                 }
@@ -68,14 +71,18 @@ public class RmiServer extends UnicastRemoteObject
 
     }
 
-    @Override
-    public void connect(VirtualView client) throws RemoteException {
+    public void connect(RmiClient client) throws RemoteException {
         clients.add(client);
-        client.showUpdate("Welcome!");
-    }
+        try {
+            client.showUpdate("Welcome!");
+        }
+        catch (Exception e) {
+            System.out.println("Error connecting to RMI server: " + e.getMessage());
+        }
 
+    }
     @Override
-    public int addPlayer(String username) throws RemoteException {
+    public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
         int min = 1;
         int max = 1000;
         int newId = ThreadLocalRandom.current().nextInt(min, max + 1);

@@ -2,8 +2,9 @@ package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.network.client.ClientCommunicateToSrvIf;
-import it.polimi.ingsw.network.client.GeneralVirtualViewIf;
+import it.polimi.ingsw.network.client.GeneralClientIf;
+
+
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
@@ -20,7 +21,7 @@ public class GalaxyTruckerTUI implements Runnable {
     private int serverPort;
     private int playerId;
 
-    private GeneralVirtualViewIf client;
+    private GeneralClientIf client;
     private RmiClient rmiClient;
     private SocketClient socketClient;
     private Player currentPlayer;
@@ -93,7 +94,7 @@ public class GalaxyTruckerTUI implements Runnable {
 
             if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort, this);
-                client = (GeneralVirtualViewIf) socketClient;
+                client = (GeneralClientIf) socketClient;
                 new Thread(socketClient).start();
 
                 playerId = socketClient.addPlayer(username);
@@ -104,7 +105,7 @@ public class GalaxyTruckerTUI implements Runnable {
                 rmiClient = RmiClient.connectTo(serverAddress);
                 if (rmiClient == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
-                client = (GeneralVirtualViewIf) rmiClient;
+                client = (GeneralClientIf) rmiClient;
                 playerId = rmiClient.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
 
@@ -228,7 +229,7 @@ public class GalaxyTruckerTUI implements Runnable {
 
     private void handleRunningState() {
         console.printHelp();
-        TuiController tuiController = new TuiController((GeneralVirtualViewIf)client, console, playerId);
+        TuiController tuiController = new TuiController(client, console, playerId);
 
         while (true) {
             String cmd = console.readCommand();

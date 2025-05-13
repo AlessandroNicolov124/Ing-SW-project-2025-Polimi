@@ -30,7 +30,8 @@ public class VirtualSocketServer implements VirtualServer {
     }
 
     // Synchronous call: send AddPlayerMessage, wait for PlayerAddedMessage
-    public int addPlayer(String username) throws IOException {
+    @Override
+    public int sendSrvAddPlayerReqAndWaitResp(String username) throws IOException {
         send(new AddPlayerMessage(username));
         try {
             // Wait for the PlayerAddedMessage response
@@ -53,7 +54,6 @@ public class VirtualSocketServer implements VirtualServer {
         }
     }
 
-    @Override
     public void close() throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'close'");

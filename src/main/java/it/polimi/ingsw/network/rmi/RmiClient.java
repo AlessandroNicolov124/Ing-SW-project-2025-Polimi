@@ -1,5 +1,11 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Position;
+import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.socket.messages.RotationType;
+
+import java.io.IOException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
@@ -20,7 +26,7 @@ import java.rmi.ConnectException;
 // causing a data race which interferes with the user input.
 
 // Asynchronous client stub for the RMI server.
-public class RmiClient extends UnicastRemoteObject implements VirtualView{
+public class RmiClient extends UnicastRemoteObject implements GeneralClientIf {
     private final VirtualServer server;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private int playerId = -1;
@@ -52,6 +58,16 @@ public class RmiClient extends UnicastRemoteObject implements VirtualView{
         System.out.println("[Server] " + message);
     }
 
+    @Override
+    public void validateShip() throws Exception {
+
+    }
+
+    @Override
+    public void rotateComponent(Position position, RotationType rotationType) throws Exception {
+
+    }
+
     // Consumer thread which takes messages from the queue and prints them on the TUI
     private void startConsumer() {
         Thread t = new Thread(() -> {
@@ -65,9 +81,14 @@ public class RmiClient extends UnicastRemoteObject implements VirtualView{
         t.start();
     }
 
+    @Override
     public int addPlayer(String username) throws RemoteException {
-        playerId = server.addPlayer(username);
+        playerId = server.sendSrvAddPlayerReqAndWaitResp(username);
         return playerId;
+    }
+
+    public void placeComponent(Component component, Position position) throws IOException {
+
     }
 
     @Override

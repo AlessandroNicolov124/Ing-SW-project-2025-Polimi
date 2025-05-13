@@ -7,7 +7,7 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
-import it.polimi.ingsw.network.socket.client.SocketClient; // Added import
+import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
 
 import java.sql.Connection;
@@ -19,15 +19,15 @@ public class ShipBuildingHandler {
     private final ConsoleManager console;
     // private final GameController controller; // Keep for local validation/display logic if needed, or remove
     private final Player currentPlayer; // Assuming we know the current player
-    private final SocketClient socketClient; // Added socket client
+    private final GeneralClientIf simpleClient; // Added socket client
 
     private final Random random = new Random();
     private Queue<Component> componentDeck; // La pila di componenti pescati casualmente
 
 
-    public ShipBuildingHandler(ConsoleManager console, SocketClient socketClient, Player currentPlayer) {
+    public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer) {
         this.console = console;
-        this.socketClient = socketClient;
+        this.simpleClient = simpleClient;
         this.currentPlayer = currentPlayer;
         this.componentDeck = new LinkedList<>();
         // this.controller = controller; // Remove if no longer needed
@@ -303,15 +303,18 @@ public class ShipBuildingHandler {
 
         // 4. Call network client to send message
         try {
-             socketClient.placeComponent(component, pos);
+             simpleClient.placeComponent(component, pos);
              console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
              // Note: The actual success/failure message will come asynchronously
-             // via the ComponentPlacedMessage handled by SocketClient's run loop.
+             // via the ComponentPlacedMessage handled by simpleClient's run loop.
              // The TUI should be updated based on that message.
         } catch (IOException | IllegalStateException e) {
             console.printError("Error sending placement request: " + e.getMessage());
             // Optionally, allow the user to retry or handle the error
             // handlePlaceComponent(component); // Example: Retry automatically (use with caution)
+        }
+        catch (Exception e) {
+            console.printError("Error sending placement request: " + e.getMessage());
         }
 
         // boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
@@ -381,10 +384,10 @@ public class ShipBuildingHandler {
 
         // Send remove request via network
         try {
-            socketClient.removeComponent(posToRemove);
+            //simpleClient.removeComponent(posToRemove);
             console.printMessage("Remove request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
             // Success/failure message handled asynchronously by ComponentRemovedMessage
-        } catch (IOException | IllegalStateException e) {
+        } catch (IllegalStateException e) {
             console.printError("Error sending remove request: " + e.getMessage());
         }
 
@@ -428,9 +431,12 @@ public class ShipBuildingHandler {
         }
 
         try {
-            socketClient.rotateComponent(posToRotate, rotationType);
+            simpleClient.rotateComponent(posToRotate, rotationType);
             console.printMessage("Rotation request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
         } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending rotation request: " + e.getMessage());
+        }
+        catch (Exception e) {
             console.printError("Error sending rotation request: " + e.getMessage());
         }
     }
@@ -475,7 +481,7 @@ public class ShipBuildingHandler {
     private boolean handleValidateAndFinish() {
         console.printMessage("Sending validation request to server...");
         try {
-            socketClient.validateShip();
+            simpleClient.validateShip();
             // We sent the request. Now we need to wait for the ShipValidationResultMessage.
             // The TUI loop cannot simply proceed here.
             // For now, we just return false and let the message handler update the state later.
@@ -483,20 +489,16 @@ public class ShipBuildingHandler {
             // The actual result (isValid) is not available synchronously here.
             // The TUI state needs to be updated when ShipValidationResultMessage arrives.
             return false; // Indicate building is NOT done yet, waiting for server.
-        } catch (IOException | IllegalStateException e) {
+    } catch (IOException e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
+        } catch (IllegalStateException e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
+        } catch (Exception e) {
             console.printError("Error sending validation request: " + e.getMessage());
             return false; // Building not done.
         }
-
-        // Old synchronous logic:
-        // boolean isValid = controller.validateShipForPlayer(currentPlayer);
-        // if (isValid) {
-        //    console.printMessage("Ship is valid! Construction complete.");
-        //    return true;
-        // } else {
-        //    console.printError("Ship is NOT valid. Please check your design.");
-        //    return false;
-        // }
     }
 
     // Factory methods per creare i diversi tipi di componenti

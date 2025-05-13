@@ -1,14 +1,14 @@
 package it.polimi.ingsw.view.tui.components;
 
 
-import it.polimi.ingsw.network.client.GeneralVirtualViewIf;
+import it.polimi.ingsw.network.client.GeneralClientIf;
 
 public class TuiController {
-    private final GeneralVirtualViewIf client;
+    private final GeneralClientIf client;
     private final ConsoleManager console;
     private final int playerId;
 
-    public TuiController(GeneralVirtualViewIf client, ConsoleManager console, int playerId) {
+    public TuiController(GeneralClientIf client, ConsoleManager console, int playerId) {
         this.client = client;
         this.console = console;
         this.playerId = playerId;
