@@ -7,17 +7,23 @@ public final class SingleCannon extends Cannon {
         super(1,0);
     }
 
-    public SingleCannon(Direction firingDirection) {
-        super(1, 0);
+
+    @Override
+    public boolean fire() {
+        if(damaged){
+            return false;
+        }
+        return true;
     }
 
     @Override
-    public double calculateBasePower() {
-        return this.getFirePower();
-    }
+    public double getEffectivePower() {
+        if (damaged) {
+            return 0.0;
+        }
 
-    @Override
-    public double calculatePowerWithBattery() {
-        return this.getFirePower(); // cannone singolo non beneficia della batteria
+        boolean isForwardFacing = getComponentDirection() == Direction.NORTH;
+
+        return isForwardFacing ? this.getFirePower() : this.getFirePower() / 2.0;
     }
 }

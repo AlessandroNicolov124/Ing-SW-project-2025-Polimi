@@ -548,15 +548,7 @@ public class ShipBuilder {
     }
 
     public double calculateFirePower() {
-        double totalFirePower = 0.0;
-
-//        for (Component component : components.keySet()) {
-//            if (component instanceof Cannon cannon) {
-//                totalFirePower += cannon.getEffectivePower();
-//            }
-//        }
-
-        totalFirePower = components.keySet().stream()
+        double totalFirePower = components.keySet().stream()
                 .mapToDouble(component -> switch(component){
                     case Cannon c -> c.getEffectivePower();
                     default -> 0.0;

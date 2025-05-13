@@ -47,26 +47,17 @@ public class OpenSpace extends AdventureCard {
      * @param gameModel The current game state
      */
     public void applyOpenSpace(GameModel gameModel) {
-        List<Player> playersInOrder = getPlayersInOrder(gameModel);
+        List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
         
         for (Player player : playersInOrder) {
             // Calculate engine strength for player
-            int engineStrength = calculateEngineStrength(player, true);
+
+            // UI il giocatore potrebbe decidere di non usare le batterie
+            double engineStrength = calculateEngineStrength(player, true);
             
             // Move player forward on flight board
-            movePlayerForward(player, engineStrength, gameModel);
+            gameModel.updatePosition(player, (int) engineStrength);
         }
-    }
-    
-    /**
-     * Get players in order based on their position on the flight board
-     * @param gameModel The current game state
-     * @return Ordered list of players starting with the leader
-     */
-    private List<Player> getPlayersInOrder(GameModel gameModel) {
-        // This would need to get players in order based on their position
-        // For now, return a copy of the players list
-        return new ArrayList<>(gameModel.getPlayers());
     }
     
     /**
@@ -75,38 +66,15 @@ public class OpenSpace extends AdventureCard {
      * @param useBatteries Whether the player chooses to use batteries for double engines
      * @return Total engine strength
      */
-    private int calculateEngineStrength(Player player, boolean useBatteries) {
-        int strength = 0;
-        List<Component> components = player.getShip().getAllComponents();
-        
-        // Find all engines and count their strength
-        for (Component component : components) {
-            if (component instanceof Engine engine) {
-
-                // If it's a double engine and player wants to use batteries
-                //if (engine.isDoubleEngine() && useBatteries) {
-                    // This would consume a battery token
-                //    strength += 2; // Double strength
-                //} else {
-                //    strength += 1; // Normal strength
-                //}
-            }
-        }
+    private double calculateEngineStrength(Player player, boolean useBatteries) {
+        double strength = player.getShip().getComponents().keySet().stream()
+                .mapToDouble(component -> switch(component){
+                    case SingleCannon sc -> sc.getEffectivePower();
+                    case DoubleCannon dc -> dc.calculatePowerUsingBattery(useBatteries);
+                    default -> 0.0;
+                })
+                .sum();
         
         return strength;
-    }
-    
-    /**
-     * Move a player forward on the flight board
-     * @param player The player to move
-     * @param spaces Number of empty spaces to move forward
-     * @param gameModel The current game state
-     */
-    private void movePlayerForward(Player player, int spaces, GameModel gameModel) {
-        // This would need to handle the logic of moving forward
-        // and skipping occupied spaces
-        
-        // For now, just update the position
-        //gameModel.getFlightBoard().updatePosition(player, spaces);
     }
 }
