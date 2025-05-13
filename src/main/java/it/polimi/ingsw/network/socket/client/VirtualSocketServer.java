@@ -16,7 +16,6 @@ import it.polimi.ingsw.network.socket.messages.RemoveComponentMessage;
 import it.polimi.ingsw.network.socket.messages.RotateComponentMessage;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 import it.polimi.ingsw.network.socket.messages.ValidateShipMessage;
-import it.polimi.ingsw.network.socket.messages.ShipValidationResultMessage;
 
 
 public class VirtualSocketServer implements VirtualServer {

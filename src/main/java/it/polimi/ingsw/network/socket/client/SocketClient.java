@@ -27,7 +27,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private Player localPlayerReference;
     private GalaxyTruckerTUI tui;
 
-    public SocketClient(String host,int port, GalaxyTruckerTUI tui) throws IOException {
+    public SocketClient(String host, int port, GalaxyTruckerTUI tui) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
         out.flush();
@@ -59,10 +59,10 @@ public class SocketClient implements Runnable, GeneralClientIf {
         System.out.println("[Server] " + text);
     }
 
-    @Override public void close() throws Exception { 
+    @Override 
+    public void close() throws Exception { 
         socket.close(); 
     }
-
 
     public int addPlayer(String username) throws IOException {
         return proxy.sendSrvAddPlayerReqAndWaitResp(username);

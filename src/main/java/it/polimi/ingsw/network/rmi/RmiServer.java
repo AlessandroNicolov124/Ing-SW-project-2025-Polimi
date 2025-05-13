@@ -2,8 +2,10 @@ package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
+import it.polimi.ingsw.Position;
+import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.GeneralClientIf;
-
+import it.polimi.ingsw.network.client.RmiClientIf;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -19,7 +21,7 @@ public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
 
     private final GameController controller;
-    private final List<RmiClient> clients = new CopyOnWriteArrayList<>();
+    private final List<RmiClientIf> clients = new CopyOnWriteArrayList<>();
     private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
@@ -71,7 +73,8 @@ public class RmiServer extends UnicastRemoteObject
 
     }
 
-    public void connect(RmiClient client) throws RemoteException {
+    @Override
+    public void connect(RmiClientIf client) throws RemoteException {
         clients.add(client);
         try {
             client.showUpdate("Welcome!");
@@ -81,6 +84,7 @@ public class RmiServer extends UnicastRemoteObject
         }
 
     }
+
     @Override
     public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
         int min = 1;
@@ -121,6 +125,11 @@ public class RmiServer extends UnicastRemoteObject
         catch (Exception ignored) {
             System.out.println("Error while closing server: " + ignored.getMessage());
         }
+    }
+
+    @Override
+    public void placeComponent(int playerId, Component component, Position position) {
+        System.out.println("Prova");
     }
 
 }

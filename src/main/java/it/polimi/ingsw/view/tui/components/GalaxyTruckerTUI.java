@@ -1,5 +1,7 @@
 package it.polimi.ingsw.view.tui.components;
 
+import java.util.Objects;
+
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.client.GeneralClientIf;
@@ -22,14 +24,12 @@ public class GalaxyTruckerTUI implements Runnable {
     private int playerId;
 
     private GeneralClientIf client;
-    private RmiClient rmiClient;
     private SocketClient socketClient;
     private Player currentPlayer;
     private ShipBuildingHandler activeShipBuildingHandler;
 
     public GalaxyTruckerTUI()
     {
-        this.rmiClient = null;
         this.socketClient = null;
         this.controller = new GameController();
         this.console = new ConsoleManager();
@@ -94,7 +94,7 @@ public class GalaxyTruckerTUI implements Runnable {
 
             if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort, this);
-                client = (GeneralClientIf) socketClient;
+                client = socketClient;
                 new Thread(socketClient).start();
 
                 playerId = socketClient.addPlayer(username);
@@ -102,11 +102,11 @@ public class GalaxyTruckerTUI implements Runnable {
                 socketClient.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
-                rmiClient = RmiClient.connectTo(serverAddress);
-                if (rmiClient == null)
-                    throw new IllegalStateException("Failed to connect to RMI server");
-                client = (GeneralClientIf) rmiClient;
-                playerId = rmiClient.addPlayer(username);
+                client = RmiClient.connectTo(serverAddress);
+                if (client == null) {
+                    throw new IllegalStateException("Failed to connect to RMI server.");
+                }
+                playerId = client.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
 
             } else {

@@ -1,17 +1,10 @@
 package it.polimi.ingsw;
 
-import it.polimi.ingsw.AdventureCards.*;
-import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.network.GeneralServer;
-import it.polimi.ingsw.network.socket.client.SocketClient;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 
-/**
- * Hello world!
- *
- */
+
 public class App {
     public static void main(String[] args) throws IOException {
 

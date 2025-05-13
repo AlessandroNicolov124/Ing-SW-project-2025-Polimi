@@ -1,19 +1,16 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.client.RmiClientIf;
 
-import java.io.IOException;
 import java.rmi.Naming;
-import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.rmi.ConnectException;
-
 
 
 
@@ -26,7 +23,7 @@ import java.rmi.ConnectException;
 // causing a data race which interferes with the user input.
 
 // Asynchronous client stub for the RMI server.
-public class RmiClient extends UnicastRemoteObject implements GeneralClientIf {
+public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     private final VirtualServer server;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private int playerId = -1;
@@ -38,17 +35,9 @@ public class RmiClient extends UnicastRemoteObject implements GeneralClientIf {
         startConsumer(); // thread which prints incoming messages on the TUI
     }
 
-    // Connect to the server using the given host.
-    public static RmiClient connectTo(String host) {
-        try {
-            VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":1099/GalaxyTruckerServer");
-            return new RmiClient(srv);
-        } catch (NotBoundException | ConnectException e) {
-            System.err.println("Server unreachable: " + e.getMessage());
-        } catch (Exception e) {
-            System.err.println("Error initializing client: " + e.getMessage());
-        }
-        return null;
+    public static RmiClient connectTo(String host) throws Exception {
+        VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":1099/GalaxyTruckerServer");
+        return new RmiClient(srv);
     }
 
     @Override
@@ -59,12 +48,12 @@ public class RmiClient extends UnicastRemoteObject implements GeneralClientIf {
     }
 
     @Override
-    public void validateShip() throws Exception {
+    public void validateShip() throws RemoteException {
 
     }
 
     @Override
-    public void rotateComponent(Position position, RotationType rotationType) throws Exception {
+    public void rotateComponent(Position position, RotationType rotationType) throws RemoteException {
 
     }
 
@@ -87,7 +76,17 @@ public class RmiClient extends UnicastRemoteObject implements GeneralClientIf {
         return playerId;
     }
 
-    public void placeComponent(Component component, Position position) throws IOException {
+    @Override
+    public void placeComponent(Component component, Position position) throws RemoteException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot place component before player ID is assigned.");
+        }
+        server.placeComponent(playerId, component, position);
+
+    }
+
+    @Override
+    public void setLocalPlayer(Player player) {
 
     }
 

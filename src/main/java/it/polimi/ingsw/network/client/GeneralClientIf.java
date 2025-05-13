@@ -1,12 +1,11 @@
 package it.polimi.ingsw.network.client;
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.socket.messages.RotationType;
-
-import java.io.IOException;
-
 public interface GeneralClientIf extends AutoCloseable {
+    
     int addPlayer(String username) throws Exception;
 
     void placeComponent(Component component, Position position) throws Exception;
@@ -16,5 +15,7 @@ public interface GeneralClientIf extends AutoCloseable {
     void validateShip() throws Exception;
 
     void rotateComponent(Position position, RotationType rotationType) throws Exception;
+
+    void setLocalPlayer(Player player) throws Exception;
 
 }
