@@ -8,6 +8,7 @@ import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
 import it.polimi.ingsw.network.socket.client.SocketClient; // Added import
+import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
 
 import java.sql.Connection;
 import java.util.*;
@@ -70,22 +71,23 @@ public class ShipBuildingHandler {
                 case "p": // Place component
                     if (currentComponent != null) {
                         handlePlaceComponent(currentComponent);
-                        // Se piazzato con successo, il componente diventa null per pescarne uno nuovo
-                        currentComponent = null;
+                        currentComponent = null; // Component is now placed (or request sent)
                     } else {
                         console.printError("No component available to place!");
                     }
                     break;
-                case "r": // Remove component
-                    handleRemoveComponent();
+                case "r": // Remove component from ship
+                    handleRemoveComponent(); // This now sends a network request
                     break;
-                case "t": // Rotate component (t for turn)
-                    //handleRotateComponent();
+                case "tc": // Rotate CURRENT (held) component
                     if (currentComponent != null) {
-                        currentComponent = handleRotateComponent(currentComponent);
+                        currentComponent = handleRotateHeldComponent(currentComponent); // Client-side rotation
                     } else {
-                        console.printError("No component to rotate!");
+                        console.printError("No current component to rotate!");
                     }
+                    break;
+                case "ts": // Rotate component ON SHIP
+                    handleRotateComponentOnShip(); // This now sends a network request
                     break;
                 case "s": // Skip current component
                     if (currentComponent != null) {
@@ -250,14 +252,15 @@ public class ShipBuildingHandler {
         console.printMessage("\nShip Building Options:");
         if (hasComponent) {
             console.printMessage(" (p) Place Current Component");
-            console.printMessage(" (t) Rotate Current Component");
+            console.printMessage(" (tc) Rotate Current (Held) Component");
             console.printMessage(" (s) Skip Current Component");
         } else {
             console.printMessage(" (p) [No component available]");
-            console.printMessage(" (t) [No component available]");
+            console.printMessage(" (tc) [No component available]");
             console.printMessage(" (s) [No component available]");
         }
         console.printMessage(" (r) Remove Component from Ship");
+        console.printMessage(" (ts) Rotate Placed Component on Ship");
         console.printMessage(" (v) Validate and Finish Ship");
         console.printMessage(" (q) Quit Ship Building");
         console.printMessage("Enter your choice: ");
@@ -362,95 +365,126 @@ public class ShipBuildingHandler {
             return;
         }
         Position posToRemove = new Position(x,y);
-        Component compToRemove = currentPlayer.getShip().getComponentAt(posToRemove);
+        // Component compToRemove = currentPlayer.getShip().getComponentAt(posToRemove);
 
-        if (compToRemove != null) {
-            boolean res = controller.removeComponentForPlayer(currentPlayer, compToRemove);
-            console.printMessage("Attempted to remove component at (" + x + "," + y + "): result: " + res);
-        } else {
-            console.printError("No component found at (" + x + "," + y + ").");
+        // Send remove request via network
+        try {
+            socketClient.removeComponent(posToRemove);
+            console.printMessage("Remove request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
+            // Success/failure message handled asynchronously by ComponentRemovedMessage
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending remove request: " + e.getMessage());
+        }
+
+        // if (compToRemove != null) {
+        //    boolean res = controller.removeComponentForPlayer(currentPlayer, compToRemove);
+        //    console.printMessage("Attempted to remove component at (" + x + "," + y + "): result: " + res);
+        // } else {
+        //    console.printError("No component found at (" + x + "," + y + ").");
+        // }
+    }
+
+    // Modified handleRotateComponent
+    // The 'component' argument is the one currently held by the player (drawn from deck), NOT the one on the ship.
+    // This method now handles rotating a component already PLACED on the ship.
+    private void handleRotateComponentOnShip() { 
+        console.printMessage("--- Rotate Component on Ship ---");
+        int x, y;
+        try {
+            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
+            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
+        } catch (NumberFormatException e) {
+            console.printError("Invalid coordinates.");
+            return;
+        }
+        Position posToRotate = new Position(x, y);
+
+        // Check if component exists locally first (optional, server will validate anyway)
+        Component compToRotateCheck = currentPlayer.getShip().getComponentAt(posToRotate);
+        if (compToRotateCheck == null) {
+            console.printError("No component found at (" + x + "," + y + ") on your ship view.");
+            // return; // Allow sending anyway, server has final say
+        }
+
+        String rotationTypeStr = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+        RotationType rotationType;
+        switch (rotationTypeStr) {
+            case "c": rotationType = RotationType.CLOCKWISE; break;
+            case "a": rotationType = RotationType.ANTI_CLOCKWISE; break;
+            case "o": rotationType = RotationType.OPPOSITE; break;
+            default: console.printError("Invalid rotation type."); return;
+        }
+
+        try {
+            socketClient.rotateComponent(posToRotate, rotationType);
+            console.printMessage("Rotation request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending rotation request: " + e.getMessage());
         }
     }
 
-    private Component handleRotateComponent(Component component) {
-        console.printMessage("--- Rotate Component ---");
-        String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+    // This old method rotated the component the player was *holding*
+    private Component handleRotateHeldComponent(Component component) {
+        console.printMessage("--- Rotate Current Component ---");
+        String rotationTypeStr = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+        
+        // This rotation happens client-side ONLY, before placing.
+        // We need the component rotation logic locally or accessible here.
+        // Let's assume Component class has rotate methods, or we call local utility.
+        // For now, we modify the component directly.
 
-        // Salva lo stato attuale del componente per verificare le modifiche
-        // Nota: potrebbe essere necessario implementare una funzione di copia profonda
-
-        switch (rotationType) {
+        RotationType rotationType = null;
+        switch (rotationTypeStr) {
             case "c":
-                component = controller.rotateComponentClockwise(currentPlayer, component);
-                //controller.rotateComponentClockwiseForPlayer(currentPlayer, component);
+                component.setComponentDirection(component.getComponentDirection().getClockwise());
+                // Also rotate connectors
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+                rotationType = RotationType.CLOCKWISE;
                 break;
             case "a":
-                component = controller.rotateComponentCounterClockwise(currentPlayer, component);
-                //controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, component);
+                 component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
+                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                rotationType = RotationType.ANTI_CLOCKWISE;
                 break;
             case "o":
-                component = controller.rotateComponentOpposite(currentPlayer, component);
-                //controller.rotateComponentOppositeForPlayer(currentPlayer, component);
+                component.setComponentDirection(component.getComponentDirection().getOpposite());
+                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                rotationType = RotationType.OPPOSITE;
                 break;
             default:
                 console.printError("Invalid rotation type.");
-                break;
+                return component; // Return unchanged component
         }
-
-        console.printMessage("Component rotated " +
-                (rotationType.equals("c") ? "clockwise" :
-                        rotationType.equals("a") ? "anti-clockwise" : "opposite"));
+        
+        console.printMessage("Component rotated locally " + rotationType + ". Ready to place.");
         return component;
     }
 
-//    private void handleRotateComponent() {
-//        console.printMessage("--- Rotate Component ---");
-//        int x = -1, y = -1;
-//        try {
-//            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
-//            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
-//        } catch (NumberFormatException e) {
-//            console.printError("Invalid coordinates.");
-//            return;
-//        }
-//        Position posToRotate = new Position(x,y);
-//        Component compToRotate = currentPlayer.getShip().getComponentAt(posToRotate);
-//
-//        if (compToRotate == null) {
-//            console.printError("No component found at (" + x + "," + y + ").");
-//            return;
-//        }
-//
-//        String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
-//        switch (rotationType) {
-//            case "c":
-//                controller.rotateComponentClockwiseForPlayer(currentPlayer, compToRotate);
-//                break;
-//            case "a":
-//                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, compToRotate);
-//                break;
-//            case "o":
-//                controller.rotateComponentOppositeForPlayer(currentPlayer, compToRotate);
-//                break;
-//            default:
-//                console.printError("Invalid rotation type.");
-//                return;
-//        }
-//        console.printMessage("Attempted to rotate component at (" + x + "," + y + ").");
-//    }
-
     private boolean handleValidateAndFinish() {
-        console.printMessage("Validating ship...");
-        boolean isValid = controller.validateShipForPlayer(currentPlayer);
-        if (isValid) {
-            console.printMessage("Ship is valid! Construction complete.");
-            // Here, you might want to signal the main TUI loop to change state
-            return true;
-        } else {
-            console.printError("Ship is NOT valid. Please check your design.");
-            // For example: Ensure all parts are connected, has engine and cabin, cannons not blocked.
-            return false;
+        console.printMessage("Sending validation request to server...");
+        try {
+            socketClient.validateShip();
+            // We sent the request. Now we need to wait for the ShipValidationResultMessage.
+            // The TUI loop cannot simply proceed here.
+            // For now, we just return false and let the message handler update the state later.
+            console.printMessage("Validation request sent. Waiting for server response...");
+            // The actual result (isValid) is not available synchronously here.
+            // The TUI state needs to be updated when ShipValidationResultMessage arrives.
+            return false; // Indicate building is NOT done yet, waiting for server.
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
         }
+
+        // Old synchronous logic:
+        // boolean isValid = controller.validateShipForPlayer(currentPlayer);
+        // if (isValid) {
+        //    console.printMessage("Ship is valid! Construction complete.");
+        //    return true;
+        // } else {
+        //    console.printError("Ship is NOT valid. Please check your design.");
+        //    return false;
+        // }
     }
 
     // Factory methods per creare i diversi tipi di componenti

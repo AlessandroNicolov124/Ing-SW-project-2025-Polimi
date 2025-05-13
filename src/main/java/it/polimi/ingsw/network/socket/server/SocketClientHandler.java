@@ -41,6 +41,7 @@ public class SocketClientHandler implements Runnable, VirtualView {
             try {
                 while (true) {
                     GenericMessage msg = updates.take();
+                    System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Sending to " + socket.getRemoteSocketAddress() + ": " + msg.getClass().getSimpleName());
                     synchronized (out) {
                         out.writeObject(msg);
                         out.flush();
@@ -72,10 +73,12 @@ public class SocketClientHandler implements Runnable, VirtualView {
             while (!socket.isClosed()) {
                 Object obj = in.readObject();
                 if (obj instanceof GenericMessage g) {
+                    System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Received from " + socket.getRemoteSocketAddress() + ": " + g.getClass().getSimpleName());
                     g.handleServer(this); 
                 }
             }
         } catch (Exception ignored) {
+            System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Client disconnected or error: " + socket.getRemoteSocketAddress() + " " + ignored.getMessage());
         } finally {
             close();
         }

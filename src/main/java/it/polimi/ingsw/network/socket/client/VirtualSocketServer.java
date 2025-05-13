@@ -12,6 +12,11 @@ import it.polimi.ingsw.network.socket.messages.PlayerAddedMessage;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.socket.messages.PlaceComponentMessage;
+import it.polimi.ingsw.network.socket.messages.RemoveComponentMessage;
+import it.polimi.ingsw.network.socket.messages.RotateComponentMessage;
+import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.socket.messages.ValidateShipMessage;
+import it.polimi.ingsw.network.socket.messages.ShipValidationResultMessage;
 
 
 public class VirtualSocketServer implements VirtualServer {
@@ -59,6 +64,24 @@ public class VirtualSocketServer implements VirtualServer {
         send(new PlaceComponentMessage(playerId, component, position));
         // The client will receive ComponentPlacedMessage asynchronously via its run loop
         // and that message's handleClient method will be invoked.
+    }
+
+    // Asynchronous call: remove component
+    public void removeComponent(int playerId, Position position) throws IOException {
+        send(new RemoveComponentMessage(playerId, position));
+        // Response handled asynchronously by ComponentRemovedMessage
+    }
+
+    // Asynchronous call: rotate component
+    public void rotateComponent(int playerId, Position position, RotationType rotationType) throws IOException {
+        send(new RotateComponentMessage(playerId, position, rotationType));
+        // Response handled asynchronously by ComponentRotatedMessage
+    }
+
+    // Asynchronous call: validate ship
+    public void validateShip(int playerId) throws IOException {
+        send(new ValidateShipMessage(playerId));
+        // Response handled asynchronously by ShipValidationResultMessage
     }
 
     // Send a message to the server (synchronized to prevent concurrent writes from different threads if proxy is shared)
