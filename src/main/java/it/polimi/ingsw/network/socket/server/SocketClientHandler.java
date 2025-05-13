@@ -84,7 +84,6 @@ public class SocketClientHandler implements Runnable, VirtualView {
         }
     }
 
-    @Override
     public int addPlayer(String username) {
         int min = 1; // use an atomic integer or a uuid
         int max = 1000; // use an atomic integer or a uuid

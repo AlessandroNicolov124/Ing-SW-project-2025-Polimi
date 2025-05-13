@@ -2,9 +2,8 @@ package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.network.client.GameClient;
-import it.polimi.ingsw.network.commands.PlayerDTO;
-import it.polimi.ingsw.network.commands.PlayerReadyCommand;
+import it.polimi.ingsw.network.client.ClientCommunicateToSrvIf;
+import it.polimi.ingsw.network.client.GeneralVirtualViewIf;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
@@ -21,10 +20,9 @@ public class GalaxyTruckerTUI implements Runnable {
     private int serverPort;
     private int playerId;
 
-    private GameClient client;
+    private GeneralVirtualViewIf client;
     private RmiClient rmiClient;
     private SocketClient socketClient;
-    private PlayerDTO plDTO;
     private Player currentPlayer;
     private ShipBuildingHandler activeShipBuildingHandler;
 
@@ -35,7 +33,6 @@ public class GalaxyTruckerTUI implements Runnable {
         this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
-        this.plDTO = null;
         this.currentPlayer = null;
         this.activeShipBuildingHandler = null;
     }
@@ -96,19 +93,18 @@ public class GalaxyTruckerTUI implements Runnable {
 
             if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort, this);
-                client = socketClient;
+                client = (GeneralVirtualViewIf) socketClient;
                 new Thread(socketClient).start();
-                plDTO = new PlayerDTO(username);
 
                 playerId = socketClient.addPlayer(username);
-                this.currentPlayer = new Player(playerId, username, false);
+                this.currentPlayer = new Player(0, username, false);
                 socketClient.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
                 rmiClient = RmiClient.connectTo(serverAddress);
                 if (rmiClient == null)
                     throw new IllegalStateException("Failed to connect to RMI server");
-                client = rmiClient;
+                client = (GeneralVirtualViewIf) rmiClient;
                 playerId = rmiClient.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
 
@@ -136,12 +132,7 @@ public class GalaxyTruckerTUI implements Runnable {
                     controller.setPlayerReady(this.currentPlayer);
                 }
 
-                PlayerReadyCommand plRdCmd = new PlayerReadyCommand(this.plDTO != null ? this.plDTO : new PlayerDTO(username));
 
-                if (socketClient != null) {
-                    socketClient.socketSetPlayerReady(plRdCmd);
-                } else if (rmiClient != null) {
-                }
                 console.printMessage("You are marked as ready. Waiting for game to start...");
                 state = TuiState.SHIP_BUILDING;
             } else {
@@ -237,7 +228,7 @@ public class GalaxyTruckerTUI implements Runnable {
 
     private void handleRunningState() {
         console.printHelp();
-        TuiController tuiController = new TuiController(client, console, playerId);
+        TuiController tuiController = new TuiController((GeneralVirtualViewIf)client, console, playerId);
 
         while (true) {
             String cmd = console.readCommand();

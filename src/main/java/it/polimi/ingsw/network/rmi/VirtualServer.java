@@ -3,9 +3,9 @@ package it.polimi.ingsw.network.rmi;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import it.polimi.ingsw.network.client.GameClient;
+import it.polimi.ingsw.network.client.ClientCommunicateToSrvIf;
 
-public interface VirtualServer extends Remote, GameClient {
+public interface VirtualServer extends Remote, ClientCommunicateToSrvIf{
 
     void connect(VirtualView client) throws RemoteException;
 

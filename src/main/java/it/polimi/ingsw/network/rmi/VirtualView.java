@@ -2,15 +2,12 @@ package it.polimi.ingsw.network.rmi;
 
 import java.rmi.RemoteException;
 
-import it.polimi.ingsw.network.client.GameClient;
+import it.polimi.ingsw.network.client.GeneralVirtualViewIf;
 
 import java.rmi.Remote;
 
-public interface VirtualView extends Remote, GameClient {
-    
-    void showUpdate(String message) throws RemoteException;
+public interface VirtualView extends Remote, GeneralVirtualViewIf {
 
     @Override
-    int addPlayer(String username) throws RemoteException;
-
+    void showUpdate(String message) throws RemoteException;
 }

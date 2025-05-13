@@ -1,6 +1,6 @@
 package it.polimi.ingsw.network.client;
 
-public interface GameClient extends AutoCloseable {
+public interface ClientCommunicateToSrvIf extends AutoCloseable {
 
     int addPlayer(String username) throws Exception;
     

@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.rmi.ConnectException;
 
-import it.polimi.ingsw.network.client.GameClient;;
+
 
 
 // This class is a RMI client implementation.
@@ -20,7 +20,7 @@ import it.polimi.ingsw.network.client.GameClient;;
 // causing a data race which interferes with the user input.
 
 // Asynchronous client stub for the RMI server.
-public class RmiClient extends UnicastRemoteObject implements VirtualView {
+public class RmiClient extends UnicastRemoteObject implements VirtualView{
     private final VirtualServer server;
     private final BlockingQueue<String> incoming = new LinkedBlockingQueue<>();
     private int playerId = -1;
@@ -65,7 +65,6 @@ public class RmiClient extends UnicastRemoteObject implements VirtualView {
         t.start();
     }
 
-    @Override
     public int addPlayer(String username) throws RemoteException {
         playerId = server.addPlayer(username);
         return playerId;
