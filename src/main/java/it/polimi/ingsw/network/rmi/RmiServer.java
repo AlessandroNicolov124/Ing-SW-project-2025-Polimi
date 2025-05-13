@@ -78,6 +78,7 @@ public class RmiServer extends UnicastRemoteObject
         clients.add(client);
         try {
             client.showUpdate("Welcome!");
+            System.out.println("Client connected: " + client.toString());
         }
         catch (Exception e) {
             System.out.println("Error connecting to RMI server: " + e.getMessage());
