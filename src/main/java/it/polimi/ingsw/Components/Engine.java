@@ -3,8 +3,8 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.Direction;
 
 public abstract sealed class Engine extends Component permits SingleEngine, DoubleEngine {
-    private int power;
-    private int energyConsumption;
+    protected int power;
+    protected int energyConsumption;
 
     public Engine(int power, int energyConsumption) {
         super();
@@ -33,5 +33,8 @@ public abstract sealed class Engine extends Component permits SingleEngine, Doub
         }
         return false;
     }
+
+    public abstract int getEffectivePower();
+
 
 }

@@ -2,8 +2,10 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Components.ShieldGenerator;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 public class Player implements Serializable {
@@ -101,4 +103,5 @@ public class Player implements Serializable {
     public void dischargeBatteries(int batteriesNeeded) {
         ship.dischargeBatteries(batteriesNeeded);
     }
+
 }
