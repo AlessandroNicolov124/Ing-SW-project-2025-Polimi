@@ -73,8 +73,13 @@ public class Smugglers extends AdventureCard {
         
         for (Player player : playersInOrder) {
             // Calculate player's cannon strength
+
+            activateDoubleCannons(player);
+
             double playerStrength = player.getShip().calculateFirePower();
-            
+
+            player.getShip().dischargeAllActiveDoubleCannon();
+
             // Compare strengths
             if (playerStrength > smugglerStrength) {
                 // Player defeats smugglers
@@ -94,6 +99,23 @@ public class Smugglers extends AdventureCard {
             } else {
                 // Tie - nothing happens, continue to next player
 
+            }
+        }
+    }
+
+    /**
+     * Let player decide which double cannons to activate
+     * @param player The player making decisions
+     */
+    private void activateDoubleCannons(Player player) {
+        List<DoubleCannon> doubleCannons = player.getShip().getOperationalDoubleCannons();
+
+        for (DoubleCannon cannon : doubleCannons) {
+            // Check if player has batteries and wants to activate this cannon
+            if (player.getShip().calculateTotalBatteryCharge() > 0) {
+                // TODO UI scelta del giocatore su uso delle batterie
+                // ipotizzo lo voglia fare
+                player.getShip().chargeWeapon(cannon);
             }
         }
     }

@@ -53,25 +53,47 @@ public class OpenSpace extends AdventureCard {
             // Calculate engine strength for player
 
             // UI il giocatore potrebbe decidere di non usare le batterie
-            double engineStrength = calculateEngineStrength(player, true);
+            activateDoubleEngines(player);
+
+            double engineStrength = calculateEngineStrength(player);
             
             // Move player forward on flight board
             gameModel.updatePosition(player, (int) engineStrength);
+
+            //una volta usati li scarico
+            player.getShip().dischargeAllActiveDoubleEngine();
         }
+
+    }
+
+    /**
+     * Let player decide if activate double engines
+     * @param player The player making decisions
+     */
+    private void activateDoubleEngines(Player player) {
+        List<DoubleEngine> doubleEngines = player.getShip().getOperationalDoubleEngines();
+
+        //for (DoubleEngine engine : doubleEngines) {
+        // Check if player has batteries and wants to activate this engine
+        if (player.getShip().calculateTotalBatteryCharge() > 0) {
+            // TODO UI scelta del giocatore su uso delle batterie
+            // ipotizzo lo voglia fare
+            player.getShip().chargeEngine();
+            //player.getShip().chargeEngine(engine);
+        }
+        //}
     }
     
     /**
      * Calculate the engine strength of a player's ship
      * @param player The player
-     * @param useBatteries Whether the player chooses to use batteries for double engines
      * @return Total engine strength
      */
-    private double calculateEngineStrength(Player player, boolean useBatteries) {
-        double strength = player.getShip().getComponents().keySet().stream()
-                .mapToDouble(component -> switch(component){
-                    case SingleCannon sc -> sc.getEffectivePower();
-                    case DoubleCannon dc -> dc.calculatePowerUsingBattery(useBatteries);
-                    default -> 0.0;
+    private int calculateEngineStrength(Player player) {
+        int strength = player.getShip().getComponents().keySet().stream()
+                .mapToInt(component -> switch(component){
+                    case Engine c -> c.getEffectivePower();
+                    default -> 0;
                 })
                 .sum();
         

@@ -51,6 +51,11 @@ public final class DoubleEngine extends Engine {
             return this.getPower() / 2;
         }
     }
+    public void discharge() {
+        this.isCharged = false;
+    }
 
-
+    public boolean isCharge() {
+        return isCharged;
+    }
 }

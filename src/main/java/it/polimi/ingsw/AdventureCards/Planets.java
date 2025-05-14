@@ -50,15 +50,18 @@ public class Planets extends AdventureCard{
         List<Planet> defaultPlanets = new ArrayList<>();
 
         List<Cargo> defaultCargo1 = new ArrayList<>();
-        defaultCargo1.add(new BlueCargo(2));
-        defaultCargo1.add(new RedCargo(1));
+        defaultCargo1.add(new BlueCargo());
+        defaultCargo1.add(new BlueCargo());
+        defaultCargo1.add(new RedCargo());
 
         List<Cargo> defaultCargo2 = new ArrayList<>();
-        defaultCargo1.add(new BlueCargo(2));
-        defaultCargo1.add(new GreenCargo(2));
+        defaultCargo1.add(new BlueCargo());
+        defaultCargo1.add(new BlueCargo());
+        defaultCargo1.add(new GreenCargo());
+        defaultCargo1.add(new GreenCargo());
 
         List<Cargo> defaultCargo3 = new ArrayList<>();
-        defaultCargo1.add(new YellowCargo(1));
+        defaultCargo1.add(new YellowCargo());
 
         defaultPlanets.add(new Planet("Alpha", defaultCargo1)); // Name and goods count
         defaultPlanets.add(new Planet("Beta", defaultCargo2));
@@ -141,7 +144,7 @@ public class Planets extends AdventureCard{
             return null; // No planets available
         }
         
-        // This is a placeholder - actual implementation would involve player choice
+        // TODO This is a placeholder - actual implementation would involve player choice
         Random random = new Random();
         int randomIndex = random.nextInt(availablePlanets.size());
         return availablePlanets.get(randomIndex);

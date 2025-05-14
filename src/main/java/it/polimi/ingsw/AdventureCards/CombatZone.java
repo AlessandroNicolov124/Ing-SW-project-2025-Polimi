@@ -6,6 +6,7 @@ import it.polimi.ingsw.Components.DoubleCannon;
 import it.polimi.ingsw.Components.DoubleEngine;
 import it.polimi.ingsw.Components.ShieldGenerator;
 import javafx.geometry.Pos;
+import javafx.scene.control.skin.TextInputControlSkin;
 
 import java.util.*;
 
@@ -42,8 +43,6 @@ public class CombatZone extends AdventureCard {
     private Random random;
     private int flightDayPenalty;
     private int crewLossPenalty;
-    private static final int DICE_MIN_MISS = 2;     // Roll of 2 misses the ship
-    private static final int DICE_MAX_MISS = 12;    // Roll of 12 misses the ship
     private static final Direction ATTACK_DIRECTION = Direction.SOUTH; // Attacks come from behind
 
 
@@ -139,6 +138,10 @@ public class CombatZone extends AdventureCard {
             // Apply crew loss penalty
             removeCrewMembers(weakestEngines, crewLossPenalty);
         }
+        //dopo averli usati devono essere scaricati
+        for (Player player : sortedPlayers) {
+            player.getShip().dischargeAllActiveDoubleEngine();
+        }
     }
 
     /**
@@ -169,9 +172,14 @@ public class CombatZone extends AdventureCard {
             boolean heavyHit = applyHeavyCannonFire(weakestCannons);
 
             if (!lightHit && !heavyHit) {
-                //gameModel.logEvent(weakestCannons.getName() + " got lucky! Both cannon shots missed.");
+                System.out.println(weakestCannons.getNickName() + " got lucky! Both cannon shots missed.");
 
             }
+        }
+
+        //scarico i cannoni
+        for (Player player : sortedPlayers) {
+            player.getShip().dischargeAllActiveDoubleCannon();
         }
     }
 
@@ -295,32 +303,28 @@ public class CombatZone extends AdventureCard {
         // 1. Roll dice to determine row/column of hit
         int diceRoll = rollDice();
 
-        if (diceRoll == DICE_MIN_MISS || diceRoll == DICE_MAX_MISS) {
-            //gameModel.logEvent("The heavy cannon fire misses the ship completely!");
-            return false;
-        }
-        Position targetCoord = convertDiceRollToCoordinate(player, ATTACK_DIRECTION, diceRoll);
-
         // 2. Check if hit lands on ship
-        boolean hit = checkCannonHit(player, targetCoord);
+        Position hit = checkCannonHit(player, ATTACK_DIRECTION, diceRoll);
         
-        if (hit) {
-            System.out.println("Light cannon fire target component at position " + targetCoord.toString());
+        if (hit!=null) {
+            System.out.println("Light cannon fire target component at position " + hit.toString());
 
             // 3. Check if player can defend with shield
-            boolean defended = canDefendWithShield(player, ATTACK_DIRECTION);
+            ShieldGenerator defended = canDefendWithShield(player, ATTACK_DIRECTION);
             
-            if (!defended) {
-                System.out.println("Light cannon fire hit component at position " + targetCoord.toString());
+            if (defended==null) {
+                System.out.println("Light cannon fire hit component at position " + hit.toString());
                 // 4. Destroy component if no defense
-                player.getShip().destroyComponentAt(targetCoord);
+                player.getShip().destroyComponentAt(hit);
                 return true;
             }
-            System.out.println("Defends with a shield!");
-
+            System.out.println(player.getNickName() + "Defends with a shield!");
+            //dopo averlo usato scarico lo scudo
+            defended.discharge();
 
         }
-        
+        System.out.println(player.getNickName() + "NOT defends with a shield!");
+
         return false;
     }
     
@@ -333,22 +337,15 @@ public class CombatZone extends AdventureCard {
         // 1. Roll dice to determine row/column of hit
         int diceRoll = rollDice();
 
-        if (diceRoll == DICE_MIN_MISS || diceRoll == DICE_MAX_MISS) {
-            //gameModel.logEvent("The heavy cannon fire misses the ship completely!");
-            return false;
-        }
-        Position targetCoord = convertDiceRollToCoordinate(player, ATTACK_DIRECTION, diceRoll);
-
         // 2. Check if hit lands on ship
-        boolean hit = checkCannonHit(player, targetCoord);
+        Position hit = checkCannonHit(player, ATTACK_DIRECTION, diceRoll);
         
-        if (hit) {
-            System.out.println("Heavy cannon fire hit component at position " + targetCoord.toString());
+        if (hit!=null) {
+            System.out.println("Heavy cannon fire hit component at position " + hit.toString());
             // No defense against heavy cannon fire
-            player.getShip().destroyComponentAt(targetCoord);
+            player.getShip().destroyComponentAt(hit);
             return true;
         }
-        
         return false;
     }
     
@@ -359,58 +356,67 @@ public class CombatZone extends AdventureCard {
     private int rollDice() {
         return random.nextInt(6) + random.nextInt(6) + 2; // Simulating dice
     }
-
-    /**
-     * Convert dice roll to ship coordinates based on attack direction
-     * @param player The player being attacked
-     * @param direction The direction of attack
-     * @param diceRoll The dice roll result
-     * @return Coordinates on the ship targeted by the attack
-     */
-    private Position convertDiceRollToCoordinate(Player player, Direction direction, int diceRoll) {
-
-        int rows =  player.getShip().getHeight();
-        int cols =  player.getShip().getWidth();
-
-        // Map dice roll (2-12) to a row/column based on direction
-        // For SOUTH (attack from behind), we target a specific row
-        if (direction == Direction.SOUTH) {
-            // Convert dice roll to row index (adjust based on ship dimensions)
-            int row = (diceRoll - 2) % rows;
-            // For attack from behind, we target the last column
-            return new Position(row, cols - 1);
-        }
-
-        // Could add more directions as needed
-
-        return null;
-    }
     
     /**
      * Check if cannon fire hits the player's ship
      * @param player The player whose ship may be hit
-     *@param targetCoord The position (row/column) of the potential impact
-     * @return true if the fire hits the ship, false otherwise
+     * @param targetCoord The position (row/column) of the potential impact
+     * @return Position hit if the fire hits the ship
      */
-    private boolean checkCannonHit(Player player, Position targetCoord) {
+    private Position checkCannonHit(Player player, Direction attack, int targetCoord) {
         // 4. Check if there's a component at those coordinates
-        Component targetComponent = player.getShip().getComponentAt(targetCoord);
+        Component targetComponent = null;
+        Position target = null;
+
+        if(attack == Direction.SOUTH) {
+            for(int i=player.getShip().getHeight()-1; i > 0; i--){
+                target = new Position(i,targetCoord);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.NORTH) {
+            for(int i=0; i < player.getShip().getHeight(); i++){
+                target = new Position(i, targetCoord);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.WEST) {
+            for(int i=0; i < player.getShip().getWidth(); i++){
+                target = new Position(targetCoord, i);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.EAST) {
+            for(int i=player.getShip().getWidth()-1; i > 0; i--){
+                target = new Position(targetCoord,i);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }
 
         if (targetComponent == null) {
             System.out.println("The cannon fire targets an empty space!");
-            return false;
+            return null;
         }
 
-        return true;
+        return target;
     }
 
     /**
      * Check if player can and wants to defend with a shield
      * @param player The player attempting to defend
      * @param direction The direction of the attack
-     * @return true if defense is successful, false otherwise
+     * @return ShieldGenerator activated if defense is successful
      */
-    private boolean canDefendWithShield(Player player, Direction direction) {
+    private ShieldGenerator canDefendWithShield(Player player, Direction direction) {
         // Check if player has a shield that can protect against this direction and position
         List<ShieldGenerator> shields = player.getShip().getShieldsProtecting(direction);
 
@@ -418,16 +424,16 @@ public class CombatZone extends AdventureCard {
             // Player has shield(s) and batteries - ask if they want to defend
 
             // TODO UI scelta del giocatore su uso delle batterie
-            boolean count = false;
+            ShieldGenerator count = null;
             for(ShieldGenerator shield : shields){
                 if(player.getShip().activateShield(shield)){
-                    count = true;
+                    count = shield;
                     break;
                 }
             }
             return count;
         }
 
-        return false;
+        return null;
     }
 }

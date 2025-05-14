@@ -65,4 +65,12 @@ public final class DoubleCannon extends Cannon {
         }
         return false;
     }
+
+    public boolean isCharge() {
+        return this.isCharged;
+    }
+
+    public void discharge() {
+        this.isCharged = false;
+    }
 }

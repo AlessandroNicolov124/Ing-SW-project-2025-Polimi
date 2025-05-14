@@ -594,7 +594,7 @@ public class ShipBuilder {
                 .sum();
     }
 
-    private List<Cabin> getAllCabins() {
+    public List<Cabin> getAllCabins() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case Cabin bc -> Stream.of(bc);
@@ -920,5 +920,21 @@ public class ShipBuilder {
         }
 
         return false;
+    }
+
+    public void dischargeAllActiveDoubleEngine() {
+        for(DoubleEngine de : getOperationalDoubleEngines()){
+            if(de.isCharge()){
+                de.discharge();
+            }
+        }
+    }
+
+    public void dischargeAllActiveDoubleCannon() {
+        for(DoubleCannon de : getOperationalDoubleCannons()){
+            if(de.isCharge()){
+                de.discharge();
+            }
+        }
     }
 }

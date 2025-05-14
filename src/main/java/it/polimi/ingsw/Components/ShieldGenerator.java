@@ -58,5 +58,9 @@ public final class ShieldGenerator extends Component {
         }
         return false;
     }
+
+    public void discharge() {
+        this.isCharged = false;
+    }
 }
 
