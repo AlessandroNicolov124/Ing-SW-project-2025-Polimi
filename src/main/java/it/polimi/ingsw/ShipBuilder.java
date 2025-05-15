@@ -126,12 +126,18 @@ public class ShipBuilder {
         }
 
         // Check if removing this component would disconnect the ship
-        if (components.size() > 1 && wouldDisconnectShip(component) && !component.isDamaged()) {
+        if (components.size() > 1 && component.isDamaged()) {
+            if(!wouldDisconnectShip(component)){
+                components.remove(component);
+            }else{
+                //TODO vanno gestiti i componenti rimossi
+            }
+            return true;
+        }else{
             return false;
         }
 
-        components.remove(component);
-        return true;
+
     }
 
     private boolean areAllComponentsConnected() {
@@ -577,21 +583,28 @@ public class ShipBuilder {
                 .sum();
 
         // Bonus dell'alieno viola
-//        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
-//            totalFirePower += 2.0;
-//        }
+        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
+            totalFirePower += 2.0;
+        }
 
         return totalFirePower;
     }
 
     public double calculateFirePowerWithBatteries(boolean usingBattery) {
-        return components.keySet().stream()
+        double totalFirePower = components.keySet().stream()
                 .mapToDouble(component -> switch(component){
                     case SingleCannon e -> e.getEffectivePower();
                     case DoubleCannon e -> e.calculatePowerUsingBattery(usingBattery);
                     default -> 0;
                 })
                 .sum();
+
+        // Bonus dell'alieno viola
+        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
+            totalFirePower += 2.0;
+        }
+
+        return totalFirePower;
     }
 
     public List<Cabin> getAllCabins() {
@@ -778,22 +791,36 @@ public class ShipBuilder {
     }
 
     public int calculateEnginePower() {
-        return components.keySet().stream()
+        int totalPower = components.keySet().stream()
                 .mapToInt(component -> switch(component){
                     case SingleEngine e -> e.getEffectivePower();
                     case DoubleEngine e -> e.getEffectivePower();
                     default -> 0;
                 })
                 .sum();
+
+        // Bonus dell'alieno marrone
+        if (totalPower > 0 && crewCount.getOrDefault(CrewType.BROWN_ALIEN, 0) > 0) {
+            totalPower += 2;
+        }
+
+        return totalPower;
     }
     public int calculateEnginePowerWithBatteries(boolean usingBattery) {
-        return components.keySet().stream()
+        int totalPower = components.keySet().stream()
                 .mapToInt(component -> switch(component){
                     case SingleEngine e -> e.getEffectivePower();
                     case DoubleEngine e -> e.calculatePowerUsingBattery(usingBattery);
                     default -> 0;
                 })
                 .sum();
+
+        // Bonus dell'alieno marrone
+        if (totalPower > 0 && crewCount.getOrDefault(CrewType.BROWN_ALIEN, 0) > 0) {
+            totalPower += 2;
+        }
+
+        return totalPower;
     }
 
     public Map<CrewType, Integer> getCrewCounts() {
@@ -850,13 +877,13 @@ public class ShipBuilder {
         return chargedEngines;
     }
 
-//    public int removeBrownAlien(int aliensToRemove) {
-//        return removeCrewOfType(CrewType.BROWN_ALIEN, aliensToRemove);
-//    }
-//
-//    public int removePurpleAlien(int aliensToRemove) {
-//        return removeCrewOfType(CrewType.PURPLE_ALIEN, aliensToRemove);
-//    }
+    public int removeBrownAlien(int aliensToRemove) {
+        return removeCrewOfType(CrewType.BROWN_ALIEN, aliensToRemove);
+    }
+
+    public int removePurpleAlien(int aliensToRemove) {
+        return removeCrewOfType(CrewType.PURPLE_ALIEN, aliensToRemove);
+    }
 
     public int removeAliens(int aliensToRemove) {
         if (aliensToRemove <= 0) {

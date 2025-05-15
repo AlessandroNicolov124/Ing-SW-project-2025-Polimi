@@ -58,7 +58,7 @@ public class Sabotage extends AdventureCard {
      */
     public boolean applySabotage(GameModel gameModel) {
         // Find player with the smallest crew
-        Player targetPlayer = findPlayerWithSmallestCrew(gameModel);
+        Player targetPlayer = findPlayerWithFewestCrew(gameModel.getFlightBoard().getPlayersInFlightOrder());
         
         if (targetPlayer == null) {
             return false; // No valid target
@@ -67,60 +67,24 @@ public class Sabotage extends AdventureCard {
         // Sabotage the target's ship
         return sabotageShip(targetPlayer);
     }
-    
+
     /**
-     * Find the player with the smallest crew count
-     * If tied, return the player furthest ahead
-     * @param gameModel The current game state
-     * @return The player with the smallest crew
+     * Find the player with the fewest crew figures
+     * In case of ties, the player furthest ahead is returned
+     * @param players List of players
+     * @return The player with fewest crew
      */
-    private Player findPlayerWithSmallestCrew(GameModel gameModel) {
-        List<Player> players = gameModel.getPlayers();
-        
+    private Player findPlayerWithFewestCrew(List<Player> players) {
         if (players.isEmpty()) {
             return null;
         }
-        
-        Player smallestCrewPlayer = players.get(0);
-        int smallestCrew = getCrewCount(smallestCrewPlayer);
-        
-        for (int i = 1; i < players.size(); i++) {
-            Player currentPlayer = players.get(i);
-            int currentCrew = getCrewCount(currentPlayer);
-            
-            if (currentCrew < smallestCrew) {
-                smallestCrewPlayer = currentPlayer;
-                smallestCrew = currentCrew;
-            } else if (currentCrew == smallestCrew) {
-                // If tied, check who is furthest ahead on the flight board
-                if (isPlayerAheadOf(currentPlayer, smallestCrewPlayer, gameModel)) {
-                    smallestCrewPlayer = currentPlayer;
-                }
-            }
-        }
-        
-        return smallestCrewPlayer;
-    }
-    
-    /**
-     * Get the crew count for a player
-     * @param player The player
-     * @return Number of crew members
-     */
-    private int getCrewCount(Player player) {
-        return 3; //placeholder
-    }
-    
-    /**
-     * Check if player1 is ahead of player2 on the flight board
-     * @param player1 First player
-     * @param player2 Second player
-     * @param gameModel The game model
-     * @return true if player1 is ahead of player2
-     */
-    private boolean isPlayerAheadOf(Player player1, Player player2, GameModel gameModel) {
-        // This would compare player positions on the flight board
-        return true;
+
+        // This would need to count crew figures for each player
+        Player selected = players.stream().reduce((p1, p2) ->
+                        p1.getShip().getTotalCrewCount() > p2.getShip().getTotalCrewCount() ? p2 : p1)
+                .get();
+
+        return selected;
     }
     
     /**
@@ -143,7 +107,8 @@ public class Sabotage extends AdventureCard {
             Component targetComponent = ship.getComponentAt(targetPosition);
             
             if (targetComponent != null) {
-                return destroyComponent(player, targetComponent, ship);
+                player.getShip().destroyComponentAt(targetPosition);
+                return player.removeComponent(targetComponent);
             }
             
             // If missed, retry
@@ -160,27 +125,5 @@ public class Sabotage extends AdventureCard {
     private int rollDice() {
         return random.nextInt(6) + random.nextInt(6) + 2; // Simulating dice
     }
-    
-    /**
-     * Destroy a component and handle any cascading destruction
-     * @param player The target player
-     * @param component The component to destroy
-     * @param ship The player's ship
-     * @return true if component was destroyed, false otherwise
-     */
-    private boolean destroyComponent(Player player, Component component, ShipBuilder ship) {
-        // Remove the component from the ship
-        boolean removed = ship.removeComponent(component);
-        
-        if (removed) {
-            // Check for components that would fall off as a result
-            // handled by the ShipBuilder.removeComponent method
-            // If the ship is disconnected, additional components would be removed
-            
-            // Add to player's discard pile
-            return true;
-        }
-        
-        return false;
-    }
+
 }
