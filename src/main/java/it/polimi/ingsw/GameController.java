@@ -100,8 +100,15 @@ public class  GameController {
      */
     public boolean setPlayerInitialStartingPosition(Player player, int position) {
         if (isPlayerThere(player)) {
-            return gameModel.setPlayerInitialStartingPosition(player, position);
+            boolean result = gameModel.setPlayerInitialStartingPosition(player, position);
+            if (result) {
+                System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + player.getId() + ") set to position " + position);
+            } else {
+                System.out.println("[GameController] Failed to set position " + position + " for player " + player.getNickName());
+            }
+            return result;
         }
+        System.out.println("[GameController] Player not found when trying to set position");
         return false; // Player not found
     }
 
@@ -111,7 +118,31 @@ public class  GameController {
      * @return A list of integers representing available starting positions.
      */
     public List<Integer> getAvailableStartingPositions() {
-        return gameModel.getAvailableStartingPositions();
+        List<Integer> positions = gameModel.getAvailableStartingPositions();
+        System.out.println("[GameController] Available positions: " + positions);
+        return positions;
+    }
+
+    /**
+     * Gets the current position of a player on the flight board.
+     *
+     * @param player The player to check.
+     * @return The current position of the player, or -1 if player is not found.
+     */
+    public int getPlayerPosition(Player player) {
+        if (isPlayerThere(player)) {
+            return gameModel.getFlightBoard().getPosition(player);
+        }
+        return -1; // Player not found
+    }
+
+    /**
+     * Gets a map of all players and their positions on the flight board.
+     *
+     * @return A map with players as keys and their positions as values.
+     */
+    public Map<Player, Integer> getAllPlayerPositions() {
+        return gameModel.getFlightBoard().getAllPositions();
     }
 
     public void playTurn() {

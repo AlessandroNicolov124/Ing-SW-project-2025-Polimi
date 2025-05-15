@@ -1,5 +1,7 @@
 package it.polimi.ingsw.view.tui.components;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
 import it.polimi.ingsw.GameController;
@@ -27,6 +29,7 @@ public class GalaxyTruckerTUI implements Runnable {
     private SocketClient socketClient;
     private Player currentPlayer;
     private ShipBuildingHandler activeShipBuildingHandler;
+    private List<Integer> availablePositions;
 
     public GalaxyTruckerTUI()
     {
@@ -98,7 +101,8 @@ public class GalaxyTruckerTUI implements Runnable {
                 new Thread(socketClient).start();
 
                 playerId = socketClient.addPlayer(username);
-                this.currentPlayer = new Player(0, username, false);
+                this.currentPlayer = new Player(playerId, username, false); // Update ID
+                socketClient.setPlayerId(playerId); // Set player ID in socket client
                 socketClient.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
@@ -168,34 +172,62 @@ public class GalaxyTruckerTUI implements Runnable {
 
         console.printMessage("\n=== Choose Your Starting Position ===");
 
+        try {
+            // Request available positions from server 
+            if (socketClient != null) {
+                socketClient.requestAvailablePositions();
+                console.printMessage("Requesting available positions from server...");
+            } else {
+                // Fall back to local positions if no socket client
+                availablePositions = controller.getAvailableStartingPositions();
+                showAvailablePositions(availablePositions);
+            }
+        } catch (IOException e) {
+            console.printError("Error requesting available positions: " + e.getMessage());
+            state = TuiState.TERMINATED;
+            return;
+        }
+
         boolean positionChosen = false;
         while (!positionChosen) {
-            java.util.List<Integer> availablePositions = controller.getAvailableStartingPositions();
-
-            if (availablePositions.isEmpty()) {
-                console.printError("No starting positions available. This shouldn't happen in a standard game. Waiting...");
+            if (availablePositions == null || availablePositions.isEmpty()) {
+                console.printMessage("Waiting for server to provide available positions...");
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    console.printError("Interrupted while waiting.");
-                    state = TuiState.TERMINATED;
-                    return;
                 }
                 continue;
             }
 
-            console.printMessage("Available starting positions: " + availablePositions.toString());
-            String input = console.askQuestion("Enter your desired starting position (1-4): ");
+            String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
 
             try {
                 int chosenPosition = Integer.parseInt(input);
-                if (controller.setPlayerInitialStartingPosition(this.currentPlayer, chosenPosition)) {
-                    positionChosen = true;
-                    console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
-                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-                } else {
-                    console.printError("Failed to set position. It might be taken or invalid. Please try again.");
+                if (!availablePositions.contains(chosenPosition)) {
+                    console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
+                    continue;
+                }
+
+                try {
+                    if (socketClient != null) {
+                        socketClient.selectPosition(chosenPosition);
+                        console.printMessage("Position request sent to server. Waiting for confirmation...");
+                        // The response will be handled by notifyPositionResponse
+                        positionChosen = true;
+                        // Don't transition state yet - wait for server confirmation
+                    } else {
+                        // Fall back to local controller if no socket client
+                        if (controller.setPlayerInitialStartingPosition(this.currentPlayer, chosenPosition)) {
+                            positionChosen = true;
+                            console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
+                            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+                        } else {
+                            console.printError("Failed to set position. It might be taken or invalid. Please try again.");
+                        }
+                    }
+                } catch (Exception e) {
+                    console.printError("Error selecting position: " + e.getMessage());
                 }
             } catch (NumberFormatException e) {
                 console.printError("Invalid input. Please enter a number.");
@@ -204,13 +236,12 @@ public class GalaxyTruckerTUI implements Runnable {
     }
 
     private void handleWaitForAllPlayersPositionedState() {
-        // This state just waits. The console.printMessage was moved to the end of handleChooseStartPositionState.
-        // The actual transition to RUNNING will be triggered by an external call to proceedToRunningState().
-        // To prevent busy-looping and consuming CPU, we can add a small sleep if no other mechanism
-        // is pausing the TUI thread. However, typically, the readCommand() in other states blocks.
-        // If the mainLoop continuously spins here, a Thread.sleep might be needed if this state can be active for a while.
-        // For now, we assume the loop will check state, print nothing if it's this state, and proceed.
-        // If there's a desire for a continuously updating message or a spinning cursor, that'd be more complex.
+        console.printMessage("Waiting for all players to choose their positions...");
+        try {
+            Thread.sleep(2000); // Small sleep to prevent tight loop
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
@@ -244,5 +275,55 @@ public class GalaxyTruckerTUI implements Runnable {
         if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
             activeShipBuildingHandler.refreshDisplay();
         }
+    }
+    
+    /**
+     * Called by network messages to update available positions display
+     */
+    public void showAvailablePositions(List<Integer> positions) {
+        this.availablePositions = positions;
+        if (positions.isEmpty()) {
+            console.printMessage("No positions available currently. Please wait...");
+        } else {
+            console.printMessage("Available positions: " + positions);
+        }
+    }
+    
+    /**
+     * Called by PositionResponseMessage to handle position selection response
+     */
+    public void triggerPositionSelectionRefresh() {
+        if (state == TuiState.CHOOSE_START_POSITION) {
+            // If we're still in position selection state, the selection failed
+            try {
+                socketClient.requestAvailablePositions();
+            } catch (IOException e) {
+                console.printError("Error refreshing available positions: " + e.getMessage());
+            }
+        } else if (state != TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+            // If the user successfully selected a position, transition to waiting state
+            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        }
+    }
+    
+    /**
+     * Called by PositionUpdateMessage to update a player's position
+     */
+    public void updatePlayerPosition(int playerId, int position) {
+        console.printMessage("Player ID " + playerId + " has selected position " + position);
+        
+        // Check if we're the last player to select a position
+        try {
+            socketClient.requestAvailablePositions();
+        } catch (IOException e) {
+            console.printError("Error checking remaining positions: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Display a message in the console
+     */
+    public void showMessage(String message) {
+        console.printMessage(message);
     }
 }

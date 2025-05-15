@@ -2,12 +2,16 @@ package it.polimi.ingsw.network.socket.client;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
+import it.polimi.ingsw.network.socket.messages.GetAvailablePositionsMessage;
+import it.polimi.ingsw.network.socket.messages.SelectPositionMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
@@ -94,6 +98,81 @@ public class SocketClient implements Runnable, GeneralClientIf {
             throw new IllegalStateException("Cannot validate ship before player ID is assigned.");
         }
         proxy.validateShip(playerId);
+    }
+
+    // New method to request available positions
+    public void requestAvailablePositions() throws IOException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot request positions before player ID is assigned.");
+        }
+        System.out.println("[Client] Requesting available positions from server");
+        synchronized (out) {
+            out.writeObject(new GetAvailablePositionsMessage(playerId));
+            out.flush();
+        }
+    }
+    
+    // New method to select a position on the flight board
+    public void selectPosition(int position) throws IOException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot select position before player ID is assigned.");
+        }
+        if (position < 1 || position > 4) {
+            throw new IllegalArgumentException("Position must be between 1 and 4");
+        }
+        System.out.println("[Client] Sending position selection request: " + position);
+        synchronized (out) {
+            out.writeObject(new SelectPositionMessage(playerId, position));
+            out.flush();
+        }
+    }
+    
+    // Called by PositionResponseMessage
+    public void notifyPositionResponse(int playerId, int position, boolean success, String message) {
+        if (tui != null) {
+            if (success) {
+                tui.showMessage("Position " + position + " selected successfully");
+            } else {
+                tui.showMessage("Failed to select position " + position + ": " + message);
+            }
+            tui.triggerPositionSelectionRefresh();
+        }
+    }
+    
+    // Called by AvailablePositionsResponseMessage
+    public void showAvailablePositions(List<Integer> positions) {
+        if (tui != null) {
+            tui.showAvailablePositions(positions);
+        }
+    }
+    
+    // Called by PositionUpdateMessage
+    public void updatePlayerPosition(int playerId, int position) {
+        // Update local game state if necessary
+        if (tui != null) {
+            tui.updatePlayerPosition(playerId, position);
+        }
+    }
+
+    /**
+     * Called by AllPositionsSelectedMessage when all players have selected their positions
+     * 
+     * @param playerPositions Map of player IDs to their selected positions
+     */
+    public void proceedToGamePhase(Map<Integer, Integer> playerPositions) {
+        System.out.println("[Client] All players have selected positions. Proceeding to game phase");
+        
+        if (tui != null) {
+            // Display all player positions
+            StringBuilder positionInfo = new StringBuilder("All players have selected positions:");
+            for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+                positionInfo.append("\nPlayer ").append(entry.getKey()).append(" at position ").append(entry.getValue());
+            }
+            tui.showMessage(positionInfo.toString());
+            
+            // Transition to game phase
+            tui.proceedToRunningState();
+        }
     }
 
     public void setPlayerId(int id) {
