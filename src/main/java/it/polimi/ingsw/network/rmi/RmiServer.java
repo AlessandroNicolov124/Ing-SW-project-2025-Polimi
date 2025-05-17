@@ -138,7 +138,16 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public void placeComponent(int playerId, Component component, Position position) {
-        System.out.println("Prova");
+        Player p = this.controller.getPlayerById(playerId);
+        System.out.println("[ServerRMI] Processing PlaceComponentMessage for player " + playerId + ": Component=" + component.getClass().getSimpleName() + ", Pos=" + position);
+        if (this.controller.addComponentForPlayer(p, component, position)){
+            updates.offer("Placed component " + component.getClass().getSimpleName() + ", Pos=" + position);
+        }
+        else{
+            updates.offer("Failed to place component for player " + playerId);
+        }
+
+
     }
 
 }
