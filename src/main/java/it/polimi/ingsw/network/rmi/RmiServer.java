@@ -141,9 +141,11 @@ public class RmiServer extends UnicastRemoteObject
         Player p = this.controller.getPlayerById(playerId);
         System.out.println("[ServerRMI] Processing PlaceComponentMessage for player " + playerId + ": Component=" + component.getClass().getSimpleName() + ", Pos=" + position);
         if (this.controller.addComponentForPlayer(p, component, position)){
+            System.out.println("Component placed successfully");
             updates.offer("Placed component " + component.getClass().getSimpleName() + ", Pos=" + position);
         }
         else{
+            System.out.println("Failed to place component");
             updates.offer("Failed to place component for player " + playerId);
         }
 
