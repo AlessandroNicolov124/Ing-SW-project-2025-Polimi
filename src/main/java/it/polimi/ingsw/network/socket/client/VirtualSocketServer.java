@@ -5,17 +5,10 @@ import java.io.ObjectOutputStream;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-import it.polimi.ingsw.network.socket.messages.GenericMessage;
-import it.polimi.ingsw.network.socket.messages.AddPlayerMessage;
+import it.polimi.ingsw.network.socket.messages.*;
 import it.polimi.ingsw.network.socket.server.VirtualServer;
-import it.polimi.ingsw.network.socket.messages.PlayerAddedMessage;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.socket.messages.PlaceComponentMessage;
-import it.polimi.ingsw.network.socket.messages.RemoveComponentMessage;
-import it.polimi.ingsw.network.socket.messages.RotateComponentMessage;
-import it.polimi.ingsw.network.socket.messages.RotationType;
-import it.polimi.ingsw.network.socket.messages.ValidateShipMessage;
 
 
 public class VirtualSocketServer implements VirtualServer {
@@ -69,6 +62,29 @@ public class VirtualSocketServer implements VirtualServer {
     public void removeComponent(int playerId, Position position) throws IOException {
         send(new RemoveComponentMessage(playerId, position));
         // Response handled asynchronously by ComponentRemovedMessage
+    }
+
+    public Component pickCompForShip(int playerId) throws IOException {
+        send(new PickCompMessage(playerId));
+
+        try {
+            // Wait for server to respond
+            while (true) {
+
+                GenericMessage response = receivedMessagesQueue.takeFirst(); // Blocking call
+                if (response instanceof CompPickedMessage resp) {
+                    return resp.getComponent();
+                } else {
+                    // If it's not the message we're waiting for, put it back at the end of the deque
+                    // or handle it if it's an unexpected but valid message (e.g. a broadcast)
+                    receivedMessagesQueue.offerLast(response);
+                    Thread.sleep(50); // Small delay to prevent busy spinning if other messages are in queue
+                }
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Interrupted while waiting for player ID from server", e);
+        }
     }
 
     // Asynchronous call: rotate component

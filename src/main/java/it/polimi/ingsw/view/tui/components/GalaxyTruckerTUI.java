@@ -31,6 +31,7 @@ public class GalaxyTruckerTUI implements Runnable {
     public GalaxyTruckerTUI()
     {
         this.socketClient = null;
+        this.client = null;
         this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
@@ -97,9 +98,9 @@ public class GalaxyTruckerTUI implements Runnable {
                 client = socketClient;
                 new Thread(socketClient).start();
 
-                playerId = socketClient.addPlayer(username);
+                playerId = client.addPlayer(username);
                 this.currentPlayer = new Player(0, username, false);
-                socketClient.setLocalPlayer(this.currentPlayer);
+                client.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
                 client = RmiClient.connectTo(serverAddress);
@@ -151,7 +152,7 @@ public class GalaxyTruckerTUI implements Runnable {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        activeShipBuildingHandler = new ShipBuildingHandler(console, socketClient, this.currentPlayer);
+        activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer);
         activeShipBuildingHandler.manageShipBuilding();
         activeShipBuildingHandler = null;
 

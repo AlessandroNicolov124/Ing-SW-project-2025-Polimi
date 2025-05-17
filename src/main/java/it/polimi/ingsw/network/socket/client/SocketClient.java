@@ -64,8 +64,18 @@ public class SocketClient implements Runnable, GeneralClientIf {
         socket.close(); 
     }
 
+
     public int addPlayer(String username) throws IOException {
         return proxy.sendSrvAddPlayerReqAndWaitResp(username);
+    }
+
+    public Component pickComponentCard() throws IOException
+    {
+        Component c = null;
+        if (playerId != -1) {
+            c = proxy.pickCompForShip(playerId);
+        }
+        return c;
     }
 
     public void placeComponent(Component component, Position position) throws IOException {

@@ -91,6 +91,11 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     }
 
     @Override
+    public Component pickComponentCard() throws Exception {
+        return null;
+    }
+
+    @Override
     public void close() throws Exception {
         UnicastRemoteObject.unexportObject(this, true);
     }

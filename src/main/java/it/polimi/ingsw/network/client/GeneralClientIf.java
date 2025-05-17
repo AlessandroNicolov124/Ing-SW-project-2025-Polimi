@@ -18,4 +18,6 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void setLocalPlayer(Player player) throws Exception;
 
+    Component pickComponentCard() throws Exception;
+
 }

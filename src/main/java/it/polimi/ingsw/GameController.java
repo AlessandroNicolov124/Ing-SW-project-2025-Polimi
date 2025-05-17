@@ -56,6 +56,10 @@ public class  GameController {
         return null;
     }
 
+    public Component getCompFromDeck(Player p){
+        return gameModel.pickOneComponentCardFromDeck(p);
+    }
+
     public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
             return player.placeComponent(component, pos);
