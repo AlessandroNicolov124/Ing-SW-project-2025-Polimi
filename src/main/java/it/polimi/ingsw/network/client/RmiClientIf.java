@@ -29,5 +29,8 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void setLocalPlayer(Player player) throws RemoteException;
-     
+
+    @Override
+    Component pickComponentCard() throws RemoteException;
+
 }

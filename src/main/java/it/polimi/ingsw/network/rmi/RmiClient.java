@@ -91,8 +91,8 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     }
 
     @Override
-    public Component pickComponentCard() throws Exception {
-        return null;
+    public Component pickComponentCard() throws RemoteException {
+        return server.pickComponent(playerId);
     }
 
     @Override

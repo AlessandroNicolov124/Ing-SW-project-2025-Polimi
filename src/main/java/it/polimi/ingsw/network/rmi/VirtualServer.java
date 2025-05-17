@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.RmiClientIf;
@@ -14,6 +15,8 @@ public interface VirtualServer extends Remote {
     void stopServer() throws RemoteException;
 
     int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException;
+
+    Component pickComponent(int playerId) throws RemoteException;
 
     void placeComponent(int playerId, Component component, Position position) throws RemoteException;
 

@@ -91,7 +91,7 @@ public class RmiServer extends UnicastRemoteObject
         int min = 1;
         int max = 1000;
         int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
-        Player p  = new Player(newId, username, true);
+        Player p = new Player(newId, username, true);
         controller.addPlayer(p);
         updates.offer("Player " + username + " joined (id = " + newId + ")");
         return newId;
@@ -127,6 +127,14 @@ public class RmiServer extends UnicastRemoteObject
             System.out.println("Error while closing server: " + ignored.getMessage());
         }
     }
+
+    public Component pickComponent(int Id) throws RemoteException {
+        Player p = this.controller.getPlayerById(Id);
+        Component c = this.controller.getCompFromDeck(p);
+        updates.offer("Received component from server : " + c);
+        return c;
+    }
+
 
     @Override
     public void placeComponent(int playerId, Component component, Position position) {
