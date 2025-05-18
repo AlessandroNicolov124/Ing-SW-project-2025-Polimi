@@ -1,6 +1,5 @@
 package it.polimi.ingsw.network.rmi;
 
-import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.RmiClientIf;

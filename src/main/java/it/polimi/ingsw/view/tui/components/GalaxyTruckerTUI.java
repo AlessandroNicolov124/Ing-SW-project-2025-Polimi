@@ -5,13 +5,12 @@ import java.util.Objects;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.client.GeneralClientIf;
-
-
+import it.polimi.ingsw.network.client.listeners.ShipBuildingListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 
 
-public class GalaxyTruckerTUI implements Runnable {
+public class GalaxyTruckerTUI implements Runnable, ShipBuildingListener {
 
     private final ConsoleManager console;
     private GameController controller;
@@ -103,12 +102,13 @@ public class GalaxyTruckerTUI implements Runnable {
                 client.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
-                client = RmiClient.connectTo(serverAddress);
+                client = RmiClient.connectTo(serverAddress, this);
                 if (client == null) {
                     throw new IllegalStateException("Failed to connect to RMI server.");
                 }
                 playerId = client.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
+                client.setLocalPlayer(currentPlayer);
 
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
@@ -241,7 +241,8 @@ public class GalaxyTruckerTUI implements Runnable {
         }
     }
 
-    public void triggerShipDisplayRefresh() {
+    @Override
+    public void displayRefresh() {
         if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
             activeShipBuildingHandler.refreshDisplay();
         }

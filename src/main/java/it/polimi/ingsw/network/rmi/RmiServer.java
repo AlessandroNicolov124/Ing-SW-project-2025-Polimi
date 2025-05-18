@@ -6,6 +6,10 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.RmiClientIf;
+import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
+import it.polimi.ingsw.network.rmi.messages.PickComponentMessage;
+import it.polimi.ingsw.network.rmi.messages.PlayerAddedMessage;
+import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -22,7 +26,7 @@ public class RmiServer extends UnicastRemoteObject
 
     private final GameController controller;
     private final List<RmiClientIf> clients = new CopyOnWriteArrayList<>();
-    private final BlockingQueue<String> updates = new LinkedBlockingQueue<>();
+    private final BlockingQueue<UpdateMessage> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
 
@@ -38,8 +42,8 @@ public class RmiServer extends UnicastRemoteObject
         Thread t = new Thread(() -> {
             try {
                 while (true) {
-                    String msg = updates.take();
-                    for (GeneralClientIf c : clients) {
+                    UpdateMessage msg = updates.take();
+                    for (RmiClientIf c : clients) {
                         try {
                             c.showUpdate(msg);
                         }
@@ -61,16 +65,7 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     public void run() {
-
-//      Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-//          try {
-//              server.close();
-//          } catch (Exception ignored) {
-//              System.out.println("Error while closing server: " + ignored.getMessage());
-//          }
-//      }));
         System.out.println("GalaxyTruckerServer RMI ready (port 1099)");
-
     }
 
     @Override
@@ -84,17 +79,6 @@ public class RmiServer extends UnicastRemoteObject
             System.out.println("Error connecting to RMI server: " + e.getMessage());
         }
 
-    }
-
-    @Override
-    public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
-        int min = 1;
-        int max = 1000;
-        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
-        Player p = new Player(newId, username, true);
-        controller.addPlayer(p);
-        updates.offer("Player " + username + " joined (id = " + newId + ")");
-        return newId;
     }
 
     @Override
@@ -128,28 +112,36 @@ public class RmiServer extends UnicastRemoteObject
         }
     }
 
-    public Component pickComponent(int Id) throws RemoteException {
-        Player p = this.controller.getPlayerById(Id);
+    @Override
+    public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
+        int min = 1;
+        int max = 1000;
+        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
+        Player p = new Player(newId, username, true);
+        controller.addPlayer(p);
+        //updates.offer("Player " + username + " joined (id = " + newId + ")");
+        System.out.println("[ServerRMI] Player " + username + " joined (id = " + newId + ")");
+        updates.offer(new PlayerAddedMessage(newId));
+        return newId;
+    }
+
+    public Component pickComponent(int playerId) throws RemoteException {
+        Player p = this.controller.getPlayerById(playerId);
         Component c = this.controller.getCompFromDeck(p);
-        updates.offer("Received component from server : " + c);
+        System.out.println("[ServerRMI] Picked component: " + c.getClass().getSimpleName());
+        updates.offer(new PickComponentMessage(playerId, c));
         return c;
     }
 
-
     @Override
     public void placeComponent(int playerId, Component component, Position position) {
-        Player p = this.controller.getPlayerById(playerId);
-        System.out.println("[ServerRMI] Processing PlaceComponentMessage for player " + playerId + ": Component=" + component.getClass().getSimpleName() + ", Pos=" + position);
-        if (this.controller.addComponentForPlayer(p, component, position)){
-            System.out.println("Component placed successfully");
-            updates.offer("Placed component " + component.getClass().getSimpleName() + ", Pos=" + position);
-        }
-        else{
-            System.out.println("Failed to place component");
-            updates.offer("Failed to place component for player " + playerId);
-        }
+        Player p = controller.getPlayerById(playerId);
+        boolean ok = controller.addComponentForPlayer(p, component, position);
 
-
+        System.out.println("[ServerRMI] Placed component: " + component.getClass().getSimpleName() + " at " + position);
+        updates.offer(new ComponentPlacedMessage(playerId, component, position, ok));
     }
+
+
 
 }

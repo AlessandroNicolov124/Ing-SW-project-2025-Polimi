@@ -6,6 +6,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.client.listeners.ShipBuildingListener;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
@@ -13,7 +14,6 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.view.tui.components.GalaxyTruckerTUI;
 
 
 public class SocketClient implements Runnable, GeneralClientIf {
@@ -25,15 +25,15 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private final BlockingDeque<GenericMessage> messages = new LinkedBlockingDeque<>();
     private int playerId = -1;
     private Player localPlayerReference;
-    private GalaxyTruckerTUI tui;
+    private ShipBuildingListener listener;
 
-    public SocketClient(String host, int port, GalaxyTruckerTUI tui) throws IOException {
+    public SocketClient(String host, int port, ShipBuildingListener sbl) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
         out.flush();
         in  = new ObjectInputStream (socket.getInputStream());
         proxy = new VirtualSocketServer(out, messages);
-        this.tui = tui;
+        this.listener = sbl;
     }
 
     @Override
@@ -117,7 +117,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
     public void handleLocalComponentPlacement(Component component, Position position, boolean success) {
         if (success && localPlayerReference != null) {
             localPlayerReference.getShip().placeComponent(component, position);
-            if (tui != null) tui.triggerShipDisplayRefresh();
+            if (listener != null) 
+                listener.displayRefresh();
         }
     }
 
@@ -127,7 +128,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
             if (compToRemove != null) {
                 localPlayerReference.getShip().removeComponent(compToRemove);
             }
-            if (tui != null) tui.triggerShipDisplayRefresh();
+            if (listener != null) 
+                listener.displayRefresh();
         }
     }
 
@@ -136,7 +138,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
             Component oldComp = localPlayerReference.getShip().getComponentAt(position);
             if (oldComp != null) localPlayerReference.getShip().removeComponent(oldComp);
             localPlayerReference.getShip().placeComponent(updatedComponentState, position);
-            if (tui != null) tui.triggerShipDisplayRefresh();
+            if (listener != null) 
+                listener.displayRefresh();
         }
     }
 }
