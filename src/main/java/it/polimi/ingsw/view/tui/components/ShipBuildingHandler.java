@@ -235,9 +235,9 @@ public class ShipBuildingHandler {
     }
 
     private String getCoordinateHeader(int width) {
-        StringBuilder header = new StringBuilder("X:  ");
+        StringBuilder header = new StringBuilder("      ");
         for (int i = 0; i < width; i++) {
-            header.append("     " + i + "      "); // Center the coordinate number in the 3-cell width
+            header.append("     " + i + "     "); // Center the coordinate number in the 3-cell width
         }
         return header.toString();
     }
