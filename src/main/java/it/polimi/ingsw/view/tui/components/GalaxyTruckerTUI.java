@@ -252,6 +252,10 @@ public class GalaxyTruckerTUI implements Runnable {
         if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
             console.printMessage("\nAll players have chosen their positions! Starting the game...");
             this.state = TuiState.RUNNING;
+        } else if (this.state == TuiState.CHOOSE_START_POSITION) {
+            // If we're still in position selection, transition to waiting state first
+            console.printMessage("\nPosition selected. Waiting for other players...");
+            this.state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
         } else {
             // Log or handle unexpected state transition attempt
             console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
@@ -300,8 +304,9 @@ public class GalaxyTruckerTUI implements Runnable {
             } catch (IOException e) {
                 console.printError("Error refreshing available positions: " + e.getMessage());
             }
-        } else if (state != TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+        } else if (state == TuiState.CHOOSE_START_POSITION) {
             // If the user successfully selected a position, transition to waiting state
+            console.printMessage("Position selected. Waiting for other players...");
             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
         }
     }
