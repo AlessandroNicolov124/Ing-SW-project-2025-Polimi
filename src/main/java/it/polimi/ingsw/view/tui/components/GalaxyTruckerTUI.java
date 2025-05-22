@@ -104,6 +104,9 @@ public class GalaxyTruckerTUI implements Runnable {
                 this.currentPlayer = new Player(playerId, username, false); // Update ID
                 socketClient.setPlayerId(playerId); // Set player ID in socket client
                 socketClient.setLocalPlayer(this.currentPlayer);
+                
+                // Add the current player to local controller for offline operations
+                controller.addPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
                 client = RmiClient.connectTo(serverAddress);
@@ -112,6 +115,9 @@ public class GalaxyTruckerTUI implements Runnable {
                 }
                 playerId = client.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
+                
+                // Add the current player to local controller for offline operations  
+                controller.addPlayer(this.currentPlayer);
 
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
@@ -204,7 +210,13 @@ public class GalaxyTruckerTUI implements Runnable {
 
             try {
                 int chosenPosition = Integer.parseInt(input);
-                if (!availablePositions.contains(chosenPosition)) {
+                
+                // Validate position selection - use local data when connected to server, controller when offline
+                boolean isValid = (socketClient != null) ? 
+                    availablePositions.contains(chosenPosition) : 
+                    controller.isPositionSelectionValid(chosenPosition);
+                    
+                if (!isValid) {
                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
                     continue;
                 }
@@ -218,7 +230,7 @@ public class GalaxyTruckerTUI implements Runnable {
                         // Don't transition state yet - wait for server confirmation
                     } else {
                         // Fall back to local controller if no socket client
-                        if (controller.setPlayerInitialStartingPosition(this.currentPlayer, chosenPosition)) {
+                        if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
                             positionChosen = true;
                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
@@ -249,16 +261,24 @@ public class GalaxyTruckerTUI implements Runnable {
      * have chosen their positions and the game can proceed.
      */
     public synchronized void proceedToRunningState() {
-        if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-            console.printMessage("\nAll players have chosen their positions! Starting the game...");
-            this.state = TuiState.RUNNING;
-        } else if (this.state == TuiState.CHOOSE_START_POSITION) {
-            // If we're still in position selection, transition to waiting state first
-            console.printMessage("\nPosition selected. Waiting for other players...");
-            this.state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        // When connected to server, trust the server's signal that all players are positioned
+        // When offline, use controller to check if game can proceed
+        boolean canProceed = (socketClient != null) ? true : controller.canProceedToRunningState();
+        
+        if (canProceed) {
+            if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+                console.printMessage("\nAll players have chosen their positions! Starting the game...");
+                this.state = TuiState.RUNNING;
+            } else if (this.state == TuiState.CHOOSE_START_POSITION) {
+                // If we're still in position selection, transition to waiting state first
+                console.printMessage("\nPosition selected. Waiting for other players...");
+                this.state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+            } else {
+                // Log or handle unexpected state transition attempt
+                console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
+            }
         } else {
-            // Log or handle unexpected state transition attempt
-            console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
+            console.printMessage("Waiting for more players to choose their positions...");
         }
     }
 
@@ -299,13 +319,23 @@ public class GalaxyTruckerTUI implements Runnable {
     public void triggerPositionSelectionRefresh() {
         if (state == TuiState.CHOOSE_START_POSITION) {
             // If we're still in position selection state, the selection failed
-            try {
-                socketClient.requestAvailablePositions();
-            } catch (IOException e) {
-                console.printError("Error refreshing available positions: " + e.getMessage());
+            if (socketClient != null) {
+                try {
+                    socketClient.requestAvailablePositions();
+                } catch (IOException e) {
+                    console.printError("Error refreshing available positions: " + e.getMessage());
+                }
             }
-        } else if (state == TuiState.CHOOSE_START_POSITION) {
-            // If the user successfully selected a position, transition to waiting state
+        }
+        
+        // Check if we can now proceed to the next state
+        // When connected to server, this method is typically called after successful position selection
+        // When offline, use controller logic to check
+        boolean canProceedToNext = (socketClient != null) ? 
+            true : // Server will handle state transitions
+            (controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
+            
+        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
             console.printMessage("Position selected. Waiting for other players...");
             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
         }
@@ -317,11 +347,20 @@ public class GalaxyTruckerTUI implements Runnable {
     public void updatePlayerPosition(int playerId, int position) {
         console.printMessage("Player ID " + playerId + " has selected position " + position);
         
-        // Check if we're the last player to select a position
-        try {
-            socketClient.requestAvailablePositions();
-        } catch (IOException e) {
-            console.printError("Error checking remaining positions: " + e.getMessage());
+        // When connected to server, check if we're the last player to select a position
+        if (socketClient != null) {
+            try {
+                socketClient.requestAvailablePositions();
+            } catch (IOException e) {
+                console.printError("Error checking remaining positions: " + e.getMessage());
+            }
+        } else {
+            // Offline mode - use controller to update position
+            boolean success = controller.updatePlayerPosition(playerId, position);
+            
+            if (!success) {
+                console.printError("Failed to update position for player ID " + playerId);
+            }
         }
     }
     
