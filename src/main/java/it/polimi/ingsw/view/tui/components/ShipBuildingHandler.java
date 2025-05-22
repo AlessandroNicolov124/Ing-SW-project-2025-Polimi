@@ -112,14 +112,14 @@ public class ShipBuildingHandler {
         String[][] grid = new String[3][3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                grid[i][j] = "[  ]"; // Empty slot
+                grid[i][j] = "    "; // Empty slot
             }
         }
         grid[1][1] = "[" + getComponentSymbol(currentComponent) + "]";
-        grid[1][0] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.NORTH))  + "]";
-        grid[1][2] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.SOUTH))  + "]";
-        grid[2][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.EAST))  + "]";
-        grid[0][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.WEST))  + "]";
+        grid[1][0] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.WEST))  + "]";
+        grid[1][2] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.EAST))  + "]";
+        grid[2][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.SOUTH))  + "]";
+        grid[0][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.NORTH))  + "]";
 
 
         // Print grid
@@ -135,39 +135,17 @@ public class ShipBuildingHandler {
     }
 
     private String getConnectionSymbol(Connector connector) {
-        return switch (connector.getConnectorType()){
-            case SingleConnectorType s -> "SC";
-            case DoubleConnectorType s -> "DC";
-            case UniversalConnectorType s -> "UC";
-            case NullConnectorType s -> "NC";
+        if (connector == null) {
+            return "  "; // Empty for no connector
+        }
+
+        return switch (connector.getConnectorType()) {
+            case SingleConnectorType s -> "S-";
+            case DoubleConnectorType d -> "D=";
+            case UniversalConnectorType u -> "U≡";
+            case NullConnectorType n -> "  "; // Empty for null connector
             default -> "??";
         };
-    }
-
-    private void initializeComponentDeck() {
-        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
-        // in base alle regole del gioco e alla rarità dei componenti.
-        List<Component> allComponents = new ArrayList<>();
-
-        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
-        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
-        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
-        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
-        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
-        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
-        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
-
-        // Mescola la lista e converti in coda
-        Collections.shuffle(allComponents);
-        componentDeck = new LinkedList<>(allComponents);
     }
 
     private void displayShip() {
@@ -183,11 +161,14 @@ public class ShipBuildingHandler {
         int height = ship.getHeight();
         Map<Component, Position> components = ship.getComponents();
 
-        // Create a grid
-        String[][] grid = new String[height][width];
-        for (int i = 0; i < height; i++) {
-            for (int j = 0; j < width; j++) {
-                grid[i][j] = "[  ]"; // Empty slot
+        // Create a larger grid where each component occupies a 3x3 area
+        // This gives space to show connectors around each component
+        int gridHeight = height * 3;
+        int gridWidth = width * 3;
+        String[][] grid = new String[gridHeight][gridWidth];
+        for (int i = 0; i < gridHeight; i++) {
+            for (int j = 0; j < gridWidth; j++) {
+                grid[i][j] = "    "; // Empty slot with 4 spaces
             }
         }
 
@@ -195,29 +176,76 @@ public class ShipBuildingHandler {
         for (Map.Entry<Component, Position> entry : components.entrySet()) {
             Component comp = entry.getKey();
             Position pos = entry.getValue();
+
+            // Calculate the position in the expanded grid
+            int baseY = pos.getY() * 3;
+            int baseX = pos.getX() * 3;
+
+            // Place component symbol in center
             String compSymbol = getComponentSymbol(comp);
-            if (pos.getY() >= 0 && pos.getY() < height && pos.getX() >= 0 && pos.getX() < width) {
-                grid[pos.getY()][pos.getX()] = "[" + compSymbol + "]";
+            grid[baseY + 1][baseX + 1] = "[" + compSymbol + "]";
+
+            // Add connectors around the component
+            // North connector (above)
+            Connector northConn  = comp.getConnectorByDirection(Direction.NORTH);
+            if (northConn != null && northConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY][baseX + 1] = "[" + getConnectionSymbol(northConn) + "]";
             }
+
+            // South connector (below)
+            Connector southConn = comp.getConnectorByDirection(Direction.SOUTH);
+            if (southConn != null && southConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 2][baseX + 1] = "[" + getConnectionSymbol(southConn) + "]";
+            }
+
+            // East connector (right)
+            Connector eastConn = comp.getConnectorByDirection(Direction.EAST);
+            if (eastConn != null && eastConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 1][baseX + 2] = "[" + getConnectionSymbol(eastConn) + "]";
+            }
+
+            // West connector (left)
+            Connector westConn = comp.getConnectorByDirection(Direction.WEST);
+            if (westConn != null && westConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 1][baseX] = "[" + getConnectionSymbol(westConn) + "]";
+            }
+
         }
 
         // Add cooordinates
-        console.printMessage("  X:  0   1   2   3   4   5   6   7   8   9"); // Assuming max width 10 for now
-        // Print grid
-        for (int i = 0; i < height; i++) {
-            StringBuilder rowStr = new StringBuilder("Y:" + i + " ");
-            for (int j = 0; j < width; j++) {
+        console.printMessage("      " + getCoordinateHeader(width));
+
+        for (int i = 0; i < gridHeight; i++) {
+            StringBuilder rowStr = new StringBuilder();
+
+            // Add Y coordinate label only for the middle row of each cell
+            if (i % 3 == 1) {
+                rowStr.append("Y:" + (i / 3) + "   ");
+            } else {
+                rowStr.append("      "); // Spacing to align with coordinates
+            }
+
+            // Add row content
+            for (int j = 0; j < gridWidth; j++) {
                 rowStr.append(grid[i][j]);
             }
             console.printMessage(rowStr.toString());
         }
-        console.printMessage("--------------------");
+        console.printMessage("------------------------------------");
+    }
+
+    private String getCoordinateHeader(int width) {
+        StringBuilder header = new StringBuilder("      ");
+        for (int i = 0; i < width; i++) {
+            header.append("     " + i + "     "); // Center the coordinate number in the 3-cell width
+        }
+        return header.toString();
     }
 
     private String getComponentSymbol(Component component) {
         return switch (component) {
             case Cabin c -> "CA";
-            case SingleCannon sc -> "C1"; // S1 for single cannon
+            case SingleCannon sc -> "C1";
             case DoubleCannon dc -> "C2";
             case SingleEngine se -> "E1";
             case DoubleEngine de -> "E2";
@@ -451,9 +479,9 @@ public class ShipBuildingHandler {
     private SingleEngine createSingleEngine() {
         SingleEngine engine = new SingleEngine();
         initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
+        if(!engine.validateEngineDirection(engine.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
         return engine;
     }
@@ -461,9 +489,9 @@ public class ShipBuildingHandler {
     private DoubleEngine createDoubleEngine() {
         DoubleEngine engine = new DoubleEngine();
         initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
+        if(!engine.validateEngineDirection(engine.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
         return engine;
     }
@@ -472,24 +500,20 @@ public class ShipBuildingHandler {
         //il cannone punta con il costruttore sempre verso nord
         SingleCannon cannon = new SingleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
+        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
         return cannon;
     }
 
     private DoubleCannon createDoubleCannon() {
-//        Direction direction = getRandomDirection();
-//        DoubleCannon cannon = new DoubleCannon(direction);
-//        initializeRandomConnectors(cannon);
-//        return cannon;
         //il cannone punta con il costruttore sempre verso nord
         DoubleCannon cannon = new DoubleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
+        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
         return cannon;
     }
@@ -567,5 +591,33 @@ public class ShipBuildingHandler {
         ConnectorType west = possibleConnectors[random.nextInt(possibleConnectors.length)];
 
         component.initializeConnectors(north, east, south, west);
+    }
+
+
+
+    private void initializeComponentDeck() {
+        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
+        // in base alle regole del gioco e alla rarità dei componenti.
+        List<Component> allComponents = new ArrayList<>();
+
+        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
+        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
+        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
+        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
+        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
+        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
+        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
+
+        // Mescola la lista e converti in coda
+        Collections.shuffle(allComponents);
+        componentDeck = new LinkedList<>(allComponents);
     }
 } 

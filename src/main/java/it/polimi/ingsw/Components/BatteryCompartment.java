@@ -43,11 +43,44 @@ public final class BatteryCompartment extends Component {
         chargeLevel = maxCapacity;
     }
 
-    public boolean useCharge(int requiredCharge) {
-        if (chargeLevel >= requiredCharge) {
-            chargeLevel -= requiredCharge;
-            return true;
+//    public boolean useCharge(int requiredCharge) {
+//        if (chargeLevel >= requiredCharge) {
+//            chargeLevel -= requiredCharge;
+//            return true;
+//        }
+//        return false;
+//    }
+
+    /**
+     * Ricarica la batteria della quantità specificata.
+     *
+     * @param amount La quantità di energia da ricaricare
+     * @return La quantità effettivamente ricaricata
+     */
+    public int recharge(int amount) {
+        if (amount <= 0) {
+            return 0;
         }
-        return false;
+
+        int spaceLeft = maxCapacity - chargeLevel;
+        int actualRecharge = Math.min(spaceLeft, amount);
+        chargeLevel += actualRecharge;
+        return actualRecharge;
+    }
+
+    /**
+     * Scarica la batteria della quantità specificata.
+     *
+     * @param amount La quantità di energia da scaricare
+     * @return La quantità effettivamente scaricata
+     */
+    public int discharge(int amount) {
+        if (amount <= 0) {
+            return 0;
+        }
+
+        int actualDischarge = Math.min(chargeLevel, amount);
+        chargeLevel -= actualDischarge;
+        return actualDischarge;
     }
 }

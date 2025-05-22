@@ -47,7 +47,6 @@ public class Stardust extends AdventureCard {
         
         for (Player player : playersInReverseOrder) {
             // Count exposed connectors
-            //int exposedConnectors = countExposedConnectors(player);
             int exposedConnectors = countExposedConnectors(player.getShip());
 
             // Move player back on flight board
@@ -63,15 +62,6 @@ public class Stardust extends AdventureCard {
      * @return Ordered list of players starting with the last player
      */
     private List<Player> getPlayersInReverseOrder(GameModel gameModel) {
-//        List<Player> players = new ArrayList<>(gameModel.getPlayers());
-//
-//        // Sort players by position on flight board (reverse order)
-//        Collections.sort(players, (p1, p2) -> {
-//            // This would need to compare player positions on the flight board
-//            // For now, just reverse the current order
-//            return 0;
-//        });
-
         List<Player> players = new ArrayList<>(gameModel.getFlightBoard().getPlayersInFlightOrder());
         Collections.reverse(players);
         return players;
@@ -108,18 +98,19 @@ public class Stardust extends AdventureCard {
                     // Non c'è un componente adiacente, quindi il connettore è esposto
                     exposedConnectors++;
                 } else {
-                    // C'è un componente adiacente, verifichiamo se ha un connettore compatibile
+                    // C'è un componente adiacente
+
+                    // essendo la navicella convalidata, se c'è un componente allora è sicuramente connesso
+
+                    // TODO? verifichiamo se ha un connettore compatibile
                     boolean isConnected = false;
                     Direction oppositeDirection = connectorDirection.getOpposite();
 
-                    for (Connector adjacentConnector : adjacentComponent.getConnections()) {
-                        if (adjacentConnector.getDirection() == oppositeDirection) {
-                            isConnected = true;
-                            break;
-                        }
+                    if(adjacentComponent.getConnectorByDirection(oppositeDirection).isCompatibleWith(connector)){
+                        isConnected = true;
                     }
 
-                    // Se non c'è un connettore complementare, il connettore è esposto
+                    // Se non c'è un connettore compatibile, il connettore è esposto
                     if (!isConnected) {
                         exposedConnectors++;
                     }
@@ -128,54 +119,5 @@ public class Stardust extends AdventureCard {
         }
 
         return exposedConnectors;
-    }
-    
-    /**
-     * Count the number of exposed connectors on a player's ship
-     * @param player The player
-     * @return Number of exposed connectors
-     */
-    private int countExposedConnectors(Player player) {
-        ShipBuilder ship = player.getShip();
-        List<Component> components = ship.getAllComponents();
-        Set<Connector> exposedConnectors = new HashSet<>();
-        
-        // Identify exposed connectors
-        for (Component component : components) {
-            List<Connector> conn = component.getConnections();
-            for (Connector connector : conn) {
-                if (isExposed(connector, ship)) {
-                    exposedConnectors.add(connector);
-                }
-            }
-//            if (component instanceof Connector) {
-//                Connector connector = (Connector) component;
-//                if (isExposed(connector, ship)) {
-//                    exposedConnectors.add(connector);
-//                }
-//            }
-        }
-        
-        return exposedConnectors.size();
-    }
-    
-    /**
-     * Check if a connector is exposed (not connected to another component)
-     * @param connector The connector to check
-     * @param ship The player's ship
-     * @return true if the connector is exposed, false otherwise
-     */
-    private boolean isExposed(Connector connector, ShipBuilder ship) {
-        // This would need to check if the connector is exposed
-        // For now, return a placeholder implementation
-        
-        // Get position of the connector
-        // Position connectorPosition = ship.getPositionOf(connector);
-        
-        // Check if all connector endpoints are connected to other components
-        // Depends on how connectors and connections are implemented
-        // For example, checking adjacent positions for other components
-        
-        return false;
     }
 }

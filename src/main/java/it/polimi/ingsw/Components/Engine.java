@@ -2,9 +2,11 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
+import java.util.stream.Collectors;
+
 public abstract sealed class Engine extends Component permits SingleEngine, DoubleEngine {
-    private int power;
-    private int energyConsumption;
+    protected int power;
+    protected int energyConsumption;
 
     public Engine(int power, int energyConsumption) {
         super();
@@ -20,18 +22,29 @@ public abstract sealed class Engine extends Component permits SingleEngine, Doub
         return energyConsumption;
     }
 
-    public boolean validateEngineDirection(Direction direction) {
-        for(Connector conn : connections){
-            if(conn.getDirection() == direction.getOpposite()){
-                switch(conn.getConnectorType()){
-                    case NullConnectorType nct:
-                        return true;
-                    default:
-                        return false;
-                }
-            }
+    /**
+     * Verifica se un motore nella direzione opposta a quella specificata non ha un connettore
+     * Un cannone può sparare solo in una direzione dove non ha connettori
+     * o dove ha un connettore di tipo nullo (NullConnectorType).
+     *
+     * @param componentDirection La direzione verso cui il motore si muove
+     * @return true se il motore può sparare nella direzione opposta a quella specificata, false altrimenti
+     */
+    public boolean validateEngineDirection(Direction componentDirection) {
+        // Ottieni il connettore nella direzione specificata
+        Connector connector = getConnectorByDirection(componentDirection.getOpposite());
+
+        // Se non esiste un connettore in quella direzione, è possibile sparare
+        if (connector == null) {
+            return true;
         }
-        return false;
+        return switch(connector.getConnectorType()){
+            case NullConnectorType c -> true;
+            default -> false;
+        };
     }
+
+    public abstract int getEffectivePower();
+
 
 }

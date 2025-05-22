@@ -113,5 +113,8 @@ public final class Cabin extends Component {
         return false;
     }
 
+    public boolean isOccuped() {
+        return !crew.isEmpty();
+    }
 }
 

@@ -1,5 +1,6 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.CrewType;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
 import it.polimi.ingsw.Components.*;
@@ -66,50 +67,30 @@ public class Slavers extends AdventureCard {
      */
     public boolean fightSlavers(Player player, GameModel gameModel) {
         if (isDefeated) {
-            return true; // Slavers already defeated
+            return true; // Smugglers already defeated
         }
-        
+
+        activateDoubleCannons(player);
+
         // Calculate player's cannon strength
-        int playerStrength = calculateCannonStrength(player);
-        
+        double playerStrength = player.getShip().calculateFirePower();
+
+        player.getShip().dischargeAllActiveDoubleCannon();
+
         // Check if player defeats slavers
-        boolean playerWins = playerStrength >= slaverStrength;
-        
-        if (playerWins) {
+        if (playerStrength >= slaverStrength) {
             // Player wins, offer reward
+
+            // This would be implemented in the UI
+            offerReward(player, gameModel, true); // Assuming player accepts reward
+
             isDefeated = true;
             return true;
         } else {
             // Player is defeated, they must surrender crew
+            surrenderCrew(player);
             return false;
         }
-    }
-    
-    /**
-     * Calculate the cannon strength of a player's ship
-     * @param player The player
-     * @return Total cannon strength
-     */
-    private int calculateCannonStrength(Player player) {
-        int strength = 0;
-        List<Component> components = player.getShip().getAllComponents();
-        
-        // Find all cannons and count their strength
-        for (Component component : components) {
-            if (component instanceof Cannon) {
-                Cannon cannon = (Cannon) component;
-                strength += cannon.getFirePower();
-                
-                // Double cannons provide extra strength if powered
-
-//                if (cannon.isDoubleCannon()) {
-//                    // Assuming player chooses to power double cannons when fighting slavers
-//                    strength += 1;
-//                }
-            }
-        }
-        
-        return strength;
     }
     
     /**
@@ -137,51 +118,46 @@ public class Slavers extends AdventureCard {
     /**
      * Force a defeated player to surrender crew
      * @param player The player who was defeated
-     * @return true if crew was successfully surrendered, false otherwise
      */
-    public boolean surrenderCrew(Player player) {
+    public void surrenderCrew(Player player) {
         // This implements the mechanism for player to choose which crew to surrender
 
-        // Verify player has enough crew to surrender
-        int playerCrew = getCrewCount(player);
+        // Verify player has crew to surrender
+        int playerCrew = player.getShip().getTotalCrewCount();
         
-        if (playerCrew < crewLoss) {
-            return false; // Not enough crew to surrender
-        }
-        
-        // Logic to remove the crew
+        if (playerCrew <= crewLoss) {
+            player.removeCrewMembers(playerCrew);
+        }else{
+            //TODO scelta del giocatore UI
+            player.getShip().removeCrewMembers(crewLoss);
 
-        return true;
+//            List<Cabin> cabinWithCrew = player.getShip().getAllCabins()
+//                    .stream().filter(c -> !c.getCrew().isEmpty()).toList();
+//            int count = 0;
+//            while(count < crewLoss) {
+//
+//                for(Cabin c : cabinWithCrew) {
+//                    c.getCrew();
+//                    count++;
+//                }
+//            }
+        }
     }
-    
+
     /**
-     * Get the crew count for a player
-     * @param player The player
-     * @return Number of crew members
+     * Let player decide which double cannons to activate
+     * @param player The player making decisions
      */
-    private int getCrewCount(Player player) {
-        // This would need to count crew based on the game's implementation
-        return player.getShip().getTotalCrewCount(); // Placeholder for crew count
-    }
-    
-    // Getters
-    public int getSlaverStrength() {
-        return slaverStrength;
-    }
-    
-    public int getRewardCredits() {
-        return rewardCredits;
-    }
-    
-    public int getFlightDaysCost() {
-        return flightDaysCost;
-    }
-    
-    public int getCrewLoss() {
-        return crewLoss;
-    }
-    
-    public boolean isDefeated() {
-        return isDefeated;
+    private void activateDoubleCannons(Player player) {
+        List<DoubleCannon> doubleCannons = player.getShip().getOperationalDoubleCannons();
+
+        for (DoubleCannon cannon : doubleCannons) {
+            // Check if player has batteries and wants to activate this cannon
+            if (player.getShip().calculateTotalBatteryCharge() > 0) {
+                // TODO UI scelta del giocatore su uso delle batterie
+                // ipotizzo lo voglia fare
+                player.getShip().chargeWeapon(cannon);
+            }
+        }
     }
 }
