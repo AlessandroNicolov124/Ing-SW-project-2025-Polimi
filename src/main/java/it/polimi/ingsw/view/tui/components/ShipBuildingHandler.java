@@ -1,7 +1,6 @@
 package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
@@ -10,7 +9,6 @@ import it.polimi.ingsw.Direction; // For rotation
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
 
-import java.sql.Connection;
 import java.util.*;
 import java.io.IOException;
 
@@ -22,14 +20,12 @@ public class ShipBuildingHandler {
     private final GeneralClientIf simpleClient; // Added socket client
 
     private final Random random = new Random();
-    private Queue<Component> componentDeck; // La pila di componenti pescati casualmente
 
 
     public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer) {
         this.console = console;
         this.simpleClient = simpleClient;
         this.currentPlayer = currentPlayer;
-        this.componentDeck = new LinkedList<>();
         // this.controller = controller; // Remove if no longer needed
     }
 
@@ -43,9 +39,6 @@ public class ShipBuildingHandler {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
 
-        // Inizializza il mazzo di componenti casuali
-        initializeComponentDeck();
-
         boolean buildingDone = false;
 
         //il primo elemento è sempre la cabina di pilotaggio
@@ -58,10 +51,16 @@ public class ShipBuildingHandler {
             displayShip();
 
             // Se non abbiamo un componente corrente, peschiamone uno
-            if (currentComponent == null && !componentDeck.isEmpty()) {
-                currentComponent = componentDeck.poll();
+            if (currentComponent == null) {
+                try {
+                    currentComponent = simpleClient.pickComponentCard();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+
                 console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-            } else if (currentComponent == null && componentDeck.isEmpty()) {
+            } else if (currentComponent == null) {
                 console.printMessage("\nNo more components available!");
             }
 
@@ -158,32 +157,6 @@ public class ShipBuildingHandler {
             case NullConnectorType s -> "NC";
             default -> "??";
         };
-    }
-
-    private void initializeComponentDeck() {
-        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
-        // in base alle regole del gioco e alla rarità dei componenti.
-        List<Component> allComponents = new ArrayList<>();
-
-        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
-        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
-        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
-        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
-        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
-        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
-        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
-
-        // Mescola la lista e converti in coda
-        Collections.shuffle(allComponents);
-        componentDeck = new LinkedList<>(allComponents);
     }
 
     private void displayShip() {
@@ -316,58 +289,7 @@ public class ShipBuildingHandler {
         catch (Exception e) {
             console.printError("Error sending placement request: " + e.getMessage());
         }
-
-        // boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
-        // if (placementSuccess) {
-        //    console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
-        // } else {
-        //    console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Check position and connections.");
-        //    handlePlaceComponent(component); // Retry placing the same component
-        // }
     }
-
-//    private Component createAndInitializeComponent(String typeStr) {
-//        // This is a simplified factory. A more robust solution would use a proper factory pattern
-//        // or reflection, and handle connector initialization more dynamically.
-//        // For now, using default/sensible connector setups.
-//        Component component = null;
-//        switch (typeStr.toLowerCase()) {
-//            case "cabin":
-//                boolean isStartingCabin = currentPlayer.getShip().getComponents().isEmpty(); // First component is starting cabin
-//                component = new Cabin(isStartingCabin);
-//                // Cabins usually have universal connectors or manage them internally
-//                break;
-//            case "singleengine":
-//                Engine singleEngine = new SingleEngine();
-//                // Example: Default for a single engine might be Double on NORTH, Null elsewhere
-//                singleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = singleEngine;
-//                break;
-//            case "doubleengine":
-//                Engine doubleEngine = new DoubleEngine();
-//                // Example: Default for a double engine
-//                doubleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = doubleEngine;
-//                break;
-//            case "singlecannon":
-//                SingleCannon singleCannon = new SingleCannon(Direction.NORTH); // Default firing NORTH
-//                // Cannons might need specific connector setups based on design
-//                singleCannon.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = singleCannon;
-//                break;
-//            case "doublecannon":
-//                DoubleCannon doubleCannon = new DoubleCannon(Direction.NORTH); // Default firing NORTH
-//                doubleCannon.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = doubleCannon;
-//                break;
-//            // Add more cases for other components (CargoHolds, BatteryCompartment, etc.)
-//            // Each will require specific initialization, especially for connectors.
-//            default:
-//                console.printError("Unknown component type: " + typeStr);
-//                return null;
-//        }
-//        return component;
-//    }
 
     private void handleRemoveComponent() {
         console.printMessage("--- Remove Component ---");
@@ -460,13 +382,13 @@ public class ShipBuildingHandler {
                 rotationType = RotationType.CLOCKWISE;
                 break;
             case "a":
-                 component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
-                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
                 rotationType = RotationType.ANTI_CLOCKWISE;
                 break;
             case "o":
                 component.setComponentDirection(component.getComponentDirection().getOpposite());
-                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
                 rotationType = RotationType.OPPOSITE;
                 break;
             default:
@@ -509,108 +431,6 @@ public class ShipBuildingHandler {
             initializeRandomConnectors(cabin);
         }
         return cabin;
-    }
-
-    private SingleEngine createSingleEngine() {
-        SingleEngine engine = new SingleEngine();
-        initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
-        }
-        return engine;
-    }
-
-    private DoubleEngine createDoubleEngine() {
-        DoubleEngine engine = new DoubleEngine();
-        initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
-        }
-        return engine;
-    }
-
-    private SingleCannon createSingleCannon() {
-        //il cannone punta con il costruttore sempre verso nord
-        SingleCannon cannon = new SingleCannon();
-        initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
-        }
-        return cannon;
-    }
-
-    private DoubleCannon createDoubleCannon() {
-//        Direction direction = getRandomDirection();
-//        DoubleCannon cannon = new DoubleCannon(direction);
-//        initializeRandomConnectors(cannon);
-//        return cannon;
-        //il cannone punta con il costruttore sempre verso nord
-        DoubleCannon cannon = new DoubleCannon();
-        initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
-        }
-        return cannon;
-    }
-
-    private CargoHolds createNormalDoubleCargoHolds() {
-        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-    private CargoHolds createNormalTripleCargoHolds() {
-        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-
-    private CargoHolds createSpecialDoubleCargoHolds() {
-        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-    private CargoHolds createSpecialTripleCargoHolds() {
-        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.TRIPLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-
-    private BatteryCompartment createBatteryCompartment() {
-        BatteryCompartment battery = new BatteryCompartment();
-        initializeRandomConnectors(battery);
-        return battery;
-    }
-
-    private ShieldGenerator createShieldGenerator() {
-        ShieldGenerator shield = new ShieldGenerator();
-        initializeRandomConnectors(shield);
-        return shield;
-    }
-
-    private LifeSupportSystem createPurpleLifeSupportSystem() {
-        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
-        initializeRandomConnectors(lifeSupportSystem);
-        return lifeSupportSystem;
-    }
-    private LifeSupportSystem createBrownLifeSupportSystem() {
-        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
-        initializeRandomConnectors(lifeSupportSystem);
-        return lifeSupportSystem;
-    }
-
-    private StructuralModule createStructuralModule() {
-        StructuralModule structuralModule = new StructuralModule();
-        initializeRandomConnectors(structuralModule);
-        return structuralModule;
-    }
-
-    private Direction getRandomDirection() {
-        Direction[] directions = Direction.values();
-        return directions[random.nextInt(directions.length)];
     }
 
     private void initializeRandomConnectors(Component component) {

@@ -74,15 +74,15 @@ public class ConsoleManager {
         }
     }
 
-    public void printHelp() {
-        System.out.println("Available commands:");
-        /////
-        System.out.println("  x     - Increment the counter");
-        System.out.println("  y     - Reset the counter to 0");
-        /////
-        System.out.println("  help  - Show this help message");
-        System.out.println("  quit  - Exit the application");
-    }
+    //public void printHelp() {
+    //    System.out.println("Available commands:");
+    //    /////
+    //    System.out.println("  x     - Increment the counter");
+    //    System.out.println("  y     - Reset the counter to 0");
+    //    /////
+    //    System.out.println("  help  - Show this help message");
+    //    System.out.println("  quit  - Exit the application");
+    //}
 
     public void printConnectingMessage(String type, String address, int port) {
         System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");

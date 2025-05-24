@@ -31,7 +31,7 @@ public class PlaceComponentMessage implements ServerMessage {
 
     @Override
     public void handleServer(SocketClientHandler handler) throws Exception {
-        System.out.println("[Server] Processing PlaceComponentMessage for player " + playerId + ": Component=" + component.getClass().getSimpleName() + ", Pos=" + position);
+        System.out.println("[ServerSock] Processing PlaceComponentMessage for player " + playerId + ": Component=" + component.getClass().getSimpleName() + ", Pos=" + position);
         Player player = handler.getController().getPlayerById(playerId);
 
         if (player != null) {

@@ -6,14 +6,17 @@ import java.util.Objects;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
+import it.polimi.ingsw.Position;
+import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.GeneralClientIf;
-
-
+import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
+import it.polimi.ingsw.network.socket.messages.RotationType;
 
 
-public class GalaxyTruckerTUI implements Runnable {
+
+public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private final ConsoleManager console;
     private GameController controller;
@@ -34,6 +37,7 @@ public class GalaxyTruckerTUI implements Runnable {
     public GalaxyTruckerTUI()
     {
         this.socketClient = null;
+        this.client = null;
         this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
@@ -100,24 +104,18 @@ public class GalaxyTruckerTUI implements Runnable {
                 client = socketClient;
                 new Thread(socketClient).start();
 
-                playerId = socketClient.addPlayer(username);
-                this.currentPlayer = new Player(playerId, username, false); // Update ID
-                socketClient.setPlayerId(playerId); // Set player ID in socket client
-                socketClient.setLocalPlayer(this.currentPlayer);
-                
-                // Add the current player to local controller for offline operations
-                controller.addPlayer(this.currentPlayer);
+                playerId = client.addPlayer(username);
+                this.currentPlayer = new Player(0, username, false);
+                client.setLocalPlayer(this.currentPlayer);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
-                client = RmiClient.connectTo(serverAddress);
+                client = RmiClient.connectTo(serverAddress, this);
                 if (client == null) {
                     throw new IllegalStateException("Failed to connect to RMI server.");
                 }
                 playerId = client.addPlayer(username);
                 this.currentPlayer = new Player(playerId, username, false);
-                
-                // Add the current player to local controller for offline operations  
-                controller.addPlayer(this.currentPlayer);
+                client.setLocalPlayer(currentPlayer);
 
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
@@ -161,7 +159,7 @@ public class GalaxyTruckerTUI implements Runnable {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        activeShipBuildingHandler = new ShipBuildingHandler(console, socketClient, this.currentPlayer);
+        activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer);
         activeShipBuildingHandler.manageShipBuilding();
         activeShipBuildingHandler = null;
 
@@ -283,7 +281,7 @@ public class GalaxyTruckerTUI implements Runnable {
     }
 
     private void handleRunningState() {
-        console.printHelp();
+        //console.printHelp();
         TuiController tuiController = new TuiController(client, console, playerId);
 
         while (true) {
@@ -295,10 +293,82 @@ public class GalaxyTruckerTUI implements Runnable {
         }
     }
 
-    public void triggerShipDisplayRefresh() {
+    @Override
+    public void displayRefresh() {
         if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
             activeShipBuildingHandler.refreshDisplay();
         }
+    }
+    
+    
+    /**
+     * Called by network messages to update available positions display
+     */
+    public void showAvailablePositions(List<Integer> positions) {
+        this.availablePositions = positions;
+        if (positions.isEmpty()) {
+            console.printMessage("No positions available currently. Please wait...");
+        } else {
+            console.printMessage("Available positions: " + positions);
+        }
+    }
+    
+    /**
+     * Called by PositionResponseMessage to handle position selection response
+     */
+    public void triggerPositionSelectionRefresh() {
+        if (state == TuiState.CHOOSE_START_POSITION) {
+            // If we're still in position selection state, the selection failed
+            if (socketClient != null) {
+                try {
+                    socketClient.requestAvailablePositions();
+                } catch (IOException e) {
+                    console.printError("Error refreshing available positions: " + e.getMessage());
+                }
+            }
+        }
+        
+        // Check if we can now proceed to the next state
+        // When connected to server, this method is typically called after successful position selection
+        // When offline, use controller logic to check
+        boolean canProceedToNext = (socketClient != null) ? 
+            true : // Server will handle state transitions
+            (controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
+            
+        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
+            console.printMessage("Position selected. Waiting for other players...");
+            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        }
+    }
+    
+    /**
+     * Called by PositionUpdateMessage to update a player's position
+     */
+    public void updatePlayerPosition(int playerId, int position) {
+        console.printMessage("Player ID " + playerId + " has selected position " + position);
+        
+        // When connected to server, check if we're the last player to select a position
+        if (socketClient != null) {
+            try {
+                socketClient.requestAvailablePositions();
+            } catch (IOException e) {
+                console.printError("Error checking remaining positions: " + e.getMessage());
+            }
+        } else {
+            // Offline mode - use controller to update position
+            boolean success = controller.updatePlayerPosition(playerId, position);
+            
+            if (!success) {
+                console.printError("Failed to update position for player ID " + playerId);
+            }
+        }
+    }
+    
+    /**
+     * Display a message in the console
+     */
+    public void showMessage(String message) {
+        console.printMessage(message);
     }
     
     /**
@@ -370,4 +440,43 @@ public class GalaxyTruckerTUI implements Runnable {
     public void showMessage(String message) {
         console.printMessage(message);
     }
+
+    @Override
+    public void componentPlaced(Component component, Position position) {
+        if (currentPlayer != null && currentPlayer.getShip() != null) {
+            currentPlayer.getShip().placeComponent(component, position);
+            console.printMessage("Component " + component.getClass().getSimpleName() + 
+                               " placed at (" + position.getX() + "," + position.getY() + ")");
+        }
+    }
+
+    @Override
+    public void componentRemoved(Position position) {
+        if (currentPlayer != null && currentPlayer.getShip() != null) {
+            Component removed = currentPlayer.getShip().getComponentAt(position);
+            if (removed != null) {
+                currentPlayer.getShip().removeComponent(removed);
+                console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+            }
+        }
+    }
+
+    @Override
+    public void componentRotated(Position position, RotationType rotationType) {
+        console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
+                           ") rotated " + rotationType);
+    }
+
+    @Override
+    public void shipValidated(boolean isValid, String message) {
+        if (isValid) {
+            console.printMessage("✓ " + message);
+            if (state == TuiState.SHIP_BUILDING) {
+                //state = TuiState.NEXT_STATE; // to be defined
+            }
+        } else {
+            console.printError("✗ " + message);
+        }
+    }
+
 }

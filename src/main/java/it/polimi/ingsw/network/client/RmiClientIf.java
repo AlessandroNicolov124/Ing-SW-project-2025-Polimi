@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 
 public interface RmiClientIf extends GeneralClientIf, Remote {
@@ -29,5 +30,11 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void setLocalPlayer(Player player) throws RemoteException;
-     
+
+    @Override
+    Component pickComponentCard() throws RemoteException;
+
+    @Override
+    void showUpdate(UpdateMessage msg) throws RemoteException;
+
 }

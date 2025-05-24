@@ -33,7 +33,7 @@ public class TuiController {
 //                    }
 //                    break;
                 case "help":
-                    console.printHelp();
+                    //console.printHelp();
                     break;
                 case "quit":
                     client.close();

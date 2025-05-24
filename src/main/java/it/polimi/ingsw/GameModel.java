@@ -1,6 +1,7 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
+import it.polimi.ingsw.Components.*;
 
 import java.io.Serializable;
 import java.util.*;
@@ -8,11 +9,12 @@ import java.util.*;
 public class GameModel {
     private FlightBoard flightBoard;
     private int turnNumber;
-    private String state;
     private Player currentPlayer;
     private List<Player> players;
     private List<AdventureCard> deck;
     private HashMap<Player, Integer> credits;
+    private Queue<Component> componentDeck;
+    private final Random random;
 
     public void addPlayer(Player player) {
         players.add(player);
@@ -25,6 +27,8 @@ public class GameModel {
         credits = new HashMap<>();
         flightBoard = new FlightBoard();
         this.turnNumber = 1;
+        random = new Random();
+        this.initializeComponentDeck();
     }
 
     // Metodo per pescare una carta dall'avventura
@@ -57,8 +61,10 @@ public class GameModel {
         System.out.println("Tutte le carte avventura sono state caricate.");
     }
 
-    public void updateState(String newState){
-        state = newState;
+    public Component pickOneComponentCardFromDeck(Player p)
+    {
+        Component c = componentDeck.poll();
+        return c;
     }
 
     public Player getCurrentPlayer(){
@@ -136,7 +142,8 @@ public class GameModel {
             flightBoard.addPlayer(player);
         }
 
-        // Carica le carte avventura
+
+        //TODO This thing is ambiguous ... try to generalize and perhaps avoid magic numbers
         if (turnNumber == 1) {
             loadAdventureCardTurn1();
             //navi piccole e mazzo avventura composto da 8 carte di livello I
@@ -200,6 +207,162 @@ public class GameModel {
 
     public void updatePosition(Player player, int i) {
         flightBoard.updatePosition(player, i);
+    }
+
+    private void initializeComponentDeck() {
+        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
+        // in base alle regole del gioco e alla rarità dei componenti.
+        List<Component> allComponents = new ArrayList<>();
+
+        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
+        // TODO add defines or const values???
+        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
+        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
+        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
+        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
+        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
+        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
+        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
+        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
+
+        // Mescola la lista e converti in coda
+        Collections.shuffle(allComponents);
+        componentDeck = new LinkedList<>(allComponents);
+    }
+    private Cabin createCabin(boolean isStarting) {
+        Cabin cabin = new Cabin(isStarting);
+        if(!isStarting){
+            // Inizializza i connettori in modo casuale o predefinito
+            initializeRandomConnectors(cabin);
+        }
+        return cabin;
+    }
+
+    private SingleEngine createSingleEngine() {
+        SingleEngine engine = new SingleEngine();
+        initializeRandomConnectors(engine);
+        while(!engine.validateEngineDirection(engine.getComponentDirection())){
+            engine.deleteConnection();
+            initializeRandomConnectors(engine);
+        }
+        return engine;
+    }
+
+    private DoubleEngine createDoubleEngine() {
+        DoubleEngine engine = new DoubleEngine();
+        initializeRandomConnectors(engine);
+        while(!engine.validateEngineDirection(engine.getComponentDirection())){
+            engine.deleteConnection();
+            initializeRandomConnectors(engine);
+        }
+        return engine;
+    }
+
+    private SingleCannon createSingleCannon() {
+        //il cannone punta con il costruttore sempre verso nord
+        SingleCannon cannon = new SingleCannon();
+        initializeRandomConnectors(cannon);
+        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            cannon.deleteConnection();
+            initializeRandomConnectors(cannon);
+        }
+        return cannon;
+    }
+
+    private DoubleCannon createDoubleCannon() {
+//        Direction direction = getRandomDirection();
+//        DoubleCannon cannon = new DoubleCannon(direction);
+//        initializeRandomConnectors(cannon);
+//        return cannon;
+        //il cannone punta con il costruttore sempre verso nord
+        DoubleCannon cannon = new DoubleCannon();
+        initializeRandomConnectors(cannon);
+        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            cannon.deleteConnection();
+            initializeRandomConnectors(cannon);
+        }
+        return cannon;
+    }
+
+    private CargoHolds createNormalDoubleCargoHolds() {
+        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+    private CargoHolds createNormalTripleCargoHolds() {
+        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+
+    private CargoHolds createSpecialDoubleCargoHolds() {
+        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+    private CargoHolds createSpecialTripleCargoHolds() {
+        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.TRIPLE);
+        initializeRandomConnectors(cargoHold);
+        return cargoHold;
+    }
+
+    private BatteryCompartment createBatteryCompartment() {
+        BatteryCompartment battery = new BatteryCompartment();
+        initializeRandomConnectors(battery);
+        return battery;
+    }
+
+    private ShieldGenerator createShieldGenerator() {
+        ShieldGenerator shield = new ShieldGenerator();
+        initializeRandomConnectors(shield);
+        return shield;
+    }
+
+    private LifeSupportSystem createPurpleLifeSupportSystem() {
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
+        initializeRandomConnectors(lifeSupportSystem);
+        return lifeSupportSystem;
+    }
+    private LifeSupportSystem createBrownLifeSupportSystem() {
+        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
+        initializeRandomConnectors(lifeSupportSystem);
+        return lifeSupportSystem;
+    }
+
+    private StructuralModule createStructuralModule() {
+        StructuralModule structuralModule = new StructuralModule();
+        initializeRandomConnectors(structuralModule);
+        return structuralModule;
+    }
+
+    private Direction getRandomDirection() {
+        Direction[] directions = Direction.values();
+        return directions[random.nextInt(directions.length)];
+    }
+
+    private void initializeRandomConnectors(Component component) {
+        // Inizializza i connettori in modo casuale
+        // Questa è una versione semplificata, potresti voler implementare
+        // regole più complesse per la generazione dei connettori
+        ConnectorType[] possibleConnectors = {
+                new SingleConnectorType(),
+                new DoubleConnectorType(),
+                new UniversalConnectorType(),
+                new NullConnectorType()
+        };
+
+        ConnectorType north = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType east = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType south = possibleConnectors[random.nextInt(possibleConnectors.length)];
+        ConnectorType west = possibleConnectors[random.nextInt(possibleConnectors.length)];
+
+        component.initializeConnectors(north, east, south, west);
     }
 
 }
