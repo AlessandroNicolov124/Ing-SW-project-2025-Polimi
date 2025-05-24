@@ -31,13 +31,13 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private Player localPlayerReference;
     private GameListener listener;
 
-    public SocketClient(String host, int port, GameListener sbl) throws IOException {
+    public SocketClient(String host, int port, GameListener gameListener) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
         out.flush();
         in  = new ObjectInputStream (socket.getInputStream());
         proxy = new VirtualSocketServer(out, messages);
-        this.listener = sbl;
+        this.listener = gameListener;
     }
 
     @Override
@@ -139,29 +139,30 @@ public class SocketClient implements Runnable, GeneralClientIf {
     
     // Called by PositionResponseMessage
     public void notifyPositionResponse(int playerId, int position, boolean success, String message) {
-        if (tui != null) {
+        /*if (tui != null) {
             if (success) {
                 tui.showMessage("Position " + position + " selected successfully");
             } else {
                 tui.showMessage("Failed to select position " + position + ": " + message);
             }
             tui.triggerPositionSelectionRefresh();
+        }*/
+        if (success) {
+            listener.printTextMsg("Position " + position + " selected successfully");
+        } else {
+            listener.printTextMsg("Failed to select position " + position + ": " + message);
         }
+
     }
     
     // Called by AvailablePositionsResponseMessage
     public void showAvailablePositions(List<Integer> positions) {
-        if (tui != null) {
-            tui.showAvailablePositions(positions);
-        }
+            listener.showAvailablePositions(positions);
     }
     
     // Called by PositionUpdateMessage
     public void updatePlayerPosition(int playerId, int position) {
-        // Update local game state if necessary
-        if (tui != null) {
-            tui.updatePlayerPosition(playerId, position);
-        }
+            listener.notifyNewPlayerPosition(playerId, position);
     }
 
     /**
@@ -171,18 +172,18 @@ public class SocketClient implements Runnable, GeneralClientIf {
      */
     public void proceedToGamePhase(Map<Integer, Integer> playerPositions) {
         System.out.println("[Client] All players have selected positions. Proceeding to game phase");
-        
-        if (tui != null) {
-            // Display all player positions
-            StringBuilder positionInfo = new StringBuilder("All players have selected positions:");
-            for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
-                positionInfo.append("\nPlayer ").append(entry.getKey()).append(" at position ").append(entry.getValue());
-            }
-            tui.showMessage(positionInfo.toString());
-            
-            // Transition to game phase
-            tui.proceedToRunningState();
+
+        // Display all player positions
+        StringBuilder positionInfo = new StringBuilder("All players have selected positions:");
+        for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+            positionInfo.append("\nPlayer ").append(entry.getKey()).append(" at position ").append(entry.getValue());
         }
+        listener.printTextMsg(positionInfo.toString());
+
+        // Transition to game phase
+        //TODO implement next state update on view
+        //listener.proceedToRunningState();
+
     }
 
     public void setPlayerId(int id) {

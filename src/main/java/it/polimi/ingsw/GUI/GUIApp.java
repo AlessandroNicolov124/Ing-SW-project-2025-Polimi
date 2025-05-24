@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
+//TODO implement GameListener if (Here or somewwhere else inside GUI...)
 public class GUIApp extends Application {
 
     @Override

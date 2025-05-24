@@ -2,9 +2,6 @@ package it.polimi.ingsw.view.tui.components;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Objects;
-
-import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
@@ -19,7 +16,6 @@ import it.polimi.ingsw.network.socket.messages.RotationType;
 public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private final ConsoleManager console;
-    private GameController controller;
     private TuiState state;
 
     private String username;
@@ -38,7 +34,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     {
         this.socketClient = null;
         this.client = null;
-        this.controller = new GameController();
         this.console = new ConsoleManager();
         this.state = TuiState.INTRO;
         this.currentPlayer = null;
@@ -137,10 +132,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             String readyAnswer = console.readCommand().trim().toLowerCase();
 
             if ("yes".equals(readyAnswer)) {
-                if (this.currentPlayer != null) {
-                    controller.setPlayerReady(this.currentPlayer);
-                }
-
 
                 console.printMessage("You are marked as ready. Waiting for game to start...");
                 state = TuiState.SHIP_BUILDING;
@@ -183,7 +174,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 console.printMessage("Requesting available positions from server...");
             } else {
                 // Fall back to local positions if no socket client
-                availablePositions = controller.getAvailableStartingPositions();
+                //availablePositions = client.getAvailableStartingPositions();
                 showAvailablePositions(availablePositions);
             }
         } catch (IOException e) {
@@ -210,11 +201,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 int chosenPosition = Integer.parseInt(input);
                 
                 // Validate position selection - use local data when connected to server, controller when offline
-                boolean isValid = (socketClient != null) ? 
-                    availablePositions.contains(chosenPosition) : 
-                    controller.isPositionSelectionValid(chosenPosition);
+//                boolean isValid = (socketClient != null) ?
+//                    availablePositions.contains(chosenPosition) :
+                    //client.isPositionSelectionValid(chosenPosition);
                     
-                if (!isValid) {
+                if (!true) {
                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
                     continue;
                 }
@@ -227,14 +218,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                         positionChosen = true;
                         // Don't transition state yet - wait for server confirmation
                     } else {
+                        //TODO implemet corretly using client
                         // Fall back to local controller if no socket client
-                        if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
+                        /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
                             positionChosen = true;
                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
                         } else {
                             console.printError("Failed to set position. It might be taken or invalid. Please try again.");
-                        }
+                        }*/
                     }
                 } catch (Exception e) {
                     console.printError("Error selecting position: " + e.getMessage());
@@ -261,9 +253,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     public synchronized void proceedToRunningState() {
         // When connected to server, trust the server's signal that all players are positioned
         // When offline, use controller to check if game can proceed
-        boolean canProceed = (socketClient != null) ? true : controller.canProceedToRunningState();
+        //boolean canProceed = (socketClient != null) ? true : controller.canProceedToRunningState();
         
-        if (canProceed) {
+        if (true) {
             if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
                 console.printMessage("\nAll players have chosen their positions! Starting the game...");
                 this.state = TuiState.RUNNING;
@@ -299,19 +291,17 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             activeShipBuildingHandler.refreshDisplay();
         }
     }
-    
-    
-    /**
-     * Called by network messages to update available positions display
-     */
-    public void showAvailablePositions(List<Integer> positions) {
-        this.availablePositions = positions;
-        if (positions.isEmpty()) {
-            console.printMessage("No positions available currently. Please wait...");
-        } else {
-            console.printMessage("Available positions: " + positions);
-        }
+
+    public void printTextMsg(String message)
+    {
+        //TODO implement actual method
     }
+
+    public boolean notifyNewPlayerPosition(int playerId, int position) {
+        //TODO implement actual method
+        return true;
+    }
+
     
     /**
      * Called by PositionResponseMessage to handle position selection response
@@ -327,17 +317,30 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 }
             }
         }
-        
+
         // Check if we can now proceed to the next state
         // When connected to server, this method is typically called after successful position selection
         // When offline, use controller logic to check
-        boolean canProceedToNext = (socketClient != null) ? 
-            true : // Server will handle state transitions
-            (controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
-            
-        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
-            console.printMessage("Position selected. Waiting for other players...");
-            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        //boolean canProceedToNext = (socketClient != null) ?
+            //true : // Server will handle state transitions
+            //(controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
+
+
+//        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
+//            console.printMessage("Position selected. Waiting for other players...");
+//            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+
+    }
+
+    /**
+     * Called by network messages to update available positions display
+     */
+    public void showAvailablePositions(List<Integer> positions) {
+        this.availablePositions = positions;
+        if (positions.isEmpty()) {
+            console.printMessage("No positions available currently. Please wait...");
+        } else {
+            console.printMessage("Available positions: " + positions);
         }
     }
     
@@ -356,81 +359,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
         } else {
             // Offline mode - use controller to update position
-            boolean success = controller.updatePlayerPosition(playerId, position);
+            //boolean success = controller.updatePlayerPosition(playerId, position);
             
-            if (!success) {
-                console.printError("Failed to update position for player ID " + playerId);
-            }
-        }
-    }
-    
-    /**
-     * Display a message in the console
-     */
-    public void showMessage(String message) {
-        console.printMessage(message);
-    }
-    
-    /**
-     * Called by network messages to update available positions display
-     */
-    public void showAvailablePositions(List<Integer> positions) {
-        this.availablePositions = positions;
-        if (positions.isEmpty()) {
-            console.printMessage("No positions available currently. Please wait...");
-        } else {
-            console.printMessage("Available positions: " + positions);
-        }
-    }
-    
-    /**
-     * Called by PositionResponseMessage to handle position selection response
-     */
-    public void triggerPositionSelectionRefresh() {
-        if (state == TuiState.CHOOSE_START_POSITION) {
-            // If we're still in position selection state, the selection failed
-            if (socketClient != null) {
-                try {
-                    socketClient.requestAvailablePositions();
-                } catch (IOException e) {
-                    console.printError("Error refreshing available positions: " + e.getMessage());
-                }
-            }
-        }
-        
-        // Check if we can now proceed to the next state
-        // When connected to server, this method is typically called after successful position selection
-        // When offline, use controller logic to check
-        boolean canProceedToNext = (socketClient != null) ? 
-            true : // Server will handle state transitions
-            (controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
-            
-        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
-            console.printMessage("Position selected. Waiting for other players...");
-            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-        }
-    }
-    
-    /**
-     * Called by PositionUpdateMessage to update a player's position
-     */
-    public void updatePlayerPosition(int playerId, int position) {
-        console.printMessage("Player ID " + playerId + " has selected position " + position);
-        
-        // When connected to server, check if we're the last player to select a position
-        if (socketClient != null) {
-            try {
-                socketClient.requestAvailablePositions();
-            } catch (IOException e) {
-                console.printError("Error checking remaining positions: " + e.getMessage());
-            }
-        } else {
-            // Offline mode - use controller to update position
-            boolean success = controller.updatePlayerPosition(playerId, position);
-            
-            if (!success) {
-                console.printError("Failed to update position for player ID " + playerId);
-            }
+//            if (!success) {
+//                console.printError("Failed to update position for player ID " + playerId);
+            //}
         }
     }
     
