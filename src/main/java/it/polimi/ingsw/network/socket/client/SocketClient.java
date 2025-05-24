@@ -138,21 +138,12 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
     
     // Called by PositionResponseMessage
-    public void notifyPositionResponse(int playerId, int position, boolean success, String message) {
-        /*if (tui != null) {
-            if (success) {
-                tui.showMessage("Position " + position + " selected successfully");
-            } else {
-                tui.showMessage("Failed to select position " + position + ": " + message);
-            }
-            tui.triggerPositionSelectionRefresh();
-        }*/
+    public void notifyPositionResponse(int position, boolean success, String message) {
         if (success) {
             listener.printTextMsg("Position " + position + " selected successfully");
         } else {
             listener.printTextMsg("Failed to select position " + position + ": " + message);
         }
-
     }
     
     // Called by AvailablePositionsResponseMessage
@@ -181,8 +172,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
         listener.printTextMsg(positionInfo.toString());
 
         // Transition to game phase
-        //TODO implement next state update on view
-        //listener.proceedToRunningState();
+        // TODO implement next state update on view
+        // listener.proceedToRunningState();
 
     }
 

@@ -28,7 +28,7 @@ public class PositionResponseMessage implements ClientMessage {
         }
         
         // Notify the client's view about the result
-        client.notifyPositionResponse(playerId, position, success, message);
+        client.notifyPositionResponse(position, success, message);
     }
 
     public int getPlayerId() {
