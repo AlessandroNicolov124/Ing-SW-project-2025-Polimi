@@ -172,13 +172,13 @@ public class ShipBuilder {
     // Convalida la nave per assicurarsi che tutti i componenti necessari siano presenti
     public boolean validateShip() {
         if (components.isEmpty()) {
-            System.out.println("    no components");
+            System.out.println("No components");
             return false;
         }
 
         // 1. Check if all components are connected
         if (!areAllComponentsConnected()) {
-            System.out.println("    Components not connected");
+            System.out.println("Components not connected");
             return false;
         }
 
@@ -208,7 +208,7 @@ public class ShipBuilder {
         // La nave è assemblata se ha almeno un motore e una cabina
         boolean isValid = hasEngine>0 && hasCabin>0 && validationEngineFire && validationCannonFire;
 
-        //System.out.println("    Ship Validation: " + isValid);
+        //System.out.println("Ship Validation: " + isValid);
         return isValid;
     }
 

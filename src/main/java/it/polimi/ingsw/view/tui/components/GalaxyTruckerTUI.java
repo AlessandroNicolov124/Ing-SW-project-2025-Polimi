@@ -4,13 +4,17 @@ import java.util.Objects;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
+import it.polimi.ingsw.Position;
+import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.client.GeneralClientIf;
-import it.polimi.ingsw.network.client.listeners.ShipBuildingListener;
+import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
+import it.polimi.ingsw.network.socket.messages.RotationType;
 
 
-public class GalaxyTruckerTUI implements Runnable, ShipBuildingListener {
+
+public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private final ConsoleManager console;
     private GameController controller;
@@ -229,7 +233,7 @@ public class GalaxyTruckerTUI implements Runnable, ShipBuildingListener {
     }
 
     private void handleRunningState() {
-        console.printHelp();
+        //console.printHelp();
         TuiController tuiController = new TuiController(client, console, playerId);
 
         while (true) {
@@ -247,4 +251,43 @@ public class GalaxyTruckerTUI implements Runnable, ShipBuildingListener {
             activeShipBuildingHandler.refreshDisplay();
         }
     }
+
+    @Override
+    public void componentPlaced(Component component, Position position) {
+        if (currentPlayer != null && currentPlayer.getShip() != null) {
+            currentPlayer.getShip().placeComponent(component, position);
+            console.printMessage("Component " + component.getClass().getSimpleName() + 
+                               " placed at (" + position.getX() + "," + position.getY() + ")");
+        }
+    }
+
+    @Override
+    public void componentRemoved(Position position) {
+        if (currentPlayer != null && currentPlayer.getShip() != null) {
+            Component removed = currentPlayer.getShip().getComponentAt(position);
+            if (removed != null) {
+                currentPlayer.getShip().removeComponent(removed);
+                console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+            }
+        }
+    }
+
+    @Override
+    public void componentRotated(Position position, RotationType rotationType) {
+        console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
+                           ") rotated " + rotationType);
+    }
+
+    @Override
+    public void shipValidated(boolean isValid, String message) {
+        if (isValid) {
+            console.printMessage("✓ " + message);
+            if (state == TuiState.SHIP_BUILDING) {
+                //state = TuiState.NEXT_STATE; // to be defined
+            }
+        } else {
+            console.printError("✗ " + message);
+        }
+    }
+
 }

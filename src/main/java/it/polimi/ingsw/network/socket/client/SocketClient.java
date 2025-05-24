@@ -6,7 +6,7 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;
-import it.polimi.ingsw.network.client.listeners.ShipBuildingListener;
+import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.socket.messages.ClientMessage;
 import it.polimi.ingsw.network.socket.messages.GenericMessage;
 import it.polimi.ingsw.network.socket.messages.TextUpdateMessage;
@@ -25,9 +25,9 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private final BlockingDeque<GenericMessage> messages = new LinkedBlockingDeque<>();
     private int playerId = -1;
     private Player localPlayerReference;
-    private ShipBuildingListener listener;
+    private GameListener listener;
 
-    public SocketClient(String host, int port, ShipBuildingListener sbl) throws IOException {
+    public SocketClient(String host, int port, GameListener sbl) throws IOException {
         socket = new Socket(host,port);
         out = new ObjectOutputStream(socket.getOutputStream()); 
         out.flush();

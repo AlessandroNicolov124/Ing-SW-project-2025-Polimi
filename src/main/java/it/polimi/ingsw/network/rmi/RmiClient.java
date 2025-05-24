@@ -5,7 +5,7 @@ import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 import it.polimi.ingsw.network.client.RmiClientIf;
-import it.polimi.ingsw.network.client.listeners.ShipBuildingListener;
+import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 
@@ -22,9 +22,9 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     private final BlockingQueue<UpdateMessage> incoming = new LinkedBlockingQueue<>();
     private int playerId = -1;
     private Player localPlayerReference;
-    private ShipBuildingListener listener;
+    private GameListener listener;
 
-    private RmiClient(VirtualServer server, ShipBuildingListener sbl) throws RemoteException {
+    private RmiClient(VirtualServer server, GameListener sbl) throws RemoteException {
         super();
         this.server = server;
         this.listener = sbl;
@@ -32,7 +32,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         startConsumer(); // thread which prints incoming messages on the TUI
     }
 
-    public static RmiClient connectTo(String host, ShipBuildingListener sbl) throws Exception {
+    public static RmiClient connectTo(String host, GameListener sbl) throws Exception {
         VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":1099/GalaxyTruckerServer");
         return new RmiClient(srv, sbl);
     }
@@ -55,12 +55,6 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
             try {
                 while (true) {
                     UpdateMessage msg = incoming.take();
-
-                    if (msg instanceof ComponentPlacedMessage m
-                            && m.playerID() == playerId && m.success()) {
-                        localPlayerReference.getShip().placeComponent(m.component(), m.position());
-                    }
-
                     msg.update(listener, playerId);
                 }
             } catch (InterruptedException ignored) { }
@@ -91,12 +85,12 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void validateShip() throws RemoteException {
-
+        server.validateShip(playerId);
     }
 
     @Override
     public void rotateComponent(Position position, RotationType rotationType) throws RemoteException {
-
+        server.rotateComponent(playerId, position, rotationType);
     }
 
     @Override

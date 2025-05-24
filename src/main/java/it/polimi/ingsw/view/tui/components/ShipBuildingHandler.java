@@ -1,7 +1,6 @@
 package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
@@ -10,7 +9,6 @@ import it.polimi.ingsw.Direction; // For rotation
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
 
-import java.sql.Connection;
 import java.util.*;
 import java.io.IOException;
 
@@ -384,13 +382,13 @@ public class ShipBuildingHandler {
                 rotationType = RotationType.CLOCKWISE;
                 break;
             case "a":
-                 component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
-                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
                 rotationType = RotationType.ANTI_CLOCKWISE;
                 break;
             case "o":
                 component.setComponentDirection(component.getComponentDirection().getOpposite());
-                 component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
                 rotationType = RotationType.OPPOSITE;
                 break;
             default:
