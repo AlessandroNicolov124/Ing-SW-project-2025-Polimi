@@ -20,6 +20,123 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         connections.clear();
     }
 
+    /**
+     * Rimuove il connettore nella direzione specificata, se presente.
+     *
+     * @param direction La direzione del connettore da rimuovere
+     * @return true se un connettore è stato trovato e rimosso, false se nessun connettore
+     *         è stato trovato nella direzione specificata
+     */
+    public boolean removeConnectionByDirection(Direction direction){
+        Connector c = connections.stream()
+                .filter(cc -> cc.getDirection() == direction)
+                .findFirst().orElse(null);
+
+        if (c == null) {
+            return false;
+        }
+
+        return connections.remove(c);
+    }
+
+    /**
+     * Aggiunge un connettore nella direzione specificata.
+     * Se esiste già un connettore in quella direzione, verrà sostituito con quello nuovo.
+     *
+     * @param direction La direzione in cui aggiungere il connettore
+     * @param connectorType Il tipo di connettore da aggiungere (Singolo, Doppio, Universale, Nullo)
+     * @return true se l'operazione è riuscita, false altrimenti
+     */
+    public boolean addConnectionInDirection(Direction direction, ConnectorType connectorType) {
+        // Prima rimuoviamo eventuali connettori esistenti in quella direzione
+        removeConnectionByDirection(direction);
+
+        // Creiamo il nuovo connettore
+        Connector newConnector = new Connector(direction, connectorType);
+
+        // Aggiungiamo il nuovo connettore alla lista delle connessioni
+        return connections.add(newConnector);
+    }
+
+    /**
+     * Aggiunge un connettore specifico nella direzione indicata.
+     * Se esiste già un connettore in quella direzione, verrà sostituito.
+     *
+     * @param connector Il connettore da aggiungere
+     * @return true se l'operazione è riuscita, false altrimenti
+     */
+    public boolean addConnection(Connector connector) {
+        if (connector == null) {
+            return false;
+        }
+
+        // Rimuoviamo eventuali connettori esistenti nella stessa direzione
+        removeConnectionByDirection(connector.getDirection());
+
+        // Aggiungiamo il nuovo connettore
+        return connections.add(connector);
+    }
+
+    /**
+     * Cambia il tipo di un connettore esistente in una data direzione.
+     * Se non esiste un connettore in quella direzione, ne viene creato uno nuovo.
+     *
+     * @param direction La direzione del connettore da modificare
+     * @param newType Il nuovo tipo di connettore
+     * @return true se l'operazione è riuscita, false altrimenti
+     */
+    public boolean changeConnectorType(Direction direction, ConnectorType newType) {
+        // Cerchiamo il connettore nella direzione specificata
+        Connector existingConnector = connections.stream()
+                .filter(conn -> conn.getDirection() == direction)
+                .findFirst().orElse(null);
+
+        if (existingConnector != null) {
+            // Se esiste, rimuoviamo il connettore esistente
+            connections.remove(existingConnector);
+
+            // Creiamo un nuovo connettore con lo stesso indirizzo ma tipo diverso
+            Connector newConnector = new Connector(direction, newType);
+
+            // Aggiungiamo il nuovo connettore
+            return connections.add(newConnector);
+        } else {
+            // Se non esiste, creiamo un nuovo connettore
+            return addConnectionInDirection(direction, newType);
+        }
+    }
+
+    /**
+     * Assicura che ci sia un connettore di tipo specificato in una data direzione.
+     * Se già esiste un connettore dello stesso tipo, non fa nulla.
+     * Se esiste un connettore di tipo diverso, lo sostituisce.
+     * Se non esiste alcun connettore, ne crea uno nuovo.
+     *
+     * @param direction La direzione in cui assicurare il connettore
+     * @param requiredType Il tipo di connettore richiesto
+     * @return true se è stata fatta una modifica, false se il connettore richiesto era già presente
+     */
+    public boolean ensureConnector(Direction direction, ConnectorType requiredType) {
+        // Cerchiamo il connettore esistente
+        Connector existingConnector = getConnectorByDirection(direction);
+
+        // Se non esiste un connettore o è di tipo diverso, facciamo la modifica
+        if (existingConnector == null || !existingConnector.getConnectorType().getClass().equals(requiredType.getClass())) {
+            // Rimuovi eventuale connettore esistente
+            if (existingConnector != null) {
+                connections.remove(existingConnector);
+            }
+
+            // Aggiungi il nuovo connettore
+            Connector newConnector = new Connector(direction, requiredType);
+            connections.add(newConnector);
+            return true;
+        }
+
+        // Nessuna modifica necessaria, il connettore richiesto è già presente
+        return false;
+    }
+
     public boolean isDamaged() {
         return damaged;
     }
@@ -43,10 +160,6 @@ public sealed abstract class Component implements Serializable permits BatteryCo
 
     public Connector getConnectorByDirection(Direction direction) {
         return connections.stream().filter(c -> c.getDirection() == direction).findFirst().orElse(null);
-    }
-
-    public void setConnections(List<Connector> connections) {
-        this.connections = connections;
     }
 
     // Verifica se questo componente può connettersi a un altro componente in una data direzione

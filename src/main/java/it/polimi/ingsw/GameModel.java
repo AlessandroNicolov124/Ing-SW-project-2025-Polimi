@@ -235,6 +235,8 @@ public class GameModel {
         Collections.shuffle(allComponents);
         componentDeck = new LinkedList<>(allComponents);
     }
+
+    // Factory methods per creare i diversi tipi di componenti
     private Cabin createCabin(boolean isStarting) {
         Cabin cabin = new Cabin(isStarting);
         if(!isStarting){
@@ -247,9 +249,9 @@ public class GameModel {
     private SingleEngine createSingleEngine() {
         SingleEngine engine = new SingleEngine();
         initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
+        if(!engine.validateEngineDirection(engine.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
         return engine;
     }
@@ -257,9 +259,9 @@ public class GameModel {
     private DoubleEngine createDoubleEngine() {
         DoubleEngine engine = new DoubleEngine();
         initializeRandomConnectors(engine);
-        while(!engine.validateEngineDirection(engine.getComponentDirection())){
-            engine.deleteConnection();
-            initializeRandomConnectors(engine);
+        if(!engine.validateEngineDirection(engine.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
         return engine;
     }
@@ -268,24 +270,20 @@ public class GameModel {
         //il cannone punta con il costruttore sempre verso nord
         SingleCannon cannon = new SingleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
+        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
         return cannon;
     }
 
     private DoubleCannon createDoubleCannon() {
-//        Direction direction = getRandomDirection();
-//        DoubleCannon cannon = new DoubleCannon(direction);
-//        initializeRandomConnectors(cannon);
-//        return cannon;
         //il cannone punta con il costruttore sempre verso nord
         DoubleCannon cannon = new DoubleCannon();
         initializeRandomConnectors(cannon);
-        while(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            cannon.deleteConnection();
-            initializeRandomConnectors(cannon);
+        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
+            //System.out.println("   CONNETTORI NON VALIDI!");
+            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
         return cannon;
     }

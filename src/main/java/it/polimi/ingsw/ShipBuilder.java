@@ -126,12 +126,18 @@ public class ShipBuilder {
         }
 
         // Check if removing this component would disconnect the ship
-        if (components.size() > 1 && wouldDisconnectShip(component) && !component.isDamaged()) {
+        if (components.size() > 1 && component.isDamaged()) {
+            if(!wouldDisconnectShip(component)){
+                components.remove(component);
+            }else{
+                //TODO vanno gestiti i componenti rimossi
+            }
+            return true;
+        }else{
             return false;
         }
 
-        components.remove(component);
-        return true;
+
     }
 
     private boolean areAllComponentsConnected() {
@@ -360,6 +366,130 @@ public class ShipBuilder {
         return false;
     }
 
+    /**
+     * Rimuove un numero specificato di membri dell'equipaggio dalla nave.
+     * Rimuove equipaggio dalle cabine in modo sequenziale fino a raggiungere il numero richiesto.
+     *
+     * @param count Il numero di membri dell'equipaggio da rimuovere
+     * @return Il numero effettivo di membri dell'equipaggio rimossi
+     */
+    public int removeCrewMembers(int count) {
+        if (count <= 0) {
+            return 0;  // Nessun membro da rimuovere
+        }
+
+        int removedCount = 0;
+        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
+
+        for (Cabin cabin : cabinsWithCrew) {
+            if (removedCount >= count) {
+                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
+            }
+
+            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+            if (crewToRemove != null) {
+                for (Crew crew : crewToRemove) {
+                    if (removeCrewFromCabin(crew, cabin)) {
+                        removedCount++;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
+    /**
+     * Metodo di supporto che restituisce una lista di tutte le cabine che contengono equipaggio,
+     * prima quelle che contengono alieni poi umani
+     *
+     * @return Lista di cabine occupate da membri dell'equipaggio
+     */
+    private List<Cabin> getCabinsWithCrew() {
+        List<Cabin> cabinsWithCrew = new ArrayList<>();
+
+        // Assumo che tu abbia una collezione di cabine da qualche parte nella classe
+        // Sostituisci 'allCabins' con la tua variabile effettiva
+        List<Cabin> allCabins = getAllCabins();
+        for (Cabin cabin : allCabins) {
+            if (!cabin.getCrew().isEmpty()) {
+                cabinsWithCrew.add(cabin);
+            }
+        }
+
+        // Ordina la lista in base alla priorità di rimozione
+        // Ad esempio, per rimuovere prima gli alieni:
+        cabinsWithCrew.sort((cabin1, cabin2) -> {
+            CrewType type1 = cabin1.getCrew().getFirst().getType();
+            CrewType type2 = cabin2.getCrew().getFirst().getType();
+
+            if (type1 != CrewType.HUMAN && type2 == CrewType.HUMAN) {
+                return -1;  // Alieni prima
+            } else if (type1 == CrewType.HUMAN && type2 != CrewType.HUMAN) {
+                return 1;   // Umani dopo
+            }
+            return 0;       // Stesso tipo, ordine invariato
+        });
+
+        return cabinsWithCrew;
+    }
+
+    /**
+     * Rimuove il numero specificato di membri dell'equipaggio di un certo tipo
+     * @param crewType Il tipo di equipaggio da rimuovere
+     * @param count Il numero di membri da rimuovere
+     * @return Il numero effettivo di membri rimossi
+     */
+    public int removeCrewOfType(CrewType crewType, int count) {
+        if (count <= 0) {
+            return 0;
+        }
+
+        int removedCount = 0;
+        List<Cabin> cabinsWithCrewType = new ArrayList<>();
+
+        // Trova tutte le cabine con equipaggio del tipo specificato
+        List<Cabin> allCabins = getAllCabins();
+        for (Cabin cabin : allCabins) {
+            if (!cabin.getCrew().isEmpty() && cabin.getCrew().getFirst().getType() == crewType) {
+                cabinsWithCrewType.add(cabin);
+            }
+        }
+
+        // Rimuovi fino a 'count' membri dell'equipaggio del tipo specificato
+        for (Cabin cabin : cabinsWithCrewType) {
+            if (removedCount >= count) {
+                break;
+            }
+
+            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+            if (crewToRemove != null) {
+                for (Crew crew : crewToRemove) {
+                    if (removeCrewFromCabin(crew, cabin)) {
+                        removedCount++;
+                    }
+                    if(removedCount == count){
+                        break;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
+//    /**
+//     * Aggiunge membri dell'equipaggio del tipo specificato
+//     * Usato principalmente per ripristinare l'equipaggio rimosso erroneamente
+//     * @param crewType Il tipo di equipaggio da aggiungere
+//     * @param count Il numero di membri da aggiungere
+//     */
+//    public void addCrewOfType(CrewType crewType, int count) {
+//        // Implementazione che aggiunge nuovi membri dell'equipaggio in cabine vuote
+//
+//
+//    }
+
 
     public void distributeCrewAutomatically() {
         for (Component component : components.keySet()) {
@@ -396,6 +526,7 @@ public class ShipBuilder {
     //Carica i cannoni doppi della nave usando le batterie disponibili.
     public int chargeWeapons() {
         int chargedCannons = 0;
+
         List<BatteryCompartment> availableBatteries = getChargedBatteries();
 
         if (availableBatteries.isEmpty()) {
@@ -413,29 +544,38 @@ public class ShipBuilder {
             }
         }
 
-//        List<SingleCannon> singleCannons = getOperationalSingleCannons();
-//        for (SingleCannon cannon : singleCannons) {
-//            for (BatteryCompartment battery : availableBatteries) {
-//                if (cannon.charge(battery)) {
-//                    chargedCannons++;
-//                    break;
-//                }
+//        List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
+//        for (DoubleCannon cannon : doubleCannons) {
+//            if(chargeWeapon(cannon)){
+//                chargedCannons++;
 //            }
 //        }
 
         return chargedCannons;
     }
 
+    public boolean chargeWeapon(DoubleCannon cannon) {
+        List<BatteryCompartment> availableBatteries = getChargedBatteries();
+
+        if (availableBatteries.isEmpty()) {
+            return false;
+        }
+
+        for (BatteryCompartment battery : availableBatteries) {
+            if (cannon.charge(battery)) {
+                return true;
+            }
+        }
+
+        return true;
+    }
+
+    public int calculateTotalBatteryCharge(){
+        return getChargedBatteries().stream().mapToInt(BatteryCompartment::getChargeLevel).sum();
+    }
+
     public double calculateFirePower() {
-        double totalFirePower = 0.0;
-
-//        for (Component component : components.keySet()) {
-//            if (component instanceof Cannon cannon) {
-//                totalFirePower += cannon.getEffectivePower();
-//            }
-//        }
-
-        totalFirePower = components.keySet().stream()
+        double totalFirePower = components.keySet().stream()
                 .mapToDouble(component -> switch(component){
                     case Cannon c -> c.getEffectivePower();
                     default -> 0.0;
@@ -443,11 +583,38 @@ public class ShipBuilder {
                 .sum();
 
         // Bonus dell'alieno viola
-//        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
-//            totalFirePower += 2.0;
-//        }
+        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
+            totalFirePower += 2.0;
+        }
 
         return totalFirePower;
+    }
+
+    public double calculateFirePowerWithBatteries(boolean usingBattery) {
+        double totalFirePower = components.keySet().stream()
+                .mapToDouble(component -> switch(component){
+                    case SingleCannon e -> e.getEffectivePower();
+                    case DoubleCannon e -> e.calculatePowerUsingBattery(usingBattery);
+                    default -> 0;
+                })
+                .sum();
+
+        // Bonus dell'alieno viola
+        if (totalFirePower > 0 && crewCount.getOrDefault(CrewType.PURPLE_ALIEN, 0) > 0) {
+            totalFirePower += 2.0;
+        }
+
+        return totalFirePower;
+    }
+
+    public List<Cabin> getAllCabins() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case Cabin bc -> Stream.of(bc);
+                    default -> Stream.empty();
+                })
+                .filter(bc -> !bc.isDamaged())
+                .collect(Collectors.toList());
     }
 
     //lista di tutte le batterie cariche e funzionanti sulla nave.
@@ -461,8 +628,49 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Scarica il numero specificato di unità di energia dalle batterie della nave.
+     * Se non c'è abbastanza energia, scarica tutta quella disponibile.
+     *
+     * @param energyToRemove Il numero di unità di energia da rimuovere
+     * @return La quantità di energia effettivamente rimossa
+     */
+    public int dischargeBatteries(int energyToRemove) {
+        if (energyToRemove <= 0) {
+            return 0;
+        }
+
+        int energyRemoved = 0;
+        List<BatteryCompartment> batteries = getAllBatteries();
+
+        // Scorri tutte le batterie e scaricale una per una
+        for (BatteryCompartment battery : batteries) {
+            if (energyRemoved >= energyToRemove) {
+                break;  // Energia rimossa a sufficienza
+            }
+
+            int currentCharge = battery.getChargeLevel();
+            int chargeToRemove = Math.min(currentCharge, energyToRemove - energyRemoved);
+            battery.discharge(chargeToRemove);
+            energyRemoved += chargeToRemove;
+        }
+
+        return energyRemoved;
+    }
+
+    //lista di tutte le batterie funzionanti sulla nave.
+    public List<BatteryCompartment> getAllBatteries() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case BatteryCompartment bc -> Stream.of(bc);
+                    default -> Stream.empty();
+                })
+                .filter(bc -> !bc.isDamaged())
+                .collect(Collectors.toList());
+    }
+
     //Ottiene la lista di cannoni doppi funzionanti.
-    private List<DoubleCannon> getOperationalDoubleCannons() {
+    public List<DoubleCannon> getOperationalDoubleCannons() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case DoubleCannon doubleCannon when !doubleCannon.isDamaged() -> Stream.of(doubleCannon);
@@ -471,7 +679,7 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
-    private List<SingleCannon> getOperationalSingleCannons() {
+    public List<SingleCannon> getOperationalSingleCannons() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case SingleCannon singleCannon -> Stream.of(singleCannon);
@@ -481,7 +689,7 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
-    private List<DoubleEngine> getOperationalDoubleEngines() {
+    public List<DoubleEngine> getOperationalDoubleEngines() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case DoubleEngine de when !de.isDamaged() -> Stream.of(de);
@@ -489,7 +697,7 @@ public class ShipBuilder {
                 })
                 .collect(Collectors.toList());
     }
-    private List<SingleEngine> getOperationalSingleEngines() {
+    public List<SingleEngine> getOperationalSingleEngines() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
                     case SingleEngine de when !de.isDamaged() -> Stream.of(de);
@@ -583,12 +791,177 @@ public class ShipBuilder {
     }
 
     public int calculateEnginePower() {
-        return components.keySet().stream()
+        int totalPower = components.keySet().stream()
                 .mapToInt(component -> switch(component){
-                    case SingleEngine e -> e.getPower();
-                    case DoubleEngine e -> e.getPower();
+                    case SingleEngine e -> e.getEffectivePower();
+                    case DoubleEngine e -> e.getEffectivePower();
                     default -> 0;
                 })
                 .sum();
+
+        // Bonus dell'alieno marrone
+        if (totalPower > 0 && crewCount.getOrDefault(CrewType.BROWN_ALIEN, 0) > 0) {
+            totalPower += 2;
+        }
+
+        return totalPower;
+    }
+    public int calculateEnginePowerWithBatteries(boolean usingBattery) {
+        int totalPower = components.keySet().stream()
+                .mapToInt(component -> switch(component){
+                    case SingleEngine e -> e.getEffectivePower();
+                    case DoubleEngine e -> e.calculatePowerUsingBattery(usingBattery);
+                    default -> 0;
+                })
+                .sum();
+
+        // Bonus dell'alieno marrone
+        if (totalPower > 0 && crewCount.getOrDefault(CrewType.BROWN_ALIEN, 0) > 0) {
+            totalPower += 2;
+        }
+
+        return totalPower;
+    }
+
+    public Map<CrewType, Integer> getCrewCounts() {
+        return this.crewCount;
+    }
+
+    public List<CargoHolds> getCargoHolds() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case CargoHolds de when !de.isDamaged() -> Stream.of(de);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<Cargo> getAllCargo() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case CargoHolds de -> de.getCargos().stream();
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<ShieldGenerator> getShieldsProtecting(Direction direction) {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case ShieldGenerator de when (!de.isDamaged() && de.getProtectedDirections().contains(direction)) -> Stream.of(de);
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+
+    }
+
+    public int chargeEngine() {
+        int chargedEngines = 0;
+        List<BatteryCompartment> availableBatteries = getChargedBatteries();
+
+        if (availableBatteries.isEmpty()) {
+            return 0;
+        }
+
+        List<DoubleEngine> doubleEngines = getOperationalDoubleEngines();
+        for (DoubleEngine engine : doubleEngines) {
+            // Trovo una batteria con carica sufficiente
+            for (BatteryCompartment battery : availableBatteries) {
+                if (engine.charge(battery)) {
+                    chargedEngines++;
+                    break;
+                }
+            }
+        }
+
+        return chargedEngines;
+    }
+
+    public int removeBrownAlien(int aliensToRemove) {
+        return removeCrewOfType(CrewType.BROWN_ALIEN, aliensToRemove);
+    }
+
+    public int removePurpleAlien(int aliensToRemove) {
+        return removeCrewOfType(CrewType.PURPLE_ALIEN, aliensToRemove);
+    }
+
+    public int removeAliens(int aliensToRemove) {
+        if (aliensToRemove <= 0) {
+            return 0;
+        }
+
+        int removedCount = 0;
+        List<Cabin> cabinsWithAliens = new ArrayList<>();
+
+        // Trova tutte le cabine con equipaggio del tipo specificato
+        List<Cabin> allCabins = getAllCabins();
+        for (Cabin cabin : allCabins) {
+            if (!cabin.getCrew().isEmpty() &&
+                    ( cabin.getCrew().getFirst().getType() == CrewType.BROWN_ALIEN ||
+                            cabin.getCrew().getFirst().getType() == CrewType.PURPLE_ALIEN) ) {
+                cabinsWithAliens.add(cabin);
+            }
+        }
+
+        // Rimuovi fino a 'count' membri dell'equipaggio del tipo specificato
+        for (Cabin cabin : cabinsWithAliens) {
+            if (removedCount >= aliensToRemove) {
+                break;
+            }
+
+            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+            if (crewToRemove != null) {
+                for (Crew crew : crewToRemove) {
+                    if (removeCrewFromCabin(crew, cabin)) {
+                        removedCount++;
+                    }
+                    if(removedCount == aliensToRemove){
+                        break;
+                    }
+                }
+            }
+        }
+
+        return removedCount;
+    }
+
+    public int removeHumans(int humanToRemove) {
+        return removeCrewOfType(CrewType.HUMAN, humanToRemove);
+    }
+
+    public void destroyComponentAt(Position targetCoord) {
+        Component t = getComponentAt(targetCoord);
+        t.setDamaged(true);
+        System.out.println("The component" + t.getClass().getSimpleName() + "is Destroyed!");
+    }
+
+    public boolean activateShield(ShieldGenerator shield) {
+        List<BatteryCompartment> availableBatteries = getChargedBatteries();
+
+        if (availableBatteries.isEmpty()) {
+            return false;
+        }
+
+        for (BatteryCompartment battery : availableBatteries) {
+            return shield.charge(battery);
+        }
+
+        return false;
+    }
+
+    public void dischargeAllActiveDoubleEngine() {
+        for(DoubleEngine de : getOperationalDoubleEngines()){
+            if(de.isCharge()){
+                de.discharge();
+            }
+        }
+    }
+
+    public void dischargeAllActiveDoubleCannon() {
+        for(DoubleCannon de : getOperationalDoubleCannons()){
+            if(de.isCharge()){
+                de.discharge();
+            }
+        }
     }
 }
