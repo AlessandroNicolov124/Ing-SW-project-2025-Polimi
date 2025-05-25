@@ -1,6 +1,7 @@
 package it.polimi.ingsw.view.gui.components;
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -18,7 +19,7 @@ public class ShipGrid extends GridPane {
 
     private static final int CELL_SIZE = 50;
     private static final int GRID_WIDTH = 10;
-    private static final int GRID_HEIGHT = 8;
+    private static final int GRID_HEIGHT = 10;
 
     private final GameController controller;
     private final Player player;
@@ -34,6 +35,11 @@ public class ShipGrid extends GridPane {
         setVgap(2);
 
         initializeGrid();
+
+        // Aggiorna la vista se ci sono già componenti (es. la starting cabin)
+        if (!player.getShip().getComponents().isEmpty()) {
+            updateShipView();
+        }
     }
 
     private void initializeGrid() {
@@ -70,11 +76,11 @@ public class ShipGrid extends GridPane {
         }
     }
 
-    private void handleTileClick(Position position) {
+    private void handleTileClick(Position clickedPosition) {
         // Here you would implement placing the current component
         // This would interact with a method in the parent scene
         // For now just log the click
-        System.out.println("Clicked position: " + position.getX() + "," + position.getY());
+        System.out.println("Clicked position: " + clickedPosition.getX() + "," + clickedPosition.getY());
 
         // Notify the parent scene that this position was clicked
         // We need to traverse up to find the scene
@@ -82,14 +88,25 @@ public class ShipGrid extends GridPane {
         if (scene != null && scene.getUserData() != null) {
             Object userData = scene.getUserData();
             if (userData instanceof ShipBuildingScene) {
-                ShipBuildingScene shipBuildingScene =
-                        (ShipBuildingScene) userData;
-                shipBuildingScene.handlePlaceComponent(position);
+
+                ShipBuildingScene shipBuildingScene = (ShipBuildingScene) userData;
+                // Se non ci sono componenti, è il primo click: forziamo la cabin al centro
+                if (player.getShip().getComponents().isEmpty()) {
+
+                    Position center = player.getShip().getStartingPosition();
+                    //System.out.println("currentComponent: " + shipBuildingScene.getCurrentComponent());
+                    shipBuildingScene.handlePlaceComponent(center); // ignora clickedPosition
+                } else {
+                    // Comportamento normale dopo il primo piazzamento
+                    shipBuildingScene.handlePlaceComponent(clickedPosition);
+                }
             }
         }
     }
 
     public void updateShipView() {
+        System.out.println("=== UPDATING SHIP VIEW ===");
+
         // Clear all tiles first
         for (ComponentTile tile : tiles.values()) {
             tile.clearComponent();
@@ -100,14 +117,19 @@ public class ShipGrid extends GridPane {
 
         // Update tiles based on ship components
         for (Map.Entry<Component, Position> entry : shipComponents.entrySet()) {
-            Position pos = entry.getValue();
             Component comp = entry.getKey();
+            Position pos = entry.getValue();
+
+            System.out.println("Placing component " + comp.getClass().getSimpleName() +
+                    " at position (" + pos.getX() + "," + pos.getY() + ")");
+
 
             ComponentTile tile = tiles.get(pos);
             if (tile != null) {
                 tile.setComponent(comp);
             }
         }
+        System.out.println("=== SHIP VIEW UPDATE COMPLETE ===");
     }
 
     public ComponentTile getTileAt(Position position) {
@@ -115,14 +137,28 @@ public class ShipGrid extends GridPane {
     }
 
     public void highlightValidPositions(Component component) {
+        //System.out.println("Highlighting valid positions for " + component.getClass().getSimpleName());
+
         // Clear any previous highlights
         clearHighlights();
 
         // Check each position and highlight valid ones
         for (Position pos : tiles.keySet()) {
-            if (controller.addComponentForPlayer(player, component, pos)) {
-                tiles.get(pos).setHighlighted(true);
+            // Crea una copia temporanea del componente per il test
+            try {
+                // Usa un metodo di controllo che non modifica lo stato della nave
+                if (canPlaceComponentAt(component, pos)) {
+                    tiles.get(pos).setHighlighted(true);
+                    //System.out.println("Position (" + pos.getX() + "," + pos.getY() + ") is valid");
+                }
+            } catch (Exception e) {
+                // Se c'è un errore nel controllo, ignora questa posizione
+                System.err.println("Error checking position (" + pos.getX() + "," + pos.getY() + "): " + e.getMessage());
             }
+
+//            if (controller.addComponentForPlayer(player, component, pos)) {
+//                tiles.get(pos).setHighlighted(true);
+//            }
         }
     }
 
@@ -130,5 +166,54 @@ public class ShipGrid extends GridPane {
         for (ComponentTile tile : tiles.values()) {
             tile.setHighlighted(false);
         }
+    }
+
+    // Metodo aggiuntivo per verificare se la posizione è valida
+    private boolean isPositionValid(Position pos) {
+        return pos.getX() >= 0 && pos.getX() < GRID_WIDTH &&
+                pos.getY() >= 0 && pos.getY() < GRID_HEIGHT;
+    }
+
+    // Metodo helper per controllare se un componente può essere posizionato senza modificare la nave
+    private boolean canPlaceComponentAt(Component component, Position position) {
+        // Questo metodo dovrebbe controllare se la posizione è valida senza modificare lo stato
+        // Verifica se la posizione è già occupata
+        if(player.getShip().isPositionOccupied(position)){
+            return false;
+        }
+
+        //Verifica se la posizione è nei limiti della griglia
+        if (!isPositionValid(position)) {
+            System.out.println("Position out of bounds");
+            return false;
+        }
+
+        Map<Component, Position> currentComponents = player.getShip().getComponents();
+        // Se è la prima componente (starting cabin), deve essere posizionata al centro
+        if (currentComponents.isEmpty() && !position.equals(player.getShip().getStartingPosition())) {
+            return false;
+        }
+
+        // Altrimenti, deve essere adiacente a un componente esistente
+        // Se non è il primo componente, deve essere collegato a un componente esistente
+        if (!currentComponents.isEmpty()) {
+            boolean isConnected = true;
+
+            for (Direction direction : Direction.values()) {
+                Position adjacentPosition = direction.getAdjacentPosition(position);
+                Component adjacentComponent = player.getShip().getComponentAt(adjacentPosition);
+
+                if (adjacentComponent != null && !component.canConnectTo(adjacentComponent, direction)) {
+                    isConnected = false;
+                    break;
+                }
+            }
+
+            if (!isConnected) {
+                System.out.print(" not connected, ");
+                return false;
+            }
+        }
+        return true;
     }
 }

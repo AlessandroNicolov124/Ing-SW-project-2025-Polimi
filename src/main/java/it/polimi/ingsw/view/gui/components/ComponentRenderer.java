@@ -1,7 +1,6 @@
 package it.polimi.ingsw.view.gui.components;
 
-import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.Components.Connector;
+import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Direction;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -24,8 +23,10 @@ public class ComponentRenderer extends Pane {
     }
 
     public void setComponent(Component component) {
-        this.component = component;
-        redraw();
+        if (this.component != component) {
+            this.component = component;
+            redraw();
+        }
     }
 
     public Component getComponent() {
@@ -37,6 +38,7 @@ public class ComponentRenderer extends Pane {
         getChildren().clear();
 
         if (component == null) {
+            System.out.println("ComponentRenderer: component is null, skipping redraw.");
             return;
         }
 
@@ -65,21 +67,19 @@ public class ComponentRenderer extends Pane {
     }
 
     private void setComponentColor(Rectangle background) {
-        String componentType = component.getClass().getSimpleName();
-
-        if (componentType.contains("Cabin")) {
-            background.setFill(Color.LIGHTBLUE);
-        } else if (componentType.contains("Engine")) {
-            background.setFill(Color.ORANGE);
-        } else if (componentType.contains("Cannon")) {
-            background.setFill(Color.RED);
-        } else if (componentType.contains("Shield")) {
-            background.setFill(Color.LIGHTYELLOW);
-        } else if (componentType.contains("Life")) {
-            background.setFill(Color.LIGHTGREEN);
-        } else {
-            background.setFill(Color.LIGHTGRAY);
-        }
+        switch (component) {
+            case Cabin c -> background.setFill(Color.PURPLE);
+            case SingleCannon sc -> background.setFill(Color.RED);
+            case DoubleCannon dc -> background.setFill(Color.RED);
+            case SingleEngine se -> background.setFill(Color.ORANGE);
+            case DoubleEngine de -> background.setFill(Color.ORANGE);
+            case CargoHolds c -> background.setFill(Color.AZURE);
+            case BatteryCompartment b -> background.setFill(Color.CYAN);
+            case ShieldGenerator sg -> background.setFill(Color.LIGHTYELLOW);
+            case LifeSupportSystem ls -> background.setFill(Color.LIGHTGREEN);
+            case StructuralModule sm -> background.setFill(Color.CRIMSON);
+            default -> background.setFill(Color.LIGHTGRAY);
+        };
 
         background.setStroke(Color.BLACK);
         background.setStrokeWidth(1);
@@ -147,20 +147,18 @@ public class ComponentRenderer extends Pane {
     }
 
     private String getComponentIdentifier() {
-        String componentType = component.getClass().getSimpleName();
-
-        if (componentType.contains("Cabin")) {
-            return "C";
-        } else if (componentType.contains("Engine")) {
-            return "E";
-        } else if (componentType.contains("Cannon")) {
-            return "W";
-        } else if (componentType.contains("Shield")) {
-            return "S";
-        } else if (componentType.contains("Life")) {
-            return "L";
-        } else {
-            return "?";
-        }
+        return switch (component) {
+            case Cabin c -> "CA";
+            case SingleCannon sc -> "C1";
+            case DoubleCannon dc -> "C2";
+            case SingleEngine se -> "E1";
+            case DoubleEngine de -> "E2";
+            case CargoHolds c -> "CH";
+            case BatteryCompartment b -> "BC";
+            case ShieldGenerator sg -> "SG";
+            case LifeSupportSystem ls -> "LS";
+            case StructuralModule sm -> "SM";
+            default -> "??";
+        };
     }
 }

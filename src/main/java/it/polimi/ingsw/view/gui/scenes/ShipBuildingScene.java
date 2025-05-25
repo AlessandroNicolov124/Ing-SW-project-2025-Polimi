@@ -1,10 +1,7 @@
 package it.polimi.ingsw.view.gui.scenes;
 
+import it.polimi.ingsw.*;
 import it.polimi.ingsw.Components.*;
-import it.polimi.ingsw.Direction;
-import it.polimi.ingsw.GameController;
-import it.polimi.ingsw.Player;
-import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.client.GameClient;
 import it.polimi.ingsw.network.commands.PlayerDTO;
 import it.polimi.ingsw.network.commands.PlayerReadyCommand;
@@ -90,6 +87,9 @@ public class ShipBuildingScene {
 
         initializeComponentDeck();
         createScene();
+
+//        // Debug dello stato iniziale
+//        displayShip();
     }
 
     private void createScene() {
@@ -222,15 +222,22 @@ public class ShipBuildingScene {
     }
 
     private void drawFirstComponent() {
+        System.out.println("=== STARTING CABIN PLACEMENT ===");
+
+        // Debug dello stato prima del posizionamento
+        displayShip();
+
         // First component is always the cabin
         currentComponent = createCabin(true);
+
         updateCurrentComponentView();
         currentComponentLabel.setText("Starting Cabin (Auto-placed)");
         statusLabel.setText("Starting cabin will be auto-placed. Click to continue.");
 
-        // Auto-place the starting cabin at the center of the grid
-        Position startingPosition = currentPlayer.getShip().getStartingPosition();
-        handlePlaceComponent(startingPosition);
+        // Highlight valid positions for this component
+        shipGrid.highlightValidPositions(currentComponent);
+
+        System.out.println("=== CABIN PLACEMENT INITIATED ===");
     }
 
     private void drawNextComponent() {
@@ -248,6 +255,8 @@ public class ShipBuildingScene {
             currentComponentLabel.setText("No more components");
             statusLabel.setText("No more components available. Validate your ship when ready.");
             shipGrid.clearHighlights();
+
+            System.out.println("No more components in deck");
         }
     }
 
@@ -566,5 +575,134 @@ public class ShipBuildingScene {
 
     public Scene getScene() {
         return scene;
+    }
+
+
+    private void displayShip() {
+        System.out.println("\n--- Your Ship ---");
+        ShipBuilder ship = currentPlayer.getShip();
+        if (ship == null) {
+            System.out.println("No ship found for player: " + currentPlayer.getNickName());
+            return;
+        }
+
+        // Simple text-based representation. This can be made much fancier.
+        int width = ship.getWidth();
+        int height = ship.getHeight();
+        Map<Component, Position> components = ship.getComponents();
+
+        // Create a larger grid where each component occupies a 3x3 area
+        // This gives space to show connectors around each component
+        int gridHeight = height * 3;
+        int gridWidth = width * 3;
+        String[][] grid = new String[gridHeight][gridWidth];
+        for (int i = 0; i < gridHeight; i++) {
+            for (int j = 0; j < gridWidth; j++) {
+                grid[i][j] = "    "; // Empty slot with 4 spaces
+            }
+        }
+
+        // Fill grid with components
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            Component comp = entry.getKey();
+            Position pos = entry.getValue();
+
+            // Calculate the position in the expanded grid
+            int baseY = pos.getY() * 3;
+            int baseX = pos.getX() * 3;
+
+            // Place component symbol in center
+            String compSymbol = getComponentSymbol(comp);
+            grid[baseY + 1][baseX + 1] = "[" + compSymbol + "]";
+
+            // Add connectors around the component
+            // North connector (above)
+            Connector northConn  = comp.getConnectorByDirection(Direction.NORTH);
+            if (northConn != null && northConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY][baseX + 1] = "[" + getConnectionSymbol(northConn) + "]";
+            }
+
+            // South connector (below)
+            Connector southConn = comp.getConnectorByDirection(Direction.SOUTH);
+            if (southConn != null && southConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 2][baseX + 1] = "[" + getConnectionSymbol(southConn) + "]";
+            }
+
+            // East connector (right)
+            Connector eastConn = comp.getConnectorByDirection(Direction.EAST);
+            if (eastConn != null && eastConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 1][baseX + 2] = "[" + getConnectionSymbol(eastConn) + "]";
+            }
+
+            // West connector (left)
+            Connector westConn = comp.getConnectorByDirection(Direction.WEST);
+            if (westConn != null && westConn.getConnectorType().getClass() != NullConnectorType.class) {
+                grid[baseY + 1][baseX] = "[" + getConnectionSymbol(westConn) + "]";
+            }
+
+        }
+
+        // Add cooordinates
+        System.out.println("      " + getCoordinateHeader(width));
+
+        for (int i = 0; i < gridHeight; i++) {
+            StringBuilder rowStr = new StringBuilder();
+
+            // Add Y coordinate label only for the middle row of each cell
+            if (i % 3 == 1) {
+                rowStr.append("Y:" + (i / 3) + "   ");
+            } else {
+                rowStr.append("      "); // Spacing to align with coordinates
+            }
+
+            // Add row content
+            for (int j = 0; j < gridWidth; j++) {
+                rowStr.append(grid[i][j]);
+            }
+            System.out.println(rowStr.toString());
+        }
+        System.out.println("------------------------------------");
+    }
+
+    private String getConnectionSymbol(Connector connector) {
+        if (connector == null) {
+            return "  "; // Empty for no connector
+        }
+
+        return switch (connector.getConnectorType()) {
+            case SingleConnectorType s -> "S-";
+            case DoubleConnectorType d -> "D=";
+            case UniversalConnectorType u -> "U≡";
+            case NullConnectorType n -> "  "; // Empty for null connector
+            default -> "??";
+        };
+    }
+
+    private String getCoordinateHeader(int width) {
+        StringBuilder header = new StringBuilder("      ");
+        for (int i = 0; i < width; i++) {
+            header.append("     " + i + "     "); // Center the coordinate number in the 3-cell width
+        }
+        return header.toString();
+    }
+
+    private String getComponentSymbol(Component component) {
+        return switch (component) {
+            case Cabin c -> "CA";
+            case SingleCannon sc -> "C1";
+            case DoubleCannon dc -> "C2";
+            case SingleEngine se -> "E1";
+            case DoubleEngine de -> "E2";
+            case CargoHolds c -> "CH";
+            case BatteryCompartment b -> "BC";
+            case ShieldGenerator sg -> "SG";
+            case LifeSupportSystem ls -> "LS";
+            case StructuralModule sm -> "SM";
+            default -> "??";
+        };
+    }
+
+    public String getCurrentComponent() {
+        return currentComponent.getClass().getSimpleName();
     }
 }
