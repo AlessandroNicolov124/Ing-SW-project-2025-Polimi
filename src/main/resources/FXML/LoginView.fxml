@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns:fx="http://javafx.com/fxml" fx:controller="it.polimi.ingsw.GUI.Controllers.LoginController">
+<children>
+    <VBox alignment="CENTER" spacing="10" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
+        <Label text="Login Page" />
+        <TextField fx:id="usernameField" promptText="Username"/>
+        <TextField fx:id="connTypeField" promptText="Socket"/>
+        <TextField fx:id="ipAddrFiels" promptText="localhost"/>
+        <TextField fx:id="SrvPortField" promptText="7777"/>
+
+
+
+        <Button text="Login" onAction="#handleLogin"/>
+    </VBox>
+</children>
+</AnchorPane>

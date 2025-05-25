@@ -1,29 +1,51 @@
 package it.polimi.ingsw.GUI;
 
 
-import java.io.IOException;
+
+import it.polimi.ingsw.GUI.Controllers.LoginController;
+import it.polimi.ingsw.network.client.GeneralClientIf;
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
+
+import java.util.Objects;
 
 //TODO implement GameListener if (Here or somewwhere else inside GUI...)
 public class GUIApp extends Application {
 
-    @Override
-    public void start(Stage primaryStage) {
-        Label label = new Label("Welcome in galaxy trucker GUI");
-        Scene scene = new Scene(label, 1000, 1000);
+    private static Stage primaryStage;
+    private static AppContext context = new AppContext();
 
-        Image image = new Image("file:Images/Icons/app_icon.png");
-        primaryStage.getIcons().add(image);
-        primaryStage.setTitle("Galaxy trucker GUI");
-        primaryStage.setScene(scene);
+
+    @Override
+    public void start(Stage stage) throws Exception {
+        primaryStage = stage;
+        showLoginPage();
+    }
+
+    public static void showLoginPage() throws Exception {
+        FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/LoginView.fxml"));
+        Parent root = loader.load();
+
+        LoginController loginController = loader.getController();
+        loginController.setContext(context);
+
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setWidth(1000);
+        primaryStage.setHeight(1000);
+        primaryStage.setTitle("Login page");
         primaryStage.show();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void showDashboardPage() throws Exception {
+        Parent root = FXMLLoader.load(GUIApp.class.getResource("Resources/ConnectionView.fxml"));
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setTitle("Connection Page");
+    }
+
+    public static void main(String[] args) {
         launch(args);
     }
 
