@@ -1,8 +1,13 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Direction;
+import it.polimi.ingsw.Position;
+import it.polimi.ingsw.GameModel;
+
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Meteor Swarm
@@ -32,7 +37,7 @@ public class MeteorSwarm extends AdventureCard {
 
     public MeteorSwarm() {
         super();
-        this.meteors = createDefaultMeteors();
+        this.meteors = createRandomMeteors();
         this.random = new Random();
     }
     
@@ -46,16 +51,20 @@ public class MeteorSwarm extends AdventureCard {
      * Create default set of meteors for the swarm
      * @return List of meteors
      */
-    private List<Meteor> createDefaultMeteors() {
+    private List<Meteor> createRandomMeteors() {
         List<Meteor> defaultMeteors = new ArrayList<>();
-        // Add two small meteors from the front
-        defaultMeteors.add(new Meteor(MeteorSize.SMALL, Direction.NORTH));
-        defaultMeteors.add(new Meteor(MeteorSize.SMALL, Direction.NORTH));
-        // Add one large meteor from the front
-        defaultMeteors.add(new Meteor(MeteorSize.LARGE, Direction.NORTH));
-        // Add one small meteor from each side
-        defaultMeteors.add(new Meteor(MeteorSize.SMALL, Direction.EAST));
-        defaultMeteors.add(new Meteor(MeteorSize.SMALL, Direction.WEST));
+
+        Random random = new Random();
+        int numberOfMeteors = random.nextInt(5) + 1; // Random number between 1 and 10 meteors
+
+        for (int i = 0; i < numberOfMeteors; i++) {
+            // Randomly select a size
+            MeteorSize size = MeteorSize.values()[random.nextInt(MeteorSize.values().length)];
+            // Randomly select a direction
+            Direction direction = Direction.values()[random.nextInt(Direction.values().length)];
+            // Add the meteor with random properties
+            defaultMeteors.add(new Meteor(size, direction));
+        }
         return defaultMeteors;
     }
 
@@ -67,7 +76,6 @@ public class MeteorSwarm extends AdventureCard {
     @Override
     void resolveEvent(Player p) {
         // Process meteor impacts for a single player
-        processMeteorImpacts(p);
     }
 
     @Override
@@ -76,50 +84,106 @@ public class MeteorSwarm extends AdventureCard {
     }
     
     /**
-     * Process all meteor impacts for a player
-     * @param player The player whose ship may be impacted
-     * @return Number of components destroyed
+     * Process all meteor impacts
+     * @param gameModel The GameModel
      */
-    public int processMeteorImpacts(Player player) {
-        int componentsDestroyed = 0;
-        
+    public void processMeteorImpacts(GameModel gameModel) {
         for (Meteor meteor : meteors) {
             // Roll dice to determine row/column of potential impact
             int diceRoll = rollDice();
-            
-            // Check if meteor hits the ship
-            boolean hit = checkMeteorHit(player, meteor.getDirection(), diceRoll);
-            
-            if (hit) {
-                // Process impact based on meteor size
-                if (meteor.getSize() == MeteorSize.SMALL) {
-                    // Small meteor: check for exposed connector or shield
-                    if (isExposedConnector(player, meteor.getDirection(), diceRoll)) {
-                        // Check for shield
-                        boolean shieldUsed = useShield(player, meteor.getDirection(), diceRoll);
-                        
-                        if (!shieldUsed) {
-                            // Destroy component
-                            destroyComponent(player, meteor.getDirection(), diceRoll);
-                            componentsDestroyed++;
-                        }
-                    }
-                } else {
-                    // Large meteor: can only be stopped by cannon
-                    boolean cannonUsed = useCannon(player, meteor.getDirection(), diceRoll);
-                    
-                    if (!cannonUsed) {
+
+            for(Player player : gameModel.getPlayers()) {
+                processMeteorImpactFor(player, meteor, diceRoll);
+            }
+
+        }
+    }
+
+    private void processMeteorImpactFor(Player player, Meteor meteor, int diceRoll) {
+        // Check if meteor hits the ship
+        Position hit = checkMeteorHit(player, meteor.getDirection(), diceRoll);
+
+        if (hit!=null) {
+            // Process impact based on meteor size
+            if (meteor.getSize() == MeteorSize.SMALL) {
+                // Small meteor: check for exposed connector or shield
+                if (isExposedConnector(player, meteor.getDirection(), hit)) {
+                    // Check for shield
+                    ShieldGenerator shieldUsed = canDefendWithShield(player, meteor.getDirection());
+
+                    if (shieldUsed==null) {
                         // Destroy component
-                        destroyComponent(player, meteor.getDirection(), diceRoll);
-                        componentsDestroyed++;
+                        player.getShip().destroyComponentAt(hit);
+                    }else{
+                        shieldUsed.discharge();
                     }
+                }
+            } else {
+                // Large meteor: can only be stopped by cannon
+                Cannon cannonUsed = useCannon(player, meteor.getDirection(), hit);
+                if (cannonUsed == null) {
+                    // Destroy component
+                    player.getShip().destroyComponentAt(hit);
+                }else{
+                    //se doppio spara solo se carico e non danneggiato,
+                    //se singolo spara solo se non danneggiato
+                    cannonUsed.fire();
                 }
             }
         }
-        
-        return componentsDestroyed;
     }
-    
+
+    //cerco un cannone che possa essere usato dal giocatore per colpire il meteorite
+    // deve essere nella stessa colonna e puntare nella direzione specificata
+    private Cannon useCannon(Player player, Direction direction, Position hit) {
+        //Verifico che ci sia un cannone che punti nella direzione
+        switch(player.getShip().getComponentAt(hit)){
+            case SingleCannon sc:
+                if(sc.getComponentDirection() == direction && !sc.isDamaged()) {
+                    return sc;
+                }
+                return null;
+            case DoubleCannon dc:
+                if(dc.getComponentDirection() == direction&& !dc.isDamaged()) {
+                    // TODO UI scelta del giocatore su uso delle batterie
+                    // ipotizzo lo voglia fare
+                    if(player.getShip().chargeWeapon(dc)){
+                        return dc;
+                    }
+                }
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    /**
+     * Check if player can and wants to defend with a shield
+     * @param player The player attempting to defend
+     * @param direction The direction of the attack
+     * @return ShieldGenerator activated if defense is successful
+     */
+    private ShieldGenerator canDefendWithShield(Player player, Direction direction) {
+        // Check if player has a shield that can protect against this direction and position
+        List<ShieldGenerator> shields = player.getShip().getShieldsProtecting(direction);
+
+        if (!shields.isEmpty() && player.getShip().calculateTotalBatteryCharge() > 0) {
+            // Player has shield(s) and batteries - ask if they want to defend
+
+            // TODO UI scelta del giocatore su uso delle batterie
+            ShieldGenerator count = null;
+            for(ShieldGenerator shield : shields){
+                if(player.getShip().activateShield(shield)){
+                    count = shield;
+                    break;
+                }
+            }
+            return count;
+        }
+
+        return null;
+    }
+
     /**
      * Roll dice to determine the row or column of impact
      * @return Dice roll result (2-12)
@@ -127,64 +191,73 @@ public class MeteorSwarm extends AdventureCard {
     private int rollDice() {
         return random.nextInt(6) + random.nextInt(6) + 2; // Simulating dice
     }
-    
+
     /**
-     * Check if the meteor hits the player's ship
+     * Check if meteor hits the player's ship
      * @param player The player whose ship may be hit
-     * @param direction The direction the meteor is coming from
-     * @param position The position (row/column) of the potential impact
-     * @return true if the meteor hits the ship, false otherwise
+     * @param targetCoord The position (row/column) of the potential impact
+     * @return Position hit if the fire hits the ship
      */
-    private boolean checkMeteorHit(Player player, Direction direction, int position) {
-        // Implementation depending on ship layout
-        return random.nextBoolean();
+    private Position checkMeteorHit(Player player, Direction attack, int targetCoord) {
+        // 4. Check if there's a component at those coordinates
+        Component targetComponent = null;
+        Position target = null;
+
+        if(attack == Direction.SOUTH) {
+            for(int i=player.getShip().getHeight()-1; i > 0; i--){
+                target = new Position(i,targetCoord);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.NORTH) {
+            for(int i=0; i < player.getShip().getHeight(); i++){
+                target = new Position(i, targetCoord);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.WEST) {
+            for(int i=0; i < player.getShip().getWidth(); i++){
+                target = new Position(targetCoord, i);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }else if(attack == Direction.EAST) {
+            for(int i=player.getShip().getWidth()-1; i > 0; i--){
+                target = new Position(targetCoord,i);
+                targetComponent = player.getShip().getComponentAt(target);
+                if(targetComponent != null) {
+                    break;
+                }
+            }
+        }
+
+        if (targetComponent == null) {
+            System.out.println("The cannon fire targets an empty space!");
+            return null;
+        }
+
+        return target;
     }
     
     /**
      * Check if the impacted position is an exposed connector
      * @param player The player whose ship is being checked
      * @param direction The direction the meteor is coming from
-     * @param position The position (row/column) to check
+     * @param position The position to check
      * @return true if the position contains an exposed connector, false otherwise
      */
-    private boolean isExposedConnector(Player player, Direction direction, int position) {
+    private boolean isExposedConnector(Player player, Direction direction, Position position) {
         // Implementation checks if there's an exposed connector
-        return true; //placeholder
-    }
-    
-    /**
-     * Try to use a shield to protect against a small meteor
-     * @param player The player who might use a shield
-     * @param direction The direction the meteor is coming from
-     * @param position The position (row/column) to protect
-     * @return true if a shield was successfully used, false otherwise
-     */
-    private boolean useShield(Player player, Direction direction, int position) {
-        // Check if player has a shield and battery token to use
-        return true; //placeholder
-    }
-    
-    /**
-     * Try to use a cannon to destroy a large meteor
-     * @param player The player who might use a cannon
-     * @param direction The direction the meteor is coming from
-     * @param position The position (row/column) to protect
-     * @return true if a cannon was successfully used, false otherwise
-     */
-    private boolean useCannon(Player player, Direction direction, int position) {
-        // Check if player has a cannon pointing in the right direction
-        // and if it's in the correct column/row
-        return true; //placeholder
-    }
-    
-    /**
-     * Destroy a component on the player's ship
-     * @param player The player whose ship is impacted
-     * @param direction The direction the meteor is coming from
-     * @param position The position (row/column) of the impact
-     */
-    private void destroyComponent(Player player, Direction direction, int position) {
-        // Implementation to remove component from player's ship
+        return switch(player.getShip().getComponentAt(position).getConnectorByDirection(direction).getConnectorType()){
+            case NullConnectorType n -> false;
+            default -> true;
+        };
     }
     
     /**

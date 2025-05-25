@@ -177,6 +177,5 @@ public class GameModel {
     public void updatePosition(Player player, int i) {
         flightBoard.updatePosition(player, i);
     }
-
 }
 

@@ -48,24 +48,15 @@ public class Epidemic extends AdventureCard {
      */
     public int applyEpidemic(Player player) {
         int crewLost = 0;
-        ShipBuilder ship = player.getShip();
-        
         // Find all cabins in the ship
-        List<Component> allComponents = ship.getAllComponents();
-        List<Cabin> cabins = new ArrayList<>();
-        
-        for (Component component : allComponents) {
-            if (component instanceof Cabin) {
-                cabins.add((Cabin) component);
-            }
-        }
+        List<Cabin> cabins = player.getShip().getAllCabins();
         
         // Check which cabins are connected to other cabins
-        List<Cabin> connectedCabins = findConnectedCabins(cabins, ship);
+        List<Cabin> connectedCabins = findConnectedCabins(cabins, player.getShip());
         
         // Remove 1 crew member from each connected cabin
         for (Cabin cabin : connectedCabins) {
-            if (removeCrewMember(cabin)) {
+            if (cabin.removeCrew(cabin.getCrew().getFirst())) {
                 crewLost++;
             }
         }
@@ -84,10 +75,10 @@ public class Epidemic extends AdventureCard {
         
         for (Cabin cabin : cabins) {
             // Check if cabin is occupied
-            if (!isCabinOccupied(cabin)) {
+            if (!cabin.isOccuped()) {
                 continue;
             }
-            
+
             // Get position of this cabin
             Position cabinPosition = ship.getPositionOf(cabin);
             
@@ -96,38 +87,20 @@ public class Epidemic extends AdventureCard {
                 Position adjacentPosition = direction.getAdjacentPosition(cabinPosition);
                 Component adjacentComponent = ship.getComponentAt(adjacentPosition);
                 
-                if (adjacentComponent instanceof Cabin) {
-                    Cabin adjacentCabin = (Cabin) adjacentComponent;
-                    if (isCabinOccupied(adjacentCabin)) {
-                        // This cabin is connected to another occupied cabin
-                        connectedCabins.add(cabin);
+                switch (adjacentComponent) {
+                    case Cabin c:
+                        if (!c.isOccuped()) {
+                            // This cabin is connected to another occupied cabin
+                            connectedCabins.add(cabin);
+                            break;
+                        }
                         break;
-                    }
+                    default:
+                        break;
                 }
             }
         }
         
         return connectedCabins;
-    }
-    
-    /**
-     * Check if a cabin is occupied by crew
-     * @param cabin The cabin to check
-     * @return true if the cabin is occupied, false otherwise
-     */
-    private boolean isCabinOccupied(Cabin cabin) {
-        // Implementation depends on how cabin occupancy is tracked
-        // For now, assume all cabins are occupied
-        return true;
-    }
-    
-    /**
-     * Remove a crew member from a cabin
-     * @param cabin The cabin to remove a crew member from
-     * @return true if a crew member was removed, false otherwise
-     */
-    private boolean removeCrewMember(Cabin cabin) {
-        // Implementation depends on how crew are tracked
-        return true; // placeholder
     }
 }

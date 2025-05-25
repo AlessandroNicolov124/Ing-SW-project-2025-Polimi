@@ -2,8 +2,12 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Components.DoubleEngine;
+import it.polimi.ingsw.Components.ShieldGenerator;
 
 import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
 
 public class Player implements Serializable {
     private int id;
@@ -89,5 +93,17 @@ public class Player implements Serializable {
     public boolean validateShip() {
         return ship.validateShip();
     }
+
+    public boolean removeCrewMembers(int crewRequired) {
+        return ship.removeCrewMembers(crewRequired) == crewRequired;
+    }
+
+    public int removeCrewOfType(CrewType crewType, int requiredCount) {
+        return ship.removeCrewOfType(crewType, requiredCount);
+    }
+    public void dischargeBatteries(int batteriesNeeded) {
+        ship.dischargeBatteries(batteriesNeeded);
+    }
+
 
 }

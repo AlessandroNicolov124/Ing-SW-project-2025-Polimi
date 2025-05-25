@@ -1,8 +1,12 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
-import it.polimi.ingsw.ShipBuilder;
+
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 /**
  * Abandoned Station
@@ -24,10 +28,10 @@ import it.polimi.ingsw.ShipBuilder;
 public class AbandonedStation extends AdventureCard{
     private int minCrewRequired;
     private int flightDaysCost;
-    private int goodsToLoad;
+    private List<Cargo> goodsToLoad;
     private boolean opportunityUsed;
 
-    public AbandonedStation(int copies, int duration, int minCrewRequired, int flightDaysCost, int goodsToLoad) {
+    public AbandonedStation(int copies, int duration, int minCrewRequired, int flightDaysCost, List<Cargo> goodsToLoad) {
         super(copies, duration);
         this.minCrewRequired = minCrewRequired;
         this.flightDaysCost = flightDaysCost;
@@ -69,13 +73,203 @@ public class AbandonedStation extends AdventureCard{
         }
         
         // Load goods on player's ship
-        // Logic to add goods to player's inventory here
-        
-        // Apply flight day cost
+        if(!loadGoods(player)){
+            return false;
+        }
+//
+//        // Ordine di priorità: rosso, giallo, verde, blu
+//        Comparator<Cargo> cargoComparator = Comparator
+//                .comparing((Cargo cargo) -> {
+//                    switch(cargo) {
+//                        case RedCargo c: return 1;
+//                        case YellowCargo y: return 2;
+//                        case GreenCargo g: return 3;
+//                        case BlueCargo b: return 4;
+//                        default: return 5;
+//                    }
+//                })
+//                .thenComparing(Cargo::getValue, Comparator.reverseOrder());
+//        // Ordina le merci disponibili
+//        Collections.sort(goodsToLoad, cargoComparator);
+//
+//        // stive del giocatore
+//        List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
+//        // Calcola lo spazio totale disponibile
+//        int totalAvailableSpace = playerCargoHolds.stream()
+//                .mapToInt(CargoHolds::getAvailableSpace)
+//                .sum();
+//
+//        // Cerca di caricare le merci
+//        for (Cargo cargo : goodsToLoad) {
+//            // Se non c'è più spazio, interrompi
+//            if (totalAvailableSpace <= 0) {
+//                break;
+//            }
+//
+//            boolean loaded = false;
+//
+//            // Gestione speciale per i rossi
+//            if (cargo.isRed()) {
+//                // Prova prima nelle stive speciali rosse
+//                for (CargoHolds cargoHold : playerCargoHolds) {
+//                    switch(cargoHold){
+//                        case SpecialCargoHolds c:
+//                            if(!cargoHold.isFull() && cargoHold.canContainCargo(cargo)){
+//                                cargoHold.loadCargo(cargo);
+//                                loaded = true;
+//                                totalAvailableSpace--;
+//                            }
+//                            break;
+//                        default:
+//                            break;
+//                    }
+//                }
+//
+//                // Se non caricato nelle speciali, prova nelle normali
+//                if (!loaded) {
+//                    for (CargoHolds cargoHold : playerCargoHolds) {
+//                        if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+//                            cargoHold.loadCargo(cargo);
+//                            loaded = true;
+//                            totalAvailableSpace--;
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//            // Per tutti gli altri colori
+//            else {
+//                // Prova a caricare nelle stive che possono contenere quel tipo di merce
+//                for (CargoHolds cargoHold : playerCargoHolds) {
+//                    if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+//                        cargoHold.loadCargo(cargo);
+//                        loaded = true;
+//                        totalAvailableSpace--;
+//                        break;
+//                    }
+//                }
+//
+//                // Se non caricato nelle stive appropriate,
+//                // carica in qualsiasi stiva disponibile
+//                if (!loaded) {
+//                    for (CargoHolds cargoHold : playerCargoHolds) {
+//                        if (!cargoHold.isFull()) {
+//                            cargoHold.loadCargo(cargo);
+//                            loaded = true;
+//                            totalAvailableSpace--;
+//                            break;
+//                        }
+//                    }
+//                }
+//            }
+//        }
+
+        // Applica il costo in giorni di volo
         gameModel.updatePosition(player, -flightDaysCost);
-        
+
         opportunityUsed = true;
         return true;
+    }
+
+    /**
+     * Load goods from a planet onto a player's ship
+     *
+     * @param player The player loading goods
+     * @return
+     */
+    private boolean loadGoods(Player player) {
+        // Implementation of how goods are tracked
+        // Logic to add goods to player's inventory here
+
+        // Ordine di priorità: rosso, giallo, verde, blu
+        Comparator<Cargo> cargoComparator = Comparator
+                .comparing((Cargo cargo) -> {
+                    switch(cargo) {
+                        case RedCargo c: return 1;
+                        case YellowCargo y: return 2;
+                        case GreenCargo g: return 3;
+                        case BlueCargo b: return 4;
+                        default: return 5;
+                    }
+                })
+                .thenComparing(Cargo::getValue, Comparator.reverseOrder());
+        // Ordina le merci disponibili
+        Collections.sort(goodsToLoad, cargoComparator);
+
+        // stive del giocatore
+        List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
+        // Calcola lo spazio totale disponibile
+        int totalAvailableSpace = playerCargoHolds.stream()
+                .mapToInt(CargoHolds::getAvailableSpace)
+                .sum();
+
+        boolean loaded = false;
+
+        // Cerca di caricare le merci
+        for (Cargo cargo : goodsToLoad) {
+            // Se non c'è più spazio, interrompi
+            if (totalAvailableSpace <= 0) {
+                break;
+            }
+
+            loaded = false;
+
+            // Gestione speciale per i rossi
+            if (cargo.isRed()) {
+                // Prova prima nelle stive speciali rosse
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    switch (cargoHold) {
+                        case SpecialCargoHolds c:
+                            if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                                cargoHold.loadCargo(cargo);
+                                loaded = true;
+                                totalAvailableSpace--;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+
+                // Se non caricato nelle speciali, prova nelle normali
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+            // Per tutti gli altri colori
+            else {
+                // Prova a caricare nelle stive che possono contenere quel tipo di merce
+                for (CargoHolds cargoHold : playerCargoHolds) {
+                    if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
+                        cargoHold.loadCargo(cargo);
+                        loaded = true;
+                        totalAvailableSpace--;
+                        break;
+                    }
+                }
+
+                // Se non caricato nelle stive appropriate,
+                // carica in qualsiasi stiva disponibile
+                if (!loaded) {
+                    for (CargoHolds cargoHold : playerCargoHolds) {
+                        if (!cargoHold.isFull()) {
+                            cargoHold.loadCargo(cargo);
+                            loaded = true;
+                            totalAvailableSpace--;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        return loaded;
     }
     
     // Getters and setters
@@ -87,7 +281,7 @@ public class AbandonedStation extends AdventureCard{
         return flightDaysCost;
     }
     
-    public int getGoodsToLoad() {
+    public List<Cargo> getGoodsToLoad() {
         return goodsToLoad;
     }
     
