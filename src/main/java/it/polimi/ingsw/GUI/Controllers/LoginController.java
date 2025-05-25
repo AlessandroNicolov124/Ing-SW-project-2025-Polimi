@@ -4,29 +4,23 @@ import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.network.socket.client.SocketClient;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.PasswordField;
-import javafx.scene.control.TextField;
 
-import java.io.IOException;
-import java.util.List;
-import it.polimi.ingsw.Player;
-import it.polimi.ingsw.Position;
-import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.client.GeneralClientIf;
-import it.polimi.ingsw.network.client.listeners.GameListener;
-import it.polimi.ingsw.network.rmi.RmiClient;
-import it.polimi.ingsw.network.socket.client.SocketClient;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import javafx.scene.control.TextField;
 
 public class LoginController {
     @FXML
     private TextField usernameField;
+
+    @FXML
     private TextField connTypeField;
+
+    @FXML
     private TextField ipAddrField;
-    private TextField SrvPortField;
+
+    @FXML
+    private TextField srvPortField;
 
 
     private AppContext context;
@@ -34,17 +28,18 @@ public class LoginController {
     @FXML
     private void handleLogin(ActionEvent event) {
         // Dummy authentication: accept any non-empty username/password
-        if (!usernameField.getText().isEmpty() && !connTypeField.getText().isEmpty() && !ipAddrField.getText().isEmpty() && !SrvPortField.getText().isEmpty()) {
+        if (!usernameField.getText().isEmpty() && !connTypeField.getText().isEmpty() && !ipAddrField.getText().isEmpty() && !srvPortField.getText().isEmpty()) {
             try {
                 String username = usernameField.getText();
                 String serverAddress = ipAddrField.getText();
-                int serverPort = Integer.parseInt(SrvPortField.getText());
+                int serverPort = Integer.parseInt(srvPortField.getText());
 
 
                 if ("socket".equals(connTypeField.getText())) {
                     SocketClient socketClient= new SocketClient(serverAddress, serverPort, context);
                     context.setClient(socketClient);
-                    new Thread(socketClient).start();
+                    Thread t = new Thread(socketClient);
+                    t.start();
 
                     context.setPlayerId(context.getClient().addPlayer(username));
 
@@ -56,7 +51,7 @@ public class LoginController {
 
                 context.setUsername(String.valueOf(usernameField));
                 context.setServerAddress(ipAddrField.getText());
-                context.setServerPort(Integer.parseInt(SrvPortField.getText()));
+                context.setServerPort(Integer.parseInt(srvPortField.getText()));
                 context.setConnectionType(connTypeField.getText());
 
 
@@ -70,7 +65,7 @@ public class LoginController {
             usernameField.setPromptText("Enter username");
             connTypeField.setPromptText("Enter connection type (rmi/socket))");
             ipAddrField.setPromptText("Enter ip address");
-            SrvPortField.setPromptText("Enter port (socket: 7777; rmi: 1099)");
+            srvPortField.setPromptText("Enter port (socket: 7777; rmi: 1099)");
 
         }
     }

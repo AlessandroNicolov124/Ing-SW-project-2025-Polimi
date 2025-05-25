@@ -11,11 +11,9 @@
           AnchorPane.topAnchor="0.0" AnchorPane.bottomAnchor="0.0">
         <Label text="Login Page" />
         <TextField fx:id="usernameField" promptText="Username"/>
-        <TextField fx:id="connTypeField" promptText="Socket"/>
-        <TextField fx:id="ipAddrFiels" promptText="localhost"/>
-        <TextField fx:id="SrvPortField" promptText="7777"/>
-
-
+        <TextField fx:id="connTypeField" promptText="socket"/>
+        <TextField fx:id="ipAddrField" promptText="localhost"/>
+        <TextField fx:id="srvPortField" promptText="7777"/>
 
         <Button text="Login" onAction="#handleLogin"/>
     </VBox>
