@@ -72,6 +72,22 @@ public class ShipBuildingHandler {
                         console.printError("No component available to place!");
                     }
                     break;
+
+                case "b": // Reserve component
+                    if (currentComponent != null) {
+                        if(handleReserveComponent(currentComponent)){
+                            currentComponent = null;
+                        }else{
+                            console.printError("Component cannot be reserved!");
+                        }
+                    } else {
+                        console.printError("No component available to reserve!");
+                    }
+                    break;
+
+                case "pb": // Place booked component
+                    handlePlaceReservedComponent();
+                    break;
                 case "r": // Remove component
                     handleRemoveComponent();
                     break;
@@ -85,6 +101,8 @@ public class ShipBuildingHandler {
                     break;
                 case "s": // Skip current component
                     if (currentComponent != null) {
+                        //TODO il componente deve essere rinviato al server per essere rimesso nelle carte dispnibili
+                        componentDeck.add(currentComponent);
                         console.printMessage("Skipping " + currentComponent.getClass().getName());
                         currentComponent = null;
                     } else {
@@ -105,6 +123,26 @@ public class ShipBuildingHandler {
                     break;
             }
         }
+    }
+
+    private void handlePlaceReservedComponent() {
+        if(currentPlayer.getShip().getReservedComponents().isEmpty()){
+            System.out.println("--- No Reserved Components ---");
+            return;
+        }
+        System.out.println("--- Reserved Components ---");
+        for(Component c : currentPlayer.getShip().getReservedComponents()){
+            displayComponent(c);
+        }
+
+        System.out.println("Choose the component to place: ");
+        String sc = console.askQuestion("Enter component name");
+        Component cc = currentPlayer.getShip().getReservedComponents().stream().filter(c -> c.getClass().getSimpleName().equals(sc)).findFirst().orElse(null);
+        handlePlaceComponent(cc);
+    }
+
+    private boolean handleReserveComponent(Component currentComponent) {
+        return currentPlayer.getShip().reserveComponent(currentComponent);
     }
 
     private void displayComponent(Component currentComponent) {
@@ -166,9 +204,26 @@ public class ShipBuildingHandler {
         int gridHeight = height * 3;
         int gridWidth = width * 3;
         String[][] grid = new String[gridHeight][gridWidth];
+
         for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
-                grid[i][j] = "    "; // Empty slot with 4 spaces
+                //grid[i][j] = "    "; // Empty slot with 4 spaces
+                // Calculate the logical position this grid cell represents
+                int logicalY = i / 3;
+                int logicalX = j / 3;
+
+                // Check if this is the center cell of a 3x3 area (where components are placed)
+                if (i % 3 == 1 && j % 3 == 1) {
+                    Position pos = new Position(logicalX, logicalY);
+                    if (!ship.isPositionValid(pos)) {
+                        grid[i][j] = "[XX]"; // Mark invalid positions
+                    } else {
+                        grid[i][j] = "    "; // Valid empty slot
+                    }
+                } else {
+                    grid[i][j] = "    "; // Empty slot with 4 spaces
+                }
+
             }
         }
 
@@ -231,13 +286,14 @@ public class ShipBuildingHandler {
             }
             console.printMessage(rowStr.toString());
         }
+
         console.printMessage("------------------------------------");
-    }
+        console.printMessage("Legend: [XX] = Invalid position");    }
 
     private String getCoordinateHeader(int width) {
-        StringBuilder header = new StringBuilder("      ");
+        StringBuilder header = new StringBuilder();
         for (int i = 0; i < width; i++) {
-            header.append("     " + i + "     "); // Center the coordinate number in the 3-cell width
+            header.append("      " + i + "     "); // Center the coordinate number in the 3-cell width
         }
         return header.toString();
     }
@@ -256,17 +312,6 @@ public class ShipBuildingHandler {
             case StructuralModule sm -> "SM";
             default -> "??";
         };
-//        if (component instanceof Cabin) return "C";
-//        if (component instanceof SingleEngine) return "E";
-//        if (component instanceof DoubleEngine) return "E"; // Could be E2
-//        if (component instanceof SingleCannon) return "S"; // S for single cannon
-//        if (component instanceof DoubleCannon) return "D"; // D for double cannon
-//        if (component instanceof CargoHolds) return "H"; // H for holds
-//        if (component instanceof BatteryCompartment) return "B";
-//        if (component instanceof ShieldGenerator) return "G";
-//        if (component instanceof LifeSupportSystem) return "L";
-//        if (component instanceof StructuralModule) return "X"; // For structural
-//        return "?"; // Unknown
     }
 
 
@@ -275,11 +320,15 @@ public class ShipBuildingHandler {
         if (hasComponent) {
             console.printMessage(" (p) Place Current Component");
             console.printMessage(" (t) Rotate Current Component");
+            console.printMessage(" (b) Reserve (Booked) Current Component");
             console.printMessage(" (s) Skip Current Component");
         } else {
             console.printMessage(" (p) [No component available]");
             console.printMessage(" (t) [No component available]");
             console.printMessage(" (s) [No component available]");
+        }
+        if(!currentPlayer.getShip().getReservedComponents().isEmpty()){
+            console.printMessage(" (pb) Place Current Component");
         }
         console.printMessage(" (r) Remove Component from Ship");
         console.printMessage(" (v) Validate and Finish Ship");
@@ -320,49 +369,6 @@ public class ShipBuildingHandler {
             handlePlaceComponent(component);
         }
     }
-
-//    private Component createAndInitializeComponent(String typeStr) {
-//        // This is a simplified factory. A more robust solution would use a proper factory pattern
-//        // or reflection, and handle connector initialization more dynamically.
-//        // For now, using default/sensible connector setups.
-//        Component component = null;
-//        switch (typeStr.toLowerCase()) {
-//            case "cabin":
-//                boolean isStartingCabin = currentPlayer.getShip().getComponents().isEmpty(); // First component is starting cabin
-//                component = new Cabin(isStartingCabin);
-//                // Cabins usually have universal connectors or manage them internally
-//                break;
-//            case "singleengine":
-//                Engine singleEngine = new SingleEngine();
-//                // Example: Default for a single engine might be Double on NORTH, Null elsewhere
-//                singleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = singleEngine;
-//                break;
-//            case "doubleengine":
-//                Engine doubleEngine = new DoubleEngine();
-//                // Example: Default for a double engine
-//                doubleEngine.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = doubleEngine;
-//                break;
-//            case "singlecannon":
-//                SingleCannon singleCannon = new SingleCannon(Direction.NORTH); // Default firing NORTH
-//                // Cannons might need specific connector setups based on design
-//                singleCannon.initializeConnectors(new SingleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = singleCannon;
-//                break;
-//            case "doublecannon":
-//                DoubleCannon doubleCannon = new DoubleCannon(Direction.NORTH); // Default firing NORTH
-//                doubleCannon.initializeConnectors(new DoubleConnectorType(), new NullConnectorType(), new NullConnectorType(), new NullConnectorType());
-//                component = doubleCannon;
-//                break;
-//            // Add more cases for other components (CargoHolds, BatteryCompartment, etc.)
-//            // Each will require specific initialization, especially for connectors.
-//            default:
-//                console.printError("Unknown component type: " + typeStr);
-//                return null;
-//        }
-//        return component;
-//    }
 
     private void handleRemoveComponent() {
         console.printMessage("--- Remove Component ---");
@@ -416,41 +422,6 @@ public class ShipBuildingHandler {
         return component;
     }
 
-//    private void handleRotateComponent() {
-//        console.printMessage("--- Rotate Component ---");
-//        int x = -1, y = -1;
-//        try {
-//            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
-//            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
-//        } catch (NumberFormatException e) {
-//            console.printError("Invalid coordinates.");
-//            return;
-//        }
-//        Position posToRotate = new Position(x,y);
-//        Component compToRotate = currentPlayer.getShip().getComponentAt(posToRotate);
-//
-//        if (compToRotate == null) {
-//            console.printError("No component found at (" + x + "," + y + ").");
-//            return;
-//        }
-//
-//        String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
-//        switch (rotationType) {
-//            case "c":
-//                controller.rotateComponentClockwiseForPlayer(currentPlayer, compToRotate);
-//                break;
-//            case "a":
-//                controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, compToRotate);
-//                break;
-//            case "o":
-//                controller.rotateComponentOppositeForPlayer(currentPlayer, compToRotate);
-//                break;
-//            default:
-//                console.printError("Invalid rotation type.");
-//                return;
-//        }
-//        console.printMessage("Attempted to rotate component at (" + x + "," + y + ").");
-//    }
 
     private boolean handleValidateAndFinish() {
         console.printMessage("Validating ship...");
