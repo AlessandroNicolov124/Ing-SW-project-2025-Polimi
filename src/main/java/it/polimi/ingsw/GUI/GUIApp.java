@@ -3,6 +3,7 @@ package it.polimi.ingsw.GUI;
 
 
 import it.polimi.ingsw.GUI.Controllers.LoginController;
+import it.polimi.ingsw.GUI.Controllers.ShipBuilderController;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -38,6 +39,19 @@ public class GUIApp extends Application {
         primaryStage.setHeight(1000);
         primaryStage.setTitle("Login page");
         primaryStage.show();
+    }
+
+    public static void showShipBuilder() throws Exception {
+        FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/ShipBuilderView.fxml"));
+        Parent root = loader.load();
+
+        ShipBuilderController shipBuilderController = loader.getController();
+        shipBuilderController.setContext(context);
+        // Switch scene
+        primaryStage.setScene(new Scene(root, 1000, 1000));
+        primaryStage.setTitle("Ship Builder");
+        primaryStage.show();
+
     }
 
     public static void showDashboardPage() throws Exception {

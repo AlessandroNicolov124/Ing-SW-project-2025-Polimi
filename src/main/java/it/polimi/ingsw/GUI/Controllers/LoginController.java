@@ -1,9 +1,9 @@
 package it.polimi.ingsw.GUI.Controllers;
 
 import it.polimi.ingsw.GUI.AppContext;
+import it.polimi.ingsw.GUI.GUIApp;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
-import it.polimi.ingsw.Player;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 
@@ -62,8 +62,8 @@ public class LoginController {
                 context.setConnectionType(connTypeField.getText());
 
 
+                GUIApp.showShipBuilder();
 
-                //GUIApp.showDashboardPage();
             } catch (Exception e) {
                 final Stage dialog = new Stage();
                 VBox dialogVbox = new VBox(20);
