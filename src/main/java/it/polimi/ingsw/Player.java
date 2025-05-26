@@ -9,6 +9,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+
+
 public class Player implements Serializable {
     private int id;
     private String nickName;
@@ -17,11 +19,13 @@ public class Player implements Serializable {
     private AdventureCard pickedCard; // Carta pescata dal giocatore
     private boolean readyToStart;
 
+    public final int WIDTH = 7, HEIGHT = 5;
+
     public Player(int id, String nickName, boolean active) {
         this.id = id;
         this.nickName = nickName;
         this.active = active;
-        this.ship = new ShipBuilder(10, 10);
+        this.ship = new ShipBuilder(WIDTH, HEIGHT);
         this.readyToStart = false;
     }
 
