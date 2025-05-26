@@ -6,26 +6,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-
-//ASSEMBLAGGIO
-//Scegli e rivela le tessere.
-//Prendi solo una tessera alla volta, usando una sola mano.
-//Se era a faccia in giù, portala fino alla tua plancia nave prima
-//di guardarla.
-//Decidi cosa fare con la tessera:
-//        • Agganciala alla nave (la tua nave deve sempre essere tutta
-//        connessa).
-//        • Prenotala per dopo (puoi conservare solo 2 tessere alla
-//        volta sulla tua plancia nell’angolo in alto a destra).
-//        • Rimettila a faccia in su nel mucchio al centro del tavolo.
-//Le tue tessere prenotate possono essere agganciate alla tua
-//nave, ma non rimesse nella pila (subirai una penalità alla fine del
-//        volo se non sarai riuscito ad agganciarle alla tua nave).
-//Puoi spostare o ruotare l’ultima tessera che hai preso, solo
-//        f
-//intanto che non prendi una nuova tessera o non guardi una
-//pila di carte avventura.
-
 public class ShipBuilder {
 
     private Position startingPosition;
@@ -34,89 +14,12 @@ public class ShipBuilder {
     private boolean isAssembled;
     private Map<CrewType, Integer> crewCount = new HashMap<>(); // tiene conto del numero di umani e alieni sulla navicella
 
-    //ATTRIBUTI per gestire le tessere prenotate
-    private List<Component> reservedComponents; // massimo 2 tessere prenotate
-    private static final int MAX_RESERVED_COMPONENTS = 2;
-
     public ShipBuilder(int width, int height) {
         this.startingPosition = new Position(width/2, height/2); // Posizione iniziale
         this.components = new HashMap<>();
         this.isAssembled = false;
         this.width = width;
         this.height = height;
-        this.reservedComponents = new ArrayList<>();
-    }
-
-    /**
-     * Restituisce il numero di tessere attualmente prenotate
-     * @return Numero di tessere prenotate
-     */
-    public int getReservedComponentsCount() {
-        return reservedComponents.size();
-    }
-
-    /**
-     * Prenota una tessera per un utilizzo futuro
-     * @param component La tessera da prenotare
-     * @return true se la prenotazione è avvenuta con successo, false se non c'è spazio
-     */
-    public boolean reserveComponent(Component component) {
-        if (!canReserveMoreComponents()) {
-            System.out.println("  Cannot reserve more than " + MAX_RESERVED_COMPONENTS + " components");
-            return false;
-        }
-
-        reservedComponents.add(component);
-        System.out.println("  Component " + component.getClass().getSimpleName() + " reserved");
-        return true;
-    }
-
-    /**
-     * Rimuove una tessera dalle prenotazioni
-     * @param component La tessera da rimuovere dalle prenotazioni
-     * @return true se la rimozione è avvenuta con successo
-     */
-    public boolean unreserveComponent(Component component) {
-        boolean removed = reservedComponents.remove(component);
-        if (removed) {
-            System.out.println("  Component " + component.getClass().getSimpleName() + " unreserved");
-        }
-        return removed;
-    }
-
-    /**
-     * Piazza una tessera prenotata sulla nave
-     * @param component La tessera prenotata da piazzare
-     * @param position La posizione dove piazzare la tessera
-     * @return true se il piazzamento è avvenuto con successo
-     */
-    public boolean placeReservedComponent(Component component, Position position) {
-        if (!reservedComponents.contains(component)) {
-            System.out.println("  Component is not reserved");
-            return false;
-        }
-
-        if (placeComponent(component, position)) {
-            return unreserveComponent(component); // Rimuove dalle prenotazioni se piazzata con successo
-        }
-
-        return false;
-    }
-
-    /**
-     * Restituisce la lista delle tessere prenotate (copia per sicurezza)
-     * @return Lista delle tessere prenotate
-     */
-    public List<Component> getReservedComponents() {
-        return new ArrayList<>(reservedComponents);
-    }
-
-    /**
-     * Controlla se ci sono slot liberi per prenotare tessere
-     * @return true se è possibile prenotare altre tessere
-     */
-    public boolean canReserveMoreComponents() {
-        return reservedComponents.size() < MAX_RESERVED_COMPONENTS;
     }
 
     public void setAssembled(boolean isAssembled) {
@@ -125,28 +28,14 @@ public class ShipBuilder {
 
     //posizione allinterno della plancia
     public boolean isPositionValid(Position position) {
-        if(position.getX() >= 0 && position.getX() < width && position.getY() >= 0 && position.getY() < height){
-            if(position.getY()==0 && (position.getX()==0 || position.getX()==1 || position.getX()==3 ||position.getX()==5 || position.getX()==width-1)){
-                return false;
-            }else if(position.getY()==1 && (position.getX()==0 || position.getX()==width-1)){
-                return false;
-            }else if(position.getY()==4 && position.getX()==3){
-                return false;
-            }else{
-                return true;
-            }
-        }else{
-            return false;
-        }
+        return position.getX() >= 0 && position.getX() < width &&
+                position.getY() >= 0 && position.getY() < height;
     }
 
     public boolean isPositionOccupied(Position position) {
         return components.containsValue(position);
     }
 
-
-
-    //in fase di assemblaggio i componenti possono essere piazzati in qualunque posizione valida, basta che la nave sia sempre tutta connessa
     public boolean placeComponent(Component component, Position position) {
         // Verifica se la posizione è già occupata
         if (isPositionOccupied(position)) {
@@ -156,13 +45,6 @@ public class ShipBuilder {
 
         // Se è il primo componente, deve essere posizionato nella posizione iniziale
         if (components.isEmpty() && !position.equals(startingPosition)) {
-            System.out.println("  first component only in center");
-            return false;
-        }
-
-        //la posizione deve essere valida (plancia della navicella)
-        if(!isPositionValid(position)){
-            System.out.println("  position not valid");
             return false;
         }
 
@@ -249,8 +131,6 @@ public class ShipBuilder {
                 components.remove(component);
             }else{
                 //TODO vanno gestiti i componenti rimossi
-
-
             }
             return true;
         }else{
@@ -297,7 +177,6 @@ public class ShipBuilder {
 
     // Convalida la nave per assicurarsi che tutti i componenti necessari siano presenti
     public boolean validateShip() {
-        //verifica esistenza componenti
         if (components.isEmpty()) {
             System.out.println("No components");
             return false;
@@ -336,19 +215,8 @@ public class ShipBuilder {
         boolean isValid = hasEngine>0 && hasCabin>0 && validationEngineFire && validationCannonFire;
 
         //System.out.println("Ship Validation: " + isValid);
-
-
-        // AVVISO per tessere prenotate non utilizzate (penalità alla fine del volo)
-        if (!reservedComponents.isEmpty()) {
-            System.out.println("    WARNING: " + reservedComponents.size() + " reserved components not used - penalty will apply at end of flight");
-        }
-
-
-        //System.out.println("    Ship Validation: " + isValid);
-      
         return isValid;
     }
-
 
     public boolean checkCannonFire() {
         List<SingleCannon> singleCannons = getOperationalSingleCannons();

@@ -47,7 +47,7 @@ public class  GameController {
         return null;
     }
 
-   public Player getPlayerById(int id) {
+    public Player getPlayerById(int id) {
         for (Player p : gameModel.getPlayers()) {
             if (p.getId() == id) {
                 return p;
