@@ -7,7 +7,11 @@ import it.polimi.ingsw.Player;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 
+import javafx.scene.Scene;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.stage.Stage;
 
 public class LoginController {
     @FXML
@@ -46,7 +50,10 @@ public class LoginController {
 
                 }
                 else if ("rmi".equals(connTypeField.getText())) {
-
+                    RmiClient rmiClient = RmiClient.connectTo(serverAddress, context);
+                    if (rmiClient == null) {
+                        throw new IllegalStateException("Failed to connect to RMI server.");
+                    }
                 }
 
                 context.setUsername(String.valueOf(usernameField));
@@ -58,6 +65,14 @@ public class LoginController {
 
                 //GUIApp.showDashboardPage();
             } catch (Exception e) {
+                final Stage dialog = new Stage();
+                VBox dialogVbox = new VBox(20);
+                dialogVbox.getChildren().add(new Text("Something went wrong, please try again."));
+                dialogVbox.getChildren().add(new Text("Make sure you insert valid username, password and ip address and server port"));
+                Scene dialogScene = new Scene(dialogVbox, 300, 100);
+                dialog.setScene(dialogScene);
+                dialog.show();
+
                 e.printStackTrace();
             }
         } else {

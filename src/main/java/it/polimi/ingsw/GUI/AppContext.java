@@ -32,6 +32,7 @@ public class AppContext implements GameListener {
     public Player getLocalPlayerReference() {
         return localPlayerReference;
     }
+
     public void setLocalPlayerReference(Player localPlayerReference) {
         this.localPlayerReference = localPlayerReference;
     }
