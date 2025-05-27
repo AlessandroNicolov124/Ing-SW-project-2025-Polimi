@@ -14,7 +14,6 @@ import javafx.stage.Stage;
 
 import java.util.Objects;
 
-//TODO implement GameListener if (Here or somewwhere else inside GUI...)
 public class GUIApp extends Application {
 
     private static Stage primaryStage;
