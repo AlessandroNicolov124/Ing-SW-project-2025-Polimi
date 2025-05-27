@@ -103,4 +103,12 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         UnicastRemoteObject.unexportObject(this, true);
     }
 
+    @Override
+    public boolean isPositionSelectionValid(int position) throws RemoteException {
+        // For RMI client, we delegate position validation to the server
+        // This method should not typically be called as RMI clients should use 
+        // server-side validation through other means
+        throw new UnsupportedOperationException("Position validation for RMI clients should use server-side validation");
+    }
+
 }

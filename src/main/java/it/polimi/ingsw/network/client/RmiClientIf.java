@@ -1,5 +1,3 @@
-
-
 package it.polimi.ingsw.network.client;
 
 import java.rmi.Remote;
@@ -36,5 +34,8 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void showUpdate(UpdateMessage msg) throws RemoteException;
+
+    @Override
+    boolean isPositionSelectionValid(int position) throws RemoteException;
 
 }

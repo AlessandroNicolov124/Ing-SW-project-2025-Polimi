@@ -213,4 +213,12 @@ public class SocketClient implements Runnable, GeneralClientIf {
                 listener.displayRefresh();
         }
     }
+
+    @Override
+    public boolean isPositionSelectionValid(int position) throws Exception {
+        // For socket client, we don't have direct access to game controller validation
+        // This method should not be called when using socket client as validation 
+        // is handled by the server and available positions list
+        throw new UnsupportedOperationException("Position validation for socket clients should use server-provided available positions");
+    }
 }

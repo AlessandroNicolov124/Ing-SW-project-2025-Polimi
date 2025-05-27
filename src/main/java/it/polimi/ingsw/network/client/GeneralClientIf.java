@@ -26,4 +26,6 @@ public interface GeneralClientIf extends AutoCloseable {
 
     Component pickComponentCard() throws Exception;
 
+    boolean isPositionSelectionValid(int position) throws Exception;
+
 }
