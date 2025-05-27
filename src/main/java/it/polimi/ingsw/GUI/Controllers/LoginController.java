@@ -54,6 +54,8 @@ public class LoginController {
                     if (rmiClient == null) {
                         throw new IllegalStateException("Failed to connect to RMI server.");
                     }
+                    context.setClient(rmiClient);
+                    context.setPlayerId(context.getClient().addPlayer(username));
                 }
 
                 context.setUsername(String.valueOf(usernameField));
