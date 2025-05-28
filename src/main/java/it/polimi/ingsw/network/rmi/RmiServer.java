@@ -4,11 +4,12 @@ import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.RmiClientIf;
+import it.polimi.ingsw.network.rmi.messages.AvailablePositionsUpdateMessage;
 import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
 import it.polimi.ingsw.network.rmi.messages.PickComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.PlayerAddedMessage;
+import it.polimi.ingsw.network.rmi.messages.PositionUpdateMessage;
 import it.polimi.ingsw.network.rmi.messages.RemoveComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.RotateComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
@@ -218,11 +219,11 @@ public class RmiServer extends UnicastRemoteObject
             System.out.println("[ServerRMI] Player " + p.getNickName() + " (ID: " + playerId + ") successfully selected position " + position);
             
             // Broadcast position update to all clients
-            updates.offer(new it.polimi.ingsw.network.rmi.messages.PositionUpdateMessage(playerId, p.getNickName(), position));
+            updates.offer(new PositionUpdateMessage(playerId, p.getNickName(), position));
             
             // Broadcast updated available positions to all clients
             List<Integer> updatedAvailablePositions = controller.getAvailableStartingPositions();
-            updates.offer(new it.polimi.ingsw.network.rmi.messages.AvailablePositionsUpdateMessage(updatedAvailablePositions));
+            updates.offer(new AvailablePositionsUpdateMessage(updatedAvailablePositions));
             System.out.println("[ServerRMI] Broadcasting updated available positions to all clients: " + updatedAvailablePositions);
         } else {
             System.out.println("[ServerRMI] Failed to set position " + position + " for player " + playerId);
