@@ -23,30 +23,13 @@ public class SelectPositionMessage implements ServerMessage {
     public void handleServer(SocketClientHandler handler) {
         System.out.println("[Server] Player " + playerId + " requested position " + position);
         
-        // Get the player from the controller
-        Player player = handler.getController().getPlayerById(playerId);
-        
-        if (player == null) {
-            System.out.println("[Server] Player with ID " + playerId + " not found");
-            handler.sendUpdate(new PositionResponseMessage(playerId, position, false, "Player not found"));
-            return;
-        }
-        
-        // Check available positions
-        List<Integer> availablePositions = handler.getController().getAvailableStartingPositions();
-        
-        if (!availablePositions.contains(position)) {
-            System.out.println("[Server] Position " + position + " is not available");
-            handler.sendUpdate(new PositionResponseMessage(playerId, position, false, 
-                    "Position " + position + " is not available. Available positions: " + availablePositions));
-            return;
-        }
-        
-        // Try to set position
-        boolean success = handler.getController().setPlayerInitialStartingPosition(player, position);
+        // Use atomic position selection to prevent race conditions
+        boolean success = handler.getController().atomicPositionSelection(playerId, position);
         
         if (success) {
+            Player player = handler.getController().getPlayerById(playerId);
             System.out.println("[Server] Player " + player.getNickName() + " (ID: " + playerId + ") successfully claimed position " + position);
+            
             // Send response to the client who requested
             handler.sendUpdate(new PositionResponseMessage(playerId, position, true, "Position set successfully"));
             
@@ -61,8 +44,11 @@ public class SelectPositionMessage implements ServerMessage {
             // Check if all players have positions now
             checkAllPlayersPositioned(handler);
         } else {
-            System.out.println("[Server] Failed to set position " + position + " for player " + player.getNickName());
-            handler.sendUpdate(new PositionResponseMessage(playerId, position, false, "Failed to set position"));
+            System.out.println("[Server] Failed to set position " + position + " for player " + playerId);
+            // Get current available positions for error message
+            List<Integer> availablePositions = handler.getController().getAvailableStartingPositions();
+            handler.sendUpdate(new PositionResponseMessage(playerId, position, false, 
+                    "Position " + position + " is not available. Available positions: " + availablePositions));
         }
     }
     

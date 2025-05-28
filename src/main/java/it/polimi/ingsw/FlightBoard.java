@@ -34,12 +34,14 @@ public class FlightBoard {
     /**
      * Sets the initial position for a player on the flight board.
      * The position must be between 1 and 4 (inclusive) and not occupied.
+     * This method is synchronized to prevent race conditions when multiple 
+     * players attempt to select the same position simultaneously.
      *
      * @param player The player choosing the position.
      * @param position The chosen position (1-4).
      * @return true if the position was successfully set, false otherwise.
      */
-    public boolean setInitialPosition(Player player, int position) {
+    public synchronized boolean setInitialPosition(Player player, int position) {
         if (position < 1 || position > 4) {
             System.out.println("Invalid position. Please choose a position between 1 and 4.");
             return false;
@@ -63,10 +65,11 @@ public class FlightBoard {
     /**
      * Gets a list of available starting positions (1-4).
      * A position is available if it's not occupied by any active player.
+     * This method is synchronized to ensure consistency with position setting.
      *
      * @return A list of integers representing available starting positions.
      */
-    public List<Integer> getAvailableStartingPositions() {
+    public synchronized List<Integer> getAvailableStartingPositions() {
         List<Integer> availablePositions = new ArrayList<>();
         for (int i = 1; i <= 4; i++) {
             boolean occupied = false;

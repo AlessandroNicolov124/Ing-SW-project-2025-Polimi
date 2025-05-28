@@ -97,12 +97,13 @@ public class  GameController {
 
     /**
      * Sets the initial starting position for the given player.
+     * This method is synchronized to prevent race conditions.
      *
      * @param player The player choosing the position.
      * @param position The chosen starting position (1-4).
      * @return true if the position was successfully set, false otherwise.
      */
-    public boolean setPlayerInitialStartingPosition(Player player, int position) {
+    public synchronized boolean setPlayerInitialStartingPosition(Player player, int position) {
         if (isPlayerThere(player)) {
             boolean result = gameModel.setPlayerInitialStartingPosition(player, position);
             if (result) {
@@ -212,12 +213,13 @@ public class  GameController {
     /**
      * Handles the logic for when a player attempts to select a position.
      * This combines validation and position setting into a single controller method.
+     * This method is synchronized to provide atomic check-and-set behavior.
      *
      * @param player The player selecting the position
      * @param position The desired position
      * @return true if the position was successfully selected, false otherwise
      */
-    public boolean handlePlayerPositionSelection(Player player, int position) {
+    public synchronized boolean handlePlayerPositionSelection(Player player, int position) {
         if (!isPositionSelectionValid(position)) {
             return false;
         }
@@ -243,6 +245,40 @@ public class  GameController {
             return newPlayer;
         }
         return existingPlayer;
+    }
+
+    /**
+     * Atomic position selection method for network clients.
+     * This method combines availability check and position setting in a single synchronized operation
+     * to prevent race conditions when multiple clients attempt to select the same position.
+     *
+     * @param playerId The ID of the player selecting the position
+     * @param position The desired position (1-4)
+     * @return true if the position was successfully selected, false if already taken or invalid
+     */
+    public synchronized boolean atomicPositionSelection(int playerId, int position) {
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[GameController] Player with ID " + playerId + " not found for position selection");
+            return false;
+        }
+
+        // Check availability and set position atomically
+        List<Integer> availablePositions = gameModel.getAvailableStartingPositions();
+        if (!availablePositions.contains(position)) {
+            System.out.println("[GameController] Position " + position + " is not available. Available: " + availablePositions);
+            return false;
+        }
+
+        // Attempt to set the position
+        boolean success = gameModel.setPlayerInitialStartingPosition(player, position);
+        if (success) {
+            System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + playerId + ") atomically selected position " + position);
+        } else {
+            System.out.println("[GameController] Failed to atomically set position " + position + " for player " + player.getNickName());
+        }
+        
+        return success;
     }
 
     public void playTurn() {

@@ -208,16 +208,15 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public boolean selectPosition(int playerId, int position) throws RemoteException {
-        Player p = controller.getPlayerById(playerId);
-        if (p == null) {
-            System.out.println("[ServerRMI] Player " + playerId + " not found for position selection");
-            return false;
-        }
+        System.out.println("[ServerRMI] Player " + playerId + " requested position " + position);
         
-        boolean success = controller.setPlayerInitialStartingPosition(p, position);
-        System.out.println("[ServerRMI] Player " + playerId + " selected position " + position + ": " + success);
+        // Use atomic position selection to prevent race conditions
+        boolean success = controller.atomicPositionSelection(playerId, position);
         
         if (success) {
+            Player p = controller.getPlayerById(playerId);
+            System.out.println("[ServerRMI] Player " + p.getNickName() + " (ID: " + playerId + ") successfully selected position " + position);
+            
             // Broadcast position update to all clients
             updates.offer(new it.polimi.ingsw.network.rmi.messages.PositionUpdateMessage(playerId, p.getNickName(), position));
             
@@ -225,6 +224,8 @@ public class RmiServer extends UnicastRemoteObject
             List<Integer> updatedAvailablePositions = controller.getAvailableStartingPositions();
             updates.offer(new it.polimi.ingsw.network.rmi.messages.AvailablePositionsUpdateMessage(updatedAvailablePositions));
             System.out.println("[ServerRMI] Broadcasting updated available positions to all clients: " + updatedAvailablePositions);
+        } else {
+            System.out.println("[ServerRMI] Failed to set position " + position + " for player " + playerId);
         }
         
         return success;
