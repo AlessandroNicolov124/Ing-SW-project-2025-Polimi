@@ -7,6 +7,7 @@ import it.polimi.ingsw.network.socket.messages.RotationType;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 public interface VirtualServer extends Remote {
 
@@ -25,5 +26,12 @@ public interface VirtualServer extends Remote {
     void rotateComponent(int playerId, Position position, RotationType rotationType) throws RemoteException;
     
     void validateShip(int playerId) throws RemoteException;
+
+    // Position selection methods for RMI
+    List<Integer> getAvailablePositions(int playerId) throws RemoteException;
+    
+    boolean selectPosition(int playerId, int position) throws RemoteException;
+
+    boolean areAllPlayersPositioned() throws RemoteException;
 
 }

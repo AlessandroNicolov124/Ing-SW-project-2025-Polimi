@@ -199,4 +199,35 @@ public class RmiServer extends UnicastRemoteObject
         updates.offer(new ValidateShipMessage(playerId, isValid, message));
     }
 
+    @Override
+    public List<Integer> getAvailablePositions(int playerId) throws RemoteException {
+        List<Integer> positions = controller.getAvailableStartingPositions();
+        System.out.println("[ServerRMI] Available positions requested by player " + playerId + ": " + positions);
+        return positions;
+    }
+
+    @Override
+    public boolean selectPosition(int playerId, int position) throws RemoteException {
+        Player p = controller.getPlayerById(playerId);
+        if (p == null) {
+            System.out.println("[ServerRMI] Player " + playerId + " not found for position selection");
+            return false;
+        }
+        
+        boolean success = controller.setPlayerInitialStartingPosition(p, position);
+        System.out.println("[ServerRMI] Player " + playerId + " selected position " + position + ": " + success);
+        
+        // TODO: Add update message to notify other clients about position selection
+        // updates.offer(new PositionSelectedMessage(playerId, position, success));
+        
+        return success;
+    }
+
+    @Override
+    public boolean areAllPlayersPositioned() throws RemoteException {
+        boolean allPositioned = controller.canProceedToRunningState();
+        System.out.println("[ServerRMI] All players positioned check: " + allPositioned);
+        return allPositioned;
+    }
+
 }

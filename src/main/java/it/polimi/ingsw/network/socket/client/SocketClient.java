@@ -110,8 +110,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
         proxy.validateShip(playerId);
     }
 
-    // New method to request available positions
-    public void requestAvailablePositions() throws IOException {
+    // Method to request available positions asynchronously
+    public void requestAvailablePositionsAsync() throws IOException {
         if (playerId == -1) {
             throw new IllegalStateException("Cannot request positions before player ID is assigned.");
         }
@@ -122,8 +122,8 @@ public class SocketClient implements Runnable, GeneralClientIf {
         }
     }
     
-    // New method to select a position on the flight board
-    public void selectPosition(int position) throws IOException {
+    // Method to select a position asynchronously
+    public void selectPositionAsync(int position) throws IOException {
         if (playerId == -1) {
             throw new IllegalStateException("Cannot select position before player ID is assigned.");
         }
@@ -220,5 +220,26 @@ public class SocketClient implements Runnable, GeneralClientIf {
         // This method should not be called when using socket client as validation 
         // is handled by the server and available positions list
         throw new UnsupportedOperationException("Position validation for socket clients should use server-provided available positions");
+    }
+
+    @Override
+    public List<Integer> requestAvailablePositions() throws Exception {
+        // For socket clients, this is handled asynchronously
+        // The actual request is sent and response comes via callback
+        requestAvailablePositionsAsync();
+        return null; // Positions will be provided via callback
+    }
+
+    @Override
+    public boolean selectPosition(int position) throws Exception {
+        // For socket clients, this is handled asynchronously
+        selectPositionAsync(position);
+        return true; // Success will be confirmed via callback
+    }
+
+    @Override
+    public boolean areAllPlayersPositioned() throws Exception {
+        // For socket clients, this is handled by server messages
+        throw new UnsupportedOperationException("Socket clients receive positioning updates via server messages");
     }
 }

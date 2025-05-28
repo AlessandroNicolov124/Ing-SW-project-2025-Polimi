@@ -14,6 +14,7 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.List;
 
 
 // Asynchronous client stub for the RMI server.
@@ -109,6 +110,35 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         // This method should not typically be called as RMI clients should use 
         // server-side validation through other means
         throw new UnsupportedOperationException("Position validation for RMI clients should use server-side validation");
+    }
+
+    @Override
+    public List<Integer> requestAvailablePositions() throws RemoteException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot request positions before player ID is assigned.");
+        }
+        System.out.println("[RMI Client] Requesting available positions from server");
+        return server.getAvailablePositions(playerId);
+    }
+    
+    @Override
+    public boolean selectPosition(int position) throws RemoteException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot select position before player ID is assigned.");
+        }
+        if (position < 1 || position > 4) {
+            throw new IllegalArgumentException("Position must be between 1 and 4");
+        }
+        System.out.println("[RMI Client] Sending position selection request: " + position);
+        return server.selectPosition(playerId, position);
+    }
+
+    @Override
+    public boolean areAllPlayersPositioned() throws RemoteException {
+        if (playerId == -1) {
+            throw new IllegalStateException("Cannot check positions before player ID is assigned.");
+        }
+        return server.areAllPlayersPositioned();
     }
 
 }

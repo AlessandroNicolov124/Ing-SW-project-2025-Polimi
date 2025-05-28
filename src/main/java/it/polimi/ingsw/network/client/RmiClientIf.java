@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.client;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -37,5 +38,14 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     boolean isPositionSelectionValid(int position) throws RemoteException;
+
+    @Override
+    List<Integer> requestAvailablePositions() throws RemoteException;
+
+    @Override
+    boolean selectPosition(int position) throws RemoteException;
+
+    @Override
+    boolean areAllPlayersPositioned() throws RemoteException;
 
 }

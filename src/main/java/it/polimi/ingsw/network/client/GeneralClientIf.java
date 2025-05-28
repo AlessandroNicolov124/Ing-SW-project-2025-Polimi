@@ -6,6 +6,8 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 
+import java.util.List;
+
 public interface GeneralClientIf extends AutoCloseable {
     
     int addPlayer(String username) throws Exception;
@@ -27,5 +29,12 @@ public interface GeneralClientIf extends AutoCloseable {
     Component pickComponentCard() throws Exception;
 
     boolean isPositionSelectionValid(int position) throws Exception;
+
+    // Position selection methods
+    List<Integer> requestAvailablePositions() throws Exception;
+    
+    boolean selectPosition(int position) throws Exception;
+    
+    boolean areAllPlayersPositioned() throws Exception;
 
 }
