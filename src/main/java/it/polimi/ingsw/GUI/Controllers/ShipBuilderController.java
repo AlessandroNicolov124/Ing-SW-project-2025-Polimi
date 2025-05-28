@@ -12,8 +12,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Line;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -38,10 +42,89 @@ public class ShipBuilderController implements GameStateUpdateListener {
     @FXML
     private Label statusLabel;
 
+    private Image draggedImage;
+
+    private static final int GRID_SIZE = 64;
+
     private AppContext context;
     private Component component;
     private Position selectedPosition;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
+
+    @FXML
+    public void initialize() {
+
+        //drawGrid();
+
+        anchorPane.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasImage()) {
+                // Snap to grid
+                int col = (int)(event.getX() / GRID_SIZE);
+                int row = (int)(event.getY() / GRID_SIZE);
+
+//                 Optionally: Check if the (row, col) is a valid position
+                if (isValidCell(row, col)) {
+                    double snappedX = col * GRID_SIZE;
+                    double snappedY = row * GRID_SIZE;
+
+                    ImageView placed = new ImageView(db.getImage());
+                    placed.setFitWidth(GRID_SIZE);
+                    placed.setFitHeight(GRID_SIZE);
+                    placed.setLayoutX(snappedX);
+                    placed.setLayoutY(snappedY);
+                    anchorPane.getChildren().add(placed);
+
+                    success = true;
+                }
+                success = true;
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+
+        anchorPane.setOnDragOver(event -> {
+            if (event.getGestureSource() != anchorPane && event.getDragboard().hasImage()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+            event.consume();
+        });
+
+
+        cardImage.setOnDragDetected(event -> {
+            if (cardImage.getImage() != null) {
+                Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
+                ClipboardContent content = new ClipboardContent();
+                content.putImage(cardImage.getImage());
+                db.setContent(content);
+                draggedImage = cardImage.getImage();
+            }
+            event.consume();
+        });
+    }
+
+    private void drawGrid() {
+        double width = anchorPane.getPrefWidth();
+        double height = anchorPane.getPrefHeight();
+
+        // Vertical lines
+        for (int x = 0; x <= width; x += GRID_SIZE) {
+            Line line = new Line(x, 0, x, height);
+            line.setStyle("-fx-stroke: lightgray; -fx-stroke-width: 1;");
+            anchorPane.getChildren().add(line);
+        }
+        // Horizontal lines
+        for (int y = 0; y <= height; y += GRID_SIZE) {
+            Line line = new Line(0, y, width, y);
+            line.setStyle("-fx-stroke: lightgray; -fx-stroke-width: 1;");
+            anchorPane.getChildren().add(line);
+        }
+    }
+
+    private boolean isValidCell(int row, int col) {
+        return true;
+    }
 
     private void showErrorDialog(String title, String message) {
         try {
@@ -304,41 +387,6 @@ public class ShipBuilderController implements GameStateUpdateListener {
     public ShipBuilderController getController() {
         return this;
     }
-
-    /*private void addDraggablePiece(String imagePath, double x, double y) {
-        ImageView piece = new ImageView(new Image(getClass().getResourceAsStream(imagePath)));
-        piece.setFitWidth(64);
-        piece.setFitHeight(64);
-        piece.setLayoutX(x);
-        piece.setLayoutY(y);
-
-        // Enable drag-and-drop
-        DragContext dragContext = new DragContext();
-        piece.setOnMousePressed(event -> {
-            dragContext.mouseAnchorX = event.getSceneX();
-            dragContext.mouseAnchorY = event.getSceneY();
-            dragContext.initialX = piece.getLayoutX();
-            dragContext.initialY = piece.getLayoutY();
-            piece.toFront(); // Bring the piece to front when dragging
-        });
-
-        piece.setOnMouseDragged(event -> {
-            double offsetX = event.getSceneX() - dragContext.mouseAnchorX;
-            double offsetY = event.getSceneY() - dragContext.mouseAnchorY;
-            piece.setLayoutX(dragContext.initialX + offsetX);
-            piece.setLayoutY(dragContext.initialY + offsetY);
-        });
-
-        anchorPane.getChildren().add(piece);
-    }
-
-    // Helper class to keep drag context per piece
-    private static class DragContext {
-        double mouseAnchorX;
-        double mouseAnchorY;
-        double initialX;
-        double initialY;
-    }*/
 
     @Override
     public void gameStateUpdate() {
