@@ -1,0 +1,29 @@
+/* Change background color of the root AnchorPane */
+.anchor-pane {
+    -fx-background-color: #042039; /* dark blue-gray */
+}
+
+
+/* Style for the login label */
+.label {
+    -fx-text-fill: #ecf0f1; /* light text */
+    -fx-font-size: 18px;
+}
+
+/* Style for the text fields */
+.text-field {
+    -fx-background-color: #ecf0f1;
+    -fx-text-fill: #000000;
+    -fx-font-size: 22px;
+    -fx-border-radius: 5;
+    -fx-background-radius: 5;
+}
+
+/* Style for the login button */
+.button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+}

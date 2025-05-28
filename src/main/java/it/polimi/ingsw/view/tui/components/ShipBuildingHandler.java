@@ -1,43 +1,47 @@
 package it.polimi.ingsw.view.tui.components;
 
-import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
+import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
 
-import java.sql.Connection;
 import java.util.*;
+import java.io.IOException;
 
 public class ShipBuildingHandler {
 
     private final ConsoleManager console;
-    private final GameController controller;
+    // private final GameController controller; // Keep for local validation/display logic if needed, or remove
     private final Player currentPlayer; // Assuming we know the current player
+    private final GeneralClientIf simpleClient; // Added socket client
 
     private final Random random = new Random();
-    private Queue<Component> componentDeck; // La pila di componenti pescati casualmente
 
 
-    public ShipBuildingHandler(ConsoleManager console, GameController controller, Player currentPlayer) {
+    public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer) {
         this.console = console;
-        this.controller = controller;
+        this.simpleClient = simpleClient;
         this.currentPlayer = currentPlayer;
-        this.componentDeck = new LinkedList<>();
+        // this.controller = controller; // Remove if no longer needed
+    }
+
+    // Method to be called to redraw the ship display
+    public void refreshDisplay() {
+        console.printMessage("[DEBUG] Refreshing ship display due to network update..."); // Optional debug message
+        displayShip();
     }
 
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
 
-        // Inizializza il mazzo di componenti casuali
-        initializeComponentDeck();
-
         boolean buildingDone = false;
 
         //il primo elemento è sempre la cabina di pilotaggio
+        // create method in the controllet to generate a starting cabin
         Component currentComponent = createCabin(true);
         displayComponent(currentComponent);
         handlePlaceComponent(currentComponent);
@@ -47,10 +51,16 @@ public class ShipBuildingHandler {
             displayShip();
 
             // Se non abbiamo un componente corrente, peschiamone uno
-            if (currentComponent == null && !componentDeck.isEmpty()) {
-                currentComponent = componentDeck.poll();
+            if (currentComponent == null) {
+                try {
+                    currentComponent = simpleClient.pickComponentCard();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+
+
                 console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-            } else if (currentComponent == null && componentDeck.isEmpty()) {
+            } else if (currentComponent == null) {
                 console.printMessage("\nNo more components available!");
             }
 
@@ -66,43 +76,26 @@ public class ShipBuildingHandler {
                 case "p": // Place component
                     if (currentComponent != null) {
                         handlePlaceComponent(currentComponent);
-                        // Se piazzato con successo, il componente diventa null per pescarne uno nuovo
-                        currentComponent = null;
+                        currentComponent = null; // Component is now placed (or request sent)
                     } else {
                         console.printError("No component available to place!");
                     }
                     break;
-
-                case "b": // Reserve component
+                case "r": // Remove component from ship
+                    handleRemoveComponent(); // This now sends a network request
+                    break;
+                case "tc": // Rotate CURRENT (held) component
                     if (currentComponent != null) {
-                        if(handleReserveComponent(currentComponent)){
-                            currentComponent = null;
-                        }else{
-                            console.printError("Component cannot be reserved!");
-                        }
+                        currentComponent = handleRotateHeldComponent(currentComponent); // Client-side rotation
                     } else {
-                        console.printError("No component available to reserve!");
+                        console.printError("No current component to rotate!");
                     }
                     break;
-
-                case "pb": // Place booked component
-                    handlePlaceReservedComponent();
-                    break;
-                case "r": // Remove component
-                    handleRemoveComponent();
-                    break;
-                case "t": // Rotate component (t for turn)
-                    //handleRotateComponent();
-                    if (currentComponent != null) {
-                        currentComponent = handleRotateComponent(currentComponent);
-                    } else {
-                        console.printError("No component to rotate!");
-                    }
+                case "ts": // Rotate component ON SHIP
+                    handleRotateComponentOnShip(); // This now sends a network request
                     break;
                 case "s": // Skip current component
                     if (currentComponent != null) {
-                        //TODO il componente deve essere rinviato al server per essere rimesso nelle carte dispnibili
-                        componentDeck.add(currentComponent);
                         console.printMessage("Skipping " + currentComponent.getClass().getName());
                         currentComponent = null;
                     } else {
@@ -118,31 +111,15 @@ public class ShipBuildingHandler {
                     console.printMessage("Exiting ship building...");
                     buildingDone = true;
                     break;
+                case "debugskip": // DEBUG: Force skip ship building validation
+                    console.printMessage("[DEBUG] Forcing skip of ship validation. Proceeding to next phase.");
+                    buildingDone = true; // Exit the loop, bypassing validation
+                    break;
                 default:
                     console.printError("Invalid choice. Please try again.");
                     break;
             }
         }
-    }
-
-    private void handlePlaceReservedComponent() {
-        if(currentPlayer.getShip().getReservedComponents().isEmpty()){
-            System.out.println("--- No Reserved Components ---");
-            return;
-        }
-        System.out.println("--- Reserved Components ---");
-        for(Component c : currentPlayer.getShip().getReservedComponents()){
-            displayComponent(c);
-        }
-
-        System.out.println("Choose the component to place: ");
-        String sc = console.askQuestion("Enter component name");
-        Component cc = currentPlayer.getShip().getReservedComponents().stream().filter(c -> c.getClass().getSimpleName().equals(sc)).findFirst().orElse(null);
-        handlePlaceComponent(cc);
-    }
-
-    private boolean handleReserveComponent(Component currentComponent) {
-        return currentPlayer.getShip().reserveComponent(currentComponent);
     }
 
     private void displayComponent(Component currentComponent) {
@@ -204,26 +181,9 @@ public class ShipBuildingHandler {
         int gridHeight = height * 3;
         int gridWidth = width * 3;
         String[][] grid = new String[gridHeight][gridWidth];
-
         for (int i = 0; i < gridHeight; i++) {
             for (int j = 0; j < gridWidth; j++) {
-                //grid[i][j] = "    "; // Empty slot with 4 spaces
-                // Calculate the logical position this grid cell represents
-                int logicalY = i / 3;
-                int logicalX = j / 3;
-
-                // Check if this is the center cell of a 3x3 area (where components are placed)
-                if (i % 3 == 1 && j % 3 == 1) {
-                    Position pos = new Position(logicalX, logicalY);
-                    if (!ship.isPositionValid(pos)) {
-                        grid[i][j] = "[XX]"; // Mark invalid positions
-                    } else {
-                        grid[i][j] = "    "; // Valid empty slot
-                    }
-                } else {
-                    grid[i][j] = "    "; // Empty slot with 4 spaces
-                }
-
+                grid[i][j] = "    "; // Empty slot with 4 spaces
             }
         }
 
@@ -286,14 +246,13 @@ public class ShipBuildingHandler {
             }
             console.printMessage(rowStr.toString());
         }
-
         console.printMessage("------------------------------------");
-        console.printMessage("Legend: [XX] = Invalid position");    }
+    }
 
     private String getCoordinateHeader(int width) {
-        StringBuilder header = new StringBuilder();
+        StringBuilder header = new StringBuilder("      ");
         for (int i = 0; i < width; i++) {
-            header.append("      " + i + "     "); // Center the coordinate number in the 3-cell width
+            header.append("     " + i + "     "); // Center the coordinate number in the 3-cell width
         }
         return header.toString();
     }
@@ -312,27 +271,37 @@ public class ShipBuildingHandler {
             case StructuralModule sm -> "SM";
             default -> "??";
         };
+//        if (component instanceof Cabin) return "C";
+//        if (component instanceof SingleEngine) return "E";
+//        if (component instanceof DoubleEngine) return "E"; // Could be E2
+//        if (component instanceof SingleCannon) return "S"; // S for single cannon
+//        if (component instanceof DoubleCannon) return "D"; // D for double cannon
+//        if (component instanceof CargoHolds) return "H"; // H for holds
+//        if (component instanceof BatteryCompartment) return "B";
+//        if (component instanceof ShieldGenerator) return "G";
+//        if (component instanceof LifeSupportSystem) return "L";
+//        if (component instanceof StructuralModule) return "X"; // For structural
+//        return "?"; // Unknown
     }
 
 
-    private void printShipBuildingMenu(boolean hasComponent) {
-        console.printMessage("\nShip Building Options:");
-        if (hasComponent) {
-            console.printMessage(" (p) Place Current Component");
-            console.printMessage(" (t) Rotate Current Component");
-            console.printMessage(" (b) Reserve (Booked) Current Component");
-            console.printMessage(" (s) Skip Current Component");
+    private void printShipBuildingMenu(boolean hasCurrentComponent) {
+        console.printMessage("\n--- Ship Building Actions ---");
+        if (hasCurrentComponent) {
+            console.printMessage("P  - Place current component");
+            console.printMessage("TC - Rotate current component (clockwise)");
+            console.printMessage("S  - Skip current component (draw next)");
         } else {
-            console.printMessage(" (p) [No component available]");
-            console.printMessage(" (t) [No component available]");
-            console.printMessage(" (s) [No component available]");
+            console.printMessage("No component to place/rotate. Draw one or manage ship.");
         }
-        if(!currentPlayer.getShip().getReservedComponents().isEmpty()){
-            console.printMessage(" (pb) Place Current Component");
-        }
-        console.printMessage(" (r) Remove Component from Ship");
-        console.printMessage(" (v) Validate and Finish Ship");
-        console.printMessage(" (q) Quit Ship Building");
+        console.printMessage("R  - Remove component from ship");
+        console.printMessage("TS - Rotate component on ship");
+        console.printMessage("V  - Validate and Finish ship building");
+        console.printMessage("Q  - Quit ship building (temporary)");
+        console.printMessage("DS - Display Ship again");
+        console.printMessage("DC - Display Current component again");
+        console.printMessage("DEBUGSKIP - Force proceed (skip validation)"); // New debug option
+        console.printMessage("---------------------------");
         console.printMessage("Enter your choice: ");
     }
 
@@ -359,14 +328,20 @@ public class ShipBuildingHandler {
             }
         }
 
-        // 4. Call controller
-        boolean placementSuccess = controller.addComponentForPlayer(currentPlayer, component, pos);
-
-        if (placementSuccess) {
-            console.printMessage(component.getClass().getSimpleName() + " successfully placed at (" + pos.getX() + "," + pos.getY() + ").");
-        } else {
-            console.printError("Failed to place " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Check position and connections.");
-            handlePlaceComponent(component);
+        // 4. Call network client to send message
+        try {
+             simpleClient.placeComponent(component, pos);
+             console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
+             // Note: The actual success/failure message will come asynchronously
+             // via the ComponentPlacedMessage handled by simpleClient's run loop.
+             // The TUI should be updated based on that message.
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending placement request: " + e.getMessage());
+            // Optionally, allow the user to retry or handle the error
+            // handlePlaceComponent(component); // Example: Retry automatically (use with caution)
+        }
+        catch (Exception e) {
+            console.printError("Error sending placement request: " + e.getMessage());
         }
     }
 
@@ -381,63 +356,127 @@ public class ShipBuildingHandler {
             return;
         }
         Position posToRemove = new Position(x,y);
-        Component compToRemove = currentPlayer.getShip().getComponentAt(posToRemove);
+        // Component compToRemove = currentPlayer.getShip().getComponentAt(posToRemove);
 
-        if (compToRemove != null) {
-            boolean res = controller.removeComponentForPlayer(currentPlayer, compToRemove);
-            console.printMessage("Attempted to remove component at (" + x + "," + y + "): result: " + res);
-        } else {
-            console.printError("No component found at (" + x + "," + y + ").");
+        // Send remove request via network
+        try {
+            //simpleClient.removeComponent(posToRemove);
+            console.printMessage("Remove request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
+            // Success/failure message handled asynchronously by ComponentRemovedMessage
+        } catch (IllegalStateException e) {
+            console.printError("Error sending remove request: " + e.getMessage());
+        }
+
+        // if (compToRemove != null) {
+        //    boolean res = controller.removeComponentForPlayer(currentPlayer, compToRemove);
+        //    console.printMessage("Attempted to remove component at (" + x + "," + y + "): result: " + res);
+        // } else {
+        //    console.printError("No component found at (" + x + "," + y + ").");
+        // }
+    }
+
+    // Modified handleRotateComponent
+    // The 'component' argument is the one currently held by the player (drawn from deck), NOT the one on the ship.
+    // This method now handles rotating a component already PLACED on the ship.
+    private void handleRotateComponentOnShip() { 
+        console.printMessage("--- Rotate Component on Ship ---");
+        int x, y;
+        try {
+            x = Integer.parseInt(console.askQuestion("Enter X coordinate of component to rotate:"));
+            y = Integer.parseInt(console.askQuestion("Enter Y coordinate of component to rotate:"));
+        } catch (NumberFormatException e) {
+            console.printError("Invalid coordinates.");
+            return;
+        }
+        Position posToRotate = new Position(x, y);
+
+        // Check if component exists locally first (optional, server will validate anyway)
+        Component compToRotateCheck = currentPlayer.getShip().getComponentAt(posToRotate);
+        if (compToRotateCheck == null) {
+            console.printError("No component found at (" + x + "," + y + ") on your ship view.");
+            // return; // Allow sending anyway, server has final say
+        }
+
+        String rotationTypeStr = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+        RotationType rotationType;
+        switch (rotationTypeStr) {
+            case "c": rotationType = RotationType.CLOCKWISE; break;
+            case "a": rotationType = RotationType.ANTI_CLOCKWISE; break;
+            case "o": rotationType = RotationType.OPPOSITE; break;
+            default: console.printError("Invalid rotation type."); return;
+        }
+
+        try {
+            simpleClient.rotateComponent(posToRotate, rotationType);
+            console.printMessage("Rotation request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
+        } catch (IOException | IllegalStateException e) {
+            console.printError("Error sending rotation request: " + e.getMessage());
+        }
+        catch (Exception e) {
+            console.printError("Error sending rotation request: " + e.getMessage());
         }
     }
 
-    private Component handleRotateComponent(Component component) {
-        console.printMessage("--- Rotate Component ---");
-        String rotationType = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+    // This old method rotated the component the player was *holding*
+    private Component handleRotateHeldComponent(Component component) {
+        console.printMessage("--- Rotate Current Component ---");
+        String rotationTypeStr = console.askQuestion("Rotate (c)lockwise, (a)nti-clockwise, or (o)pposite?").toLowerCase();
+        
+        // This rotation happens client-side ONLY, before placing.
+        // We need the component rotation logic locally or accessible here.
+        // Let's assume Component class has rotate methods, or we call local utility.
+        // For now, we modify the component directly.
 
-        // Salva lo stato attuale del componente per verificare le modifiche
-        // Nota: potrebbe essere necessario implementare una funzione di copia profonda
-
-        switch (rotationType) {
+        RotationType rotationType = null;
+        switch (rotationTypeStr) {
             case "c":
-                component = controller.rotateComponentClockwise(currentPlayer, component);
-                //controller.rotateComponentClockwiseForPlayer(currentPlayer, component);
+                component.setComponentDirection(component.getComponentDirection().getClockwise());
+                // Also rotate connectors
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+                rotationType = RotationType.CLOCKWISE;
                 break;
             case "a":
-                component = controller.rotateComponentCounterClockwise(currentPlayer, component);
-                //controller.rotateComponentCounterClockwiseForPlayer(currentPlayer, component);
+                component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                rotationType = RotationType.ANTI_CLOCKWISE;
                 break;
             case "o":
-                component = controller.rotateComponentOpposite(currentPlayer, component);
-                //controller.rotateComponentOppositeForPlayer(currentPlayer, component);
+                component.setComponentDirection(component.getComponentDirection().getOpposite());
+                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                rotationType = RotationType.OPPOSITE;
                 break;
             default:
                 console.printError("Invalid rotation type.");
-                break;
+                return component; // Return unchanged component
         }
-
-        console.printMessage("Component rotated " +
-                (rotationType.equals("c") ? "clockwise" :
-                        rotationType.equals("a") ? "anti-clockwise" : "opposite"));
+        
+        console.printMessage("Component rotated locally " + rotationType + ". Ready to place.");
         return component;
     }
 
-
     private boolean handleValidateAndFinish() {
-        console.printMessage("Validating ship...");
-        boolean isValid = controller.validateShipForPlayer(currentPlayer);
-        if (isValid) {
-            console.printMessage("Ship is valid! Construction complete.");
-            // Here, you might want to signal the main TUI loop to change state
-            return true;
-        } else {
-            console.printError("Ship is NOT valid. Please check your design.");
-            // For example: Ensure all parts are connected, has engine and cabin, cannons not blocked.
-            return false;
+        console.printMessage("Sending validation request to server...");
+        try {
+            simpleClient.validateShip();
+            // We sent the request. Now we need to wait for the ShipValidationResultMessage.
+            // The TUI loop cannot simply proceed here.
+            // For now, we just return false and let the message handler update the state later.
+            console.printMessage("Validation request sent. Waiting for server response...");
+            // The actual result (isValid) is not available synchronously here.
+            // The TUI state needs to be updated when ShipValidationResultMessage arrives.
+            return false; // Indicate building is NOT done yet, waiting for server.
+    } catch (IOException e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
+        } catch (IllegalStateException e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
+        } catch (Exception e) {
+            console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
         }
     }
 
-    // Factory methods per creare i diversi tipi di componenti
     private Cabin createCabin(boolean isStarting) {
         Cabin cabin = new Cabin(isStarting);
         if(!isStarting){
@@ -445,104 +484,6 @@ public class ShipBuildingHandler {
             initializeRandomConnectors(cabin);
         }
         return cabin;
-    }
-
-    private SingleEngine createSingleEngine() {
-        SingleEngine engine = new SingleEngine();
-        initializeRandomConnectors(engine);
-        if(!engine.validateEngineDirection(engine.getComponentDirection())){
-            //System.out.println("   CONNETTORI NON VALIDI!");
-            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
-        }
-        return engine;
-    }
-
-    private DoubleEngine createDoubleEngine() {
-        DoubleEngine engine = new DoubleEngine();
-        initializeRandomConnectors(engine);
-        if(!engine.validateEngineDirection(engine.getComponentDirection())){
-            //System.out.println("   CONNETTORI NON VALIDI!");
-            engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
-        }
-        return engine;
-    }
-
-    private SingleCannon createSingleCannon() {
-        //il cannone punta con il costruttore sempre verso nord
-        SingleCannon cannon = new SingleCannon();
-        initializeRandomConnectors(cannon);
-        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            //System.out.println("   CONNETTORI NON VALIDI!");
-            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
-        }
-        return cannon;
-    }
-
-    private DoubleCannon createDoubleCannon() {
-        //il cannone punta con il costruttore sempre verso nord
-        DoubleCannon cannon = new DoubleCannon();
-        initializeRandomConnectors(cannon);
-        if(!cannon.validateFiringDirection(cannon.getComponentDirection())){
-            //System.out.println("   CONNETTORI NON VALIDI!");
-            cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
-        }
-        return cannon;
-    }
-
-    private CargoHolds createNormalDoubleCargoHolds() {
-        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-    private CargoHolds createNormalTripleCargoHolds() {
-        CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-
-    private CargoHolds createSpecialDoubleCargoHolds() {
-        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-    private CargoHolds createSpecialTripleCargoHolds() {
-        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.TRIPLE);
-        initializeRandomConnectors(cargoHold);
-        return cargoHold;
-    }
-
-    private BatteryCompartment createBatteryCompartment() {
-        BatteryCompartment battery = new BatteryCompartment();
-        initializeRandomConnectors(battery);
-        return battery;
-    }
-
-    private ShieldGenerator createShieldGenerator() {
-        ShieldGenerator shield = new ShieldGenerator();
-        initializeRandomConnectors(shield);
-        return shield;
-    }
-
-    private LifeSupportSystem createPurpleLifeSupportSystem() {
-        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
-        initializeRandomConnectors(lifeSupportSystem);
-        return lifeSupportSystem;
-    }
-    private LifeSupportSystem createBrownLifeSupportSystem() {
-        LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
-        initializeRandomConnectors(lifeSupportSystem);
-        return lifeSupportSystem;
-    }
-
-    private StructuralModule createStructuralModule() {
-        StructuralModule structuralModule = new StructuralModule();
-        initializeRandomConnectors(structuralModule);
-        return structuralModule;
-    }
-
-    private Direction getRandomDirection() {
-        Direction[] directions = Direction.values();
-        return directions[random.nextInt(directions.length)];
     }
 
     private void initializeRandomConnectors(Component component) {
@@ -564,31 +505,4 @@ public class ShipBuildingHandler {
         component.initializeConnectors(north, east, south, west);
     }
 
-
-
-    private void initializeComponentDeck() {
-        // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
-        // in base alle regole del gioco e alla rarità dei componenti.
-        List<Component> allComponents = new ArrayList<>();
-
-        // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
-        for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleEngine());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleEngine());
-        for (int i = 0; i < 8; i++) allComponents.add(createSingleCannon());
-        for (int i = 0; i < 4; i++) allComponents.add(createDoubleCannon());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
-        for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
-        for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
-        for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
-        for (int i = 0; i < 3; i++) allComponents.add(createPurpleLifeSupportSystem());
-        for (int i = 0; i < 5; i++) allComponents.add(createStructuralModule());
-
-        // Mescola la lista e converti in coda
-        Collections.shuffle(allComponents);
-        componentDeck = new LinkedList<>(allComponents);
-    }
 } 

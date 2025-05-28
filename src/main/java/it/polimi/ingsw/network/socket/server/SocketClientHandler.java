@@ -30,12 +30,18 @@ public class SocketClientHandler implements Runnable, VirtualView {
         startDispatcher();
     }
 
+    // Added getter for the controller
+    public GameController getController() {
+        return controller;
+    }
+
     // server -> client
     private void startDispatcher() {
         Thread t = new Thread(() -> {
             try {
                 while (true) {
                     GenericMessage msg = updates.take();
+                    System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Sending to " + socket.getRemoteSocketAddress() + ": " + msg.getClass().getSimpleName());
                     synchronized (out) {
                         out.writeObject(msg);
                         out.flush();
@@ -67,16 +73,17 @@ public class SocketClientHandler implements Runnable, VirtualView {
             while (!socket.isClosed()) {
                 Object obj = in.readObject();
                 if (obj instanceof GenericMessage g) {
+                    System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Received from " + socket.getRemoteSocketAddress() + ": " + g.getClass().getSimpleName());
                     g.handleServer(this); 
                 }
             }
         } catch (Exception ignored) {
+            System.out.println("[Server Thread: " + Thread.currentThread().getName() + "] Client disconnected or error: " + socket.getRemoteSocketAddress() + " " + ignored.getMessage());
         } finally {
             close();
         }
     }
 
-    @Override
     public int addPlayer(String username) {
         int min = 1; // use an atomic integer or a uuid
         int max = 1000; // use an atomic integer or a uuid
@@ -90,7 +97,6 @@ public class SocketClientHandler implements Runnable, VirtualView {
         server.broadcast(msg); 
     }
 
-    @Override
     public void close() {
         try {
             socket.close();

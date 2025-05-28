@@ -2,9 +2,10 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
+import java.io.Serializable;
 import java.util.*;
 
-public sealed abstract class Component permits BatteryCompartment, Cabin, Cannon, CargoHolds, Engine, LifeSupportSystem, ShieldGenerator, StructuralModule {
+public sealed abstract class Component implements Serializable permits BatteryCompartment, Cabin, Cannon, CargoHolds, Engine, LifeSupportSystem, ShieldGenerator, StructuralModule {
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
     protected boolean damaged; // Stato del componente (danneggiato o no)

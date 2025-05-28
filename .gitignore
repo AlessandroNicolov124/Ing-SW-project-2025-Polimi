@@ -79,3 +79,5 @@ fabric.properties
 
 target/*
 .DS_Store
+
+.vscode

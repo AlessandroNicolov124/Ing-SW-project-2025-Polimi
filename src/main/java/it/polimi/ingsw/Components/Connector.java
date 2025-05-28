@@ -1,8 +1,9 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
+import java.io.Serializable;
 
-public class Connector {
+public class Connector implements Serializable {
     private Direction direction;
     private ConnectorType connectorType;
 
