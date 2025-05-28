@@ -29,6 +29,21 @@ public class LoginController {
 
     private AppContext context;
 
+    private void showErrorDialog(String title, String message) {
+        try {
+            final Stage dialog = new Stage();
+            VBox dialogVbox = new VBox(20);
+            dialogVbox.getChildren().add(new Text(title));
+            dialogVbox.getChildren().add(new Text(message));
+            Scene dialogScene = new Scene(dialogVbox, 400, 200);
+            dialog.setScene(dialogScene);
+            dialog.setTitle(title);
+            dialog.show();
+        } catch (Exception e) {
+            System.err.println("Failed to show error dialog: " + e.getMessage());
+        }
+    }
+
     @FXML
     private void handleLogin(ActionEvent event) {
         // Dummy authentication: accept any non-empty username/password
@@ -37,9 +52,20 @@ public class LoginController {
                 String username = usernameField.getText();
                 String serverAddress = ipAddrField.getText();
                 int serverPort = Integer.parseInt(srvPortField.getText());
+                String connectionType = connTypeField.getText().toLowerCase();
 
+                if (!connectionType.equals("socket") && !connectionType.equals("rmi")) {
+                    showErrorDialog("Invalid Connection Type", 
+                        "Connection type must be either 'socket' or 'rmi'");
+                    return;
+                }
 
-                if ("socket".equals(connTypeField.getText())) {
+                context.setUsername(username);
+                context.setServerAddress(ipAddrField.getText());
+                context.setServerPort(Integer.parseInt(srvPortField.getText()));
+                context.setConnectionType(connTypeField.getText());
+
+                if ("socket".equals(connectionType)) {
                     SocketClient socketClient= new SocketClient(serverAddress, serverPort, context);
                     context.setClient(socketClient);
                     Thread t = new Thread(socketClient);
@@ -49,7 +75,7 @@ public class LoginController {
 
 
                 }
-                else if ("rmi".equals(connTypeField.getText())) {
+                else if ("rmi".equals(connectionType)) {
                     RmiClient rmiClient = RmiClient.connectTo(serverAddress, context);
                     if (rmiClient == null) {
                         throw new IllegalStateException("Failed to connect to RMI server.");
@@ -58,31 +84,31 @@ public class LoginController {
                     context.setPlayerId(context.getClient().addPlayer(username));
                 }
 
-                context.setUsername(String.valueOf(usernameField));
-                context.setServerAddress(ipAddrField.getText());
-                context.setServerPort(Integer.parseInt(srvPortField.getText()));
-                context.setConnectionType(connTypeField.getText());
-
+                System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());
 
                 GUIApp.showShipBuilder();
 
             } catch (Exception e) {
-                final Stage dialog = new Stage();
-                VBox dialogVbox = new VBox(20);
-                dialogVbox.getChildren().add(new Text("Something went wrong, please try again."));
-                dialogVbox.getChildren().add(new Text("Make sure you insert valid username, password and ip address and server port"));
-                Scene dialogScene = new Scene(dialogVbox, 300, 100);
-                dialog.setScene(dialogScene);
-                dialog.show();
-
-                e.printStackTrace();
+                showErrorDialog("Connection Failed", 
+                    "Could not connect to server.\n" + "Error: " + e.getMessage());
+                    e.printStackTrace();                
             }
         } else {
             // Optionally show error message
-            usernameField.setPromptText("Enter username");
-            connTypeField.setPromptText("Enter connection type (rmi/socket))");
-            ipAddrField.setPromptText("Enter ip address");
-            srvPortField.setPromptText("Enter port (socket: 7777; rmi: 1099)");
+            if (usernameField.getText().isEmpty()) {
+                usernameField.setPromptText("Enter username");
+            }
+            if (connTypeField.getText().isEmpty()) {
+                connTypeField.setPromptText("Enter connection type (rmi/socket)");
+            }
+            if (ipAddrField.getText().isEmpty()) {
+                ipAddrField.setPromptText("Enter ip address");
+            }
+            if (srvPortField.getText().isEmpty()) {
+                srvPortField.setPromptText("Enter port (socket: 7777; rmi: 1099)");
+            }
+            
+            showErrorDialog("Missing Information", "Please fill in all fields");
 
         }
     }

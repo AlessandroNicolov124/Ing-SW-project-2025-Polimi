@@ -4,15 +4,11 @@ package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.GUI.Controllers.LoginController;
 import it.polimi.ingsw.GUI.Controllers.ShipBuilderController;
-import it.polimi.ingsw.network.client.GeneralClientIf;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-
-import java.util.Objects;
 
 public class GUIApp extends Application {
 
