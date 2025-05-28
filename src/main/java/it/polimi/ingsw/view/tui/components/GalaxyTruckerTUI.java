@@ -329,11 +329,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     public void printTextMsg(String message)
     {
-        //TODO implement actual method
+        console.printMessage("[Server] " + message);
     }
 
     public boolean notifyNewPlayerPosition(int playerId, int position) {
-        //TODO implement actual method
+        updatePlayerPosition(playerId, position);
         return true;
     }
 
@@ -373,7 +373,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         if (positions.isEmpty()) {
             console.printMessage("No positions available currently. Please wait...");
         } else {
-            console.printMessage("Available positions: " + positions);
+            // If we're currently in position selection, show live updates
+            if (state == TuiState.CHOOSE_START_POSITION) {
+                console.printMessage("⟳ Available positions updated: " + positions);
+            } else {
+                console.printMessage("Available positions: " + positions);
+            }
         }
     }
     
@@ -383,26 +388,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     public void updatePlayerPosition(int playerId, int position) {
         console.printMessage("Player ID " + playerId + " has selected position " + position);
         
-        // When connected to server, check if we're the last player to select a position
-        if (socketClient != null) {
-            try {
-                socketClient.requestAvailablePositionsAsync();
-            } catch (IOException e) {
-                console.printError("Error checking remaining positions: " + e.getMessage());
-            }
-        } else {
-            try {
-                availablePositions = client.requestAvailablePositions();
-                if (availablePositions != null) {
-                    console.printMessage("Updated available positions: " + availablePositions);
-                }
-            } catch (UnsupportedOperationException e) {
-                // Client doesn't support synchronous position requests
-                console.printMessage("Position updates handled asynchronously.");
-            } catch (Exception e) {
-                console.printError("Error checking remaining positions: " + e.getMessage());
-            }
-        }
+        // Position updates and available positions will be automatically updated
+        // via server broadcasts, so no need to manually request them
     }
     
     /**

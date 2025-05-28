@@ -53,6 +53,11 @@ public class SelectPositionMessage implements ServerMessage {
             // Broadcast update to all clients
             handler.broadcast(new PositionUpdateMessage(playerId, player.getNickName(), position));
             
+            // Broadcast updated available positions to all clients
+            List<Integer> updatedAvailablePositions = handler.getController().getAvailableStartingPositions();
+            handler.broadcast(new AvailablePositionsResponseMessage(updatedAvailablePositions));
+            System.out.println("[Server] Broadcasting updated available positions to all clients: " + updatedAvailablePositions);
+            
             // Check if all players have positions now
             checkAllPlayersPositioned(handler);
         } else {

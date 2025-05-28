@@ -217,8 +217,15 @@ public class RmiServer extends UnicastRemoteObject
         boolean success = controller.setPlayerInitialStartingPosition(p, position);
         System.out.println("[ServerRMI] Player " + playerId + " selected position " + position + ": " + success);
         
-        // TODO: Add update message to notify other clients about position selection
-        // updates.offer(new PositionSelectedMessage(playerId, position, success));
+        if (success) {
+            // Broadcast position update to all clients
+            updates.offer(new it.polimi.ingsw.network.rmi.messages.PositionUpdateMessage(playerId, p.getNickName(), position));
+            
+            // Broadcast updated available positions to all clients
+            List<Integer> updatedAvailablePositions = controller.getAvailableStartingPositions();
+            updates.offer(new it.polimi.ingsw.network.rmi.messages.AvailablePositionsUpdateMessage(updatedAvailablePositions));
+            System.out.println("[ServerRMI] Broadcasting updated available positions to all clients: " + updatedAvailablePositions);
+        }
         
         return success;
     }
