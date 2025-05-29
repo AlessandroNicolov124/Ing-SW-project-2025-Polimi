@@ -16,8 +16,12 @@ import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BackgroundPosition;
+import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -42,108 +46,30 @@ public class ShipBuilderController implements GameStateUpdateListener {
     @FXML
     private Label statusLabel;
 
-    private Image draggedImage;
 
-    private static final int GRID_SIZE = 64;
+    private ImageView selectedImageView = null;
+    private Rectangle selectedHighlight = null; // For visual feedback
 
     private AppContext context;
     private Component component;
     private Position selectedPosition;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
 
-    @FXML
-    public void initialize() {
+    // level 2 board related measures [px]
+    private static final int SQUARE_SIZE = 123; // width/height of a square (pixels)
+    private static final int GRID_ROWS = 5;    // number of rows
+    private static final int GRID_COLS = 7;    // number of columns
+    private static final double GRID_START_X = 38; // pixel position where leftmost valid square starts
+    private static final double GRID_START_Y = 31; // pixel position where topmost valid square starts
 
-        //drawGrid();
-
-        anchorPane.setOnDragDropped(event -> {
-            Dragboard db = event.getDragboard();
-            boolean success = false;
-            if (db.hasImage()) {
-                // Snap to grid
-                int col = (int)(event.getX() / GRID_SIZE);
-                int row = (int)(event.getY() / GRID_SIZE);
-
-//                 Optionally: Check if the (row, col) is a valid position
-                if (isValidCell(row, col)) {
-                    double snappedX = col * GRID_SIZE;
-                    double snappedY = row * GRID_SIZE;
-
-                    ImageView placed = new ImageView(db.getImage());
-                    placed.setFitWidth(GRID_SIZE);
-                    placed.setFitHeight(GRID_SIZE);
-                    placed.setLayoutX(snappedX);
-                    placed.setLayoutY(snappedY);
-                    anchorPane.getChildren().add(placed);
-
-                    success = true;
-                }
-                success = true;
-            }
-            event.setDropCompleted(success);
-            event.consume();
-        });
-
-        anchorPane.setOnDragOver(event -> {
-            if (event.getGestureSource() != anchorPane && event.getDragboard().hasImage()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-            }
-            event.consume();
-        });
-
-
-        cardImage.setOnDragDetected(event -> {
-            if (cardImage.getImage() != null) {
-                Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
-                ClipboardContent content = new ClipboardContent();
-                content.putImage(cardImage.getImage());
-                db.setContent(content);
-                draggedImage = cardImage.getImage();
-            }
-            event.consume();
-        });
-    }
-
-    private void drawGrid() {
-        double width = anchorPane.getPrefWidth();
-        double height = anchorPane.getPrefHeight();
-
-        // Vertical lines
-        for (int x = 0; x <= width; x += GRID_SIZE) {
-            Line line = new Line(x, 0, x, height);
-            line.setStyle("-fx-stroke: lightgray; -fx-stroke-width: 1;");
-            anchorPane.getChildren().add(line);
-        }
-        // Horizontal lines
-        for (int y = 0; y <= height; y += GRID_SIZE) {
-            Line line = new Line(0, y, width, y);
-            line.setStyle("-fx-stroke: lightgray; -fx-stroke-width: 1;");
-            anchorPane.getChildren().add(line);
-        }
-    }
-
-    private boolean isValidCell(int row, int col) {
-        return true;
-    }
-
-    private void showErrorDialog(String title, String message) {
-        try {
-            final Stage dialog = new Stage();
-            VBox dialogVbox = new VBox(20);
-            dialogVbox.getChildren().add(new Text(title));
-            dialogVbox.getChildren().add(new Text(message));
-            Scene dialogScene = new Scene(dialogVbox, 300, 150);
-            dialog.setScene(dialogScene);
-            dialog.setTitle(title);
-            dialog.show();
-        } catch (Exception e) {
-            System.err.println("Failed to show error dialog: " + e.getMessage());
-        }
-    }
-
-    private void updateButtonStates() {
-        // implement logic to enable/disable buttons based on the current state
-    }
+    // true means valid square, false means no square
+    private static final boolean[][] VALID_SQUARES = {
+            {false, false, true,  false, true,  false, false},
+            {false, true,  true,  true,  true,  true,  false},
+            {true,  true,  true,  true,  true,  true,  true },
+            {true,  true,  true,  true,  true,  true,  true },
+            {true, true,  true,  false, true,  true,  true },
+    };
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
             Map.entry("BatteryCompartment", "/Images/tiles/GT-new_tiles_16_for web34.jpg"),
@@ -177,6 +103,147 @@ public class ShipBuilderController implements GameStateUpdateListener {
             Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
+
+
+    @FXML
+    public void initialize() {
+        // Set background image (replace with your path)
+        Image bgImage = new Image(getClass().getResource("/Images/cardboard/cardboard-1b.jpg").toExternalForm());
+        anchorPane.setBackground(new javafx.scene.layout.Background(
+                new javafx.scene.layout.BackgroundImage(
+                        bgImage,
+                        javafx.scene.layout.BackgroundRepeat.NO_REPEAT,
+                        javafx.scene.layout.BackgroundRepeat.NO_REPEAT,
+                        BackgroundPosition.CENTER,
+                        new javafx.scene.layout.BackgroundSize(
+                                937, 679, false, false, true, false
+                        )
+                )
+        ));
+
+        anchorPane.setOnMouseClicked(event -> {
+            // Only clear selection if clicking NOT on an image
+            if (event.getTarget() == anchorPane) {
+                if (selectedHighlight != null) {
+                    anchorPane.getChildren().remove(selectedHighlight);
+                    selectedHighlight = null;
+                }
+                selectedImageView = null;
+            }
+        });
+
+        // Draw only valid squares
+        for (int row = 0; row < GRID_ROWS; row++) {
+            for (int col = 0; col < GRID_COLS; col++) {
+                if (VALID_SQUARES[row][col]) {
+                    double x = GRID_START_X + col * SQUARE_SIZE;
+                    double y = GRID_START_Y + row * SQUARE_SIZE;
+                    Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
+                    rect.setFill(Color.TRANSPARENT);
+                    rect.setStroke(Color.WHITE);
+                    rect.setStrokeWidth(2.0);
+                    anchorPane.getChildren().add(rect);
+                }
+            }
+        }
+
+        // Drag-and-drop logic
+        cardImage.setOnDragDetected(event -> {
+            if (cardImage.getImage() != null) {
+                Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
+                ClipboardContent content = new ClipboardContent();
+                content.putImage(cardImage.getImage());
+                db.setContent(content);
+            }
+            event.consume();
+        });
+
+        anchorPane.setOnDragOver(event -> {
+            if (event.getGestureSource() != anchorPane && event.getDragboard().hasImage()) {
+                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            }
+            event.consume();
+        });
+
+        anchorPane.setOnDragDropped(event -> {
+            Dragboard db = event.getDragboard();
+            boolean success = false;
+            if (db.hasImage()) {
+                // Snap to nearest grid square
+                int col = (int) ((event.getX() - GRID_START_X) / SQUARE_SIZE);
+                int row = (int) ((event.getY() - GRID_START_Y) / SQUARE_SIZE);
+
+                // Check bounds
+                if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS && VALID_SQUARES[row][col]) {
+                    double snappedX = GRID_START_X + col * SQUARE_SIZE;
+                    double snappedY = GRID_START_Y + row * SQUARE_SIZE;
+
+                    ImageView dropped = new ImageView(db.getImage());
+                    dropped.setFitWidth(SQUARE_SIZE);
+                    dropped.setFitHeight(SQUARE_SIZE);
+                    dropped.setLayoutX(snappedX);
+                    dropped.setLayoutY(snappedY);
+                    dropped.getProperties().put("row", row);
+                    dropped.getProperties().put("col", col);
+                    dropped.setOnMouseClicked(mouseclick -> {
+                        selectImageView(dropped);
+                    });
+                    anchorPane.getChildren().add(dropped);
+
+
+                    Position newPosition = new Position(row, col);
+                    try {
+                        context.getClient().placeComponent(this.component, newPosition);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                        this.showErrorDialog("Error", "Communicatiion error, try again");
+                    }
+                    this.component = null;
+                    //cardImage = null;
+                    success = true;
+                }
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    private void showErrorDialog(String title, String message) {
+        try {
+            final Stage dialog = new Stage();
+            VBox dialogVbox = new VBox(20);
+            dialogVbox.getChildren().add(new Text(title));
+            dialogVbox.getChildren().add(new Text(message));
+            Scene dialogScene = new Scene(dialogVbox, 300, 150);
+            dialog.setScene(dialogScene);
+            dialog.setTitle(title);
+            dialog.show();
+        } catch (Exception e) {
+            System.err.println("Failed to show error dialog: " + e.getMessage());
+        }
+    }
+
+    private void selectImageView(ImageView imageView) {
+        if (selectedHighlight != null) {
+            anchorPane.getChildren().remove(selectedHighlight);
+        }
+        selectedImageView = imageView;
+        selectedHighlight = new Rectangle(
+                imageView.getLayoutX(), imageView.getLayoutY(),
+                SQUARE_SIZE, SQUARE_SIZE
+        );
+        selectedHighlight.setFill(Color.TRANSPARENT);
+        selectedHighlight.setStroke(Color.YELLOWGREEN);
+        selectedHighlight.setStrokeWidth(7);
+        anchorPane.getChildren().add(selectedHighlight);
+        selectedHighlight.toBack(); // so it doesn't cover the image
+    }
+
+    private void updateButtonStates() {
+        // implement logic to enable/disable buttons based on the current state
+    }
+
     public void setContext(AppContext context) {
         if (this.context != null){
             this.context.removeGameStateUpdateListener(this);
@@ -204,10 +271,19 @@ public class ShipBuilderController implements GameStateUpdateListener {
             statusLabel.setText("Error: No client connection");
             return;
         }
+
+        if (selectedImageView != null)
+        {
+            int row = (int) selectedImageView.getProperties().get("row");
+            int col = (int) selectedImageView.getProperties().get("col");
+            selectedPosition = new Position(row, col);
+        }
         
         if (selectedPosition != null) {
             try {
                 System.out.println("[ShipBuilder] Sending clockwise rotation request for position: " + selectedPosition);
+                selectedImageView.setRotate(selectedImageView.getRotate() + 90);
+                context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
                 context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
                 statusLabel.setText("Rotating component clockwise...");
             } catch (Exception e) {
@@ -236,11 +312,20 @@ public class ShipBuilderController implements GameStateUpdateListener {
             statusLabel.setText("Error: No client connection");
             return;
         }
-        
-        if (selectedPosition != null) {
+
+        if (selectedImageView != null)
+        {
+            int row = (int) selectedImageView.getProperties().get("row");
+            int col = (int) selectedImageView.getProperties().get("col");
+            selectedPosition = new Position(row, col);
+        }
+
+            if (selectedPosition != null) {
             try {
                 System.out.println("[ShipBuilder] Sending counter-clockwise rotation request for position: " + selectedPosition);
+                selectedImageView.setRotate(selectedImageView.getRotate() - 90);
                 context.getClient().rotateComponent(selectedPosition, RotationType.ANTI_CLOCKWISE);
+
                 statusLabel.setText("Rotating component counter-clockwise...");
             } catch (Exception e) {
                 System.err.println("[ShipBuilder] Error during counter-clockwise rotation: " + e.getMessage());
