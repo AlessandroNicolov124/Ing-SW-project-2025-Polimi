@@ -22,6 +22,7 @@ public class  GameController {
         //gameView.startGame();
         //Set private method??
     }
+    
     //TODO Consider instatiating a new player and returning it..
     public void addPlayer(Player player){
         gameModel.addPlayer(player);
