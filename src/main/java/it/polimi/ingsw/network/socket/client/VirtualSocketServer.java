@@ -99,6 +99,27 @@ public class VirtualSocketServer implements VirtualServer {
         // Response handled asynchronously by ShipValidationResultMessage
     }
 
+    // Method to request available positions asynchronously
+    public void requestAvailablePositionsAsync(int playerId) throws IOException {
+        System.out.println("[Client] Requesting available positions from server");
+        synchronized (out) {
+            out.writeObject(new GetAvailablePositionsMessage(playerId));
+            out.flush();
+        }
+    }
+
+    // Method to select a position asynchronously
+    public void selectPositionAsync(int playerId, int position) throws IOException {
+        if (position < 1 || position > 4) {
+            throw new IllegalArgumentException("Position must be between 1 and 4");
+        }
+        System.out.println("[Client] Sending position selection request: " + position);
+        synchronized (out) {
+            out.writeObject(new SelectPositionMessage(playerId, position));
+            out.flush();
+        }
+    }
+
     // Send a message to the server (synchronized to prevent concurrent writes from different threads if proxy is shared)
     private void send(GenericMessage msg) throws IOException {
         synchronized (out) { // Synchronize on the output stream for thread safety

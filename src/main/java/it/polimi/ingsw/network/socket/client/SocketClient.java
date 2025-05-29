@@ -110,31 +110,18 @@ public class SocketClient implements Runnable, GeneralClientIf {
         proxy.validateShip(playerId);
     }
 
-    // Method to request available positions asynchronously
     public void requestAvailablePositionsAsync() throws IOException {
         if (playerId == -1) {
             throw new IllegalStateException("Cannot request positions before player ID is assigned.");
         }
-        System.out.println("[Client] Requesting available positions from server");
-        synchronized (out) {
-            out.writeObject(new GetAvailablePositionsMessage(playerId));
-            out.flush();
-        }
+        proxy.requestAvailablePositionsAsync(playerId);
     }
     
-    // Method to select a position asynchronously
     public void selectPositionAsync(int position) throws IOException {
         if (playerId == -1) {
             throw new IllegalStateException("Cannot select position before player ID is assigned.");
         }
-        if (position < 1 || position > 4) {
-            throw new IllegalArgumentException("Position must be between 1 and 4");
-        }
-        System.out.println("[Client] Sending position selection request: " + position);
-        synchronized (out) {
-            out.writeObject(new SelectPositionMessage(playerId, position));
-            out.flush();
-        }
+        proxy.selectPositionAsync(playerId, position);
     }
     
     // Called by PositionResponseMessage
