@@ -487,8 +487,31 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
-    //@Override
-    //public void playerLeftMatch(UUID matchId, String playerName) {
-    // ............  to update the list of players after a player leaves , probably is ok with the lobbyHandler.updatePlayersInMatch() method
+    @Override
+    public void playerLeftMatch(String playerName) {
+        try {
+            console.printMessage("Player " + playerName + " left the match.");
+            lobbyHandler.updatePlayersInMatchAfterRemoval();
+        } catch (Exception e) {
+            console.printError("Error updating player list: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void hostChanged(String newHostName) {
+        console.printMessage("New host is now: " + newHostName);
+        try {
+            lobbyHandler.updateHostAfterRemoval();
+        } catch (Exception e) {
+            console.printError("Error updating host: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void matchStarted(UUID matchId, String message) {
+        console.printMessage("Match started: " + message);
+        this.state = TuiState.SHIP_BUILDING;
+    }
+
 
 }

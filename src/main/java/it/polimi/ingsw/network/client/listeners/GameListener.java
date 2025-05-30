@@ -22,4 +22,7 @@ public interface GameListener {
 
     void matchCreated(UUID matchId, String matchName, String playerName);
     void playerJoinedMatch(UUID matchId, String playerName);
+    void playerLeftMatch(String playerName);
+    void hostChanged(String newHostName);
+    void matchStarted(UUID matchId, String matchName);
 }

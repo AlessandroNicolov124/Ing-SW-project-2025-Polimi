@@ -64,6 +64,7 @@ public class LobbyHandler {
                 return handleMatchCommands(command);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             console.printError("Error executing command: " + e.getMessage());
             return true;
         }
@@ -186,14 +187,11 @@ public class LobbyHandler {
         }
     }
 
-    //TODO: fix logic to handle leaving the match, remember to update the host correctly
     private void leaveMatch() throws Exception {
         if (currentMatchId != null) {
             console.printMessage("Leaving match...");
             simpleClient.leaveMatch(currentMatchId);
             currentMatchId = null;
-            isHost = simpleClient.isPlayerHostById(currentMatchId);
-            playersInCurrentMatch = null;
             console.printMessage("Left the match. Returning to lobby menu.");
         }
     }
@@ -229,6 +227,33 @@ public class LobbyHandler {
             playersInCurrentMatch = simpleClient.getPlayersInMatch(currentMatchId);
             console.printMessage("Updated players in match: " + playersInCurrentMatch);
         } 
+    }
+
+    public void updatePlayersInMatchAfterRemoval() throws Exception {
+        if (currentMatchId != null) {
+            playersInCurrentMatch = simpleClient.getPlayersInMatch(currentMatchId);
+            // if host is removed i need to update the new host
+            if (playersInCurrentMatch != null && !playersInCurrentMatch.isEmpty()) {
+                isHost = simpleClient.isPlayerHostById(currentMatchId);
+            } else {
+                isHost = false;
+            }
+            if (playersInCurrentMatch.isEmpty()) {
+                console.printMessage("No players left in the match. Returning to lobby.");
+                currentMatchId = null;
+                isHost = false;
+                playersInCurrentMatch = null;
+            } else {
+                console.printMessage("Updated players in match: " + playersInCurrentMatch);
+            }
+        }
+    }
+
+    public void updateHostAfterRemoval() throws Exception {
+        if (currentMatchId != null) {
+            isHost = simpleClient.isPlayerHostById(currentMatchId);
+            console.printMessage("Your host status updated: " + (isHost ? "You are the host" : "You are not the host"));
+        }
     }
 
 

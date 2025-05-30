@@ -31,11 +31,11 @@ public interface VirtualServer extends Remote {
 
     List<String> getAvailableMatches() throws RemoteException;
 
-    UUID createMatch(String matchName, int playerId, String playerName) throws RemoteException;
+    UUID createMatch(String matchName, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
-    boolean joinMatch(UUID matchId, int playerId, String playerName) throws RemoteException;
+    boolean joinMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
-    boolean leaveMatch(UUID matchId, int playerId, String playerName) throws RemoteException;
+    boolean leaveMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
     boolean startMatch(UUID matchId, int playerId) throws RemoteException;
 

@@ -7,9 +7,12 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
 import it.polimi.ingsw.network.MatchStates;
+import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
+import it.polimi.ingsw.network.rmi.messages.HostChangedMessage;
 import it.polimi.ingsw.network.rmi.messages.MatchCreatedMessage;
+import it.polimi.ingsw.network.rmi.messages.MatchStartedMessage;
 import it.polimi.ingsw.network.rmi.messages.PickComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.PlayerAddedMessage;
 import it.polimi.ingsw.network.rmi.messages.PlayerJoinedMessage;
@@ -17,6 +20,7 @@ import it.polimi.ingsw.network.rmi.messages.RemoveComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.RotateComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 import it.polimi.ingsw.network.rmi.messages.ValidateShipMessage;
+import it.polimi.ingsw.network.rmi.messages.PlayerLeavedMessage;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 
 import java.rmi.RemoteException;
@@ -24,8 +28,10 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.server.Unreferenced;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -34,6 +40,7 @@ public class RmiServer extends UnicastRemoteObject
 
     private final LobbyManager lobbyManager;
     private final List<RmiClientIf> clients = new CopyOnWriteArrayList<>();
+    private final Map<UUID, List<GeneralClientIf>> clientsInMatch = new ConcurrentHashMap<>();
     private final BlockingQueue<UpdateMessage> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
@@ -45,7 +52,7 @@ public class RmiServer extends UnicastRemoteObject
         this.dispatcher = startDispatcher();
     }
 
-    // Thread which dispatches updates to all clients
+    // Thread which dispatches general updates to all clients
     private Thread startDispatcher() {
         Thread t = new Thread(() -> {
             try {
@@ -136,31 +143,39 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public UUID createMatch(String matchName, int playerId, String playerName) throws RemoteException {
-        Player hostPlayer = new Player(playerId, playerName, true);
-        GameMatch match = lobbyManager.createMatch(matchName, hostPlayer);
+    public UUID createMatch(String matchName, int playerId, String playerName, RmiClientIf client) throws RemoteException {
+        GameMatch match = lobbyManager.createMatch(matchName, playerId, playerName);
         System.out.println("[ServerRMI] Match created: " + matchName + " with host " + playerName);
+
+        this.clientsInMatch.computeIfAbsent(match.getMatchId(), k -> new CopyOnWriteArrayList<>()).add(client);
+
+        // Notify all clients about the new match
         updates.offer(new MatchCreatedMessage(match.getMatchId(), matchName, playerName));
+
         return match.getMatchId();
     }
 
+
     @Override
-    public boolean joinMatch(UUID matchId, int playerId, String playerName) throws RemoteException {
-        Player player = new Player(playerId, playerName, true);
-        boolean success = lobbyManager.joinMatch(matchId, player);
+    public boolean joinMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException {
+        boolean success = lobbyManager.joinMatch(matchId, playerId, playerName);
         if (success) {
-            GameMatch match = lobbyManager.findMatchById(matchId);
-            System.out.println("[ServerRMI] Player " + playerName + " joined match: " + match.getMatchName());
-            // consider a new strategy to notify all clients about the new player
-            // just for testing now, and also try to notify only the clients in the match not all the clients
-            for (RmiClientIf client : clients) {
-                try {
-                    client.showUpdate(new PlayerJoinedMessage(matchId, playerName));
-                } catch (RemoteException e) {
-                    clients.remove(client);
-                    System.out.println("[ServerRMI] Client disconnected: " + client.toString());
-                } catch (Exception e) {
-                    e.printStackTrace();
+            System.out.println("[ServerRMI] Player " + playerName + " joined match: " + matchId);
+
+            this.clientsInMatch.computeIfAbsent(matchId, k -> new CopyOnWriteArrayList<>()).add(client);
+
+            // Notify all the clients IN THE MATCH about the new player
+            List<GeneralClientIf> matchClients = clientsInMatch.get(matchId);
+            if (matchClients != null) {
+                for (GeneralClientIf c : matchClients) {
+                    try {
+                        c.showUpdate(new PlayerJoinedMessage(matchId, playerName));
+                    } catch (RemoteException e) {
+                        matchClients.remove(c);
+                        System.out.println("[ServerRMI] Client disconnected: " + c);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -168,25 +183,62 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public boolean leaveMatch(UUID matchId, int playerId, String playerName) throws RemoteException {
-        GameMatch match = lobbyManager.findMatchById(matchId);
-        if (match != null) {
-            Player player = match.getPlayerById(playerId);
-            if (player != null) {
-                boolean success = lobbyManager.leaveMatch(matchId, player);
-                if (success) {
-                    System.out.println("[ServerRMI] Player " + player.getNickName() + " left match");
+    public boolean leaveMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException {
+        boolean success = lobbyManager.leaveMatch(matchId, playerId);
+        if (success) {
+            System.out.println("[ServerRMI] Player " + playerName + " left match: " + matchId);
+
+            List<GeneralClientIf> matchClients = clientsInMatch.get(matchId);
+            if (matchClients != null) {
+                matchClients.remove(client);
+
+                for (GeneralClientIf c : matchClients) {
+                    try {
+                        c.showUpdate(new PlayerLeavedMessage(playerName));
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                     }
                 }
-                return success;
+
+                GameMatch match = lobbyManager.findMatchById(matchId);
+                if (match != null && !match.isEmpty()) {
+                    String newHostName = match.getHostPlayer().getNickName();
+                    for (GeneralClientIf c : matchClients) {
+                        try {
+                            c.showUpdate(new HostChangedMessage(newHostName));
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
             }
         }
-        return false;
+        return success;
     }
 
+    @Override
     public boolean startMatch(UUID matchId, int playerId) throws RemoteException {
         boolean success = lobbyManager.startMatch(matchId, playerId);
         if (success) {
             System.out.println("[ServerRMI] Match started by player " + playerId);
+
+            List<GeneralClientIf> matchClients = clientsInMatch.get(matchId);
+            if (matchClients != null) {
+                for (GeneralClientIf c : matchClients) {
+                    try {
+                        c.showUpdate(new MatchStartedMessage(matchId, "Match has started! Assemble your ships."));
+                    } catch (RemoteException e) {
+                        matchClients.remove(c);
+                        System.out.println("[ServerRMI] Client disconnected: " + c);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         }
         return success;
     }

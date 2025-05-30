@@ -18,14 +18,17 @@ public class GameMatch {
     private MatchStates matchState;
     private Player hostPlayer;
 
-    public GameMatch(String matchName, Player hostPlayer) {
+    public GameMatch(String matchName, int hostId, String hostName) {
         this.matchId = UUID.randomUUID();
         this.matchName = matchName;
         this.controller = new GameController();
         this.players = new ArrayList<>();
         this.matchState = MatchStates.WAITING_FOR_PLAYERS;
-        this.hostPlayer = hostPlayer;
-        addPlayer(hostPlayer);
+
+        Player host = new Player(hostId, hostName, true);
+        this.players.add(host);
+        this.hostPlayer = host;
+        this.controller.addPlayer(host);
     }
 
     // Getter
@@ -77,8 +80,8 @@ public class GameMatch {
         return this.players.size() >= 2 && matchState == MatchStates.WAITING_FOR_PLAYERS;
     }
 
-    public boolean isPlayerInMatch(Player player) {
-        return this.players.contains(player);
+    public boolean isPlayerInMatch(int playerId) {
+        return this.players.contains(getPlayerById(playerId));
     }
 
     public boolean isPlayerInMatchById(int playerId) {
@@ -90,25 +93,27 @@ public class GameMatch {
     }
 
     // Handling players in the match
-    public synchronized void addPlayer(Player player) {
+    public synchronized void addPlayer(int playerId, String playerName) {
         if (this.players.size() < MAX_PLAYERS && matchState == MatchStates.WAITING_FOR_PLAYERS) {
-            if (isPlayerInMatchById(player.getId())) {
-                System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " already in match " + matchName);
+            if (isPlayerInMatchById(playerId)) {
+                System.out.println("[GameMatch " + matchId + "] Player " + playerName + " already in match " + matchName);
                 return;
             }
             if (isFull() || matchState != MatchStates.WAITING_FOR_PLAYERS) {
-                System.out.println("[GameMatch " + matchId + "] Cannot add player " + player.getNickName() + ": Match is full or already started");
+                System.out.println("[GameMatch " + matchId + "] Cannot add player " + playerName + ": Match is full or already started");
                 return;
             }
+            Player player = new Player(playerId, playerName, true);
             this.players.add(player);
             this.controller.addPlayer(player);
-            System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " added to match " + matchName);
+            System.out.println("[GameMatch " + matchId + "] Player " + playerName + " added to match " + matchName);
         } else {
-            System.out.println("[GameMatch " + matchId + "] Cannot add player " + player.getNickName() + ": Match is full or already started");
+            System.out.println("[GameMatch " + matchId + "] Cannot add player " + playerName + ": Match is full or already started");
         }
     }
 
-    public boolean removePlayer(Player player) {
+    public boolean removePlayer(int playerId) {
+        Player player = getPlayerById(playerId);
         boolean removed = this.players.remove(player);
 
         if (!removed) {

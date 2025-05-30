@@ -42,19 +42,19 @@ public class GeneralServer implements LobbyManager {
 
     // Create and manage matches
     @Override
-    public GameMatch createMatch(String matchName, Player host) {
-        GameMatch newMatch = new GameMatch(matchName, host);
+    public GameMatch createMatch(String matchName, int hostId, String hostName) {
+        GameMatch newMatch = new GameMatch(matchName, hostId, hostName);
         matches.add(newMatch);
-        System.out.println("[GeneralServer] Match created: " + matchName + " with host " + host.getNickName());
+        System.out.println("[GeneralServer] Match created: " + matchName + " with host " + hostName);
         return newMatch;
     }
 
     @Override
-    public boolean joinMatch(UUID matchId, Player player) {
+    public boolean joinMatch(UUID matchId, int playerId, String playerName) {
         GameMatch match = findMatchById(matchId);
         if (match != null && !match.isFull() && match.getMatchState() == MatchStates.WAITING_FOR_PLAYERS) {
-            match.addPlayer(player);
-            System.out.println("[GeneralServer] Player " + player.getNickName() + " joined match " + match.getMatchName());
+            match.addPlayer(playerId, playerName);
+            System.out.println("[GeneralServer] Player " + playerName + " joined match " + match.getMatchName());
             return true;
         } else {
             System.out.println("[GeneralServer] Failed to join match " + matchId + ": Match is full or not found");
@@ -63,24 +63,24 @@ public class GeneralServer implements LobbyManager {
     }
 
     @Override
-    public boolean leaveMatch(UUID matchId, Player player) {
+    public boolean leaveMatch(UUID matchId, int playerId) {
         GameMatch match = findMatchById(matchId);
-        if (match != null) {
-            boolean removed = match.removePlayer(player);
-            if (removed) {
-                System.out.println("[GeneralServer] Player " + player.getNickName() + " left match " + match.getMatchName());
-                if (match.isEmpty()) {
-                    matches.remove(match);
-                    System.out.println("[GeneralServer] Match " + match.getMatchName() + " removed due to no players");
-                }
-            } else {
-                System.out.println("[GeneralServer] Player " + player.getNickName() + " could not leave match " + match.getMatchName());
-            }
-            return removed;
-        } else {
-            System.out.println("[GeneralServer] Match " + matchId + " not found for player " + player.getNickName());
+        if (match == null) {
+            System.out.println("[GeneralServer] Match " + matchId + " not found for player ID " + playerId);
             return false;
         }
+        Player player = match.getPlayerById(playerId);
+        boolean removed = match.removePlayer(playerId);
+        if (removed) {
+            System.out.println("[GeneralServer] Player " + player.getNickName() + " left match " + match.getMatchName());
+            if (match.isEmpty()) {
+                matches.remove(match);
+                System.out.println("[GeneralServer] Match " + match.getMatchName() + " removed due to no players");
+            }
+        } else {
+            System.out.println("[GeneralServer] Player " + player.getNickName() + " could not leave match " + match.getMatchName());
+        }
+        return removed;
     }
 
     @Override
@@ -146,6 +146,5 @@ public class GeneralServer implements LobbyManager {
         matches.removeIf(match -> match.getNumberOfPlayers() == 1 || match.getMatchState() == MatchStates.IN_PROGRESS);
         System.out.println("[GeneralServer] Removed all in-progress matches");
     }
-
 
 }

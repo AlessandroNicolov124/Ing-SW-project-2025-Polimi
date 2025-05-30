@@ -104,17 +104,17 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public UUID createMatch(String matchName) throws RemoteException {
-        return server.createMatch(matchName, playerId, localPlayerReference.getNickName());
+        return server.createMatch(matchName, playerId, localPlayerReference.getNickName(), this);
     }
 
     @Override
     public boolean joinMatch(UUID matchId) throws RemoteException {
-        return server.joinMatch(matchId, playerId, localPlayerReference.getNickName());
+        return server.joinMatch(matchId, playerId, localPlayerReference.getNickName(), this);
     }
 
     @Override
     public boolean leaveMatch(UUID matchId) throws RemoteException {
-        return server.leaveMatch(matchId, playerId, localPlayerReference.getNickName());
+        return server.leaveMatch(matchId, playerId, localPlayerReference.getNickName(), this);
     }
 
     @Override

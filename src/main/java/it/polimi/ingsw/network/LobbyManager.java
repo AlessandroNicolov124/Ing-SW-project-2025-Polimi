@@ -8,11 +8,11 @@ public interface LobbyManager {
 
     int generatePlayerId();
     
-    GameMatch createMatch(String matchName, Player host);
+    GameMatch createMatch(String matchName, int hostId, String hostName);
     
-    boolean joinMatch(UUID matchId, Player player);
+    boolean joinMatch(UUID matchId, int playerId, String playerName);
     
-    boolean leaveMatch(UUID matchId, Player player);
+    boolean leaveMatch(UUID matchId, int playerId);
 
     boolean startMatch(UUID matchId, int requestingPlayerId);
 
