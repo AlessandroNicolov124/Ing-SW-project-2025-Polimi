@@ -4,6 +4,8 @@ package it.polimi.ingsw.network.client;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.util.List;
+import java.util.UUID;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -14,7 +16,7 @@ import it.polimi.ingsw.network.socket.messages.RotationType;
 public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
-    int addPlayer(String username) throws RemoteException;
+    int createPlayer(String username) throws RemoteException;
 
     @Override
     void placeComponent(Component component, Position position) throws RemoteException;
@@ -36,5 +38,29 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void showUpdate(UpdateMessage msg) throws RemoteException;
+
+    @Override
+    UUID createMatch(String matchName) throws RemoteException;
+
+    @Override
+    List<String> getAvailableMatches() throws RemoteException;
+
+    @Override
+    boolean joinMatch(UUID matchId) throws RemoteException;
+
+    @Override
+    boolean leaveMatch(UUID matchId) throws RemoteException;
+
+    @Override
+    boolean startMatch(UUID matchId) throws RemoteException;
+
+    @Override
+    Player getLocalPlayer() throws RemoteException;
+
+    @Override
+    boolean isPlayerHostById(UUID matchId) throws RemoteException;
+
+    @Override
+    List<String> getPlayersInMatch(UUID matchId) throws RemoteException;
 
 }

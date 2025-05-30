@@ -4,14 +4,16 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
-import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -63,13 +65,10 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         t.start();
     }
   
-    public Player getPlayer() throws RemoteException {
-        return localPlayerReference;
-    }
-
     @Override
-    public int addPlayer(String username) throws RemoteException {
-        playerId = server.sendSrvAddPlayerReqAndWaitResp(username);
+    public int createPlayer(String username) throws RemoteException {
+        playerId = server.createPlayer(username);
+        localPlayerReference = new Player(playerId, username, true);
         return playerId;
     }
 
@@ -96,6 +95,46 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     @Override
     public void setLocalPlayer(Player player) {
         this.localPlayerReference = player;
+    }
+
+    @Override
+    public List<String> getAvailableMatches() throws RemoteException {
+        return server.getAvailableMatches();
+    }
+
+    @Override
+    public UUID createMatch(String matchName) throws RemoteException {
+        return server.createMatch(matchName, playerId, localPlayerReference.getNickName());
+    }
+
+    @Override
+    public boolean joinMatch(UUID matchId) throws RemoteException {
+        return server.joinMatch(matchId, playerId, localPlayerReference.getNickName());
+    }
+
+    @Override
+    public boolean leaveMatch(UUID matchId) throws RemoteException {
+        return server.leaveMatch(matchId, playerId, localPlayerReference.getNickName());
+    }
+
+    @Override
+    public boolean startMatch(UUID matchId) throws RemoteException {
+        return server.startMatch(matchId, playerId);
+    }
+     
+    @Override
+    public Player getLocalPlayer() throws RemoteException {
+        return localPlayerReference;
+    }
+
+    @Override
+    public boolean isPlayerHostById(UUID matchId) throws RemoteException {
+        return server.isPlayerHostById(matchId, playerId);
+    }
+
+    @Override
+    public List<String> getPlayersInMatch(UUID matchId) throws RemoteException {
+        return server.getPlayersInMatch(matchId);
     }
 
     @Override

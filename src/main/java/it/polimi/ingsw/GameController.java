@@ -19,13 +19,24 @@ public class  GameController {
 
     public void startGame(){
         gameModel.startGame();
+        System.out.println("[GameController] Game started with " + gameModel.getPlayers().size() + " players");
         //gameView.startGame();
         //Set private method??
     }
-    
+
+    public void startGame(List<Player> players) {
+        for (Player player : players) {
+            if (!isPlayerThere(player)) {
+                gameModel.addPlayer(player);
+            }
+        }
+        gameModel.startGame();
+    }
+
     //TODO Consider instatiating a new player and returning it..
     public void addPlayer(Player player){
         gameModel.addPlayer(player);
+        System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + player.getId() + ") added to game");
     }
 
     public void setCredits(Player player, int credits){

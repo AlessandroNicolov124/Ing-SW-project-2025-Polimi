@@ -11,5 +11,9 @@ public enum TuiState {
     CHOOSE_START_POSITION, // New state for choosing starting position
     WAIT_FOR_ALL_PLAYERS_POSITIONED, // New state for waiting after this player chose position
     RUNNING,              // execute game commands
-    TERMINATED            // exit
+    TERMINATED,            // exit
+
+    LOBBY_MENU,
+    WAIT_IN_MATCH
+
 }

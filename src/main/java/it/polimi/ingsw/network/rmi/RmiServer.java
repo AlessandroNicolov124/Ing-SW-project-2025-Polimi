@@ -4,11 +4,15 @@ import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.GameMatch;
+import it.polimi.ingsw.network.LobbyManager;
+import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.rmi.messages.ComponentPlacedMessage;
+import it.polimi.ingsw.network.rmi.messages.MatchCreatedMessage;
 import it.polimi.ingsw.network.rmi.messages.PickComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.PlayerAddedMessage;
+import it.polimi.ingsw.network.rmi.messages.PlayerJoinedMessage;
 import it.polimi.ingsw.network.rmi.messages.RemoveComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.RotateComponentMessage;
 import it.polimi.ingsw.network.rmi.messages.UpdateMessage;
@@ -20,24 +24,24 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.server.Unreferenced;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
 
-    private final GameController controller;
+    private final LobbyManager lobbyManager;
     private final List<RmiClientIf> clients = new CopyOnWriteArrayList<>();
     private final BlockingQueue<UpdateMessage> updates = new LinkedBlockingQueue<>();
     private final Thread dispatcher;
     private final Registry registry;
 
-    public RmiServer(GameController controller, Registry registry) throws RemoteException {
+    public RmiServer(LobbyManager lobbyManager, Registry registry) throws RemoteException {
         super();
-        this.controller = controller;
-        this.registry   = registry;
+        this.lobbyManager = lobbyManager;
+        this.registry = registry;
         this.dispatcher = startDispatcher();
     }
 
@@ -55,6 +59,7 @@ public class RmiServer extends UnicastRemoteObject
                             clients.remove(c);
                         }
                         catch (Exception e) {
+                            e.printStackTrace();
                         }
                     }
                 }
@@ -118,85 +123,211 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
-        int min = 1;
-        int max = 1000;
-        int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
-        Player p = new Player(newId, username, true);
-        controller.addPlayer(p);
-        //updates.offer("Player " + username + " joined (id = " + newId + ")");
-        System.out.println("[ServerRMI] Player " + username + " joined (id = " + newId + ")");
-        updates.offer(new PlayerAddedMessage(newId));
-        return newId;
+    public int createPlayer(String username) throws RemoteException {
+        int playerId = lobbyManager.generatePlayerId();
+        System.out.println("[ServerRMI] Player: " + username + " added with ID: " + playerId);
+        updates.offer(new PlayerAddedMessage(playerId, username));
+        return playerId;
     }
 
+    @Override
+    public List<String> getAvailableMatches() throws RemoteException {
+        return lobbyManager.getAvailableMatches();
+    }
+
+    @Override
+    public UUID createMatch(String matchName, int playerId, String playerName) throws RemoteException {
+        Player hostPlayer = new Player(playerId, playerName, true);
+        GameMatch match = lobbyManager.createMatch(matchName, hostPlayer);
+        System.out.println("[ServerRMI] Match created: " + matchName + " with host " + playerName);
+        updates.offer(new MatchCreatedMessage(match.getMatchId(), matchName, playerName));
+        return match.getMatchId();
+    }
+
+    @Override
+    public boolean joinMatch(UUID matchId, int playerId, String playerName) throws RemoteException {
+        Player player = new Player(playerId, playerName, true);
+        boolean success = lobbyManager.joinMatch(matchId, player);
+        if (success) {
+            GameMatch match = lobbyManager.findMatchById(matchId);
+            System.out.println("[ServerRMI] Player " + playerName + " joined match: " + match.getMatchName());
+            // consider a new strategy to notify all clients about the new player
+            // just for testing now, and also try to notify only the clients in the match not all the clients
+            for (RmiClientIf client : clients) {
+                try {
+                    client.showUpdate(new PlayerJoinedMessage(matchId, playerName));
+                } catch (RemoteException e) {
+                    clients.remove(client);
+                    System.out.println("[ServerRMI] Client disconnected: " + client.toString());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return success;
+    }
+
+    @Override
+    public boolean leaveMatch(UUID matchId, int playerId, String playerName) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match != null) {
+            Player player = match.getPlayerById(playerId);
+            if (player != null) {
+                boolean success = lobbyManager.leaveMatch(matchId, player);
+                if (success) {
+                    System.out.println("[ServerRMI] Player " + player.getNickName() + " left match");
+                }
+                return success;
+            }
+        }
+        return false;
+    }
+
+    public boolean startMatch(UUID matchId, int playerId) throws RemoteException {
+        boolean success = lobbyManager.startMatch(matchId, playerId);
+        if (success) {
+            System.out.println("[ServerRMI] Match started by player " + playerId);
+        }
+        return success;
+    }
+
+    //@Override
+    //public int sendSrvAddPlayerReqAndWaitResp(String username) throws RemoteException {
+    //    int min = 1;
+    //    int max = 1000;
+    //    int newId = ThreadLocalRandom.current().nextInt(min, max + 1);
+    //    Player p = new Player(newId, username, true);
+    //    controller.addPlayer(p);
+    //    //updates.offer("Player " + username + " joined (id = " + newId + ")");
+    //    System.out.println("[ServerRMI] Player " + username + " joined (id = " + newId + ")");
+    //    updates.offer(new PlayerAddedMessage(newId));
+    //    return newId;
+    //}
+
     public Component pickComponent(int playerId) throws RemoteException {
-        Player p = this.controller.getPlayerById(playerId);
-        Component c = this.controller.getCompFromDeck(p);
-        System.out.println("[ServerRMI] Picked component: " + c.getClass().getSimpleName());
-        updates.offer(new PickComponentMessage(playerId, c));
-        return c;
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS){
+            GameController controller = match.getController();
+            Player p = controller.getPlayerById(playerId);
+            if (p != null) {
+                Component c = controller.getCompFromDeck(p);
+                System.out.println("[ServerRMI] Picked component: " + c.getClass().getSimpleName());
+                updates.offer(new PickComponentMessage(playerId, c));
+                return c;
+            }
+        }
+        return null;
     }
 
     @Override
     public void placeComponent(int playerId, Component component, Position position) {
-        Player p = controller.getPlayerById(playerId);
-        boolean ok = controller.addComponentForPlayer(p, component, position);
-
-        System.out.println("[ServerRMI] Placed component: " + component.getClass().getSimpleName() + " at " + position);
-        updates.offer(new ComponentPlacedMessage(playerId, component, position, ok));
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
+            GameController controller = match.getController();
+            Player player = controller.getPlayerById(playerId);
+            if (player != null) {
+                boolean isValidPosition = controller.addComponentForPlayer(player, component, position);
+                System.out.println("[ServerRMI] Placed component: " + component.getClass().getSimpleName() + " at " + position);
+                updates.offer(new ComponentPlacedMessage(playerId, component, position, isValidPosition));
+            }
+        }
     }
 
     @Override
     public void removeComponent(int playerId, Position position) throws RemoteException {
-        Player p = controller.getPlayerById(playerId);
-        Component componentToRemove = p.getShip().getComponentAt(position);
-        boolean ok = false;
-        if (componentToRemove != null) {
-            ok = controller.removeComponentForPlayer(p, componentToRemove);
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
+            GameController controller = match.getController();
+            Player player = controller.getPlayerById(playerId);
+            if (player != null) {
+                Component componentToRemove = player.getShip().getComponentAt(position);
+                boolean isComponentRemoved = false;
+                if (componentToRemove != null) {
+                    isComponentRemoved = controller.removeComponentForPlayer(player, componentToRemove);
+                
+                }
+                System.out.println("[ServerRMI] Removed component at " + position + ": " + isComponentRemoved);
+                updates.offer(new RemoveComponentMessage(playerId, position, isComponentRemoved));
+            }
         }
-        System.out.println("[ServerRMI] Removed component at " + position + ": " + ok);
-        updates.offer(new RemoveComponentMessage(playerId, position, ok));
+
     }
 
 
     // modificare col compoenente sulla nave
     @Override
     public void rotateComponent(int playerId, Position position, RotationType rotationType) throws RemoteException {
-        Player p = controller.getPlayerById(playerId);
-        Component componentToRotate = p.getShip().getComponentAt(position);
-        boolean ok = false;
-        
-        if (componentToRotate != null) {
-            switch (rotationType) {
-                case CLOCKWISE:
-                    controller.rotateComponentClockwiseForPlayer(p, componentToRotate);
-                    ok = true;
-                    break;
-                case ANTI_CLOCKWISE:
-                    controller.rotateComponentCounterClockwiseForPlayer(p, componentToRotate);
-                    ok = true;
-                    break;
-                case OPPOSITE:
-                    controller.rotateComponentOppositeForPlayer(p, componentToRotate);
-                    ok = true;
-                    break;
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
+            GameController controller = match.getController();
+            Player player= controller.getPlayerById(playerId);
+            if (player != null) {
+                Component componentToRotate = player.getShip().getComponentAt(position);
+                boolean isValidRotation = false;
+
+                if (componentToRotate != null) {
+                    switch (rotationType) {
+                        case CLOCKWISE:
+                            controller.rotateComponentClockwiseForPlayer(player, componentToRotate);
+                            isValidRotation = true;
+                            break;
+                        case ANTI_CLOCKWISE:
+                            controller.rotateComponentCounterClockwiseForPlayer(player, componentToRotate);
+                            isValidRotation = true;
+                            break;
+                        case OPPOSITE:
+                            controller.rotateComponentOppositeForPlayer(player, componentToRotate);
+                            isValidRotation = true;
+                            break;
+                    }
+                }
+                System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
+                updates.offer(new RotateComponentMessage(playerId, position, rotationType, isValidRotation));
             }
         }
-        
-        
-        System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + ok);
-        updates.offer(new RotateComponentMessage(playerId, position, rotationType, ok));
     }
 
     @Override
     public void validateShip(int playerId) throws RemoteException {
-        Player p = controller.getPlayerById(playerId);
-        boolean isValid = controller.validateShipForPlayer(p);
-        String message = isValid ? "Ship is valid!" : "Ship validation failed.";
-        
-        System.out.println("[ServerRMI] Ship validation for player " + playerId + ": " + isValid);
-        updates.offer(new ValidateShipMessage(playerId, isValid, message));
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
+            GameController controller = match.getController();
+            Player p = controller.getPlayerById(playerId);
+            if (p != null) {
+                boolean isValid = controller.validateShipForPlayer(p);
+                String message = isValid ? "Ship is valid!" : "Ship validation failed";
+                
+                System.out.println("[RMI Server] Ship validation for player " + playerId + ": " + isValid);
+                updates.offer(new ValidateShipMessage(playerId, isValid, message));
+            }
+        }
+    }
+
+    @Override
+    public boolean isPlayerHostById(UUID matchId, int playerId) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match != null) {
+            Player player = match.getPlayerById(playerId);
+            if (player != null) {
+                boolean isHost = match.getHostPlayer().getId() == playerId;
+                System.out.println("[ServerRMI] Player " + player.getNickName() + " is host: " + isHost);
+                return isHost;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public List<String> getPlayersInMatch(UUID matchId) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match != null && match.getMatchState() == MatchStates.WAITING_FOR_PLAYERS) {
+            List<String> playerNames = match.getPlayers().stream()
+                    .map(Player::getNickName)
+                    .toList();
+            System.out.println("[ServerRMI] Players in match " + matchId + ": " + playerNames);
+            return playerNames;
+        }
+        return null;
     }
 
 }

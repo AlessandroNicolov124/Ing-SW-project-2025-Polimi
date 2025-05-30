@@ -6,6 +6,7 @@ import it.polimi.ingsw.network.socket.messages.RotationType;
 import it.polimi.ingsw.Position;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface GameListener {
     
@@ -19,4 +20,6 @@ public interface GameListener {
 
     void printTextMsg(String message);
 
+    void matchCreated(UUID matchId, String matchName, String playerName);
+    void playerJoinedMatch(UUID matchId, String playerName);
 }

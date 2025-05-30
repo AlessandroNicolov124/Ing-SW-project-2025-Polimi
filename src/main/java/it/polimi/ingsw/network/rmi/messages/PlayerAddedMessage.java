@@ -2,7 +2,7 @@ package it.polimi.ingsw.network.rmi.messages;
 
 import it.polimi.ingsw.network.client.listeners.GameListener;
 
-public record PlayerAddedMessage(int playerId) implements UpdateMessage {
+public record PlayerAddedMessage(int playerId, String username) implements UpdateMessage {
 
     @Override
     public void update(GameListener listener, int localPlayerId) {
