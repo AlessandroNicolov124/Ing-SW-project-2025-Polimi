@@ -204,7 +204,9 @@ public sealed abstract class Component implements Serializable permits BatteryCo
 
     public String getConnectionsString(){
         StringBuilder sb = new StringBuilder();
-        for(Connector c : connections){
+
+        for(Direction d : Direction.values()){
+        Connector c = getConnectorByDirection(d);
             switch(c.getConnectorType()){
                 case NullConnectorType n -> sb.append("N");
                 case SingleConnectorType n -> sb.append("S");
