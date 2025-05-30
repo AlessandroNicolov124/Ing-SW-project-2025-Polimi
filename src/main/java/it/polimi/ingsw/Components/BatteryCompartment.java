@@ -11,6 +11,13 @@ public final class BatteryCompartment extends Component {
         super();
     }
 
+    @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += type.toString().toLowerCase() + "_" + getConnectionsString();
+        return s;
+    }
+
     public BatteryCompartment(int maxCapacity, BatteryType type, int chargeLevel) {
         super();
         this.maxCapacity = maxCapacity;

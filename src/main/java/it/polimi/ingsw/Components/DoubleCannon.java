@@ -11,6 +11,14 @@ public final class DoubleCannon extends Cannon {
     }
 
     @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString().toLowerCase();
+        return s;
+    }
+
+
+    @Override
     public boolean fire() {
         if (!isCharged || damaged) {
             return false;

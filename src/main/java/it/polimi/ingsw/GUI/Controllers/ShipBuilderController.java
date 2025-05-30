@@ -38,6 +38,8 @@ public class ShipBuilderController implements GameStateUpdateListener {
     @FXML
     private Button pickComponentButton;
     @FXML
+    private Button pickFistComponentButton;
+    @FXML
     private Button rotateClockwiseButton;
     @FXML
     private Button rotateCounterClockwiseButton;
@@ -72,7 +74,28 @@ public class ShipBuilderController implements GameStateUpdateListener {
     };
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
-            Map.entry("BatteryCompartment", "/Images/tiles/GT-new_tiles_16_for web34.jpg"),
+            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_1.jpg"),
+//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_2.jpg"),
+//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_3.jpg"),
+//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_4.jpg"),
+            Map.entry("batterycompartment_double_DSDS", "/Images/tiles/batterycompartment_double_DSDS.jpg"),
+            Map.entry("batterycompartment_double_NNNU", "/Images/tiles/batterycompartment_double_NNNU.jpg"),
+            Map.entry("batterycompartment_double_NNNU_2", "/Images/tiles/batterycompartment_double_NNNU_2.jpg"),
+            Map.entry("batterycompartment_double_NUNU", "/Images/tiles/batterycompartment_double_NUNU.jpg"),
+            Map.entry("batterycompartment_double_UDDD", "/Images/tiles/batterycompartment_double_UDDD.jpg"),
+            Map.entry("batterycompartment_double_UDNN", "/Images/tiles/batterycompartment_double_UDNN.jpg"),
+            Map.entry("batterycompartment_double_UDSN", "/Images/tiles/batterycompartment_double_UDSN.jpg"),
+            Map.entry("batterycompartment_double_UNNS", "/Images/tiles/batterycompartment_double_UNNS.jpg"),
+            Map.entry("batterycompartment_double_UNNU", "/Images/tiles/batterycompartment_double_UNNU.jpg"),
+            Map.entry("batterycompartment_double_USDN", "/Images/tiles/batterycompartment_double_USDN.jpg"),
+            Map.entry("batterycompartment_double_USSS", "/Images/tiles/batterycompartment_double_USSS.jpg"),
+            Map.entry("batterycompartment_triple_DDSN", "/Images/tiles/batterycompartment_triple_DDSN.jpg"),
+            Map.entry("batterycompartment_triple_DNNN", "/Images/tiles/batterycompartment_triple_DNNN.jpg"),
+            Map.entry("batterycompartment_triple_DSNN", "/Images/tiles/batterycompartment_triple_DSNN.jpg"),
+            Map.entry("batterycompartment_triple_NNNS", "/Images/tiles/batterycompartment_triple_NNNS.jpg"),
+            Map.entry("batterycompartment_triple_SNDN", "/Images/tiles/batterycompartment_triple_SNDN.jpg"),
+            Map.entry("batterycompartment_triple_SSDN", "/Images/tiles/batterycompartment_triple_SSDN.jpg"),
+
             Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
             Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
             Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
@@ -444,7 +467,7 @@ public class ShipBuilderController implements GameStateUpdateListener {
 
     private String getComponentImgPath(Component c){
         if (c == null) return null;
-        return COMP_IMAGE_MAP.get(c.getClass().getSimpleName());
+        return COMP_IMAGE_MAP.get(c.getComponentString());
     }
 
     private ImageView createImageViewFor(Component component) {
