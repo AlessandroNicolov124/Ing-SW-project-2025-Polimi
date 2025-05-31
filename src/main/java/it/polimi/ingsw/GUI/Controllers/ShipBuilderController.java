@@ -504,11 +504,11 @@ public class ShipBuilderController implements GameStateUpdateListener {
         statusLabel.setText("Component placed successfully!");
         this.component = null;
         cardImage.setImage(null);
-        ImageView iv = createImageViewFor(component);
-        anchorPane.getChildren().add(iv);
-        cellViews.put(position, iv);
-        updateButtonStates();
-
+        //ImageView iv = createImageViewFor(component);
+        //anchorPane.getChildren().add(iv);
+        //cellViews.put(position, iv);
+        //updateButtonStates();
+        //TODO implement component drop here 
         
         refreshShipDisplay();
     }
