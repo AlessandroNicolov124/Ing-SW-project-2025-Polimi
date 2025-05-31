@@ -21,7 +21,7 @@ public class Player implements Serializable {
         this.id = id;
         this.nickName = nickName;
         this.active = active;
-        this.ship = new ShipBuilder(10, 10);
+        this.ship = new ShipBuilder(7, 5);
         this.readyToStart = false;
     }
 

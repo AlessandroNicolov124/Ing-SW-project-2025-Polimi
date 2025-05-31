@@ -213,8 +213,8 @@ public class ShipBuilderController implements GameStateUpdateListener {
                     });
                     anchorPane.getChildren().add(dropped);
 
-
-                    Position newPosition = new Position(row, col);
+                    // Be aware that col tells you the X coord. and row tells you the Y coord.
+                    Position newPosition = new Position(col, row);
                     try {
                         context.getClient().placeComponent(this.component, newPosition);
                     }
@@ -222,7 +222,7 @@ public class ShipBuilderController implements GameStateUpdateListener {
                         e.printStackTrace();
                         this.showErrorDialog("Error", "Communicatiion error, try again");
                     }
-                    this.component = null;
+                    //this.component = null;
                     //cardImage = null;
                     success = true;
                 }
@@ -413,11 +413,7 @@ public class ShipBuilderController implements GameStateUpdateListener {
             System.err.println("[ShipBuilder] Error picking component: " + e.getMessage());
             e.printStackTrace();
             showErrorDialog("Component pick failed", "Error: " + e.getMessage());
-            
-            this.component = null;
-            if (cardImage != null) {
-                cardImage.setImage(null);
-            }
+
             statusLabel.setText("Failed to pick component");
         }
     }
@@ -506,15 +502,13 @@ public class ShipBuilderController implements GameStateUpdateListener {
     public void gameComponentPlaced(Component component, Position position) {
         System.out.println("[ShipBuilder] Component placed: " + component.getClass().getSimpleName() + " at " + position);
         statusLabel.setText("Component placed successfully!");
-        
-        if (component.equals(this.component)) {
-            this.component = null;
-            cardImage.setImage(null);
-            ImageView iv = createImageViewFor(component);
-            anchorPane.getChildren().add(iv);
-            cellViews.put(position, iv);
-            updateButtonStates();
-        }
+        this.component = null;
+        cardImage.setImage(null);
+        ImageView iv = createImageViewFor(component);
+        anchorPane.getChildren().add(iv);
+        cellViews.put(position, iv);
+        updateButtonStates();
+
         
         refreshShipDisplay();
     }

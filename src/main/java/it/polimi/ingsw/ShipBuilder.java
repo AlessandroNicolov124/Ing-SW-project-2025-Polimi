@@ -8,14 +8,13 @@ import java.util.stream.Stream;
 
 public class ShipBuilder {
 
-    private Position startingPosition;
+    private final Position startingPosition = new Position(3, 2);
     private int width, height; //dimensioni plancia
     private Map<Component, Position> components;
     private boolean isAssembled;
     private Map<CrewType, Integer> crewCount = new HashMap<>(); // tiene conto del numero di umani e alieni sulla navicella
 
     public ShipBuilder(int width, int height) {
-        this.startingPosition = new Position(width/2, height/2); // Posizione iniziale
         this.components = new HashMap<>();
         this.isAssembled = false;
         this.width = width;
@@ -44,7 +43,7 @@ public class ShipBuilder {
         }
 
         // Se è il primo componente, deve essere posizionato nella posizione iniziale
-        if (components.isEmpty() && !position.equals(startingPosition)) {
+        if (components.isEmpty() && !position.equals(this.startingPosition)) {
             return false;
         }
 
