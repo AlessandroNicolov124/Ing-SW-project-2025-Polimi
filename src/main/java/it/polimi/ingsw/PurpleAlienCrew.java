@@ -15,14 +15,14 @@ public class PurpleAlienCrew extends Crew {
         return cabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
     }
 
-    public void applyAbility(ShipBuilder ship) {
-        // Adds +2 to fire power if ship already has fire power
-        if (ship.calculateFirePower() > 0) {
-            //ship.modifyFirePower(getCannonBonus());
-        }
-    }
+//    public void applyAbility(ShipBuilder ship) {
+//        // Adds +2 to fire power if ship already has fire power
+//        if (ship.calculateFirePower() > 0) {
+//            //ship.modifyFirePower(getCannonBonus());
+//        }
+//    }
 
-    public int getCannonBonus(){
-        return 2;
-    }
+//    public int getCannonBonus(){
+//        return 2;
+//    }
 }

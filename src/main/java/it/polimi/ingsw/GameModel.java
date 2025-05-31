@@ -325,7 +325,17 @@ public class GameModel {
     }
 
     private BatteryCompartment createBatteryCompartment() {
-        BatteryCompartment battery = new BatteryCompartment();
+        // Selezione casuale del tipo di batteria dall'enum
+        BatteryType[] types = BatteryType.values();
+        BatteryType randomType = types[(int)(Math.random() * types.length)];
+        int maxC;
+        if(randomType == BatteryType.DOUBLE){
+            maxC = 2;
+        }else{
+            maxC = 3;
+        }
+        BatteryCompartment battery = new BatteryCompartment(maxC, randomType,0);
+
         initializeRandomConnectors(battery);
         return battery;
     }

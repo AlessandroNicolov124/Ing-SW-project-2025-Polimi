@@ -15,16 +15,16 @@ public class BrownAlienCrew extends Crew {
         return cabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
     }
 
-    @Override
-    public void applyAbility(ShipBuilder ship) {
-    // Adds +2 to engine power if ship already has engine power
-//        if (ship.getEnginePower() > 0) {
-//            ship.modifyEnginePower(getEngineBonus());
-//        }
-    }
+//    @Override
+//    public void applyAbility(ShipBuilder ship) {
+//    // Adds +2 to engine power if ship already has engine power
+////        if (ship.getEnginePower() > 0) {
+////            ship.modifyEnginePower(getEngineBonus());
+////        }
+//    }
 
 
-    public int getEngineBonus(){
-        return 2;
-    }
+//    public int getEngineBonus(){
+//        return 2;
+//    }
 }
