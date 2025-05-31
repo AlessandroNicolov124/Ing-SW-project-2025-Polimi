@@ -195,12 +195,12 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     public void handleLocalComponentPlacement(Component component, Position position, boolean success) {
-        if (success && localPlayerReference != null) {
-            localPlayerReference.getShip().placeComponent(component, position);
-            if (listener != null) {
+        if (success) {
+            //localPlayerReference.getShip().placeComponent(component, position);
+            if (listener != null /*&& localPlayerReference != null*/) {
                 listener.componentPlaced(component, position);
-                //listener.displayRefresh();
             }
+
         }
     }
 
