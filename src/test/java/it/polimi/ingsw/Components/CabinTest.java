@@ -430,7 +430,7 @@ class CabinTest {
         @DisplayName("Test getComponentString for regular cabin")
         void testGetComponentStringForRegularCabin() {
             String result = cabin.getComponentString();
-            assertEquals("cabin_", result);
+            assertEquals("cabin_"+cabin.getConnectionsString(), result);
         }
 
         @Test

@@ -16,7 +16,7 @@ public final class NormalCargoHolds extends CargoHolds {
     }
 
     public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        String s = this.getClass().getSimpleName().toLowerCase() + "_" + this.getCapacity() +"_";
         s += getConnectionsString();
         return s;
     }

@@ -16,7 +16,7 @@ public final class SpecialCargoHolds extends CargoHolds {
 
     @Override
     public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        String s = this.getClass().getSimpleName().toLowerCase() + "_" + this.getCapacity() +"_";
         s += getConnectionsString();
         return s;
     }
