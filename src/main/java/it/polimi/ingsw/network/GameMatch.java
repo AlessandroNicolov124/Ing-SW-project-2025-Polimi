@@ -56,7 +56,7 @@ public class GameMatch {
         return this.matchState;
     }
 
-    public Player getHostPlayer() {
+    public synchronized Player getHostPlayer() {
         return this.hostPlayer;
     }
 
@@ -89,7 +89,7 @@ public class GameMatch {
     }
 
     public boolean isPlayerHostById(int playerId) {
-        return this.hostPlayer.getId() == playerId;
+        return this.hostPlayer != null && this.hostPlayer.getId() == playerId;
     }
 
     // Handling players in the match
@@ -106,41 +106,59 @@ public class GameMatch {
             Player player = new Player(playerId, playerName, true);
             this.players.add(player);
             this.controller.addPlayer(player);
+
+            if (hostPlayer == null) {
+                hostPlayer = player;
+                System.out.println("[GameMatch " + matchId + "] Player " + playerName + " became host (no previous host)");
+            } 
+
             System.out.println("[GameMatch " + matchId + "] Player " + playerName + " added to match " + matchName);
         } else {
             System.out.println("[GameMatch " + matchId + "] Cannot add player " + playerName + ": Match is full or already started");
         }
     }
 
-    public boolean removePlayer(int playerId) {
+    public synchronized boolean removePlayer(int playerId) {
         Player player = getPlayerById(playerId);
-        boolean removed = this.players.remove(player);
-
-        if (!removed) {
-            System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " not found in match " + matchName);
+        if (player == null) {
+            System.out.println("[GameMatch " + matchId + "] Player ID "
+                + playerId + " not found in match " + matchName);
             return false;
         }
 
-        if (removed && matchState == MatchStates.WAITING_FOR_PLAYERS) {
-            if (player.equals(this.hostPlayer) && !players.isEmpty()) {
-                this.hostPlayer = players.get(0);
-                System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " left. New host is " + hostPlayer.getNickName());
-            }
-            System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " removed from match " + matchName);
-        } else {
-            System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " could not be removed: Match is in progress or player not found");
+        boolean wasHost = isPlayerHostById(playerId);
+        boolean removed = this.players.remove(player);
+
+        if (!removed) {
+            System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " could not be removed from match " + matchName);
+            return false;
         }
+
+        System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " removed from match " + matchName);
+
+        if (players.isEmpty()) {
+            this.hostPlayer = null;
+            System.out.println("[GameMatch " + matchId + "] Match is now empty, no host assigned");
+        } else if (wasHost) {
+            this.hostPlayer = players.get(0);
+            System.out.println("[GameMatch " + matchId + "] New host assigned: " + hostPlayer.getNickName() + " (ID: " + hostPlayer.getId() + ")");
+        }
+
         return removed;
     }
 
     // Control match state
     public synchronized void startMatch() {
-        if (canStartMatch()) {
-            this.matchState = MatchStates.IN_PROGRESS;
-            this.controller.startGame(this.players);
-            System.out.println("[GameMatch " + matchId + "] Match " + matchName + " started with players: " + players);
+        if (matchState == MatchStates.WAITING_FOR_PLAYERS && players.size() >= 2) {
+            matchState = MatchStates.IN_PROGRESS;
+            
+            if (controller != null) {
+                controller.startGame();
+            }
+            
+            System.out.println("[GameMatch " + matchId + "] Match " + matchName + " started with " + players.size() + " players");
         } else {
-            System.out.println("[GameMatch " + matchId + "] Cannot start match " + matchName + ": Not enough players or already started");
+            System.out.println("[GameMatch " + matchId + "] Cannot start match: insufficient players or wrong state");
         }
     }
 

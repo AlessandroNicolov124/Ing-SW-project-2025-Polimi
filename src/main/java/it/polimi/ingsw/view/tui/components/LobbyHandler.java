@@ -1,6 +1,8 @@
 package it.polimi.ingsw.view.tui.components;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -10,13 +12,17 @@ public class LobbyHandler {
     private final int playerId;
     private UUID currentMatchId;
     private boolean isHost;
+    private String username;
     private List<String> availableMatches;
     private List<String> playersInCurrentMatch;
 
-    public LobbyHandler(ConsoleManager console, GeneralClientIf simpleClient, int playerId) {
+    public LobbyHandler(ConsoleManager console, GeneralClientIf simpleClient, int playerId, String username) {
         this.console = console;
         this.simpleClient = simpleClient;
         this.playerId = playerId;
+        this.username = username;
+        this.availableMatches = new ArrayList<>();
+        this.playersInCurrentMatch = new ArrayList<>();
     }
 
     public boolean handleLobbyMenu() {
@@ -44,14 +50,11 @@ public class LobbyHandler {
         } else {
             console.printMessage("Current Match ID: " + currentMatchId);
             console.printMessage("Role: " + (isHost ? "Host" : "Player"));
-            if (playersInCurrentMatch != null) {
-                console.printMessage("Players in match: " + playersInCurrentMatch);
-            }
+            console.printMessage("Players in match: " + playersInCurrentMatch);
             console.printMessage("1. Leave match");
-            if (isHost) {
-                console.printMessage("2. Start match (requires at least 2 players)");
-            }
-            console.printMessage("quit. Exit application");
+            console.printMessage("2. Refresh menu");
+            console.printMessage("3. Start match (requires at least 2 players)");
+            console.printMessage("4. quit. Exit application");
         }
         console.printMessage("Enter command: ");
     }
@@ -99,14 +102,14 @@ public class LobbyHandler {
                 leaveMatch();
                 break;
             case "2":
+                showLobbyMenu();
+                break;
+            case "3":
                 if (isHost) {
                     startMatch();
                 } else {
                     console.printError("Only the host can start the match.");
                 }
-                break;
-            case "help":
-                showLobbyMenu();
                 break;
             case "quit":
                 if (currentMatchId != null) {
@@ -115,24 +118,14 @@ public class LobbyHandler {
                 simpleClient.close();
                 return false;
             default:
-                console.printError("Unknown command. Available commands: 1" + (isHost ? ", 2" : "") + ", help, quit");
+                console.printError("Unknown command. Available commands: 1, 2, 3, quit");
         }
         return true;
     }
 
     private void listAvailableMatches() throws Exception {
         console.printMessage("Requesting available matches...");
-        availableMatches = simpleClient.getAvailableMatches();
-        if (availableMatches == null || availableMatches.isEmpty()) {
-            console.printMessage("No available matches found.");
-            availableMatches = null;
-        } else {
-            console.printMessage("Available matches:");
-
-            for (String match : availableMatches) {
-                console.printMessage(match);
-            }
-        }
+        simpleClient.getAvailableMatches();
     }
 
     private void createNewMatch() throws Exception {
@@ -142,10 +135,7 @@ public class LobbyHandler {
             return;
         }
         console.printMessage("Creating match: " + matchName);
-        UUID matchId = simpleClient.createMatch(matchName);
-        this.currentMatchId = matchId;
-        this.isHost = simpleClient.isPlayerHostById(matchId); 
-        this.playersInCurrentMatch = simpleClient.getPlayersInMatch(matchId);
+        simpleClient.createMatch(matchName, playerId, username);
     }
 
     private void joinMatch() throws Exception {
@@ -172,10 +162,7 @@ public class LobbyHandler {
                 UUID matchId = UUID.fromString(matchIdStr);
                 
                 console.printMessage("Joining match: " + selectedMatch);
-                simpleClient.joinMatch(matchId);
-                this.currentMatchId = matchId;
-                this.isHost = simpleClient.isPlayerHostById(matchId);
-                this.playersInCurrentMatch = simpleClient.getPlayersInMatch(matchId);
+                simpleClient.joinMatch(matchId, playerId, username);
 
             } else {
                 console.printError("Invalid match number.");
@@ -190,13 +177,10 @@ public class LobbyHandler {
     private void leaveMatch() throws Exception {
         if (currentMatchId != null) {
             console.printMessage("Leaving match...");
-            simpleClient.leaveMatch(currentMatchId);
-            currentMatchId = null;
-            console.printMessage("Left the match. Returning to lobby menu.");
+            simpleClient.leaveMatch(currentMatchId, playerId, username);
         }
     }
 
-    // TODO: modify logic to handle starting the match
     private void startMatch() throws Exception {
         if (currentMatchId != null && isHost) {
             int playerCount;
@@ -212,48 +196,106 @@ public class LobbyHandler {
             }
             
             console.printMessage("Starting match with " + playerCount + " players...");
-            simpleClient.startMatch(currentMatchId);
+            simpleClient.startMatch(currentMatchId, playerId, username);
         } else {
             console.printError("Cannot start match: not the host or no active match.");
         }
     }
 
-    public void updateAvailableMatches() throws Exception {
-        availableMatches = simpleClient.getAvailableMatches();
+        public void matchCreatedCallback(String matchName, UUID matchId, boolean isHost, String playerName, int playerId) {
+            String matchNameParsed = matchId.toString() + ": " + matchName;  
+            if (this.playerId != playerId) {
+                if (!this.availableMatches.contains(matchNameParsed)) {
+                    this.availableMatches.add(matchNameParsed);
+                }
+                return;
+            }
+
+            this.currentMatchId = matchId;
+            this.isHost = isHost;
+            this.playersInCurrentMatch.clear();
+            this.playersInCurrentMatch.add(playerName);
+
+            console.printMessage("Match created successfully: " + matchName);
+            console.printMessage("You are now in match: " + matchName + (isHost ? " (as Host)" : ""));
+            showLobbyMenu();     
+        }
+
+
+    public void setAvailableMatches(List<String> matches) {
+        if (matches == null || matches.isEmpty()) {
+            console.printMessage("No available matches found.");
+            this.availableMatches.clear();
+        } else {
+            this.availableMatches = new ArrayList<>(matches);
+            console.printMessage("Available matches:");
+            for (int i = 0; i < availableMatches.size(); i++) {
+                console.printMessage((i + 1) + ". " + availableMatches.get(i));
+            }
+        }
+        showLobbyMenu();
     }
     
-    public void updatePlayersInMatch() throws Exception {
-        if (currentMatchId != null) {
-            playersInCurrentMatch = simpleClient.getPlayersInMatch(currentMatchId);
-            console.printMessage("Updated players in match: " + playersInCurrentMatch);
-        } 
+    public void playerJoinedMatchCallback(UUID matchId, String playerName) {
+        if (currentMatchId == null) {
+            currentMatchId = matchId;
+            playersInCurrentMatch.clear();
+        }
+        if (!currentMatchId.equals(matchId)) return;
+
+        if (!playersInCurrentMatch.contains(playerName)) {
+            playersInCurrentMatch.add(playerName);
+        }
+        console.printMessage("Player " + playerName + " has joined the match.");
+        showLobbyMenu();
     }
 
-    public void updatePlayersInMatchAfterRemoval() throws Exception {
-        if (currentMatchId != null) {
-            playersInCurrentMatch = simpleClient.getPlayersInMatch(currentMatchId);
-            // if host is removed i need to update the new host
-            if (playersInCurrentMatch != null && !playersInCurrentMatch.isEmpty()) {
-                isHost = simpleClient.isPlayerHostById(currentMatchId);
-            } else {
-                isHost = false;
-            }
-            if (playersInCurrentMatch.isEmpty()) {
-                console.printMessage("No players left in the match. Returning to lobby.");
-                currentMatchId = null;
-                isHost = false;
-                playersInCurrentMatch = null;
-            } else {
-                console.printMessage("Updated players in match: " + playersInCurrentMatch);
-            }
+
+    public void playerLeftMatchCallback(UUID matchId, int playerId, String playerName) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
         }
+        boolean me = (playerId == this.playerId);
+        playersInCurrentMatch.remove(playerName);
+        console.printMessage("Player " + playerName + " has left the match.");
+
+        if (me) {
+            currentMatchId = null;
+            isHost = false;
+            playersInCurrentMatch.clear();
+        }
+
+        showLobbyMenu();
+    }   
+
+    public void updateHostCallback(UUID matchId, int newHostId, String newHostName) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
+        }
+        isHost = (newHostId == this.playerId);
+        console.printMessage(
+            "The new host is now: " + newHostName + (isHost ? " — you are now the host." : ""));
+
+        showLobbyMenu();
     }
 
-    public void updateHostAfterRemoval() throws Exception {
-        if (currentMatchId != null) {
-            isHost = simpleClient.isPlayerHostById(currentMatchId);
-            console.printMessage("Your host status updated: " + (isHost ? "You are the host" : "You are not the host"));
+    public void playersInMatchCallback(UUID matchId, List<String> playerNames, int hostId) {
+        currentMatchId = matchId;
+        playersInCurrentMatch.clear();
+        playersInCurrentMatch.addAll(playerNames);
+
+        isHost = (matchId != null && hostId == playerId);
+
+        showLobbyMenu();
+    }
+
+    public void matchStartedCallback(UUID matchId, String username) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
         }
+        console.printMessage("Match started by: " + username + "! Assemble your ship!");
+        // The ship building phase will not be seen until a user will press an input
+        // this is a bit annoying, maybe a loading phase would be better
     }
 
 

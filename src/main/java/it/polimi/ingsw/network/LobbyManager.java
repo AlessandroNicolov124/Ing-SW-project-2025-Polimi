@@ -1,12 +1,14 @@
 package it.polimi.ingsw.network;
 
-import it.polimi.ingsw.Player;
+import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.messages.ResponseMessage;
+
 import java.util.List;
 import java.util.UUID;
 
 public interface LobbyManager {
 
-    int generatePlayerId();
+    int generatePlayerId(GeneralClientIf client);
     
     GameMatch createMatch(String matchName, int hostId, String hostName);
     
@@ -22,10 +24,22 @@ public interface LobbyManager {
     
     GameMatch findMatchById(UUID matchId);
     
-    void removeMatch(UUID matchId, int playerId);
-
     void removeEmptyMatches();
 
     void removeInProgressMatch();
+
+    // Methods for managing clients
+
+    void addClientToMatch(UUID matchId, GeneralClientIf client);
+    
+    void removeClientFromMatch(UUID matchId, GeneralClientIf client);
+    
+    List<GeneralClientIf> getClientsInMatch(UUID matchId);
+    
+    void broadcastToAll(ResponseMessage responseMessage);
+    
+    void multicastToMatch(UUID matchId, ResponseMessage responseMessage);
+
+    void multicastToMatchExceptOne(UUID matchId, ResponseMessage responseMessage, GeneralClientIf client);
 
 }

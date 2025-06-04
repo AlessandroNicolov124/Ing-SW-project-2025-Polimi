@@ -90,6 +90,10 @@ public class ConsoleManager {
         return scanner.nextLine().trim();
     }
 
+    public Scanner getScanner() {
+        return scanner;
+    }
+
     public void close() {
         scanner.close();
     }

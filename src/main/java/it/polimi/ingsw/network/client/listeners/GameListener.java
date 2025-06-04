@@ -10,6 +10,8 @@ import java.util.UUID;
 
 public interface GameListener {
     
+    void playerCreated(int playerId, String playerName);
+    
     void displayRefresh();
     void componentPlaced(Component component, Position position);
     void componentRemoved(Position position);
@@ -20,9 +22,11 @@ public interface GameListener {
 
     void printTextMsg(String message);
 
-    void matchCreated(UUID matchId, String matchName, String playerName);
+    void matchCreated(UUID matchId, String matchName, String playerName, int playerId);
     void playerJoinedMatch(UUID matchId, String playerName);
-    void playerLeftMatch(String playerName);
-    void hostChanged(String newHostName);
-    void matchStarted(UUID matchId, String matchName);
+    void playerLeftMatch(UUID matchId, int playerId, String playerName);
+    void updateAvailableMatches(List<String> matchNames);
+    void updateHost(UUID matchId, int playerId, String playerName);
+    void matchStarted(UUID matchId, String username);
+    void playersInMatch(UUID matchId, List<String> players, int hostId);
 }

@@ -2,7 +2,6 @@ package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.socket.messages.RotationType;
 
@@ -27,7 +26,7 @@ public interface VirtualServer extends Remote {
     
     void validateShip(int playerId) throws RemoteException;
 
-    int createPlayer(String username) throws RemoteException;
+    int createPlayer(String username, RmiClientIf client) throws RemoteException;
 
     List<String> getAvailableMatches() throws RemoteException;
 
@@ -37,9 +36,9 @@ public interface VirtualServer extends Remote {
 
     boolean leaveMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
-    boolean startMatch(UUID matchId, int playerId) throws RemoteException;
+    boolean startMatch(UUID matchId, int playerId, String username) throws RemoteException;
 
-    boolean isPlayerHostById(UUID matchId, int playerId) throws RemoteException;
+    int getHostPlayerId(UUID matchId, int playerId) throws RemoteException;
 
     List<String> getPlayersInMatch(UUID matchId) throws RemoteException;
 

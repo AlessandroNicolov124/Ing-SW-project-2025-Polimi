@@ -1,0 +1,38 @@
+package it.polimi.ingsw.network.messages.lobby;
+
+import java.util.UUID;
+
+import it.polimi.ingsw.network.client.listeners.GameListener;
+import it.polimi.ingsw.network.messages.ResponseMessage;
+
+public class LeaveMatchResponse implements ResponseMessage {
+
+    private static final long serialVersionUID = 1L;
+    private final UUID matchId;
+    private final String playerName;
+    private final int playerId;
+
+    public LeaveMatchResponse(UUID matchId, int playerId, String playerName) {
+        this.matchId = matchId;
+        this.playerName = playerName;
+        this.playerId = playerId;
+    }
+
+    public UUID getMatchId() {
+        return matchId;
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public int getPlayerId() {
+        return playerId;
+    }
+
+    @Override
+    public void handleClient(GameListener listener) {
+        listener.playerLeftMatch(matchId, playerId, playerName);
+    }
+    
+}

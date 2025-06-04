@@ -24,7 +24,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private String connectionType;
     private String serverAddress;
     private int serverPort;
-    private int playerId;
 
     private GeneralClientIf client;
     private SocketClient socketClient;
@@ -58,6 +57,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             switch (state) {
                 case INTRO                -> handleIntroState();
                 case ASK_USERNAME         -> handleUsernameState();
+                case WAIT_FOR_CALLBACK -> handleWaitForPlayerCreationState();
                 case ASK_NET              -> handleConnectionTypeState();
                 case ASK_ADDRESS          -> handleAddressState();
                 case CONNECTING           -> handleConnectingState();
@@ -98,6 +98,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         state = TuiState.CONNECTING;
     }
 
+    private void handleWaitForPlayerCreationState() {
+        // nothing to do here, waiting for a callback
+    }
+
     private void handleConnectingState() {
         try {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
@@ -107,8 +111,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 client = socketClient;
                 new Thread(socketClient).start();
 
-                playerId = client.createPlayer(username);
-                this.currentPlayer = client.getLocalPlayer();
+                client.createPlayer(username);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
                 client = RmiClient.connectTo(serverAddress, this);
@@ -117,18 +120,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 }
                 
                 // Create player through the new system
-                playerId = client.createPlayer(username);
-                this.currentPlayer = client.getLocalPlayer();
+                client.createPlayer(username);
 
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
             }
 
-            console.printMessage("Connected as " + username + " with Player ID: " + playerId + "!");
+            //console.printMessage("Connected as " + username + " with Player ID: " + playerId + "!");
             
-            lobbyHandler = new LobbyHandler(console, client, playerId);
-            
-            state = TuiState.LOBBY_MENU;
+            state = TuiState.WAIT_FOR_CALLBACK;
 
         } catch (Exception e) {
             console.printError("Connection failed: " + e.getMessage());
@@ -150,15 +150,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 return;
             }
 
-            if (lobbyHandler.isInMatch()) {
-                state = TuiState.WAIT_IN_MATCH;
-            }
         } catch (Exception e) {
             console.printError("Error in lobby menu: " + e.getMessage());
         }
     }
 
-    // TODO: modify a little bit because is annoying in this way
     private void handleWaitInMatchState() {
         try {
             if (lobbyHandler == null || !lobbyHandler.isInMatch()) {
@@ -167,11 +163,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 return;
             }
 
-            // modify here 
-            console.printMessage("Waiting in match... Type 'menu' to return to match options, or wait for the match to start.");
-            String input = console.readCommand();
+            if (!lobbyHandler.handleLobbyMenu()) {
+                state = TuiState.TERMINATED;
+                return;
+            }
             
-            if ("menu".equalsIgnoreCase(input.trim())) {
+            if (!lobbyHandler.isInMatch()) {
                 state = TuiState.LOBBY_MENU;
             }
         } catch (Exception e) {
@@ -327,11 +324,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     private void handleRunningState() {
-        LobbyHandler tuiController = new LobbyHandler(console, client, playerId);
-
         while (true) {
             String cmd = console.readCommand();
-            if (!tuiController.executeCommand(cmd)) {
+            if (!lobbyHandler.executeCommand(cmd)) {
                 state = TuiState.TERMINATED;
                 return;
             }
@@ -465,52 +460,57 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+
+
     @Override
-    public void matchCreated(UUID matchId, String matchName, String playerName) {
-        try {
-        console.printMessage("Match created: " + matchName + " (ID: " + matchId + ") by " + playerName);
-        lobbyHandler.updateAvailableMatches();
-        } catch (Exception e) {
-            console.printError("Error creating match: " + e.getMessage());
-            return;
-        }
+    public void playerCreated(int playerId, String username) {
+        this.currentPlayer = new Player(playerId, username, true);
+        
+        //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
+        lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());
+        state = TuiState.LOBBY_MENU;
+    }
+
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
+        lobbyHandler.matchCreatedCallback(matchName, matchId, true, playerName, playerId);
+        this.state = TuiState.WAIT_IN_MATCH;
+    }
+
+    @Override
+    public void updateAvailableMatches(List<String> matches) {
+        lobbyHandler.setAvailableMatches(matches);
     }
 
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
-        try{
-            console.printMessage("Player " + playerName + " joined match " + matchId);
-            lobbyHandler.updatePlayersInMatch();
-        } catch (Exception e) {
-            console.printError("Error joining match: " + e.getMessage());
-            return;
+        lobbyHandler.playerJoinedMatchCallback(matchId, playerName);
+
+        if (playerName.equals(currentPlayer.getNickName()) && state == TuiState.LOBBY_MENU) {
+            state = TuiState.WAIT_IN_MATCH;
         }
     }
 
     @Override
-    public void playerLeftMatch(String playerName) {
-        try {
-            console.printMessage("Player " + playerName + " left the match.");
-            lobbyHandler.updatePlayersInMatchAfterRemoval();
-        } catch (Exception e) {
-            console.printError("Error updating player list: " + e.getMessage());
-        }
+    public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
+        lobbyHandler.playerLeftMatchCallback(matchId, playerId, playerName);
     }
 
     @Override
-    public void hostChanged(String newHostName) {
-        console.printMessage("New host is now: " + newHostName);
-        try {
-            lobbyHandler.updateHostAfterRemoval();
-        } catch (Exception e) {
-            console.printError("Error updating host: " + e.getMessage());
-        }
+    public void updateHost(UUID matchId, int playerId, String playerName) {
+        lobbyHandler.updateHostCallback(matchId, playerId, playerName);
     }
 
     @Override
-    public void matchStarted(UUID matchId, String message) {
-        console.printMessage("Match started: " + message);
+    public void matchStarted(UUID matchId, String username) {
+        lobbyHandler.matchStartedCallback(matchId, username);   
         this.state = TuiState.SHIP_BUILDING;
+
+    }
+
+    @Override
+    public void playersInMatch(UUID matchId, List<String> playerNames, int hostId) {
+        lobbyHandler.playersInMatchCallback(matchId, playerNames, hostId);
     }
 
 
