@@ -11,7 +11,7 @@ import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 
 
 
@@ -65,7 +65,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case WAIT_IN_MATCH        -> handleWaitInMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
-                case CHOOSE_START_POSITION -> handleChooseStartPositionState();
+                //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case RUNNING              -> handleRunningState();
                 case TERMINATED           -> { return; }
@@ -209,84 +209,84 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         state = TuiState.CHOOSE_START_POSITION;
     }
 
-    private void handleChooseStartPositionState() {
-        if (this.currentPlayer == null) {
-            console.printError("Cannot choose starting position: current player not set.");
-            state = TuiState.ASK_USERNAME;
-            return;
-        }
+//     private void handleChooseStartPositionState() {
+//         if (this.currentPlayer == null) {
+//             console.printError("Cannot choose starting position: current player not set.");
+//             state = TuiState.ASK_USERNAME;
+//             return;
+//         }
 
-        console.printMessage("\n=== Choose Your Starting Position ===");
+//         console.printMessage("\n=== Choose Your Starting Position ===");
 
-        try {
-            // Request available positions from server 
-            if (socketClient != null) {
-                socketClient.requestAvailablePositions();
-                console.printMessage("Requesting available positions from server...");
-            } else {
-                // Fall back to local positions if no socket client
-                //availablePositions = client.getAvailableStartingPositions();
-                showAvailablePositions(availablePositions);
-            }
-        } catch (IOException e) {
-            console.printError("Error requesting available positions: " + e.getMessage());
-            state = TuiState.TERMINATED;
-            return;
-        }
+//         try {
+//             // Request available positions from server 
+//             if (socketClient != null) {
+//                 socketClient.requestAvailablePositions();
+//                 console.printMessage("Requesting available positions from server...");
+//             } else {
+//                 // Fall back to local positions if no socket client
+//                 //availablePositions = client.getAvailableStartingPositions();
+//                 showAvailablePositions(availablePositions);
+//             }
+//         } catch (IOException e) {
+//             console.printError("Error requesting available positions: " + e.getMessage());
+//             state = TuiState.TERMINATED;
+//             return;
+//         }
 
-        boolean positionChosen = false;
-        while (!positionChosen) {
-            if (availablePositions == null || availablePositions.isEmpty()) {
-                console.printMessage("Waiting for server to provide available positions...");
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                continue;
-            }
+//         boolean positionChosen = false;
+//         while (!positionChosen) {
+//             if (availablePositions == null || availablePositions.isEmpty()) {
+//                 console.printMessage("Waiting for server to provide available positions...");
+//                 try {
+//                     Thread.sleep(1000);
+//                 } catch (InterruptedException e) {
+//                     Thread.currentThread().interrupt();
+//                 }
+//                 continue;
+//             }
 
-            String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
+//             String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
 
-            try {
-                int chosenPosition = Integer.parseInt(input);
+//             try {
+//                 int chosenPosition = Integer.parseInt(input);
                 
-                // Validate position selection - use local data when connected to server, controller when offline
-//                boolean isValid = (socketClient != null) ?
-//                    availablePositions.contains(chosenPosition) :
-                    //client.isPositionSelectionValid(chosenPosition);
+//                 // Validate position selection - use local data when connected to server, controller when offline
+// //                boolean isValid = (socketClient != null) ?
+// //                    availablePositions.contains(chosenPosition) :
+//                     //client.isPositionSelectionValid(chosenPosition);
                     
-                if (!true) {
-                    console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
-                    continue;
-                }
+//                 if (!true) {
+//                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
+//                     continue;
+//                 }
 
-                try {
-                    if (socketClient != null) {
-                        socketClient.selectPosition(chosenPosition);
-                        console.printMessage("Position request sent to server. Waiting for confirmation...");
-                        // The response will be handled by notifyPositionResponse
-                        positionChosen = true;
-                        // Don't transition state yet - wait for server confirmation
-                    } else {
-                        //TODO implemet corretly using client
-                        // Fall back to local controller if no socket client
-                        /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
-                            positionChosen = true;
-                            console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
-                            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-                        } else {
-                            console.printError("Failed to set position. It might be taken or invalid. Please try again.");
-                        }*/
-                    }
-                } catch (Exception e) {
-                    console.printError("Error selecting position: " + e.getMessage());
-                }
-            } catch (NumberFormatException e) {
-                console.printError("Invalid input. Please enter a number.");
-            }
-        }
-    }
+//                 try {
+//                     if (socketClient != null) {
+//                         socketClient.selectPosition(chosenPosition);
+//                         console.printMessage("Position request sent to server. Waiting for confirmation...");
+//                         // The response will be handled by notifyPositionResponse
+//                         positionChosen = true;
+//                         // Don't transition state yet - wait for server confirmation
+//                     } else {
+//                         //TODO implemet corretly using client
+//                         // Fall back to local controller if no socket client
+//                         /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
+//                             positionChosen = true;
+//                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
+//                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+//                         } else {
+//                             console.printError("Failed to set position. It might be taken or invalid. Please try again.");
+//                         }*/
+//                     }
+//                 } catch (Exception e) {
+//                     console.printError("Error selecting position: " + e.getMessage());
+//                 }
+//             } catch (NumberFormatException e) {
+//                 console.printError("Invalid input. Please enter a number.");
+//             }
+//         }
+//     }
 
     private void handleWaitForAllPlayersPositionedState() {
         console.printMessage("Waiting for all players to choose their positions...");
@@ -354,17 +354,17 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     /**
      * Called by PositionResponseMessage to handle position selection response
      */
-    public void triggerPositionSelectionRefresh() {
-        if (state == TuiState.CHOOSE_START_POSITION) {
-            // If we're still in position selection state, the selection failed
-            if (socketClient != null) {
-                try {
-                    socketClient.requestAvailablePositions();
-                } catch (IOException e) {
-                    console.printError("Error refreshing available positions: " + e.getMessage());
-                }
-            }
-        }
+    // public void triggerPositionSelectionRefresh() {
+    //     if (state == TuiState.CHOOSE_START_POSITION) {
+    //         // If we're still in position selection state, the selection failed
+    //         if (socketClient != null) {
+    //             try {
+    //                 socketClient.requestAvailablePositions();
+    //             } catch (IOException e) {
+    //                 console.printError("Error refreshing available positions: " + e.getMessage());
+    //             }
+    //         }
+    //     }
 
         // Check if we can now proceed to the next state
         // When connected to server, this method is typically called after successful position selection
@@ -378,42 +378,42 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 //            console.printMessage("Position selected. Waiting for other players...");
 //            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
 
-    }
+//    }
 
     /**
      * Called by network messages to update available positions display
      */
-    public void showAvailablePositions(List<Integer> positions) {
-        this.availablePositions = positions;
-        if (positions.isEmpty()) {
-            console.printMessage("No positions available currently. Please wait...");
-        } else {
-            console.printMessage("Available positions: " + positions);
-        }
-    }
+    // public void showAvailablePositions(List<Integer> positions) {
+    //     this.availablePositions = positions;
+    //     if (positions.isEmpty()) {
+    //         console.printMessage("No positions available currently. Please wait...");
+    //     } else {
+    //         console.printMessage("Available positions: " + positions);
+    //     }
+    // }
     
     /**
      * Called by PositionUpdateMessage to update a player's position
      */
-    public void updatePlayerPosition(int playerId, int position) {
-        console.printMessage("Player ID " + playerId + " has selected position " + position);
+//     public void updatePlayerPosition(int playerId, int position) {
+//         console.printMessage("Player ID " + playerId + " has selected position " + position);
         
-        // When connected to server, check if we're the last player to select a position
-        if (socketClient != null) {
-            try {
-                socketClient.requestAvailablePositions();
-            } catch (IOException e) {
-                console.printError("Error checking remaining positions: " + e.getMessage());
-            }
-        } else {
-            // Offline mode - use controller to update position
-            //boolean success = controller.updatePlayerPosition(playerId, position);
+//         // When connected to server, check if we're the last player to select a position
+//         if (socketClient != null) {
+//             try {
+//                 socketClient.requestAvailablePositions();
+//             } catch (IOException e) {
+//                 console.printError("Error checking remaining positions: " + e.getMessage());
+//             }
+//         } else {
+//             // Offline mode - use controller to update position
+//             //boolean success = controller.updatePlayerPosition(playerId, position);
             
-//            if (!success) {
-//                console.printError("Failed to update position for player ID " + playerId);
-            //}
-        }
-    }
+// //            if (!success) {
+// //                console.printError("Failed to update position for player ID " + playerId);
+//             //}
+//         }
+//     }
     
     /**
      * Display a message in the console
@@ -511,6 +511,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void playersInMatch(UUID matchId, List<String> playerNames, int hostId) {
         lobbyHandler.playersInMatchCallback(matchId, playerNames, hostId);
+    }
+
+    @Override
+    public void showAvailablePositions(List<Integer> positions) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
     }
 
 

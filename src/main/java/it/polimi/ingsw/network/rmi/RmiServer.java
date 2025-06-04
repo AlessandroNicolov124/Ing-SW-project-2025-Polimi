@@ -11,7 +11,7 @@ import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;

@@ -2,7 +2,7 @@ package it.polimi.ingsw.network.client.listeners;
 
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
 
 import java.util.List;

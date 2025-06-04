@@ -3,7 +3,7 @@ package it.polimi.ingsw.network.rmi;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;

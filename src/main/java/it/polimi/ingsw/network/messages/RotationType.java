@@ -1,4 +1,4 @@
-package it.polimi.ingsw.network.socket.messages;
+package it.polimi.ingsw.network.messages;
 
 import java.io.Serializable;
 

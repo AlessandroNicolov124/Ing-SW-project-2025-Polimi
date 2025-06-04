@@ -9,17 +9,15 @@ import java.util.UUID;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
+import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerRequest;
 import it.polimi.ingsw.network.messages.lobby.CreateMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.GetMatchesRequest;
 import it.polimi.ingsw.network.messages.lobby.JoinMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.StartMatchRequest;
-import it.polimi.ingsw.network.socket.messages.GetAvailablePositionsMessage;
-import it.polimi.ingsw.network.socket.messages.SelectPositionMessage;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.socket.messages.RotationType;
 import it.polimi.ingsw.Player;
 
 
@@ -28,8 +26,6 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private final Socket socket;
     private final ObjectOutputStream out;
     private final ObjectInputStream  in;
-    private int playerId = -1;
-    private Player localPlayerReference;
     private GameListener listener;
 
     public SocketClient(String host, int port, GameListener gameListener) throws IOException {
@@ -149,7 +145,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
         proxy.validateShip(playerId);
     } */
 
-    // New method to request available positions
+ /*    // New method to request available positions
     public void requestAvailablePositions() throws IOException {
         if (playerId == -1) {
             throw new IllegalStateException("Cannot request positions before player ID is assigned.");
@@ -174,89 +170,86 @@ public class SocketClient implements Runnable, GeneralClientIf {
             out.writeObject(new SelectPositionMessage(playerId, position));
             out.flush();
         }
-    }
+    } */
     
-    // Called by PositionResponseMessage
-    public void notifyPositionResponse(int playerId, int position, boolean success, String message) {
-        /*if (tui != null) {
-            if (success) {
-                tui.showMessage("Position " + position + " selected successfully");
-            } else {
-                tui.showMessage("Failed to select position " + position + ": " + message);
-            }
-            tui.triggerPositionSelectionRefresh();
-        }*/
-        if (success) {
-            listener.printTextMsg("Position " + position + " selected successfully");
-        } else {
-            listener.printTextMsg("Failed to select position " + position + ": " + message);
-        }
+    // // Called by PositionResponseMessage
+    // public void notifyPositionResponse(int playerId, int position, boolean success, String message) {
+    //     /*if (tui != null) {
+    //         if (success) {
+    //             tui.showMessage("Position " + position + " selected successfully");
+    //         } else {
+    //             tui.showMessage("Failed to select position " + position + ": " + message);
+    //         }
+    //         tui.triggerPositionSelectionRefresh();
+    //     }*/
+    //     if (success) {
+    //         listener.printTextMsg("Position " + position + " selected successfully");
+    //     } else {
+    //         listener.printTextMsg("Failed to select position " + position + ": " + message);
+    //     }
 
-    }
+    // }
+ 
     
-    // Called by AvailablePositionsResponseMessage
-    public void showAvailablePositions(List<Integer> positions) {
-            listener.showAvailablePositions(positions);
-    }
+    // // Called by AvailablePositionsResponseMessage
+    // public void showAvailablePositions(List<Integer> positions) {
+    //         listener.showAvailablePositions(positions);
+    // }
     
-    // Called by PositionUpdateMessage
-    public void updatePlayerPosition(int playerId, int position) {
-            listener.notifyNewPlayerPosition(playerId, position);
-    }
+    // // Called by PositionUpdateMessage
+    // public void updatePlayerPosition(int playerId, int position) {
+    //         listener.notifyNewPlayerPosition(playerId, position);
+    // }
 
-    /**b
-     * Called by AllPositionsSelectedMessage when all players have selected their positions
-     * 
-     * @param playerPositions Map of player IDs to their selected positions
-     */
-    public void proceedToGamePhase(Map<Integer, Integer> playerPositions) {
-        System.out.println("[Client] All players have selected positions. Proceeding to game phase");
+    // /**b
+    //  * Called by AllPositionsSelectedMessage when all players have selected their positions
+    //  * 
+    //  * @param playerPositions Map of player IDs to their selected positions
+    //  */
+    // public void proceedToGamePhase(Map<Integer, Integer> playerPositions) {
+    //     System.out.println("[Client] All players have selected positions. Proceeding to game phase");
 
-        // Display all player positions
-        StringBuilder positionInfo = new StringBuilder("All players have selected positions:");
-        for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
-            positionInfo.append("\nPlayer ").append(entry.getKey()).append(" at position ").append(entry.getValue());
-        }
-        listener.printTextMsg(positionInfo.toString());
+    //     // Display all player positions
+    //     StringBuilder positionInfo = new StringBuilder("All players have selected positions:");
+    //     for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+    //         positionInfo.append("\nPlayer ").append(entry.getKey()).append(" at position ").append(entry.getValue());
+    //     }
+    //     listener.printTextMsg(positionInfo.toString());
 
-        // Transition to game phase
-        //TODO implement next state update on view
-        //listener.proceedToRunningState();
+    //     // Transition to game phase
+    //     //TODO implement next state update on view
+    //     //listener.proceedToRunningState();
 
-    }
+    // }
 
-    public void setLocalPlayer(Player player) {
-        this.localPlayerReference = player;
-    }
+    // public void handleLocalComponentPlacement(Component component, Position position, boolean success) {
+    //     if (success && localPlayerReference != null) {
+    //         localPlayerReference.getShip().placeComponent(component, position);
+    //         if (listener != null) 
+    //             listener.displayRefresh();
+    //     }
+    // }
 
-    public void handleLocalComponentPlacement(Component component, Position position, boolean success) {
-        if (success && localPlayerReference != null) {
-            localPlayerReference.getShip().placeComponent(component, position);
-            if (listener != null) 
-                listener.displayRefresh();
-        }
-    }
+    // public void handleLocalComponentRemoval(Position position, boolean success) {
+    //     if (success && localPlayerReference != null) {
+    //         Component compToRemove = localPlayerReference.getShip().getComponentAt(position);
+    //         if (compToRemove != null) {
+    //             localPlayerReference.getShip().removeComponent(compToRemove);
+    //         }
+    //         if (listener != null) 
+    //             listener.displayRefresh();
+    //     }
+    // }
 
-    public void handleLocalComponentRemoval(Position position, boolean success) {
-        if (success && localPlayerReference != null) {
-            Component compToRemove = localPlayerReference.getShip().getComponentAt(position);
-            if (compToRemove != null) {
-                localPlayerReference.getShip().removeComponent(compToRemove);
-            }
-            if (listener != null) 
-                listener.displayRefresh();
-        }
-    }
-
-    public void handleLocalComponentRotation(Position position, Component updatedComponentState, boolean success) {
-        if (success && localPlayerReference != null && updatedComponentState != null) {
-            Component oldComp = localPlayerReference.getShip().getComponentAt(position);
-            if (oldComp != null) localPlayerReference.getShip().removeComponent(oldComp);
-            localPlayerReference.getShip().placeComponent(updatedComponentState, position);
-            if (listener != null) 
-                listener.displayRefresh();
-        }
-    }
+    // public void handleLocalComponentRotation(Position position, Component updatedComponentState, boolean success) {
+    //     if (success && localPlayerReference != null && updatedComponentState != null) {
+    //         Component oldComp = localPlayerReference.getShip().getComponentAt(position);
+    //         if (oldComp != null) localPlayerReference.getShip().removeComponent(oldComp);
+    //         localPlayerReference.getShip().placeComponent(updatedComponentState, position);
+    //         if (listener != null) 
+    //             listener.displayRefresh();
+    //     }
+    // }
 
     @Override
     public void placeComponent(Component component, Position position) throws Exception {
@@ -271,15 +264,20 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     @Override
+    public Component pickComponentCard() throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
+    }
+
     public void rotateComponent(Position position, RotationType rotationType) throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
     }
 
     @Override
-    public Component pickComponentCard() throws Exception {
+    public void setLocalPlayer(Player player) throws Exception {
         // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
+        throw new UnsupportedOperationException("Unimplemented method 'setLocalPlayer'");
     }
 
 }
