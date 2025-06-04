@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 public enum CargoHoldsSize {
+    SINGLE(1),
     DOUBLE(2),
     TRIPLE(3);
 
@@ -14,3 +15,4 @@ public enum CargoHoldsSize {
         return capacity;
     }
 }
+

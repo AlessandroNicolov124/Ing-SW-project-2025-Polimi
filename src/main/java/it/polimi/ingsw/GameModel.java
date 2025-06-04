@@ -237,7 +237,7 @@ public class GameModel {
         for (int i = 0; i < 6; i++) allComponents.add(createNormalDoubleCargoHolds());
         for (int i = 0; i < 6; i++) allComponents.add(createNormalTripleCargoHolds());
         for (int i = 0; i < 6; i++) allComponents.add(createSpecialDoubleCargoHolds());
-        for (int i = 0; i < 6; i++) allComponents.add(createSpecialTripleCargoHolds());
+        for (int i = 0; i < 6; i++) allComponents.add(createSpecialSingleCargoHolds());
         for (int i = 0; i < 3; i++) allComponents.add(createBatteryCompartment());
         for (int i = 0; i < 3; i++) allComponents.add(createShieldGenerator());
         for (int i = 0; i < 3; i++) allComponents.add(createBrownLifeSupportSystem());
@@ -318,8 +318,8 @@ public class GameModel {
         initializeRandomConnectors(cargoHold);
         return cargoHold;
     }
-    private CargoHolds createSpecialTripleCargoHolds() {
-        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.TRIPLE);
+    private CargoHolds createSpecialSingleCargoHolds() {
+        CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.SINGLE);
         initializeRandomConnectors(cargoHold);
         return cargoHold;
     }

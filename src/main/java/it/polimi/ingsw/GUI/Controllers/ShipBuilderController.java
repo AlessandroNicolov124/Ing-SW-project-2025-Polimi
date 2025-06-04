@@ -131,6 +131,15 @@ public class ShipBuilderController implements GameStateUpdateListener {
             Map.entry("normalcargoholds_triple_SNDS", "/Images/tiles/normalcargoholds_triple_SNDS.jpg"),
             Map.entry("normalcargoholds_triple_DNSD", "/Images/tiles/normalcargoholds_triple_DNSD.jpg"),
 
+            Map.entry("specialcargohold_single_DDDU", "/Images/tiles/specialcargohold_single_DDDU.jpg"),
+            Map.entry("specialcargohold_single_DSNU", "/Images/tiles/specialcargohold_single_DSNU.jpg"),
+            Map.entry("specialcargohold_single_NDSU", "/Images/tiles/specialcargohold_single_NDSU.jpg"),
+            Map.entry("specialcargohold_single_NUNU", "/Images/tiles/specialcargohold_single_NUNU.jpg"),
+            Map.entry("specialcargohold_single_UNNU", "/Images/tiles/specialcargohold_single_UNNU.jpg"),
+            Map.entry("specialcargohold_single_SSSU", "/Images/tiles/specialcargohold_single_SSSU.jpg"),
+            Map.entry("specialcargohold_double_NDNS", "/Images/tiles/specialcargohold_double_NDNS.jpg"),
+            Map.entry("specialcargohold_double_NNND", "/Images/tiles/specialcargohold_double_NNND.jpg"),
+            Map.entry("specialcargohold_double_NNNS", "/Images/tiles/specialcargohold_double_NNNS.jpg"),
 
 
             Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
