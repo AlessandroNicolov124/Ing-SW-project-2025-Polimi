@@ -1,0 +1,88 @@
+# Component Deck Configuration
+# Format: componentType_characteristic1_characteristic2_NESO
+# N=North, E=East, S=South, O=West (clockwise)
+# Connector types: S=Single, D=Double, U=Universal, N=Null
+
+# Starting Cabins (separate deck)
+startingcabin_SSSS
+startingcabin_DDDD
+startingcabin_SUDS
+startingcabin_NUSU
+
+# Regular Cabins
+cabin_SSSS
+cabin_DDDD
+cabin_SUDS
+cabin_NUSU
+
+# Single Engines (must have valid direction for thrust)
+singleengine_NSSN
+singleengine_NSDN
+singleengine_NUSN
+singleengine_SNSN
+singleengine_DNSN
+singleengine_UNSN
+singleengine_NNSN
+singleengine_NNSS
+
+# Double Engines (must have valid direction for thrust)
+doubleengine_NSSN
+doubleengine_NSDN
+doubleengine_NUSN
+doubleengine_SNSN
+
+# Single Cannons (must point forward - North should be Null for firing)
+singlecannon_NSSS
+singlecannon_NSDS
+singlecannon_NSUS
+singlecannon_NSSD
+singlecannon_NSDD
+singlecannon_NSUD
+singlecannon_NSSU
+singlecannon_NSDU
+
+# Double Cannons (must point forward - North should be Null for firing)
+doublecannon_NSSS
+doublecannon_NSDS
+doublecannon_NSUS
+doublecannon_NSSD
+
+# Normal Cargo Holds (with size specification)
+normalcargoholds_double_SSSS
+normalcargoholds_double_DDDD
+normalcargoholds_triple_SUDS
+normalcargoholds_triple_NUSU
+normalcargoholds_double_SDUS
+normalcargoholds_triple_USDN
+
+# Special Cargo Holds (with size specification)
+specialcargoholds_single_SSSS
+specialcargoholds_double_DDDD
+specialcargoholds_single_SUDS
+specialcargoholds_double_NUSU
+specialcargoholds_single_SDUS
+specialcargoholds_double_USDN
+
+# Battery Compartments (type and initial charge)
+batterycompartment_double_SSSS
+batterycompartment_triple_DDDD
+batterycompartment_double_SUDS
+batterycompartment_triple_NUSU
+
+# Shield Generators
+shieldgenerator_SNSS
+shieldgenerator_SDSS
+shieldgenerator_SUSS
+
+# Life Support Systems (with color specification)
+lifesupportsystem_brown_SSSS
+lifesupportsystem_purple_DDDD
+lifesupportsystem_brown_SUDS
+lifesupportsystem_purple_NUSU
+
+# Structural Modules
+structuralmodule_SSSS
+structuralmodule_DDDD
+structuralmodule_SUDS
+structuralmodule_NUSU
+structuralmodule_SDUS

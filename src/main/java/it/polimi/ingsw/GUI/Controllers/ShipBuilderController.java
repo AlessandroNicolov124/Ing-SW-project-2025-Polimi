@@ -141,6 +141,23 @@ public class ShipBuilderController implements GameStateUpdateListener {
             Map.entry("specialcargohold_double_NNND", "/Images/tiles/specialcargohold_double_NNND.jpg"),
             Map.entry("specialcargohold_double_NNNS", "/Images/tiles/specialcargohold_double_NNNS.jpg"),
 
+            Map.entry("structuralmodule_SUDU", "/Images/tiles/structuralmodule_SUDU.jpg"),
+            Map.entry("structuralmodule_SUNU", "/Images/tiles/structuralmodule_SUNU.jpg"),
+            Map.entry("structuralmodule_SUSU", "/Images/tiles/structuralmodule_SUSU.jpg"),
+            Map.entry("structuralmodule_UDDU", "/Images/tiles/structuralmodule_UDDU.jpg"),
+            Map.entry("structuralmodule_UDNU", "/Images/tiles/structuralmodule_UDNU.jpg"),
+            Map.entry("structuralmodule_USDU", "/Images/tiles/structuralmodule_USDU.jpg"),
+            Map.entry("structuralmodule_UUNS", "/Images/tiles/structuralmodule_UUNS.jpg"),
+
+            Map.entry("shieldgenerator_NSUS", "/Images/tiles/shieldgenerator_NSUS.jpg"),
+            Map.entry("shieldgenerator_DSDS", "/Images/tiles/shieldgenerator_DSDS.jpg"),
+            Map.entry("shieldgenerator_NDDD", "/Images/tiles/shieldgenerator_NDDD.jpg"),
+            Map.entry("shieldgenerator_NDDU", "/Images/tiles/shieldgenerator_NDDU.jpg"),
+            Map.entry("shieldgenerator_NNSU", "/Images/tiles/shieldgenerator_NNSU.jpg"),
+            Map.entry("shieldgenerator_NNUD", "/Images/tiles/shieldgenerator_NNUD.jpg"),
+            Map.entry("shieldgenerator_SDSD", "/Images/tiles/shieldgenerator_SDSD.jpg"),
+            Map.entry("shieldgenerator_SNSS", "/Images/tiles/shieldgenerator_SNSS.jpg"),
+
 
             Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
             Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
