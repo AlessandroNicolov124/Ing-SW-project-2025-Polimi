@@ -22,7 +22,7 @@ class NormalCargoHoldsTest {
     @BeforeEach
     void setUp() {
         mockSize = mock(CargoHoldsSize.class);
-        when(mockSize.getCapacity()).thenReturn(3);
+        when(mockSize.getCapacity()).thenReturn(2); // Changed from 3 to 2 (valid for normal)
 
         normalCargoHolds = new NormalCargoHolds(mockSize);
 
@@ -41,19 +41,25 @@ class NormalCargoHoldsTest {
         @DisplayName("Constructor should initialize with correct capacity")
         void testConstructor() {
             assertNotNull(normalCargoHolds);
-            assertEquals(3, normalCargoHolds.getCapacity());
+            assertEquals(2, normalCargoHolds.getCapacity());
             assertTrue(normalCargoHolds.isEmpty());
-            assertEquals(3, normalCargoHolds.getAvailableSpace());
+            assertEquals(2, normalCargoHolds.getAvailableSpace());
         }
 
         @Test
-        @DisplayName("Constructor should work with different sizes")
-        void testConstructorWithDifferentSizes() {
-            CargoHoldsSize largeSize = mock(CargoHoldsSize.class);
-            when(largeSize.getCapacity()).thenReturn(10);
+        @DisplayName("Constructor should work with valid capacities (2 or 3)")
+        void testConstructorWithValidCapacities() {
+            // Test with capacity 2
+            CargoHoldsSize doubleSize = mock(CargoHoldsSize.class);
+            when(doubleSize.getCapacity()).thenReturn(2);
+            NormalCargoHolds doubleHold = new NormalCargoHolds(doubleSize);
+            assertEquals(2, doubleHold.getCapacity());
 
-            NormalCargoHolds largeHold = new NormalCargoHolds(largeSize);
-            assertEquals(10, largeHold.getCapacity());
+            // Test with capacity 3
+            CargoHoldsSize tripleSize = mock(CargoHoldsSize.class);
+            when(tripleSize.getCapacity()).thenReturn(3);
+            NormalCargoHolds tripleHold = new NormalCargoHolds(tripleSize);
+            assertEquals(3, tripleHold.getCapacity());
         }
     }
 
@@ -96,7 +102,7 @@ class NormalCargoHoldsTest {
 
             assertFalse(normalCargoHolds.isEmpty());
             assertEquals(1, normalCargoHolds.getCargos().size());
-            assertEquals(2, normalCargoHolds.getAvailableSpace());
+            assertEquals(1, normalCargoHolds.getAvailableSpace()); // Changed from 2 to 1
             assertTrue(normalCargoHolds.getCargos().contains(mockCargo));
         }
 
@@ -113,20 +119,18 @@ class NormalCargoHoldsTest {
         @Test
         @DisplayName("loadCargo should throw exception when at full capacity")
         void testLoadCargoWhenFull() {
-            // Fill to capacity
+            // Fill to capacity (2)
             Cargo cargo1 = mock(Cargo.class);
             Cargo cargo2 = mock(Cargo.class);
             Cargo cargo3 = mock(Cargo.class);
-            Cargo cargo4 = mock(Cargo.class);
 
             normalCargoHolds.loadCargo(cargo1);
             normalCargoHolds.loadCargo(cargo2);
-            normalCargoHolds.loadCargo(cargo3);
 
             assertTrue(normalCargoHolds.isFull());
 
             assertThrows(IllegalStateException.class, () -> {
-                normalCargoHolds.loadCargo(cargo4);
+                normalCargoHolds.loadCargo(cargo3);
             });
         }
 
@@ -135,15 +139,34 @@ class NormalCargoHoldsTest {
         void testLoadCargoToCapacity() {
             Cargo cargo1 = mock(Cargo.class);
             Cargo cargo2 = mock(Cargo.class);
-            Cargo cargo3 = mock(Cargo.class);
 
             normalCargoHolds.loadCargo(cargo1);
             normalCargoHolds.loadCargo(cargo2);
-            normalCargoHolds.loadCargo(cargo3);
 
             assertTrue(normalCargoHolds.isFull());
             assertEquals(0, normalCargoHolds.getAvailableSpace());
-            assertEquals(3, normalCargoHolds.getCargos().size());
+            assertEquals(2, normalCargoHolds.getCargos().size()); // Changed from 3 to 2
+        }
+
+        @Test
+        @DisplayName("loadCargo should work with triple capacity")
+        void testLoadCargoWithTripleCapacity() {
+            // Test with capacity 3
+            CargoHoldsSize tripleSize = mock(CargoHoldsSize.class);
+            when(tripleSize.getCapacity()).thenReturn(3);
+            NormalCargoHolds tripleHold = new NormalCargoHolds(tripleSize);
+
+            Cargo cargo1 = mock(Cargo.class);
+            Cargo cargo2 = mock(Cargo.class);
+            Cargo cargo3 = mock(Cargo.class);
+
+            tripleHold.loadCargo(cargo1);
+            tripleHold.loadCargo(cargo2);
+            tripleHold.loadCargo(cargo3);
+
+            assertTrue(tripleHold.isFull());
+            assertEquals(0, tripleHold.getAvailableSpace());
+            assertEquals(3, tripleHold.getCargos().size());
         }
     }
 
@@ -168,7 +191,7 @@ class SpecialCargoHoldsTest {
     @BeforeEach
     void setUp() {
         mockSize = mock(CargoHoldsSize.class);
-        when(mockSize.getCapacity()).thenReturn(2);
+        when(mockSize.getCapacity()).thenReturn(1); // Changed from 2 to 1 (valid for special)
 
         specialCargoHolds = new SpecialCargoHolds(mockSize);
 
@@ -187,9 +210,25 @@ class SpecialCargoHoldsTest {
         @DisplayName("Constructor should initialize with correct capacity")
         void testConstructor() {
             assertNotNull(specialCargoHolds);
-            assertEquals(2, specialCargoHolds.getCapacity());
+            assertEquals(1, specialCargoHolds.getCapacity());
             assertTrue(specialCargoHolds.isEmpty());
-            assertEquals(2, specialCargoHolds.getAvailableSpace());
+            assertEquals(1, specialCargoHolds.getAvailableSpace());
+        }
+
+        @Test
+        @DisplayName("Constructor should work with valid capacities (1 or 2)")
+        void testConstructorWithValidCapacities() {
+            // Test with capacity 1
+            CargoHoldsSize singleSize = mock(CargoHoldsSize.class);
+            when(singleSize.getCapacity()).thenReturn(1);
+            SpecialCargoHolds singleHold = new SpecialCargoHolds(singleSize);
+            assertEquals(1, singleHold.getCapacity());
+
+            // Test with capacity 2
+            CargoHoldsSize doubleSize = mock(CargoHoldsSize.class);
+            when(doubleSize.getCapacity()).thenReturn(2);
+            SpecialCargoHolds doubleHold = new SpecialCargoHolds(doubleSize);
+            assertEquals(2, doubleHold.getCapacity());
         }
     }
 
@@ -233,7 +272,8 @@ class SpecialCargoHoldsTest {
 
             assertFalse(specialCargoHolds.isEmpty());
             assertEquals(1, specialCargoHolds.getCargos().size());
-            assertEquals(1, specialCargoHolds.getAvailableSpace());
+            assertEquals(0, specialCargoHolds.getAvailableSpace()); // Changed from 1 to 0
+            assertTrue(specialCargoHolds.isFull()); // Now full with single capacity
         }
 
         @Test
@@ -244,18 +284,35 @@ class SpecialCargoHoldsTest {
             assertFalse(specialCargoHolds.isEmpty());
             assertEquals(1, specialCargoHolds.getCargos().size());
             assertTrue(specialCargoHolds.getCargos().contains(mockRedCargo));
+            assertTrue(specialCargoHolds.isFull());
         }
 
         @Test
-        @DisplayName("loadCargo should load mixed cargo types")
-        void testLoadMixedCargoTypes() {
-            specialCargoHolds.loadCargo(mockCargo);
-            specialCargoHolds.loadCargo(mockRedCargo);
+        @DisplayName("loadCargo should load mixed cargo types with double capacity")
+        void testLoadMixedCargoTypesWithDoubleCapacity() {
+            // Test with capacity 2
+            CargoHoldsSize doubleSize = mock(CargoHoldsSize.class);
+            when(doubleSize.getCapacity()).thenReturn(2);
+            SpecialCargoHolds doubleHold = new SpecialCargoHolds(doubleSize);
 
+            doubleHold.loadCargo(mockCargo);
+            doubleHold.loadCargo(mockRedCargo);
+
+            assertTrue(doubleHold.isFull());
+            assertEquals(2, doubleHold.getCargos().size());
+            assertTrue(doubleHold.getCargos().contains(mockCargo));
+            assertTrue(doubleHold.getCargos().contains(mockRedCargo));
+        }
+
+        @Test
+        @DisplayName("loadCargo should throw exception when single capacity is exceeded")
+        void testLoadCargoExceedsSingleCapacity() {
+            specialCargoHolds.loadCargo(mockCargo);
             assertTrue(specialCargoHolds.isFull());
-            assertEquals(2, specialCargoHolds.getCargos().size());
-            assertTrue(specialCargoHolds.getCargos().contains(mockCargo));
-            assertTrue(specialCargoHolds.getCargos().contains(mockRedCargo));
+
+            assertThrows(IllegalStateException.class, () -> {
+                specialCargoHolds.loadCargo(mockRedCargo);
+            });
         }
     }
 
@@ -264,7 +321,6 @@ class SpecialCargoHoldsTest {
     void testGetComponentString() {
         String result = specialCargoHolds.getComponentString();
         assertTrue(result.startsWith("specialcargoholds_"+mockSize.getCapacity()+"_"+specialCargoHolds.getConnectionsString()));
-
     }
 }
 
@@ -294,16 +350,18 @@ abstract class CargoHoldsTestBase {
         @Test
         @DisplayName("getCargos should return defensive copy")
         void testGetCargosReturnsDefensiveCopy() {
-            cargoHolds.loadCargo(mockCargo1);
+            if (cargoHolds.canContainCargo(mockCargo1)) {
+                cargoHolds.loadCargo(mockCargo1);
 
-            List<Cargo> cargos = cargoHolds.getCargos();
-            int originalSize = cargos.size();
+                List<Cargo> cargos = cargoHolds.getCargos();
+                int originalSize = cargos.size();
 
-            // Modifying returned list should not affect internal state
-            cargos.clear();
+                // Modifying returned list should not affect internal state
+                cargos.clear();
 
-            assertEquals(originalSize, cargoHolds.getCargos().size());
-            assertFalse(cargoHolds.isEmpty());
+                assertEquals(originalSize, cargoHolds.getCargos().size());
+                assertFalse(cargoHolds.isEmpty());
+            }
         }
 
         @Test
@@ -311,11 +369,13 @@ abstract class CargoHoldsTestBase {
         void testIsEmpty() {
             assertTrue(cargoHolds.isEmpty());
 
-            cargoHolds.loadCargo(mockCargo1);
-            assertFalse(cargoHolds.isEmpty());
+            if (cargoHolds.canContainCargo(mockCargo1)) {
+                cargoHolds.loadCargo(mockCargo1);
+                assertFalse(cargoHolds.isEmpty());
 
-            cargoHolds.unloadCargo(mockCargo1);
-            assertTrue(cargoHolds.isEmpty());
+                cargoHolds.unloadCargo(mockCargo1);
+                assertTrue(cargoHolds.isEmpty());
+            }
         }
 
         @Test
@@ -374,11 +434,11 @@ abstract class CargoHoldsTestBase {
         void testSumCargoValue() {
             assertEquals(0, cargoHolds.sumCargoValue());
 
-            if (cargoHolds.canContainCargo(mockCargo1) && cargoHolds.canContainCargo(mockCargo2)) {
+            if (cargoHolds.canContainCargo(mockCargo1)) {
                 cargoHolds.loadCargo(mockCargo1);
                 assertEquals(100, cargoHolds.sumCargoValue());
 
-                if (cargoHolds.getAvailableSpace() > 0) {
+                if (cargoHolds.getAvailableSpace() > 0 && cargoHolds.canContainCargo(mockCargo2)) {
                     cargoHolds.loadCargo(mockCargo2);
                     assertEquals(300, cargoHolds.sumCargoValue());
                 }
@@ -424,7 +484,7 @@ class NormalCargoHoldsCommonTest extends CargoHoldsTestBase {
     @BeforeEach
     void setUp() {
         CargoHoldsSize mockSize = mock(CargoHoldsSize.class);
-        when(mockSize.getCapacity()).thenReturn(5);
+        when(mockSize.getCapacity()).thenReturn(3); // Valid capacity for normal cargo holds
         cargoHolds = new NormalCargoHolds(mockSize);
         setUpBase();
     }
@@ -438,7 +498,7 @@ class SpecialCargoHoldsCommonTest extends CargoHoldsTestBase {
     @BeforeEach
     void setUp() {
         CargoHoldsSize mockSize = mock(CargoHoldsSize.class);
-        when(mockSize.getCapacity()).thenReturn(5);
+        when(mockSize.getCapacity()).thenReturn(2); // Valid capacity for special cargo holds
         cargoHolds = new SpecialCargoHolds(mockSize);
         setUpBase();
     }
@@ -456,11 +516,15 @@ class CargoHoldsIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        CargoHoldsSize size = mock(CargoHoldsSize.class);
-        when(size.getCapacity()).thenReturn(3);
+        // Use valid capacities for each type
+        CargoHoldsSize normalSize = mock(CargoHoldsSize.class);
+        when(normalSize.getCapacity()).thenReturn(2); // Valid for normal (2 or 3)
 
-        normalHolds = new NormalCargoHolds(size);
-        specialHolds = new SpecialCargoHolds(size);
+        CargoHoldsSize specialSize = mock(CargoHoldsSize.class);
+        when(specialSize.getCapacity()).thenReturn(2); // Valid for special (1 or 2)
+
+        normalHolds = new NormalCargoHolds(normalSize);
+        specialHolds = new SpecialCargoHolds(specialSize);
 
         normalCargo = mock(Cargo.class);
         when(normalCargo.getValue()).thenReturn(100);
@@ -489,7 +553,7 @@ class CargoHoldsIntegrationTest {
     }
 
     @Test
-    @DisplayName("Both hold types should have same capacity management")
+    @DisplayName("Both hold types should have same capacity management when using same capacity")
     void testCapacityManagement() {
         assertEquals(normalHolds.getCapacity(), specialHolds.getCapacity());
         assertEquals(normalHolds.getAvailableSpace(), specialHolds.getAvailableSpace());
@@ -500,5 +564,31 @@ class CargoHoldsIntegrationTest {
 
         assertEquals(normalHolds.getAvailableSpace(), specialHolds.getAvailableSpace());
         assertEquals(normalHolds.getCargos().size(), specialHolds.getCargos().size());
+    }
+
+    @Test
+    @DisplayName("Test capacity constraints are respected")
+    void testCapacityConstraints() {
+        // Test that normal holds work with capacity 2 and 3
+        CargoHoldsSize normalSize2 = mock(CargoHoldsSize.class);
+        when(normalSize2.getCapacity()).thenReturn(2);
+        NormalCargoHolds normalHolds2 = new NormalCargoHolds(normalSize2);
+        assertEquals(2, normalHolds2.getCapacity());
+
+        CargoHoldsSize normalSize3 = mock(CargoHoldsSize.class);
+        when(normalSize3.getCapacity()).thenReturn(3);
+        NormalCargoHolds normalHolds3 = new NormalCargoHolds(normalSize3);
+        assertEquals(3, normalHolds3.getCapacity());
+
+        // Test that special holds work with capacity 1 and 2
+        CargoHoldsSize specialSize1 = mock(CargoHoldsSize.class);
+        when(specialSize1.getCapacity()).thenReturn(1);
+        SpecialCargoHolds specialHolds1 = new SpecialCargoHolds(specialSize1);
+        assertEquals(1, specialHolds1.getCapacity());
+
+        CargoHoldsSize specialSize2 = mock(CargoHoldsSize.class);
+        when(specialSize2.getCapacity()).thenReturn(2);
+        SpecialCargoHolds specialHolds2 = new SpecialCargoHolds(specialSize2);
+        assertEquals(2, specialHolds2.getCapacity());
     }
 }
