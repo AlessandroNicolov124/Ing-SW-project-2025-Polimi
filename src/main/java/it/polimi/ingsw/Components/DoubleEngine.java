@@ -14,7 +14,7 @@ public final class DoubleEngine extends Engine {
     @Override
     public String getComponentString() {
         String s = this.getClass().getSimpleName().toLowerCase() + "_";
-        s += getConnectionsString().toLowerCase();
+        s += getConnectionsString();
         return s;
     }
 

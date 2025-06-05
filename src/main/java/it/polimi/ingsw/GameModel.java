@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.io.*;
 import java.nio.file.*;
+import java.util.stream.Collectors;
 
 public class GameModel {
     private FlightBoard flightBoard;
@@ -220,10 +221,6 @@ public class GameModel {
         flightBoard.updatePosition(player, i);
     }
 
-    private void initializeComponentDeck() {
-        initializeComponentDeckFromFile("component_deck.txt");
-    }
-
     private void initializeComponentDeckDefault() {
         // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
         // in base alle regole del gioco e alla rarità dei componenti.
@@ -256,13 +253,28 @@ public class GameModel {
         componentDeck = new LinkedList<>(allComponents);
     }
 
+    private void initializeComponentDeck() {
+        initializeComponentDeckFromFile("component_deck.txt");
+    }
     private void initializeComponentDeckFromFile(String filename) {
         List<Component> allComponents = new ArrayList<>();
         List<Component> startingCabins = new ArrayList<>();
 
+        System.out.println("Inizializzazione component deck da file: " + filename);
         try {
+            // Debug: mostra dove stiamo cercando
+            String currentDir = System.getProperty("user.dir");
+            // System.out.println("Directory corrente: " + currentDir);
+            Path filePath = Paths.get(currentDir + "/src/main/resources/" + filename);
+
+            if (Files.exists(filePath)) {
+                    System.out.println("✓ File trovato: " + filePath.toAbsolutePath());
+            }else{
+                throw new IOException("File non trovato in nessun percorso");
+            }
+
             // Leggi il file
-            List<String> lines = Files.readAllLines(Paths.get(filename));
+            List<String> lines = Files.readAllLines(filePath);
 
             for (String line : lines) {
                 line = line.trim();
@@ -272,33 +284,45 @@ public class GameModel {
 
                 // Parse della riga: "componentType_characteristic1_characteristic2_NESO"
                 String[] parts = line.split("_");
-                if (parts.length < 2) {
+                if (parts.length < 1) {
                     System.err.println("Formato riga non valido (manca _): " + line);
                     continue;
                 }
 
                 String componentType = parts[0].toLowerCase();
-                String connectors = parts[parts.length - 1].toUpperCase(); // L'ultimo elemento sono sempre i connettori
-
-                if (connectors.length() != 4) {
-                    System.err.println("Formato connettori non valido (devono essere 4 caratteri): " + line);
+                // Gestione speciale per starting cabins
+                if (componentType.equals("cabin") && (parts.length == 2 || parts.length == 3) && parts[1].equals("starting")) {
+                    Component component = createComponentWithCharacteristics(componentType, new String[]{"starting"}, "UUUU");
+                    if (component != null) {
+                        //System.out.println("Componente inizializzato da file: " + filename);
+                        startingCabins.add(component);
+                    }
                     continue;
                 }
+                // Controlla se l'ultimo elemento sono i connettori (4 caratteri con solo N, E, S, O, D, U)
+                String lastPart = parts[parts.length - 1].toUpperCase();
+                String connectors;
+                String[] characteristics;
 
-                // Estrai le caratteristiche (tutto tranne il primo e l'ultimo elemento)
-                String[] characteristics = new String[parts.length - 2];
-                for (int i = 1; i < parts.length - 1; i++) {
-                    characteristics[i - 1] = parts[i].toLowerCase();
+                if (lastPart.length() == 4 && lastPart.matches("[NDUS]+")) {
+                    // L'ultimo elemento sono i connettori
+                    connectors = lastPart;
+                    characteristics = new String[parts.length - 2];
+                    for (int i = 1; i < parts.length - 1; i++) {
+                        characteristics[i - 1] = parts[i].toLowerCase();
+                    }
+                } else {
+                    // Non ci sono connettori espliciti, usa default
+                    connectors = "UUUU";
+                    characteristics = new String[parts.length - 1];
+                    for (int i = 1; i < parts.length; i++) {
+                        characteristics[i - 1] = parts[i].toLowerCase();
+                    }
                 }
 
-                // Crea il componente con caratteristiche e connettori specificati
                 Component component = createComponentWithCharacteristics(componentType, characteristics, connectors);
                 if (component != null) {
-                    if (componentType.equals("cabin") && characteristics.length == 1 && characteristics[0].equals("starting")) {
-                        startingCabins.add(component);
-                    } else {
-                        allComponents.add(component);
-                    }
+                    allComponents.add(component);
                 }
             }
 
@@ -314,7 +338,7 @@ public class GameModel {
             System.out.println("Altri componenti: " + allComponents.size());
 
         } catch (IOException e) {
-            System.err.println("Errore nella lettura del file " + filename + ": " + e.getMessage());
+            System.err.println("Errore nella lettura del file " + filename + ": " + e);
             System.out.println("Inizializzazione con valori di default...");
             initializeComponentDeckDefault();
         }
@@ -418,23 +442,19 @@ public class GameModel {
 
     // Valida i connettori per componenti con regole speciali
     private boolean validateComponentConnectors(Component component, String componentType) {
-        switch (componentType) {
-            case "singleengine":
-            case "doubleengine":
-                return switch (component) {
-                    case SingleEngine se -> se.validateEngineDirection(component.getComponentDirection());
-                    case DoubleEngine de -> de.validateEngineDirection(component.getComponentDirection());
-                    default -> throw new IllegalStateException("Unexpected value: " + component);
-                };
-            case "singlecannon":
-            case "doublecannon":
-                return switch (component) {
-                    case SingleCannon se -> se.validateFiringDirection(component.getComponentDirection());
-                    case DoubleCannon de -> de.validateFiringDirection(component.getComponentDirection());
-                    default -> throw new IllegalStateException("Unexpected value: " + component);
-                };
-        }
-        return true; // Altri componenti non hanno validazioni speciali
+        return switch (componentType) {
+            case "singleengine", "doubleengine" -> switch (component) {
+                case SingleEngine se -> se.validateEngineDirection(component.getComponentDirection());
+                case DoubleEngine de -> de.validateEngineDirection(component.getComponentDirection());
+                default -> throw new IllegalStateException("Unexpected value: " + component);
+            };
+            case "singlecannon", "doublecannon" -> switch (component) {
+                case SingleCannon se -> se.validateFiringDirection(component.getComponentDirection());
+                case DoubleCannon de -> de.validateFiringDirection(component.getComponentDirection());
+                default -> throw new IllegalStateException("Unexpected value: " + component);
+            };
+            default -> true;
+        };
     }
 
     private CargoHoldsSize parseCargoSize(String sizeStr) {

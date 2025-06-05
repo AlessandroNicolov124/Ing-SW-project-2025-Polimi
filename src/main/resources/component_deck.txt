@@ -4,32 +4,64 @@
 # Connector types: S=Single, D=Double, U=Universal, N=Null
 
 # Starting Cabins (separate deck)
-startingcabin_SSSS
-startingcabin_DDDD
-startingcabin_SUDS
-startingcabin_NUSU
+cabin_starting
+cabin_starting_1
+cabin_starting_2
+cabin_starting_3
+cabin_starting_4
 
 # Regular Cabins
-cabin_SSSS
-cabin_DDDD
-cabin_SUDS
-cabin_NUSU
+cabin_DDNU
+cabin_DNDU
+cabin_DNNS
+cabin_DSDD
+cabin_DSDS
+cabin_DSNS
+cabin_NDNU
+cabin_NNUS
+cabin_NSNU
+cabin_NSSU
+cabin_NSUD
+cabin_SDDS
+cabin_SDND
+cabin_SDSS
+cabin_SNDU
+cabin_SNSU
+cabin_UNND
 
 # Single Engines (must have valid direction for thrust)
-singleengine_NSSN
-singleengine_NSDN
-singleengine_NUSN
-singleengine_SNSN
-singleengine_DNSN
-singleengine_UNSN
-singleengine_NNSN
-singleengine_NNSS
+singleengine_DNND
+singleengine_DNNN
+singleengine_2_DNNN
+singleengine_DSNS
+singleengine_DUNN
+singleengine_NDNU
+singleengine_NNNU
+singleengine_2_NNNU
+singleengine_NSND
+singleengine_NUNN
+singleengine_2_NUNN
+singleengine_NUNS
+singleengine_SDND
+singleengine_SNNN
+singleengine_2_SNNN
+singleengine_SNNU
+singleengine_SSNN
+singleengine_UDNN
+singleengine_UDNS
+singleengine_UNNS
+singleengine_USND
 
 # Double Engines (must have valid direction for thrust)
-doubleengine_NSSN
-doubleengine_NSDN
-doubleengine_NUSN
-doubleengine_SNSN
+doubleengine_DDND
+doubleengine_DNNN
+doubleengine_DNNU
+doubleengine_NUNU
+doubleengine_SSNS
+doubleengine_SNNN
+doubleengine_SUNN
+doubleengine_UNND
+doubleengine_USNN
 
 # Single Cannons (must point forward - North should be Null for firing)
 singlecannon_NSSS
@@ -48,31 +80,61 @@ doublecannon_NSUS
 doublecannon_NSSD
 
 # Normal Cargo Holds (with size specification)
-normalcargoholds_double_SSSS
-normalcargoholds_double_DDDD
-normalcargoholds_triple_SUDS
-normalcargoholds_triple_NUSU
-normalcargoholds_double_SDUS
-normalcargoholds_triple_USDN
+normalcargoholds_double_DSUN
+normalcargoholds_double_DSUS
+normalcargoholds_double_DUNS
+normalcargoholds_double_NNNU
+normalcargoholds_double_2_NNNU
+normalcargoholds_double_NSNU
+normalcargoholds_double_NDNU
+normalcargoholds_double_DSDU
+normalcargoholds_double_UNNU
+normalcargoholds_triple_NNNS
+normalcargoholds_triple_SNSN
+normalcargoholds_triple_NNND
+normalcargoholds_triple_DNDN
+normalcargoholds_triple_SNDS
+normalcargoholds_triple_DNSD
 
 # Special Cargo Holds (with size specification)
-specialcargoholds_single_SSSS
-specialcargoholds_double_DDDD
-specialcargoholds_single_SUDS
-specialcargoholds_double_NUSU
-specialcargoholds_single_SDUS
-specialcargoholds_double_USDN
+specialcargoholds_single_DDDU
+specialcargoholds_single_DSNU
+specialcargoholds_single_NDSU
+specialcargoholds_single_NUNU
+specialcargoholds_single_UNNU
+specialcargoholds_single_SSSU
+specialcargoholds_double_NDNS
+specialcargoholds_double_NNND
+specialcargoholds_double_NNNS
 
 # Battery Compartments (type and initial charge)
-batterycompartment_double_SSSS
-batterycompartment_triple_DDDD
-batterycompartment_double_SUDS
-batterycompartment_triple_NUSU
+batterycompartment_double_DSDS
+batterycompartment_double_NNNU
+batterycompartment_double_2_NNNU
+batterycompartment_double_NUNU
+batterycompartment_double_UDDD
+batterycompartment_double_UDNN
+batterycompartment_double_UDSN
+batterycompartment_double_UNNS
+batterycompartment_double_UNNU
+batterycompartment_double_USDN
+batterycompartment_double_USSS
+batterycompartment_triple_DDSN
+batterycompartment_triple_DNNN
+batterycompartment_triple_DSNN
+batterycompartment_triple_NNNS
+batterycompartment_triple_SNDN
+batterycompartment_triple_SSDN
 
 # Shield Generators
+shieldgenerator_NSUS
+shieldgenerator_DSDS
+shieldgenerator_NDDD
+shieldgenerator_NDDU
+shieldgenerator_NNSU
+shieldgenerator_NNUD
+shieldgenerator_SDSD
 shieldgenerator_SNSS
-shieldgenerator_SDSS
-shieldgenerator_SUSS
 
 # Life Support Systems (with color specification)
 lifesupportsystem_brown_SSSS
@@ -81,8 +143,10 @@ lifesupportsystem_brown_SUDS
 lifesupportsystem_purple_NUSU
 
 # Structural Modules
-structuralmodule_SSSS
-structuralmodule_DDDD
-structuralmodule_SUDS
-structuralmodule_NUSU
-structuralmodule_SDUS
+structuralmodule_SUDU
+structuralmodule_SUNU
+structuralmodule_SUSU
+structuralmodule_UDDU
+structuralmodule_UDNU
+structuralmodule_USDU
+structuralmodule_UUNS

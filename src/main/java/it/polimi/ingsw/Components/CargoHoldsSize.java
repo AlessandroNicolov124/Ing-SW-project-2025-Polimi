@@ -14,5 +14,14 @@ public enum CargoHoldsSize {
     public int getCapacity() {
         return capacity;
     }
+
+    public static CargoHoldsSize fromInt(int i) {
+        switch (i) {
+            case 1: return SINGLE;
+            case 2: return DOUBLE;
+            case 3: return TRIPLE;
+            default: throw new IllegalArgumentException("Invalid CargoHoldsSize value: " + i);
+        }
+    }
 }
 
