@@ -9,6 +9,12 @@ import java.util.UUID;
 public interface LobbyManager {
 
     int generatePlayerId(GeneralClientIf client);
+
+    boolean registerUsername(int playerId, String playerName);
+
+    boolean isUsernameAvailable(String username);
+
+    void unregisterUsername(int playerId);
     
     GameMatch createMatch(String matchName, int hostId, String hostName);
     
@@ -17,6 +23,8 @@ public interface LobbyManager {
     boolean leaveMatch(UUID matchId, int playerId);
 
     boolean startMatch(UUID matchId, int requestingPlayerId);
+
+    boolean loadingAckResponse(UUID matchId);
 
     List<String> getAvailableMatches();
     

@@ -10,6 +10,8 @@ import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.network.messages.loading.LoadingAckRequest;
+import it.polimi.ingsw.network.messages.loading.PlayerReadyRequest;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerRequest;
 import it.polimi.ingsw.network.messages.lobby.CreateMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.GetMatchesRequest;
@@ -60,7 +62,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     @Override
-    public void createPlayer(String username) throws IOException {
+    public void createPlayer(String username) throws Exception {
         synchronized (out) {
             out.writeObject(new AddPlayerRequest(username));
             out.flush();
@@ -107,6 +109,23 @@ public class SocketClient implements Runnable, GeneralClientIf {
             out.flush();
         }
     }
+
+    @Override
+    public void loadingAck(UUID matchId) throws Exception {
+        synchronized (out) {
+            out.writeObject(new LoadingAckRequest(matchId));
+            out.flush();
+        }
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int playerId) throws Exception {
+        synchronized (out) {
+            out.writeObject(new PlayerReadyRequest(matchId, playerId));
+            out.flush();
+        }
+    }
+    
 
 /*     public Component pickComponentCard() throws IOException
     {

@@ -31,6 +31,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private ShipBuildingHandler activeShipBuildingHandler;
     private LobbyHandler lobbyHandler;
     private List<Integer> availablePositions;
+    private boolean localReady = false;
 
     public GalaxyTruckerTUI()
     {
@@ -57,12 +58,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             switch (state) {
                 case INTRO                -> handleIntroState();
                 case ASK_USERNAME         -> handleUsernameState();
-                case WAIT_FOR_CALLBACK -> handleWaitForPlayerCreationState();
+                case WAIT_FOR_CALLBACK    -> handleWaitForPlayerCreationState();
                 case ASK_NET              -> handleConnectionTypeState();
                 case ASK_ADDRESS          -> handleAddressState();
                 case CONNECTING           -> handleConnectingState();
                 case LOBBY_MENU           -> handleLobbyMenuState();
                 case WAIT_IN_MATCH        -> handleWaitInMatchState();
+                case WAITING_FOR_PLAYERS  -> handleWaitForAllPlayers();
+                case LOADING              -> handleLoadingMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
                 //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
@@ -126,13 +129,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
             }
 
-            //console.printMessage("Connected as " + username + " with Player ID: " + playerId + "!");
+            console.printMessage("Connected as " + username + "!");
             
             state = TuiState.WAIT_FOR_CALLBACK;
 
         } catch (Exception e) {
             console.printError("Connection failed: " + e.getMessage());
-            e.printStackTrace();
             state = TuiState.ASK_NET;
         }
     }
@@ -145,10 +147,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 return;
             }
 
-            if (!lobbyHandler.handleLobbyMenu()) {
+        while (state == TuiState.LOBBY_MENU) {
+            lobbyHandler.tick();
+            String cmd = console.pollCommand(200);
+            if (cmd != null && !lobbyHandler.executeCommand(cmd)) {
                 state = TuiState.TERMINATED;
                 return;
             }
+        }
 
         } catch (Exception e) {
             console.printError("Error in lobby menu: " + e.getMessage());
@@ -156,26 +162,56 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     private void handleWaitInMatchState() {
-        try {
-            if (lobbyHandler == null || !lobbyHandler.isInMatch()) {
-                console.printMessage("No active match. Returning to lobby...");
-                state = TuiState.LOBBY_MENU;
-                return;
-            }
+        if (lobbyHandler == null || !lobbyHandler.isInMatch()) {
+            state = TuiState.LOBBY_MENU;
+            return;
+        }
 
-            if (!lobbyHandler.handleLobbyMenu()) {
+        while (state == TuiState.WAIT_IN_MATCH) {
+            lobbyHandler.tick();
+            String cmd = console.pollCommand(200);
+            if (cmd != null && !lobbyHandler.executeCommand(cmd)) {
                 state = TuiState.TERMINATED;
                 return;
             }
-            
             if (!lobbyHandler.isInMatch()) {
                 state = TuiState.LOBBY_MENU;
             }
-        } catch (Exception e) {
-            console.printError("Error while waiting in match: " + e.getMessage());
-            state = TuiState.LOBBY_MENU;
         }
     }
+
+    private void handleLoadingMatchState() {
+        try {
+            client.loadingAck(lobbyHandler.getCurrentMatchId());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        console.printMessage("Match started by: " + username + "! Waiting for other players to start!");
+
+        state = TuiState.WAIT_FOR_CALLBACK;
+
+    }
+
+    private void handleWaitForAllPlayers() {
+        if (!localReady) {
+            console.printMessage("Press enter when you are ready");
+        }
+
+        while (state == TuiState.WAITING_FOR_PLAYERS) {
+            String input = console.pollCommand(200);
+
+            if (input != null && !localReady) {
+                try {
+                    client.playerReady(lobbyHandler.getCurrentMatchId(), lobbyHandler.getPlayerId());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                console.printMessage("You are marked as ready. Waiting for game to start...");
+                localReady = true;
+            }
+        }
+        localReady = false;
+     }
 
 /*     public void handlePlayerReady() {
         try {
@@ -472,6 +508,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void usernameRejected(String errorMessage) {
+        console.printError(errorMessage);
+        state = TuiState.ASK_USERNAME;
+    }
+
+    @Override
     public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
         lobbyHandler.matchCreatedCallback(matchName, matchId, true, playerName, playerId);
         this.state = TuiState.WAIT_IN_MATCH;
@@ -504,7 +546,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void matchStarted(UUID matchId, String username) {
         lobbyHandler.matchStartedCallback(matchId, username);   
-        this.state = TuiState.SHIP_BUILDING;
+        this.state = TuiState.LOADING;
 
     }
 
@@ -512,6 +554,25 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     public void playersInMatch(UUID matchId, List<String> playerNames, int hostId) {
         lobbyHandler.playersInMatchCallback(matchId, playerNames, hostId);
     }
+
+
+    @Override
+    public void loadingStatus(UUID matchId, int playersReady, int totalPlayers) {
+        lobbyHandler.loadingStatusCallback(matchId, playersReady, totalPlayers);
+        this.state = TuiState.WAITING_FOR_PLAYERS;
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
+        lobbyHandler.playerReadyCallback(matchId, readyPlayers, totalPlayers);
+    }
+
+    @Override
+    public void shipBuildingStart(UUID matchId, int readyPlayers) {
+        lobbyHandler.shipBuildingStartCallback(matchId, readyPlayers);
+        this.state = TuiState.SHIP_BUILDING;
+    }
+
 
     @Override
     public void showAvailablePositions(List<Integer> positions) {

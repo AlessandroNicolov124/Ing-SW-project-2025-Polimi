@@ -42,4 +42,8 @@ public interface VirtualServer extends Remote {
 
     List<String> getPlayersInMatch(UUID matchId) throws RemoteException;
 
+    boolean loadingAck(UUID matchId) throws RemoteException;
+
+    boolean playerReady(UUID matchId, int playerId) throws RemoteException;
+
 }

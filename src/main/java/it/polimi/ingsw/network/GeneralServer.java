@@ -13,6 +13,7 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +34,10 @@ public class GeneralServer implements LobbyManager {
     private final BlockingQueue<ResponseMessage> generalBroadcastQueue = new LinkedBlockingQueue<>();
     private final Thread generalDispatcher;
     private final List<GeneralClientIf> allClients = new CopyOnWriteArrayList<>();
+    // to make sure the usernames are unique
+    private final Map<Integer, String> playerIdsAndNames = new ConcurrentHashMap<>();
+    private final Set<String> usernames = ConcurrentHashMap.newKeySet();
+
 
     public GeneralServer() throws RemoteException, MalformedURLException {
         System.setProperty("java.rmi.server.hostname", "127.0.0.1");
@@ -48,6 +53,28 @@ public class GeneralServer implements LobbyManager {
     public void serverRun() {
         new Thread(this.socketServer).start();
         new Thread(this.rmiServer).start();
+    }
+
+    @Override
+    public boolean registerUsername(int playerId, String username) {
+        boolean added = usernames.add(username);
+        if (added) {
+            playerIdsAndNames.put(playerId, username);
+        }
+        return added;
+    }
+
+    @Override
+    public void unregisterUsername(int playerId) {
+        String name = playerIdsAndNames.remove(playerId);
+        if (name != null) {
+            usernames.remove(name);
+        }
+    }
+
+    @Override
+    public boolean isUsernameAvailable(String username) {
+        return !usernames.contains(username);
     }
 
     @Override
@@ -116,11 +143,24 @@ public class GeneralServer implements LobbyManager {
                 return false;
             }
 
-            System.out.println("[GeneralServer] Match " + match.getMatchName() + " started");
+            System.out.println("[GeneralServer] Match " + match.getMatchName() + " started by " + match.getPlayerById(requestingPlayerId).getNickName());
             return true;
         }
         System.out.println("[GeneralServer] Failed to start match " + matchId + ": Match not found or already started");
         return false;
+    }
+
+    @Override
+    public boolean loadingAckResponse(UUID matchId) {
+        GameMatch match = findMatchById(matchId);
+        if (match == null) {
+            return false;
+        } else {
+            match.loadingAckResponse();
+            System.out.println("[GeneralServer] Waiting for players to load in match: " + match.getMatchName());
+            return true;
+        } 
+
     }
 
     // Search and retrieve matches

@@ -35,4 +35,8 @@ public interface GeneralClientIf extends AutoCloseable {
 
     Component pickComponentCard() throws Exception;
 
+    void loadingAck(UUID matchId) throws Exception;
+
+    void playerReady(UUID matchId, int playerId) throws Exception;
+
 }

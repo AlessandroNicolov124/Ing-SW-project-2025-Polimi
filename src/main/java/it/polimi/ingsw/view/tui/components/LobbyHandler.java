@@ -3,8 +3,11 @@ package it.polimi.ingsw.view.tui.components;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class LobbyHandler {
     private final GeneralClientIf simpleClient;
@@ -15,6 +18,9 @@ public class LobbyHandler {
     private String username;
     private List<String> availableMatches;
     private List<String> playersInCurrentMatch;
+    private int readyPlayers;
+    private final AtomicBoolean dirty = new AtomicBoolean(true);
+    private final Set<UUID> handledCreations = new HashSet<>();
 
     public LobbyHandler(ConsoleManager console, GeneralClientIf simpleClient, int playerId, String username) {
         this.console = console;
@@ -23,21 +29,30 @@ public class LobbyHandler {
         this.username = username;
         this.availableMatches = new ArrayList<>();
         this.playersInCurrentMatch = new ArrayList<>();
+        
     }
 
     public boolean handleLobbyMenu() {
-        try {
-            showLobbyMenu();
-            String command = console.readCommand();
-            return executeCommand(command);
-        } catch (Exception e) {
-            console.printError("Error in lobby: " + e.getMessage());
-            return true;
-        }
+        String cmd = console.pollCommand(200);
+        return (cmd == null) || executeCommand(cmd);
     }
 
     public boolean isInMatch() {
         return currentMatchId != null;
+    }
+
+    public UUID getCurrentMatchId() {
+        return currentMatchId;
+    }
+
+    public int getPlayerId() {
+        return playerId;
+    }
+
+    public void tick() {
+        if (dirty.getAndSet(false)) {
+            showLobbyMenu();
+        }
     }
 
     private void showLobbyMenu() {
@@ -60,14 +75,10 @@ public class LobbyHandler {
     }
 
     public boolean executeCommand(String command) {
+        if (command == null || command.trim().isEmpty()) return true;
         try {
-            if (currentMatchId == null) {
-                return handleLobbyCommands(command);
-            } else {
-                return handleMatchCommands(command);
-            }
+            return (currentMatchId == null) ? handleLobbyCommands(command) : handleMatchCommands(command);
         } catch (Exception e) {
-            e.printStackTrace();
             console.printError("Error executing command: " + e.getMessage());
             return true;
         }
@@ -204,6 +215,9 @@ public class LobbyHandler {
 
         public void matchCreatedCallback(String matchName, UUID matchId, boolean isHost, String playerName, int playerId) {
             String matchNameParsed = matchId.toString() + ": " + matchName;  
+            if (this.playerId == playerId && !handledCreations.add(matchId)) {
+                return;
+            }
             if (this.playerId != playerId) {
                 if (!this.availableMatches.contains(matchNameParsed)) {
                     this.availableMatches.add(matchNameParsed);
@@ -218,7 +232,7 @@ public class LobbyHandler {
 
             console.printMessage("Match created successfully: " + matchName);
             console.printMessage("You are now in match: " + matchName + (isHost ? " (as Host)" : ""));
-            showLobbyMenu();     
+            dirty.set(true);   
         }
 
 
@@ -233,7 +247,7 @@ public class LobbyHandler {
                 console.printMessage((i + 1) + ". " + availableMatches.get(i));
             }
         }
-        showLobbyMenu();
+        dirty.set(true);
     }
     
     public void playerJoinedMatchCallback(UUID matchId, String playerName) {
@@ -241,13 +255,15 @@ public class LobbyHandler {
             currentMatchId = matchId;
             playersInCurrentMatch.clear();
         }
-        if (!currentMatchId.equals(matchId)) return;
+        if (!currentMatchId.equals(matchId)) {
+            return;
+        }
 
         if (!playersInCurrentMatch.contains(playerName)) {
             playersInCurrentMatch.add(playerName);
         }
         console.printMessage("Player " + playerName + " has joined the match.");
-        showLobbyMenu();
+        dirty.set(true);
     }
 
 
@@ -265,7 +281,7 @@ public class LobbyHandler {
             playersInCurrentMatch.clear();
         }
 
-        showLobbyMenu();
+        dirty.set(true);
     }   
 
     public void updateHostCallback(UUID matchId, int newHostId, String newHostName) {
@@ -276,27 +292,45 @@ public class LobbyHandler {
         console.printMessage(
             "The new host is now: " + newHostName + (isHost ? " — you are now the host." : ""));
 
-        showLobbyMenu();
+        dirty.set(true);
     }
 
     public void playersInMatchCallback(UUID matchId, List<String> playerNames, int hostId) {
         currentMatchId = matchId;
         playersInCurrentMatch.clear();
         playersInCurrentMatch.addAll(playerNames);
-
         isHost = (matchId != null && hostId == playerId);
-
-        showLobbyMenu();
+        dirty.set(true);
     }
 
     public void matchStartedCallback(UUID matchId, String username) {
         if (currentMatchId == null || !currentMatchId.equals(matchId)) {
             return;
         }
-        console.printMessage("Match started by: " + username + "! Assemble your ship!");
-        // The ship building phase will not be seen until a user will press an input
-        // this is a bit annoying, maybe a loading phase would be better
+        console.printMessage("Loading match... Please wait.");
     }
+
+    public void loadingStatusCallback(UUID matchId, int playersReady, int totalPlayers) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
+        }
+        
+    }
+
+    public void playerReadyCallback(UUID matchId, int readyPlayers, int totalPlayers /*, String username */) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
+        }
+        console.printMessage("Player " + readyPlayers + " out of " + totalPlayers + " are ready for the match.");
+    }
+
+    public void shipBuildingStartCallback(UUID matchId, int readyPlayers) {
+        if (currentMatchId == null || !currentMatchId.equals(matchId)) {
+            return;
+        }
+        console.printMessage("Ship building phase started with " + readyPlayers + " players ready.");
+    }
+
 
 
 }

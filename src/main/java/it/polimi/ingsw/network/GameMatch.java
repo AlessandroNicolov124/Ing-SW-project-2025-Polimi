@@ -2,6 +2,7 @@ package it.polimi.ingsw.network;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import it.polimi.ingsw.GameController;
@@ -17,6 +18,7 @@ public class GameMatch {
     private List<Player> players;
     private MatchStates matchState;
     private Player hostPlayer;
+    private Map<Integer, Boolean> readyPlayersMap;
 
     public GameMatch(String matchName, int hostId, String hostName) {
         this.matchId = UUID.randomUUID();
@@ -65,6 +67,10 @@ public class GameMatch {
                 .filter(player -> player.getId() == playerId)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public Map<Integer, Boolean> getReadyPlayersMap() {
+        return readyPlayersMap;
     }
 
     // General match state checks
@@ -150,17 +156,52 @@ public class GameMatch {
     // Control match state
     public synchronized void startMatch() {
         if (matchState == MatchStates.WAITING_FOR_PLAYERS && players.size() >= 2) {
-            matchState = MatchStates.IN_PROGRESS;
+            matchState = MatchStates.LOADING;
             
             if (controller != null) {
                 controller.startGame();
             }
             
-            System.out.println("[GameMatch " + matchId + "] Match " + matchName + " started with " + players.size() + " players");
+            System.out.println("[GameMatch " + matchId + "] Match " + matchName + " started with " + players.size() + " players. Loading game...");
         } else {
             System.out.println("[GameMatch " + matchId + "] Cannot start match: insufficient players or wrong state");
         }
     }
+
+    public synchronized void loadingAckResponse() {
+        if (matchState == MatchStates.LOADING) {
+            readyPlayersMap = new java.util.HashMap<>();
+            for (Player player : players) {
+                readyPlayersMap.put(player.getId(), false);
+            }
+            System.out.println("[GameMatch " + matchId + "] Game loaded. Waiting for players to finish loading...");
+        }
+    }
+
+    public synchronized boolean setPlayerReady(int playerId) {
+        if (readyPlayersMap == null || !readyPlayersMap.containsKey(playerId)) {
+            System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " is not in the match or match is not loading.");
+            return false;
+        }
+
+        // if the player is already ready, ignore the request otherwise he would be able to spam (interesting behavior for trolling)
+        if (Boolean.TRUE.equals(readyPlayersMap.get(playerId))) {
+            System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " was already ready. Ignoring duplicate.");
+            return false;
+        }
+
+        readyPlayersMap.put(playerId, true);
+        System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " is ready.");
+
+        if (readyPlayersMap.values().stream().allMatch(Boolean::booleanValue)) {
+            matchState = MatchStates.IN_PROGRESS;
+            System.out.println("[GameMatch " + matchId + "] All players are ready. " + "Match is now in progress.");
+        } else {
+            System.out.println("[GameMatch " + matchId + "] Waiting for all players to be ready...");
+        }
+        return true;
+    }
+
 
     public void endMatch() {
         this.matchState = MatchStates.FINISHED;

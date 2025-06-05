@@ -28,5 +28,10 @@ public interface GameListener {
     void updateAvailableMatches(List<String> matchNames);
     void updateHost(UUID matchId, int playerId, String playerName);
     void matchStarted(UUID matchId, String username);
+    void loadingStatus(UUID matchId, int playersReady, int totalPlayers);
     void playersInMatch(UUID matchId, List<String> players, int hostId);
+    void playerReady(UUID matchId, int readyPlayers, int totalPlayers);
+    void shipBuildingStart(UUID matchId, int readyPlayers);
+    void usernameRejected(String errorMessage);
+
 }

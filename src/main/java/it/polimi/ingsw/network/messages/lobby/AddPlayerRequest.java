@@ -6,7 +6,7 @@ import it.polimi.ingsw.network.socket.server.SocketClientHandler;
 public class AddPlayerRequest implements RequestMessage {
 
     private static final long serialVersionUID = 1L;
-    public String playerName; 
+    private final String playerName; 
 
 
     public AddPlayerRequest(String playerName) {
@@ -19,7 +19,11 @@ public class AddPlayerRequest implements RequestMessage {
 
     @Override
     public void handleServer(SocketClientHandler handler) {
-        handler.createPlayer(playerName);
+        try {
+            handler.createPlayer(playerName);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
 }

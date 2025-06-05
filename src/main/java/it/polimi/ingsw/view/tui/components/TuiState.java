@@ -15,6 +15,8 @@ public enum TuiState {
     TERMINATED,            // exit
 
     LOBBY_MENU,
-    WAIT_IN_MATCH
+    WAIT_IN_MATCH,
+    LOADING,
+    WAITING_FOR_PLAYERS
 
 }

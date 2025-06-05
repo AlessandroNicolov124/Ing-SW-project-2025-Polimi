@@ -11,7 +11,11 @@ import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
+import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
 import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
+import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
+import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -86,9 +90,24 @@ public class RmiServer extends UnicastRemoteObject
     public int createPlayer(String username, RmiClientIf client) throws RemoteException {
         int playerId = lobbyManager.generatePlayerId(client);
         if (playerId == -1) {
-            throw new RemoteException("Failed to generate player ID");
+            try {
+                client.showUpdate(new UsernameRejectedResponse("Failed to generate player ID"));
+            } catch (RemoteException e) {
+                System.err.println("Failed to send rejection message: " + e.getMessage());
+            }
+            return -1; 
         }
-        System.out.println("[ServerRMI] Player: " + username + " added with ID: " + playerId);
+
+        if (!lobbyManager.registerUsername(playerId, username)) {
+            try {
+                client.showUpdate(new UsernameRejectedResponse("Username already taken: " + username));
+            } catch (RemoteException e) {
+                System.err.println("Failed to send rejection message: " + e.getMessage());
+            }
+            return -1;
+        }
+
+        System.out.println("[ServerRMI] Player " + username + " added with ID " + playerId);
         return playerId;
     }
 
@@ -199,6 +218,61 @@ public class RmiServer extends UnicastRemoteObject
             lobbyManager.multicastToMatch(matchId, new StartMatchResponse(matchId, username));
         }
         return success;
+    }
+
+    // remainder for // loadingAck and playerReady
+    // things are already loaded in startMatch
+    // so when the host sends us a loadingAck, we need to send back a message like loadingStatus
+    // so that each of them in the match knows that the match is being started by the host.
+    // in order to start all together we send first the loadingStatus message
+    // the clients will be in another state, they then send another message to say that they are ready
+    // the server will track how many players are ready and if all of them are ready the server will 
+    // answer back and the clients will start the match together.
+
+    @Override
+    public boolean loadingAck(UUID matchId) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found: " + matchId);
+            return false;
+        }
+
+        lobbyManager.loadingAckResponse(matchId);
+        System.out.println("[ServerRMI] Loading acknowledged for match: " + matchId);
+        int readyPlayersMap = match.getReadyPlayersMap().size();
+        int totalPlayers = match.getPlayers().size();
+        lobbyManager.multicastToMatch(matchId, new LoadingStatusResponse(matchId, readyPlayersMap, totalPlayers));
+        return true;
+    }
+
+    @Override
+    public boolean playerReady(UUID matchId, int playerId) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found: " + matchId);
+            return false;
+        }
+
+        if (!match.isPlayerInMatchById(playerId)) {
+            System.out.println("[ServerRMI] Player ID " + playerId + " not in match: " + matchId);
+            return false;
+        }
+
+        boolean isReady = match.setPlayerReady(playerId);
+        if (!isReady) {
+            System.out.println("[ServerRMI] Duplicate ready state for player ID " + playerId + " in match: " + matchId);
+            return false;
+        }
+        int playersReady = (int) match.getReadyPlayersMap().values().stream().filter(Boolean::booleanValue).count();
+        int totalPlayers = match.getPlayers().size();
+        lobbyManager.multicastToMatch(matchId, new PlayerReadyResponse(matchId, playersReady, totalPlayers));
+        System.out.println("[ServerRMI] Player ID " + playerId + " is ready for match: " + matchId);
+        if (playersReady == totalPlayers) {
+            System.out.println("[ServerRMI] All players are ready for match: " + matchId);
+            lobbyManager.multicastToMatch(matchId, new ShipBuildingStartResponse(matchId, playersReady));
+        }
+        return true;
     }
 
     @Override

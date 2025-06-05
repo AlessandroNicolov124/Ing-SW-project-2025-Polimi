@@ -13,7 +13,7 @@ import it.polimi.ingsw.network.messages.lobby.GetMatchesResponse;
 import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
-
+import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -66,10 +66,12 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     @Override
     public void createPlayer(String username) throws RemoteException {
         try{
-            int prova = server.createPlayer(username, this);
-            showUpdate(new AddPlayerResponse(prova, username));
+            int playerId = server.createPlayer(username, this);
+            if (playerId != -1) {
+                showUpdate(new AddPlayerResponse(playerId, username));
+            }
         } catch (RemoteException e) {
-            throw new RemoteException("Error creating player");
+            showUpdate(new UsernameRejectedResponse("Connection error: " + e.getMessage()));
         }
     }
 
@@ -102,7 +104,6 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
             if (!isJoined) {
                 throw new RemoteException("Failed to join match: " + matchId);
             }
-            showUpdate(new JoinMatchResponse(matchId, username));
             showUpdate(new PlayersInMatchResponse(matchId, playerNames, hostId));
 
         } catch (RemoteException e) {
@@ -132,6 +133,30 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
             }
         } catch (RemoteException e) {
             throw new RemoteException("Error starting match", e);
+        }
+    }
+
+    @Override
+    public void loadingAck(UUID matchId) throws RemoteException {
+        try {
+            boolean isAcknowledged = server.loadingAck(matchId);
+            if (!isAcknowledged) {
+                throw new RemoteException("Failed to acknowledge loading for match: " + matchId);
+            }
+        } catch (RemoteException e) {
+            throw new RemoteException("Error acknowledging loading", e);
+        }
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int playerId) throws RemoteException {
+        try {
+            boolean isReady = server.playerReady(matchId, playerId);
+            if (!isReady) {
+                throw new RemoteException("Failed to set player ready for match: " + matchId);
+            }
+        } catch (RemoteException e) {
+            throw new RemoteException("Error setting player ready", e);
         }
     }
 

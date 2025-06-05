@@ -50,4 +50,10 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     @Override
     void startMatch(UUID matchId, int playerId, String username) throws RemoteException;
 
+    @Override
+    void loadingAck(UUID matchId) throws RemoteException;
+
+    @Override
+    void playerReady(UUID matchId, int playerId) throws RemoteException;
+
 }
