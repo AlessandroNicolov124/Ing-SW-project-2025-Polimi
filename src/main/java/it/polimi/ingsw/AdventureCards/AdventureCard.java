@@ -1,8 +1,10 @@
 package it.polimi.ingsw.AdventureCards;
 
+import java.io.Serializable;
+
 import it.polimi.ingsw.Player;
 
-public abstract class AdventureCard {
+public abstract class AdventureCard implements Serializable{
     private int copies;
     private int duration;
     private int cost;

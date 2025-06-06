@@ -6,7 +6,7 @@ import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.*; // For specific component types
 import it.polimi.ingsw.Direction; // For rotation
 import it.polimi.ingsw.network.client.GeneralClientIf;
-import it.polimi.ingsw.network.socket.messages.RotationType; // <<< ADD THIS IMPORT
+import it.polimi.ingsw.network.messages.RotationType; // <<< ADD THIS IMPORT
 
 import java.util.*;
 import java.io.IOException;
