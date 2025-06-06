@@ -71,17 +71,17 @@ public class LoginController {
                     Thread t = new Thread(socketClient);
                     t.start();
 
-                    context.setPlayerId(context.getClient().addPlayer(username));
-
-
+                    context.getClient().createPlayer(username);
+                    //methods to add a new player
                 }
-                else if ("rmi".equals(connectionType)) {
+                else {
                     RmiClient rmiClient = RmiClient.connectTo(serverAddress, context);
                     if (rmiClient == null) {
                         throw new IllegalStateException("Failed to connect to RMI server.");
                     }
                     context.setClient(rmiClient);
-                    context.setPlayerId(context.getClient().addPlayer(username));
+                    context.getClient().createPlayer(username);
+
                 }
 
                 System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());

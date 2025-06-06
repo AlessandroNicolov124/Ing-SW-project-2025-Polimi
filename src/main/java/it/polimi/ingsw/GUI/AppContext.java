@@ -6,7 +6,7 @@ import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -16,6 +16,9 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static it.polimi.ingsw.network.messages.RotationType.*;
 
 public class AppContext implements GameListener {
     private String username;
@@ -155,6 +158,11 @@ public class AppContext implements GameListener {
     }
 
     @Override
+    public void playerCreated(int playerId, String playerName) {
+
+    }
+
+    @Override
     public void displayRefresh() {
         Platform.runLater(() -> {
             System.out.println("[GUI] Display refresh requested");
@@ -287,5 +295,60 @@ public class AppContext implements GameListener {
             System.out.println("[GUI] Server message: " + message);
             showInfoMessage("Server Message", message);
         });
+    }
+
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
+
+    }
+
+    @Override
+    public void playerJoinedMatch(UUID matchId, String playerName) {
+
+    }
+
+    @Override
+    public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
+
+    }
+
+    @Override
+    public void updateAvailableMatches(List<String> matchNames) {
+
+    }
+
+    @Override
+    public void updateHost(UUID matchId, int playerId, String playerName) {
+
+    }
+
+    @Override
+    public void matchStarted(UUID matchId, String username) {
+
+    }
+
+    @Override
+    public void loadingStatus(UUID matchId, int playersReady, int totalPlayers) {
+
+    }
+
+    @Override
+    public void playersInMatch(UUID matchId, List<String> players, int hostId) {
+
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
+
+    }
+
+    @Override
+    public void shipBuildingStart(UUID matchId, int readyPlayers) {
+
+    }
+
+    @Override
+    public void usernameRejected(String errorMessage) {
+
     }
 }
