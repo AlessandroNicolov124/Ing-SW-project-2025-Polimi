@@ -38,7 +38,6 @@ public class ConsoleManager {
     }
 
 
-
     public void printMessage(String message) {
         System.out.println(message);
     }
@@ -72,12 +71,16 @@ public class ConsoleManager {
 
     public String askUsername() {
         System.out.print("Enter username: ");
+        System.out.flush();
+
         return blockingReadLine();
     }
 
     public String askConnectionType() {
         while (true) {
             System.out.print("Choose connection type (rmi/socket): ");
+            System.out.flush();
+
             String input = blockingReadLine().toLowerCase();
             if (input.equals("rmi") || input.equals("socket")) {
                 return input;
@@ -88,6 +91,8 @@ public class ConsoleManager {
 
     public String askServerAddress() {
         System.out.print("Enter server address (default: localhost): ");
+        System.out.flush();
+
         String address = blockingReadLine();
         return address.isEmpty() ? "localhost" : address;
     }
@@ -96,6 +101,7 @@ public class ConsoleManager {
         int defaultPort = connectionType.equals("rmi") ? 1099 : 7777;
         while (true) {
             System.out.print("Enter server port (default: " + defaultPort + "): ");
+            System.out.flush();
             String portStr = blockingReadLine();
             
             if (portStr.isEmpty()) {
@@ -120,6 +126,8 @@ public class ConsoleManager {
 
     public String askQuestion(String prompt) {
         System.out.print(prompt + " ");
+        System.out.flush();
+        
         return blockingReadLine();
     }
 

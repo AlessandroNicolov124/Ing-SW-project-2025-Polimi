@@ -24,7 +24,6 @@ import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 
 import java.io.*;
 import java.net.Socket;
-import java.rmi.RemoteException;
 import java.util.List;
 import java.util.UUID;
 
