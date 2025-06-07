@@ -1,5 +1,6 @@
 package it.polimi.ingsw.view.tui.components;
 
+import java.io.IOException;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -127,9 +128,20 @@ public class ConsoleManager {
     public String askQuestion(String prompt) {
         System.out.print(prompt + " ");
         System.out.flush();
-        
+
         return blockingReadLine();
     }
+
+    public void flushInput() {
+        try {
+            while (System.in.available() > 0) {
+                System.in.read();
+            }
+        } catch (IOException e) {
+            
+        }
+    }
+
 
     public Scanner getScanner() {
         return scanner;

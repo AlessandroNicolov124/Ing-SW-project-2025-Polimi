@@ -130,7 +130,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
 
             console.printMessage("Connected as " + username + "!");
-            
+            console.flushInput();
             state = TuiState.WAIT_FOR_CALLBACK;
 
         } catch (Exception e) {
