@@ -1,8 +1,11 @@
 package it.polimi.ingsw.view.tui.components;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -33,6 +36,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private List<Integer> availablePositions;
     private boolean localReady = false;
 
+    private CompletableFuture<Player> playerCreationFuture;
+
+
     public GalaxyTruckerTUI()
     {
         this.socketClient = null;
@@ -58,7 +64,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             switch (state) {
                 case INTRO                -> handleIntroState();
                 case ASK_USERNAME         -> handleUsernameState();
-                case WAIT_FOR_CALLBACK    -> handleWaitForPlayerCreationState();
+                case WAIT_FOR_CALLBACK_PLAYER    -> handleWaitForPlayerCreationState();
                 case ASK_NET              -> handleConnectionTypeState();
                 case ASK_ADDRESS          -> handleAddressState();
                 case CONNECTING           -> handleConnectingState();
@@ -101,13 +107,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         state = TuiState.CONNECTING;
     }
 
-    private void handleWaitForPlayerCreationState() {
-        // nothing to do here, waiting for a callback
-    }
-
     private void handleConnectingState() {
         try {
             console.printConnectingMessage(connectionType, serverAddress, serverPort);
+            playerCreationFuture = new CompletableFuture<>();
 
             if ("socket".equalsIgnoreCase(connectionType)) {
                 socketClient = new SocketClient(serverAddress, serverPort, this);
@@ -122,20 +125,41 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     throw new IllegalStateException("Failed to connect to RMI server.");
                 }
                 
-                // Create player through the new system
                 client.createPlayer(username);
 
             } else {
                 throw new IllegalArgumentException("Invalid connection type: " + connectionType);
             }
 
-            console.printMessage("Connected as " + username + "!");
             
-            state = TuiState.WAIT_FOR_CALLBACK;
+            state = TuiState.WAIT_FOR_CALLBACK_PLAYER;
 
         } catch (Exception e) {
             console.printError("Connection failed: " + e.getMessage());
             state = TuiState.ASK_NET;
+        }
+    }
+
+    private void handleWaitForPlayerCreationState() {
+        try {
+            Player p = playerCreationFuture.get(15, TimeUnit.SECONDS);
+
+            console.printMessage("Connected as " + username + "!");
+            this.currentPlayer = p;
+            state = TuiState.LOBBY_MENU;
+
+        } catch (TimeoutException e) {
+            console.printError("Timeout in attesa della creazione del giocatore. Riprova.");
+            state = TuiState.ASK_USERNAME;
+
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            console.printError("Attesa interrotta.");
+            state = TuiState.ASK_USERNAME;
+
+        } catch (ExecutionException e) {
+            console.printError("Errore nella creazione del giocatore: " + e.getCause());
+            state = TuiState.ASK_USERNAME;
         }
     }
 
@@ -188,7 +212,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
         console.printMessage("Match started by: " + username + "! Waiting for other players to start!");
 
-        state = TuiState.WAIT_FOR_CALLBACK;
+        state = TuiState.WAIT_FOR_CALLBACK_PLAYER;
 
     }
 
@@ -504,7 +528,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());
-        state = TuiState.LOBBY_MENU;
+        playerCreationFuture.complete(currentPlayer);
     }
 
     @Override
