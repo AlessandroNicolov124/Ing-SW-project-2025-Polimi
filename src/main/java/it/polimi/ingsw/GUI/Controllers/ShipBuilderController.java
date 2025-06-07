@@ -454,7 +454,6 @@ public class ShipBuilderController implements GameStateUpdateListener {
 
     public void removeComponentAt(Position position) {
         try {
-            // implement method on client 
             statusLabel.setText("Removing component at (" + position.getX() + ", " + position.getY() + ")...");
         } catch (Exception e) {
             showErrorDialog("Removal Failed", "Failed to remove component: " + e.getMessage());

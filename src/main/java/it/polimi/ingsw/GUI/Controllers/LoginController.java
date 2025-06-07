@@ -86,7 +86,8 @@ public class LoginController {
 
                 System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());
 
-                GUIApp.showShipBuilder();
+                //GUIApp.showShipBuilder();
+                GUIApp.showLobbyPage();
 
             } catch (Exception e) {
                 showErrorDialog("Connection Failed", 
