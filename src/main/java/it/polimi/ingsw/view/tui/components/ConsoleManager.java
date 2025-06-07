@@ -1,35 +1,25 @@
 package it.polimi.ingsw.view.tui.components;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class ConsoleManager {
-    private final BufferedReader reader;
+    private final Scanner scanner;
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
-    private volatile boolean closed = false;
 
     public ConsoleManager() {
-        this.reader = new BufferedReader(new InputStreamReader(System.in));
+        this.scanner = new Scanner(System.in);
 
-        Thread inputThread = new Thread(() -> {
-            try {
-                String line;
-                while (!closed && (line = reader.readLine()) != null) {
-                    queue.offer(line.trim());
-                }
-            } catch (IOException e) {
-                if (!closed) {
-                    System.err.println("Error reading input: " + e.getMessage());
-                }
+        Thread reader = new Thread(() -> {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine().trim();
+                queue.offer(line);
             }
         }, "stdin-input-reader");
-        
-        inputThread.setDaemon(true);
-        inputThread.start();
+        reader.setDaemon(true);
+        reader.start();
     }
 
     public void printBanner() {
@@ -47,6 +37,7 @@ public class ConsoleManager {
         System.out.println();
     }
 
+
     public void printMessage(String message) {
         System.out.println(message);
     }
@@ -57,7 +48,6 @@ public class ConsoleManager {
 
     public String readCommand() {
         System.out.print("> ");
-        System.out.flush();
         return blockingReadLine();
     }
 
@@ -80,29 +70,16 @@ public class ConsoleManager {
     }
 
     public String askUsername() {
-        while (true) {
-            System.out.print("Enter username: ");
-            System.out.flush();
-            
-            String input = blockingReadLine();
-            if (input != null && !input.trim().isEmpty()) {
-                return input.trim();
-            }
-            printError("Username cannot be empty!");
-        }
+        System.out.print("Enter username: ");
+        return blockingReadLine();
     }
 
     public String askConnectionType() {
         while (true) {
             System.out.print("Choose connection type (rmi/socket): ");
-            System.out.flush();
-            
-            String input = blockingReadLine();
-            if (input != null) {
-                input = input.toLowerCase().trim();
-                if (input.equals("rmi") || input.equals("socket")) {
-                    return input;
-                }
+            String input = blockingReadLine().toLowerCase();
+            if (input.equals("rmi") || input.equals("socket")) {
+                return input;
             }
             printError("Invalid connection type. Please enter 'rmi' or 'socket'");
         }
@@ -110,21 +87,17 @@ public class ConsoleManager {
 
     public String askServerAddress() {
         System.out.print("Enter server address (default: localhost): ");
-        System.out.flush();
-        
         String address = blockingReadLine();
-        return (address == null || address.isEmpty()) ? "localhost" : address;
+        return address.isEmpty() ? "localhost" : address;
     }
 
     public int askServerPort(String connectionType) {
         int defaultPort = connectionType.equals("rmi") ? 1099 : 7777;
         while (true) {
             System.out.print("Enter server port (default: " + defaultPort + "): ");
-            System.out.flush();
-            
             String portStr = blockingReadLine();
             
-            if (portStr == null || portStr.isEmpty()) {
+            if (portStr.isEmpty()) {
                 return defaultPort;
             }
             
@@ -146,27 +119,14 @@ public class ConsoleManager {
 
     public String askQuestion(String prompt) {
         System.out.print(prompt + " ");
-        System.out.flush();
-        
-        String input = blockingReadLine();
-        return input != null ? input : "";
+        return blockingReadLine();
     }
 
-    public void flushInput() {
-        try {
-            while (System.in.available() > 0) {
-                System.in.read();
-            }
-        } catch (IOException e) {
-        }
+    public Scanner getScanner() {
+        return scanner;
     }
 
     public void close() {
-        closed = true;
-        try {
-            reader.close();
-        } catch (IOException e) {
-            System.err.println("Error closing reader: " + e.getMessage());
-        }
+        scanner.close();
     }
 }
