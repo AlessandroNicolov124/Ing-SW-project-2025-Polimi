@@ -482,6 +482,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         console.printMessage(message);
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
     @Override
     public void componentPlaced(Component component, Position position) {
         if (currentPlayer != null && currentPlayer.getShip() != null) {

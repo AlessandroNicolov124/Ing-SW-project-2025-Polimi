@@ -288,11 +288,14 @@ public class RmiServer extends UnicastRemoteObject
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
             System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            // Send error response to all clients in case we can't find the specific client
+            broadcastErrorToAllClients(playerId, component, position, "Match not found");
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            broadcastErrorToMatch(match.getMatchId(), playerId, component, position, "Match not in progress");
             return;
         }
 
@@ -300,6 +303,7 @@ public class RmiServer extends UnicastRemoteObject
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
             System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            broadcastErrorToMatch(match.getMatchId(), playerId, component, position, "Player not found");
             return;
         }
 
@@ -308,24 +312,28 @@ public class RmiServer extends UnicastRemoteObject
         
         System.out.println("[ServerRMI] Component placement for player " + playerId + ": " + success);
         
-        // For RMI, we can send the response directly to the client that made the request
-        // We need to find the client for this player
-        RmiClientIf client = findClientForPlayer(playerId);
-        if (client != null) {
-            try {
-                client.showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
-                    playerId, component, position, success, message));
-            } catch (RemoteException e) {
-                System.err.println("[ServerRMI] Failed to send response to client: " + e.getMessage());
-            }
+        // Send response to all clients in the match (they can filter by player ID)
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, success, message));
+    }
+
+    private void broadcastErrorToAllClients(int playerId, Component component, Position position, String errorMessage) {
+        try {
+            lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, false, errorMessage));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast error to all clients: " + e.getMessage());
         }
     }
 
-    private RmiClientIf findClientForPlayer(int playerId) {
-        // This is a simplified implementation - in a real system you'd need to track
-        // which client corresponds to which player ID
-        // For now, we'll return null and handle this limitation
-        return null;
+    private void broadcastErrorToMatch(UUID matchId, int playerId, Component component, Position position, String errorMessage) {
+        try {
+            lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, false, errorMessage));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast error to match: " + e.getMessage());
+        }
     }
 
     @Override
