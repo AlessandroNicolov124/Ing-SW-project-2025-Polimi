@@ -32,7 +32,8 @@ public class LobbyController extends GuiContoller {
     public void initialize() {
         matchesListView.setItems(matchList);
         playersListView.setItems(playerList);
-        // Load matches from server
+
+
         refreshButton.setOnAction(e -> loadMatchesFromServer());
         createMatchButton.setOnAction(e -> showCreateMatchDialog());
         joinMatchButton.setOnAction(e -> joinSelectedMatch());
@@ -109,7 +110,16 @@ public class LobbyController extends GuiContoller {
         });
     }
 
-    public static void playerJoinedMatchNotification(List<String> playersInMatch) {
+    public static void playerJoinedMatchNotification(String newPlayerName) {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                playerList.addAll(newPlayerName);
+            }
+        });
+    }
+
+    public static void playersInCurrentMatch(List<String> playersInMatch) {
         Platform.runLater(new Runnable(){
             @Override
             public void run() {

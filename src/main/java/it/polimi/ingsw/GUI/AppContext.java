@@ -313,9 +313,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
-        if (matchId == this.currentMatchId) {
-            //LobbyController.playerJoinedMatchNotification(playerName);
-        }
+            LobbyController.playerJoinedMatchNotification(playerName);
     }
 
     @Override
@@ -348,7 +346,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void playersInMatch(UUID matchId, List<String> players, int hostId) {
-            LobbyController.playerJoinedMatchNotification(players);
+            LobbyController.playersInCurrentMatch(players);
     }
 
     @Override
