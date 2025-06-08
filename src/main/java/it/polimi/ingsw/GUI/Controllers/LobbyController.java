@@ -21,6 +21,7 @@ public class LobbyController extends GuiContoller {
     private ListView<String> matchesListView;
     @FXML
     private ListView<String> playersListView;
+
     @FXML
     private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton;
 
@@ -30,6 +31,7 @@ public class LobbyController extends GuiContoller {
 
     public void initialize() {
         matchesListView.setItems(matchList);
+        playersListView.setItems(playerList);
         // Load matches from server
         refreshButton.setOnAction(e -> loadMatchesFromServer());
         createMatchButton.setOnAction(e -> showCreateMatchDialog());
@@ -50,7 +52,7 @@ public class LobbyController extends GuiContoller {
     private void showCreateMatchDialog() {
         if (super.context.getClient() != null){
             try {
-                super.context.getClient().createMatch("11", context.getPlayerId(), context.getUsername());
+                super.context.getClient().createMatch("GUI-CreatedMatch-" + context.getUsername() , context.getPlayerId(), context.getUsername());
             } catch (Exception e) {
                 showErrorDialog("COM-error", e.getMessage());
             }
@@ -58,11 +60,14 @@ public class LobbyController extends GuiContoller {
     }
 
     private void joinSelectedMatch() {
-        String selected = matchesListView.getSelectionModel().getSelectedItem();
+        String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
+        String matchID = selected[0];
+
         if (selected != null) {
             if (super.context.getClient() != null){
                 try {
-                    super.context.getClient().joinMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
+                    super.context.getClient().joinMatch(UUID.fromString(matchID), context.getPlayerId(), context.getUsername());
+                    super.context.setCurrentMatchId(UUID.fromString(matchID));
                 } catch (Exception e) {
                     showErrorDialog("COM-error", e.getMessage());
                 }
@@ -76,7 +81,7 @@ public class LobbyController extends GuiContoller {
             try {
                 super.context.getClient().startMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                showErrorDialog("Impossible to start match:", e.getMessage());
             }
         }
     }
@@ -96,6 +101,10 @@ public class LobbyController extends GuiContoller {
             public void run() {
                 matchList.clear();
                 matchList.addAll(newMatches);
+                if (newMatches.isEmpty())
+                {
+                    showErrorDialog("Matches", "No Matches found");
+                }
             }
         });
     }
@@ -104,8 +113,8 @@ public class LobbyController extends GuiContoller {
         Platform.runLater(new Runnable(){
             @Override
             public void run() {
-                matchList.clear();
-                matchList.addAll(playersInMatch);
+                playerList.clear();
+                playerList.addAll(playersInMatch);
             }
         });
     }

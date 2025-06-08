@@ -17,7 +17,7 @@ public abstract class GuiContoller {
         this.context = context;
     }
 
-    protected void showErrorDialog(String title, String message) {
+    protected static void showErrorDialog(String title, String message) {
         try {
             final Stage dialog = new Stage();
             VBox dialogVbox = new VBox(20);
