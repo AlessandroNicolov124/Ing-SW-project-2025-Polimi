@@ -54,6 +54,10 @@ public class PlaceComponentResponse implements ResponseMessage {
             if (tui.getCurrentPlayer() != null && tui.getCurrentPlayer().getId() == playerId) {
                 // Handle both success and failure cases for our player
                 if (success) {
+                    // Show success message
+                    tui.showMessage("✓ Component " + component.getClass().getSimpleName() + 
+                                   " successfully placed at (" + position.getX() + "," + position.getY() + ")");
+                    // Update the local ship model
                     listener.componentPlaced(component, position);
                     // Trigger display refresh to show the updated ship
                     listener.displayRefresh();

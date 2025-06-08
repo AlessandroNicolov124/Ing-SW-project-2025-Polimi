@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class ConsoleManager {
     private final Scanner scanner;
     private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+    private final Object outputMutex = new Object(); // Add synchronization for console output
 
     public ConsoleManager() {
         this.scanner = new Scanner(System.in);
@@ -37,17 +38,22 @@ public class ConsoleManager {
         System.out.println();
     }
 
-
     public void printMessage(String message) {
-        System.out.println(message);
+        synchronized (outputMutex) {
+            System.out.println(message);
+        }
     }
 
     public void printError(String message) {
-        System.err.println("Error: " + message);
+        synchronized (outputMutex) {
+            System.err.println("Error: " + message);
+        }
     }
 
     public String readCommand() {
-        System.out.print("> ");
+        synchronized (outputMutex) {
+            System.out.print("> ");
+        }
         return blockingReadLine();
     }
 
@@ -70,13 +76,17 @@ public class ConsoleManager {
     }
 
     public String askUsername() {
-        System.out.print("Enter username: ");
+        synchronized (outputMutex) {
+            System.out.print("Enter username: ");
+        }
         return blockingReadLine();
     }
 
     public String askConnectionType() {
         while (true) {
-            System.out.print("Choose connection type (rmi/socket): ");
+            synchronized (outputMutex) {
+                System.out.print("Choose connection type (rmi/socket): ");
+            }
             String input = blockingReadLine().toLowerCase();
             if (input.equals("rmi") || input.equals("socket")) {
                 return input;
@@ -86,7 +96,9 @@ public class ConsoleManager {
     }
 
     public String askServerAddress() {
-        System.out.print("Enter server address (default: localhost): ");
+        synchronized (outputMutex) {
+            System.out.print("Enter server address (default: localhost): ");
+        }
         String address = blockingReadLine();
         return address.isEmpty() ? "localhost" : address;
     }
@@ -94,7 +106,9 @@ public class ConsoleManager {
     public int askServerPort(String connectionType) {
         int defaultPort = connectionType.equals("rmi") ? 1099 : 7777;
         while (true) {
-            System.out.print("Enter server port (default: " + defaultPort + "): ");
+            synchronized (outputMutex) {
+                System.out.print("Enter server port (default: " + defaultPort + "): ");
+            }
             String portStr = blockingReadLine();
             
             if (portStr.isEmpty()) {
@@ -114,11 +128,15 @@ public class ConsoleManager {
     }
 
     public void printConnectingMessage(String type, String address, int port) {
-        System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
+        synchronized (outputMutex) {
+            System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
+        }
     }
 
     public String askQuestion(String prompt) {
-        System.out.print(prompt + " ");
+        synchronized (outputMutex) {
+            System.out.print(prompt + " ");
+        }
         return blockingReadLine();
     }
 

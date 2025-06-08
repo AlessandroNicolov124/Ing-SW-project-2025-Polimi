@@ -39,6 +39,9 @@ public class ShipBuildingHandler {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
 
+        // Display the initial empty ship
+        displayShip();
+
         boolean buildingDone = false;
 
         //il primo elemento è sempre la cabina di pilotaggio
@@ -49,7 +52,8 @@ public class ShipBuildingHandler {
         currentComponent = null;
 
         while (!buildingDone) {
-            displayShip();
+            // Note: displayShip() is called by the response handlers after component placement
+            // so we don't need to call it here to avoid duplicate displays
 
             // Se non abbiamo un componente corrente, peschiamone uno
             if (currentComponent == null) {
@@ -78,12 +82,14 @@ public class ShipBuildingHandler {
                     if (currentComponent != null) {
                         handlePlaceComponent(currentComponent);
                         currentComponent = null; // Component is now placed (or request sent)
+                        // Ship display will be updated by PlaceComponentResponse
                     } else {
                         console.printError("No component available to place!");
                     }
                     break;
                 case "r": // Remove component from ship
                     handleRemoveComponent(); // This now sends a network request
+                    // Ship display will be updated by response
                     break;
                 case "tc": // Rotate CURRENT (held) component
                     if (currentComponent != null) {
@@ -94,13 +100,26 @@ public class ShipBuildingHandler {
                     break;
                 case "ts": // Rotate component ON SHIP
                     handleRotateComponentOnShip(); // This now sends a network request
+                    // Ship display will be updated by response
                     break;
                 case "s": // Skip current component
                     if (currentComponent != null) {
                         console.printMessage("Skipping " + currentComponent.getClass().getName());
                         currentComponent = null;
+                        // Show ship state after skipping
+                        displayShip();
                     } else {
                         console.printError("No component to skip!");
+                    }
+                    break;
+                case "ds": // Display ship manually
+                    displayShip();
+                    break;
+                case "dc": // Display current component manually
+                    if (currentComponent != null) {
+                        displayComponent(currentComponent);
+                    } else {
+                        console.printMessage("No current component to display.");
                     }
                     break;
                 case "v": // Validate and finish
@@ -165,89 +184,91 @@ public class ShipBuildingHandler {
     }
 
     private void displayShip() {
-        console.printMessage("\n--- Your Ship ---");
-        ShipBuilder ship = currentPlayer.getShip();
-        if (ship == null) {
-            console.printError("No ship found for player: " + currentPlayer.getNickName());
-            return;
+        synchronized (console) {  // Synchronize on console to prevent concurrent display
+            console.printMessage("\n--- Your Ship ---");
+            ShipBuilder ship = currentPlayer.getShip();
+            if (ship == null) {
+                console.printError("No ship found for player: " + currentPlayer.getNickName());
+                return;
+            }
+
+            // Simple text-based representation. This can be made much fancier.
+            int width = ship.getWidth();
+            int height = ship.getHeight();
+            Map<Component, Position> components = ship.getComponents();
+
+            // Create a larger grid where each component occupies a 3x3 area
+            // This gives space to show connectors around each component
+            int gridHeight = height * 3;
+            int gridWidth = width * 3;
+            String[][] grid = new String[gridHeight][gridWidth];
+            for (int i = 0; i < gridHeight; i++) {
+                for (int j = 0; j < gridWidth; j++) {
+                    grid[i][j] = "    "; // Empty slot with 4 spaces
+                }
+            }
+
+            // Fill grid with components
+            for (Map.Entry<Component, Position> entry : components.entrySet()) {
+                Component comp = entry.getKey();
+                Position pos = entry.getValue();
+
+                // Calculate the position in the expanded grid
+                int baseY = pos.getY() * 3;
+                int baseX = pos.getX() * 3;
+
+                // Place component symbol in center
+                String compSymbol = getComponentSymbol(comp);
+                grid[baseY + 1][baseX + 1] = "[" + compSymbol + "]";
+
+                // Add connectors around the component
+                // North connector (above)
+                Connector northConn  = comp.getConnectorByDirection(Direction.NORTH);
+                if (northConn != null && northConn.getConnectorType().getClass() != NullConnectorType.class) {
+                    grid[baseY][baseX + 1] = "[" + getConnectionSymbol(northConn) + "]";
+                }
+
+                // South connector (below)
+                Connector southConn = comp.getConnectorByDirection(Direction.SOUTH);
+                if (southConn != null && southConn.getConnectorType().getClass() != NullConnectorType.class) {
+                    grid[baseY + 2][baseX + 1] = "[" + getConnectionSymbol(southConn) + "]";
+                }
+
+                // East connector (right)
+                Connector eastConn = comp.getConnectorByDirection(Direction.EAST);
+                if (eastConn != null && eastConn.getConnectorType().getClass() != NullConnectorType.class) {
+                    grid[baseY + 1][baseX + 2] = "[" + getConnectionSymbol(eastConn) + "]";
+                }
+
+                // West connector (left)
+                Connector westConn = comp.getConnectorByDirection(Direction.WEST);
+                if (westConn != null && westConn.getConnectorType().getClass() != NullConnectorType.class) {
+                    grid[baseY + 1][baseX] = "[" + getConnectionSymbol(westConn) + "]";
+                }
+
+            }
+
+            // Add cooordinates
+            console.printMessage("      " + getCoordinateHeader(width));
+
+            for (int i = 0; i < gridHeight; i++) {
+                StringBuilder rowStr = new StringBuilder();
+
+                // Add Y coordinate label only for the middle row of each cell
+                if (i % 3 == 1) {
+                    rowStr.append("Y:" + (i / 3) + "   ");
+                } else {
+                    rowStr.append("      "); // Spacing to align with coordinates
+                }
+
+                // Add row content
+                for (int j = 0; j < gridWidth; j++) {
+                    rowStr.append(grid[i][j]);
+                }
+                console.printMessage(rowStr.toString());
+            }
+            console.printMessage("------------------------------------");
         }
-
-        // Simple text-based representation. This can be made much fancier.
-        int width = ship.getWidth();
-        int height = ship.getHeight();
-        Map<Component, Position> components = ship.getComponents();
-
-        // Create a larger grid where each component occupies a 3x3 area
-        // This gives space to show connectors around each component
-        int gridHeight = height * 3;
-        int gridWidth = width * 3;
-        String[][] grid = new String[gridHeight][gridWidth];
-        for (int i = 0; i < gridHeight; i++) {
-            for (int j = 0; j < gridWidth; j++) {
-                grid[i][j] = "    "; // Empty slot with 4 spaces
-            }
-        }
-
-        // Fill grid with components
-        for (Map.Entry<Component, Position> entry : components.entrySet()) {
-            Component comp = entry.getKey();
-            Position pos = entry.getValue();
-
-            // Calculate the position in the expanded grid
-            int baseY = pos.getY() * 3;
-            int baseX = pos.getX() * 3;
-
-            // Place component symbol in center
-            String compSymbol = getComponentSymbol(comp);
-            grid[baseY + 1][baseX + 1] = "[" + compSymbol + "]";
-
-            // Add connectors around the component
-            // North connector (above)
-            Connector northConn  = comp.getConnectorByDirection(Direction.NORTH);
-            if (northConn != null && northConn.getConnectorType().getClass() != NullConnectorType.class) {
-                grid[baseY][baseX + 1] = "[" + getConnectionSymbol(northConn) + "]";
-            }
-
-            // South connector (below)
-            Connector southConn = comp.getConnectorByDirection(Direction.SOUTH);
-            if (southConn != null && southConn.getConnectorType().getClass() != NullConnectorType.class) {
-                grid[baseY + 2][baseX + 1] = "[" + getConnectionSymbol(southConn) + "]";
-            }
-
-            // East connector (right)
-            Connector eastConn = comp.getConnectorByDirection(Direction.EAST);
-            if (eastConn != null && eastConn.getConnectorType().getClass() != NullConnectorType.class) {
-                grid[baseY + 1][baseX + 2] = "[" + getConnectionSymbol(eastConn) + "]";
-            }
-
-            // West connector (left)
-            Connector westConn = comp.getConnectorByDirection(Direction.WEST);
-            if (westConn != null && westConn.getConnectorType().getClass() != NullConnectorType.class) {
-                grid[baseY + 1][baseX] = "[" + getConnectionSymbol(westConn) + "]";
-            }
-
-        }
-
-        // Add cooordinates
-        console.printMessage("      " + getCoordinateHeader(width));
-
-        for (int i = 0; i < gridHeight; i++) {
-            StringBuilder rowStr = new StringBuilder();
-
-            // Add Y coordinate label only for the middle row of each cell
-            if (i % 3 == 1) {
-                rowStr.append("Y:" + (i / 3) + "   ");
-            } else {
-                rowStr.append("      "); // Spacing to align with coordinates
-            }
-
-            // Add row content
-            for (int j = 0; j < gridWidth; j++) {
-                rowStr.append(grid[i][j]);
-            }
-            console.printMessage(rowStr.toString());
-        }
-        console.printMessage("------------------------------------");
     }
 
     private String getCoordinateHeader(int width) {
@@ -331,8 +352,8 @@ public class ShipBuildingHandler {
 
         // 4. Call network client to send message
         try {
-             simpleClient.placeComponent(component, pos);
              console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
+             simpleClient.placeComponent(component, pos);
              // Note: The actual success/failure message will come asynchronously
              // via the PlaceComponentResponse handled by simpleClient's run loop.
              // The ship display will be updated when the response arrives.
