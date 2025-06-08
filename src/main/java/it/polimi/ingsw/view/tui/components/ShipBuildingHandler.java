@@ -30,8 +30,9 @@ public class ShipBuildingHandler {
 
     // Method to be called to redraw the ship display
     public void refreshDisplay() {
-        console.printMessage("[DEBUG] Refreshing ship display due to network update..."); // Optional debug message
+        console.printMessage("\n=== Ship Updated ===");
         displayShip();
+        console.printMessage("===================");
     }
 
     public void manageShipBuilding() {
@@ -333,9 +334,9 @@ public class ShipBuildingHandler {
              simpleClient.placeComponent(component, pos);
              console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
              // Note: The actual success/failure message will come asynchronously
-             // via the ComponentPlacedMessage handled by simpleClient's run loop.
-             // The TUI should be updated based on that message.
-        } catch (IOException | IllegalStateException e) {
+             // via the PlaceComponentResponse handled by simpleClient's run loop.
+             // The ship display will be updated when the response arrives.
+        } catch (IllegalStateException e) {
             console.printError("Error sending placement request: " + e.getMessage());
             // Optionally, allow the user to retry or handle the error
             // handlePlaceComponent(component); // Example: Retry automatically (use with caution)

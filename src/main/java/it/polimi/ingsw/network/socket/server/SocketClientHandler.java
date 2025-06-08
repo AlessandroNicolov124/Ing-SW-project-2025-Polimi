@@ -1,10 +1,12 @@
 package it.polimi.ingsw.network.socket.server;
 
+import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
+import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.messages.RequestMessage;
 import it.polimi.ingsw.network.messages.ResponseMessage;
@@ -254,6 +256,45 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void placeComponent(Component component, Position position) throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'placeComponent'");
+    }
+
+    public void placeComponent(int playerId, Component component, Position position) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, false, "Match not found"));
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, false, "Match not in progress"));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                playerId, component, position, false, "Player not found"));
+            return;
+        }
+
+        boolean success = controller.addComponentForPlayer(player, component, position);
+        String message = success ? "Component placed successfully" : "Failed to place component";
+        
+        System.out.println("[ServerSocket] Component placement for player " + playerId + ": " + success);
+        
+        // Send response back to the requesting client
+        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            playerId, component, position, success, message));
+        
+        // Optionally broadcast to other players in the match
+        // lobbyManager.multicastToMatchExceptOne(match.getMatchId(), 
+        //     new PlaceComponentResponse(playerId, component, position, success, message), this);
     }
 
     @Override

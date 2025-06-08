@@ -1,10 +1,12 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
+import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.messages.lobby.CreateMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
@@ -283,8 +285,47 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public void placeComponent(int playerId, Component component, Position position) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'placeComponent'");
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            return;
+        }
+
+        boolean success = controller.addComponentForPlayer(player, component, position);
+        String message = success ? "Component placed successfully" : "Failed to place component";
+        
+        System.out.println("[ServerRMI] Component placement for player " + playerId + ": " + success);
+        
+        // For RMI, we can send the response directly to the client that made the request
+        // We need to find the client for this player
+        RmiClientIf client = findClientForPlayer(playerId);
+        if (client != null) {
+            try {
+                client.showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                    playerId, component, position, success, message));
+            } catch (RemoteException e) {
+                System.err.println("[ServerRMI] Failed to send response to client: " + e.getMessage());
+            }
+        }
+    }
+
+    private RmiClientIf findClientForPlayer(int playerId) {
+        // This is a simplified implementation - in a real system you'd need to track
+        // which client corresponds to which player ID
+        // For now, we'll return null and handle this limitation
+        return null;
     }
 
     @Override

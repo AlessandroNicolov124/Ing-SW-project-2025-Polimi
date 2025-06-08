@@ -485,9 +485,16 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void componentPlaced(Component component, Position position) {
         if (currentPlayer != null && currentPlayer.getShip() != null) {
-            currentPlayer.getShip().placeComponent(component, position);
-            console.printMessage("Component " + component.getClass().getSimpleName() + 
-                               " placed at (" + position.getX() + "," + position.getY() + ")");
+            boolean placed = currentPlayer.getShip().placeComponent(component, position);
+            if (placed) {
+                console.printMessage("✓ Component " + component.getClass().getSimpleName() + 
+                                   " successfully placed at (" + position.getX() + "," + position.getY() + ")");
+            } else {
+                console.printError("✗ Failed to place component " + component.getClass().getSimpleName() + 
+                                 " at (" + position.getX() + "," + position.getY() + ")");
+            }
+        } else {
+            console.printError("✗ Cannot place component: player or ship not available");
         }
     }
 
@@ -525,6 +532,13 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void playerCreated(int playerId, String username) {
         this.currentPlayer = new Player(playerId, username, true);
+        
+        // Set the local player in the client so it can track the player ID for requests
+        try {
+            client.setLocalPlayer(currentPlayer);
+        } catch (Exception e) {
+            console.printError("Failed to set local player in client: " + e.getMessage());
+        }
         
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());

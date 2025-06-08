@@ -29,6 +29,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private final ObjectOutputStream out;
     private final ObjectInputStream  in;
     private GameListener listener;
+    private Player localPlayer;
 
     public SocketClient(String host, int port, GameListener gameListener) throws IOException {
         socket = new Socket(host,port);
@@ -272,8 +273,15 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void placeComponent(Component component, Position position) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'placeComponent'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot place component: local player not set");
+        }
+        
+        synchronized (out) {
+            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest(
+                localPlayer.getId(), component, position));
+            out.flush();
+        }
     }
 
     @Override
@@ -295,8 +303,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void setLocalPlayer(Player player) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setLocalPlayer'");
+        this.localPlayer = player;
     }
 
 }
