@@ -1,5 +1,7 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.GUI.MatchRowDisplay;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.Match;
@@ -8,17 +10,20 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 
+import java.util.List;
+import java.util.UUID;
+
 public class LobbyController extends GuiContoller {
 
     @FXML
     private Label welcomeLabel;
     @FXML
-    private ListView<Match> matchesListView;
+    private ListView<String> matchesListView;
     @FXML
     private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton;
 
     // Suppose you have a Match class with a nice toString()
-    private ObservableList<Match> matchList = FXCollections.observableArrayList();
+    private static ObservableList<String> matchList = FXCollections.observableArrayList();
 
     public void initialize() {
         matchesListView.setItems(matchList);
@@ -50,11 +55,11 @@ public class LobbyController extends GuiContoller {
     }
 
     private void joinSelectedMatch() {
-        Match selected = matchesListView.getSelectionModel().getSelectedItem();
+        String selected = matchesListView.getSelectionModel().getSelectedItem();
         if (selected != null) {
             if (super.context.getClient() != null){
                 try {
-                    //super.context.getClient().joinMatch()
+                    super.context.getClient().joinMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
                 } catch (Exception e) {
                     showErrorDialog("COM-error", e.getMessage());
                 }
@@ -63,9 +68,27 @@ public class LobbyController extends GuiContoller {
     }
 
     private void startSelectedMatch() {
-        Match selected = matchesListView.getSelectionModel().getSelectedItem();
+        String selected = matchesListView.getSelectionModel().getSelectedItem();
         if (selected != null) {
-            // Send start request to server (only if user is host/owner)
+            try {
+                super.context.getClient().startMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
+    }
+
+    public static void updateMatchListListener(List<String> newMatches) {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                matchList.clear();
+                matchList.addAll(newMatches);
+            }
+        });
+    }
+
+    public static void playerJoinedMatchNotification(String name) {
+
     }
 }

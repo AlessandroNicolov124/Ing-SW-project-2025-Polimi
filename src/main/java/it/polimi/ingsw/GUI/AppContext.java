@@ -1,6 +1,7 @@
 package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.GUI.Controllers.LobbyController;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static it.polimi.ingsw.network.messages.RotationType.*;
+import static java.lang.System.in;
 
 public class AppContext implements GameListener {
     private String username;
@@ -27,6 +29,7 @@ public class AppContext implements GameListener {
     private Player localPlayerReference;
     private int serverPort;
     private int playerId;
+    private UUID currentMatchId;
 
     private GeneralClientIf client;
 
@@ -299,21 +302,27 @@ public class AppContext implements GameListener {
 
     @Override
     public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
-
+        this.currentMatchId = matchId;
+        //LobbyController.updateMatchListListener(matchId.toString());
     }
 
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
-
+        if (matchId == this.currentMatchId) {
+            LobbyController.playerJoinedMatchNotification(playerName);
+        }
     }
 
     @Override
     public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
+        if (matchId == this.currentMatchId) {
 
+        }
     }
 
     @Override
     public void updateAvailableMatches(List<String> matchNames) {
+        LobbyController.updateMatchListListener(matchNames);
 
     }
 
