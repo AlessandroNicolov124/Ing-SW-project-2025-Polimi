@@ -26,7 +26,7 @@ public final class Cabin extends Component {
     public String getComponentString() {
         String s = this.getClass().getSimpleName().toLowerCase() + "_";
         if(isStartingCabin){
-            s += "starting";
+            s += "starting_";
         }else{
             s += getConnectionsString();
         }

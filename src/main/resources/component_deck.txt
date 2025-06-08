@@ -32,19 +32,19 @@ cabin_UNND
 # Single Engines (must have valid direction for thrust)
 singleengine_DNND
 singleengine_DNNN
-singleengine_2_DNNN
+singleengine_DNNN
 singleengine_DSNS
 singleengine_DUNN
 singleengine_NDNU
 singleengine_NNNU
-singleengine_2_NNNU
+singleengine_NNNU
 singleengine_NSND
 singleengine_NUNN
-singleengine_2_NUNN
+singleengine_NUNN
 singleengine_NUNS
 singleengine_SDND
 singleengine_SNNN
-singleengine_2_SNNN
+singleengine_SNNN
 singleengine_SNNU
 singleengine_SSNN
 singleengine_UDNN
@@ -64,27 +64,51 @@ doubleengine_UNND
 doubleengine_USNN
 
 # Single Cannons (must point forward - North should be Null for firing)
+singlecannon_NDSN
+singlecannon_NDSN
+singlecannon_NNDN
+singlecannon_NNSN
+singlecannon_NDDD
+singlecannon_NDNN
+singlecannon_NDNU
+singlecannon_NDUN
+singlecannon_NDUS
+singlecannon_NNDN
+singlecannon_NNDS
+singlecannon_NNDU
+singlecannon_NNND
+singlecannon_NNNS
+singlecannon_NNSD
+singlecannon_NNSN
+singlecannon_NNUD
+singlecannon_NNUS
+singlecannon_NSDN
+singlecannon_NSND
+singlecannon_NSNN
 singlecannon_NSSS
-singlecannon_NSDS
-singlecannon_NSUS
-singlecannon_NSSD
-singlecannon_NSDD
 singlecannon_NSUD
-singlecannon_NSSU
-singlecannon_NSDU
+singlecannon_NSUN
+singlecannon_NUSN
 
 # Double Cannons (must point forward - North should be Null for firing)
-doublecannon_NSSS
+doublecannon_NDNS
+doublecannon_NDSD
+doublecannon_NNDN
+doublecannon_NNNU
+doublecannon_NNSN
+doublecannon_NNSU
+doublecannon_NNUD
 doublecannon_NSDS
-doublecannon_NSUS
-doublecannon_NSSD
+doublecannon_NSUN
+doublecannon_NUDN
+doublecannon_NUNN
 
 # Normal Cargo Holds (with size specification)
 normalcargoholds_double_DSUN
 normalcargoholds_double_DSUS
 normalcargoholds_double_DUNS
 normalcargoholds_double_NNNU
-normalcargoholds_double_2_NNNU
+normalcargoholds_double_NNNU
 normalcargoholds_double_NSNU
 normalcargoholds_double_NDNU
 normalcargoholds_double_DSDU
@@ -110,7 +134,7 @@ specialcargoholds_double_NNNS
 # Battery Compartments (type and initial charge)
 batterycompartment_double_DSDS
 batterycompartment_double_NNNU
-batterycompartment_double_2_NNNU
+batterycompartment_double_NNNU
 batterycompartment_double_NUNU
 batterycompartment_double_UDDD
 batterycompartment_double_UDNN
@@ -137,10 +161,19 @@ shieldgenerator_SDSD
 shieldgenerator_SNSS
 
 # Life Support Systems (with color specification)
-lifesupportsystem_brown_SSSS
-lifesupportsystem_purple_DDDD
-lifesupportsystem_brown_SUDS
-lifesupportsystem_purple_NUSU
+lifesupportsystem_brown_DSNS
+lifesupportsystem_brown_NDNT
+lifesupportsystem_brown_NNNU
+lifesupportsystem_brown_NNSD
+lifesupportsystem_brown_SNNU
+lifesupportsystem_brown_SSNS
+
+lifesupportsystem_purple_DDND
+lifesupportsystem_purple_DNNU
+lifesupportsystem_purple_NNDU
+lifesupportsystem_purple_NNNU
+lifesupportsystem_purple_NSNT
+lifesupportsystem_purple_SDND
 
 # Structural Modules
 structuralmodule_SUDU

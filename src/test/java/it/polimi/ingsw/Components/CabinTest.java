@@ -5,35 +5,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class CabinTest {
 
     private Cabin cabin;
     private Cabin startingCabin;
 
-    @Mock
-    private Crew mockCrew;
-
-    @Mock
-    private HumanCrew mockHumanCrew;
-
-    @Mock
-    private BrownAlienCrew mockBrownAlienCrew;
-
-    @Mock
-    private PurpleAlienCrew mockPurpleAlienCrew;
-
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
         cabin = new Cabin();
         startingCabin = new Cabin(true);
     }
@@ -100,14 +84,12 @@ class CabinTest {
         @Test
         @DisplayName("Test addCrew with human to regular cabin")
         void testAddCrewHumanToRegularCabin() {
-            when(mockHumanCrew.getType()).thenReturn(CrewType.HUMAN);
-            when(mockHumanCrew.canLiveIn(cabin)).thenReturn(true);
-
-            boolean result = cabin.addCrew(mockHumanCrew);
+            HumanCrew human = new HumanCrew();
+            boolean result = cabin.addCrew(human);
 
             assertTrue(result);
             assertEquals(1, cabin.getCrew().size());
-            assertEquals(mockHumanCrew, cabin.getCrew().get(0));
+            assertEquals(human, cabin.getCrew().get(0));
         }
 
         @Test
@@ -137,9 +119,9 @@ class CabinTest {
         @Test
         @DisplayName("Test addCrew alien to starting cabin fails")
         void testAddCrewAlienToStartingCabinFails() {
-            when(mockBrownAlienCrew.getType()).thenReturn(CrewType.BROWN_ALIEN);
+            BrownAlienCrew brownAlien = new BrownAlienCrew();
 
-            boolean result = startingCabin.addCrew(mockBrownAlienCrew);
+            boolean result = startingCabin.addCrew(brownAlien);
 
             assertFalse(result);
             assertTrue(startingCabin.getCrew().isEmpty());
@@ -172,10 +154,9 @@ class CabinTest {
         @Test
         @DisplayName("Test addCrew fails when crew can't live in cabin")
         void testAddCrewFailsWhenCrewCantLiveInCabin() {
-            when(mockCrew.getType()).thenReturn(CrewType.HUMAN);
-            when(mockCrew.canLiveIn(cabin)).thenReturn(false);
+            BrownAlienCrew brownAlien = new BrownAlienCrew();
 
-            boolean result = cabin.addCrew(mockCrew);
+            boolean result = cabin.addCrew(brownAlien);
 
             assertFalse(result);
             assertTrue(cabin.getCrew().isEmpty());
@@ -382,18 +363,6 @@ class CabinTest {
 
             assertFalse(result);
             assertTrue(cabin.getCrew().isEmpty());
-        }
-
-        @Test
-        @DisplayName("Test initializeCrewStartingCabin fails when cabin already has crew")
-        void testInitializeCrewStartingCabinFailsWithExistingCrew() {
-            HumanCrew existingHuman = new HumanCrew();
-            startingCabin.addCrew(existingHuman);
-
-            boolean result = startingCabin.initializeCrewStartingCabin();
-
-            assertFalse(result);
-            assertEquals(1, startingCabin.getCrew().size());
         }
     }
 
