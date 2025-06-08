@@ -94,16 +94,5 @@ public class Player implements Serializable {
         return ship.validateShip();
     }
 
-    public boolean removeCrewMembers(int crewRequired) {
-        return ship.removeCrewMembers(crewRequired) == crewRequired;
-    }
-
-    public int removeCrewOfType(CrewType crewType, int requiredCount) {
-        return ship.removeCrewOfType(crewType, requiredCount);
-    }
-    public void dischargeBatteries(int batteriesNeeded) {
-        ship.dischargeBatteries(batteriesNeeded);
-    }
-
 
 }

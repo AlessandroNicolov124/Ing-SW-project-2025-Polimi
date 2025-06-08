@@ -86,12 +86,12 @@ class CannonTest {
     class DoubleCannonTest {
 
         private DoubleCannon doubleCannon;
-        private BatteryCompartment mockBattery;
+        private BatteryCompartment testBattery;
 
         @BeforeEach
         void setUp() {
             doubleCannon = new DoubleCannon();
-            mockBattery = mock(BatteryCompartment.class);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         }
 
         @Test
@@ -129,15 +129,11 @@ class CannonTest {
         @DisplayName("fire should return true when charged and not damaged")
         void testFireWhenChargedAndNotDamaged() {
             // Prima carichiamo il cannone
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleCannon.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleCannon.charge(testBattery));
             assertTrue(doubleCannon.isCharge());
-
             // Ora dovrebbe sparare con successo
             assertTrue(doubleCannon.fire());
-
             // Dopo aver sparato, non dovrebbe essere più carico
             assertFalse(doubleCannon.isCharge());
         }
@@ -152,39 +148,32 @@ class CannonTest {
         @DisplayName("charge should return false when damaged")
         void testChargeWhenDamaged() {
             doubleCannon.setDamaged(true);
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-
-            assertFalse(doubleCannon.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertFalse(doubleCannon.charge(testBattery));
         }
 
         @Test
         @DisplayName("charge should return false when already charged")
         void testChargeWhenAlreadyCharged() {
             // Prima carica
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleCannon.charge(mockBattery));
-
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleCannon.charge(testBattery));
             // Seconda carica dovrebbe fallire
-            assertFalse(doubleCannon.charge(mockBattery));
+            assertFalse(doubleCannon.charge(testBattery));
         }
 
         @Test
         @DisplayName("charge should return false when battery has insufficient charge")
         void testChargeWithInsufficientBattery() {
-            when(mockBattery.getChargeLevel()).thenReturn(0);
-
-            assertFalse(doubleCannon.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 0);
+            assertFalse(doubleCannon.charge(testBattery));
         }
 
         @Test
         @DisplayName("charge should return true with sufficient battery")
         void testChargeWithSufficientBattery() {
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleCannon.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleCannon.charge(testBattery));
             assertTrue(doubleCannon.isCharge());
         }
 
@@ -192,12 +181,9 @@ class CannonTest {
         @DisplayName("discharge should set isCharged to false")
         void testDischarge() {
             // Prima carichiamo
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleCannon.charge(mockBattery);
-
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleCannon.charge(testBattery);
             assertTrue(doubleCannon.isCharge());
-
             // Poi scarichiamo
             doubleCannon.discharge();
             assertFalse(doubleCannon.isCharge());
@@ -214,9 +200,8 @@ class CannonTest {
         @DisplayName("getEffectivePower should return full power when charged and facing north")
         void testGetEffectivePowerChargedFacingNorth() {
             // Carichiamo il cannone
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleCannon.charge(mockBattery);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleCannon.charge(testBattery);
 
             doubleCannon.setComponentDirection(Direction.NORTH);
 

@@ -24,12 +24,12 @@ public class Stardust extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 

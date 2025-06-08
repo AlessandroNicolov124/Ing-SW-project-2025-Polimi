@@ -40,12 +40,12 @@ public class AbandonedStation extends AdventureCard{
     }
 
     @Override
-    int additionalPls(){
+    protected int additionalPls(){
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Implementation depends on how player choice is handled in the game
     }
 

@@ -39,12 +39,12 @@ public class AbandonedShip extends AdventureCard {
     }
 
     @Override
-    int additionalPls(){
+    protected int additionalPls(){
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // The leader gets first opportunity, if declined it passes to the next player
     }
 
@@ -93,7 +93,7 @@ public class AbandonedShip extends AdventureCard {
                 CrewType crewType = requirement.getKey();
                 int requiredCount = requirement.getValue();
 
-                int actuallyRemoved = player.removeCrewOfType(crewType, requiredCount);
+                int actuallyRemoved = player.getShip().removeCrewOfType(crewType, requiredCount);
                 removedCrew.put(crewType, actuallyRemoved);
 
                 if (actuallyRemoved < requiredCount) {

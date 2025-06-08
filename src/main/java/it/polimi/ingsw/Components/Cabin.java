@@ -127,5 +127,9 @@ public final class Cabin extends Component {
     public boolean isOccuped() {
         return !crew.isEmpty();
     }
+
+    public void disconnectLifeSupport(LifeSupportSystemType type) {
+        connectedLifeSupports.remove(type);
+    }
 }
 

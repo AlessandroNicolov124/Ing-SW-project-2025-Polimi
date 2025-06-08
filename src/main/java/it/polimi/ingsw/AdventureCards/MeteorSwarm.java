@@ -69,12 +69,12 @@ public class MeteorSwarm extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Process meteor impacts for a single player
     }
 

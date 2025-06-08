@@ -71,12 +71,12 @@ class EngineTest {
     class DoubleEngineTest {
 
         private DoubleEngine doubleEngine;
-        private BatteryCompartment mockBattery;
+        private BatteryCompartment testBattery;
 
         @BeforeEach
         void setUp() {
             doubleEngine = new DoubleEngine();
-            mockBattery = mock(BatteryCompartment.class);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         }
 
         @Test
@@ -108,11 +108,8 @@ class EngineTest {
         @DisplayName("getEffectivePower should return full power when charged")
         void testGetEffectivePowerWhenCharged() {
             // Carichiamo il motore
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleEngine.charge(mockBattery));
-
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleEngine.charge(testBattery));
             int expectedPower = doubleEngine.getPower();
             assertEquals(expectedPower, doubleEngine.getEffectivePower());
         }
@@ -135,9 +132,8 @@ class EngineTest {
         @DisplayName("charge should return false when damaged")
         void testChargeWhenDamaged() {
             doubleEngine.setDamaged(true);
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-
-            assertFalse(doubleEngine.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertFalse(doubleEngine.charge(testBattery));
             assertFalse(doubleEngine.isCharge());
         }
 
@@ -145,44 +141,34 @@ class EngineTest {
         @DisplayName("charge should return false when already charged")
         void testChargeWhenAlreadyCharged() {
             // Prima carica
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleEngine.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleEngine.charge(testBattery));
             assertTrue(doubleEngine.isCharge());
-
             // Seconda carica dovrebbe fallire
-            assertFalse(doubleEngine.charge(mockBattery));
+            assertFalse(doubleEngine.charge(testBattery));
         }
 
         @Test
         @DisplayName("charge should return false when battery has insufficient charge")
         void testChargeWithInsufficientBattery() {
-            when(mockBattery.getChargeLevel()).thenReturn(0);
-
-            assertFalse(doubleEngine.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 0);
+            assertFalse(doubleEngine.charge(testBattery));
             assertFalse(doubleEngine.isCharge());
         }
 
         @Test
         @DisplayName("charge should return true with sufficient battery")
         void testChargeWithSufficientBattery() {
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-
-            assertTrue(doubleEngine.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            assertTrue(doubleEngine.charge(testBattery));
             assertTrue(doubleEngine.isCharge());
-
-            verify(mockBattery).discharge(1);
         }
 
         @Test
         @DisplayName("charge should return false when battery discharge fails")
         void testChargeWhenBatteryDischargeFails() {
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(0); // Simulate discharge failure
-
-            assertFalse(doubleEngine.charge(mockBattery));
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 0); // Simula fallimento scarica
+            assertFalse(doubleEngine.charge(testBattery));
             assertFalse(doubleEngine.isCharge());
         }
 
@@ -190,12 +176,9 @@ class EngineTest {
         @DisplayName("discharge should set isCharged to false")
         void testDischarge() {
             // Prima carichiamo
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleEngine.charge(mockBattery);
-
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleEngine.charge(testBattery);
             assertTrue(doubleEngine.isCharge());
-
             // Poi scarichiamo
             doubleEngine.discharge();
             assertFalse(doubleEngine.isCharge());
@@ -217,9 +200,8 @@ class EngineTest {
             assertFalse(doubleEngine.isCharge());
 
             // After charging
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleEngine.charge(mockBattery);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleEngine.charge(testBattery);
             assertTrue(doubleEngine.isCharge());
 
             // After discharging
@@ -261,9 +243,8 @@ class EngineTest {
             assertEquals(effectivePower, calculatedPowerNoBattery);
 
             // Test when charged
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleEngine.charge(mockBattery);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleEngine.charge(testBattery);
 
             int effectivePowerCharged = doubleEngine.getEffectivePower();
             int calculatedPowerWithBattery = doubleEngine.calculatePowerUsingBattery(true);
@@ -279,9 +260,8 @@ class EngineTest {
             assertEquals(basePower / 2, doubleEngine.getEffectivePower());
 
             // Charge the engine
-            when(mockBattery.getChargeLevel()).thenReturn(2);
-            when(mockBattery.discharge(1)).thenReturn(1);
-            doubleEngine.charge(mockBattery);
+            testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
+            doubleEngine.charge(testBattery);
 
             // Charged - should be full power
             assertEquals(basePower, doubleEngine.getEffectivePower());

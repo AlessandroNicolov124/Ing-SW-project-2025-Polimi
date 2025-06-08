@@ -46,12 +46,12 @@ public class Smugglers extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -271,7 +271,7 @@ public class Smugglers extends AdventureCard {
         int batteriesNeeded = penaltyCount - removedCount;
         if (batteriesNeeded > 0) {
             // Assumendo che esista un metodo per rimuovere batterie
-            player.dischargeBatteries(batteriesNeeded);
+            player.getShip().dischargeBatteries(batteriesNeeded);
         }
     }
     

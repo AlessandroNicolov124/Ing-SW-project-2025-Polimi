@@ -7,7 +7,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class ShieldGeneratorTest {
     @BeforeEach
     public void setUp() {
         shieldGenerator = new ShieldGenerator();
-        mockBattery = mock(BatteryCompartment.class);
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
     }
 
     // ===== CONSTRUCTION TESTS =====
@@ -32,13 +31,6 @@ public class ShieldGeneratorTest {
         assertTrue(shieldGenerator.getProtectedDirections().isEmpty());
         assertFalse(shieldGenerator.isDamaged()); // Inherited from Component
     }
-
-    @Test
-    @DisplayName("ShieldGenerator should extend Component")
-    public void testInheritance() {
-        assertTrue(shieldGenerator instanceof Component);
-    }
-
     // ===== PROTECTED DIRECTIONS TESTS =====
 
     @ParameterizedTest
@@ -96,14 +88,10 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should charge successfully with sufficient battery")
     public void testChargeSuccess() {
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
-
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         assertTrue(shieldGenerator.charge(mockBattery));
         assertTrue(shieldGenerator.isCharged());
-
-        verify(mockBattery).getChargeLevel();
-        verify(mockBattery).discharge(1);
+        assertEquals(1, mockBattery.getChargeLevel());
     }
 
     @Test
@@ -116,61 +104,50 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should fail to charge when already charged")
     public void testChargeWhenAlreadyCharged() {
-        // First charge
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         assertTrue(shieldGenerator.charge(mockBattery));
-
-        // Try to charge again
-        BatteryCompartment secondBattery = mock(BatteryCompartment.class);
-        when(secondBattery.getChargeLevel()).thenReturn(5);
-
+        // Provo a ricaricare con una seconda batteria
+        BatteryCompartment secondBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         assertFalse(shieldGenerator.charge(secondBattery));
-        verify(secondBattery, never()).discharge(anyInt());
+        assertEquals(2, secondBattery.getChargeLevel()); // Nessuna scarica
     }
 
     @Test
     @DisplayName("Should fail to charge when damaged")
     public void testChargeWhenDamaged() {
         shieldGenerator.setDamaged(true);
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         assertFalse(shieldGenerator.charge(mockBattery));
         assertFalse(shieldGenerator.isCharged());
-        verify(mockBattery, never()).discharge(anyInt());
+        assertEquals(2, mockBattery.getChargeLevel());
     }
 
     @Test
     @DisplayName("Should fail to charge with insufficient battery")
     public void testChargeWithInsufficientBattery() {
-        when(mockBattery.getChargeLevel()).thenReturn(0); // Less than energyConsumption (1)
-
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 0); // Carica insufficiente
         assertFalse(shieldGenerator.charge(mockBattery));
         assertFalse(shieldGenerator.isCharged());
-        verify(mockBattery, never()).discharge(anyInt());
+        assertEquals(0, mockBattery.getChargeLevel());
     }
 
     @Test
     @DisplayName("Should fail to charge when battery discharge fails")
     public void testChargeWhenBatteryDischargeFails() {
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(0); // Discharge failed
-
+        // Per far fallire la scarica, la carica deve essere 0
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 0);
         assertFalse(shieldGenerator.charge(mockBattery));
         assertFalse(shieldGenerator.isCharged());
-
-        verify(mockBattery).getChargeLevel();
-        verify(mockBattery).discharge(1);
+        assertEquals(0, mockBattery.getChargeLevel());
     }
 
     @Test
     @DisplayName("Should handle battery with exactly enough charge")
     public void testChargeWithExactlyEnoughBattery() {
-        when(mockBattery.getChargeLevel()).thenReturn(1); // Exactly energyConsumption
-        when(mockBattery.discharge(1)).thenReturn(1);
-
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 1);
         assertTrue(shieldGenerator.charge(mockBattery));
         assertTrue(shieldGenerator.isCharged());
+        assertEquals(0, mockBattery.getChargeLevel());
     }
 
     // ===== DISCHARGE TESTS =====
@@ -178,13 +155,9 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should discharge when charged")
     public void testDischarge() {
-        // First charge
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         shieldGenerator.charge(mockBattery);
         assertTrue(shieldGenerator.isCharged());
-
-        // Then discharge
         shieldGenerator.discharge();
         assertFalse(shieldGenerator.isCharged());
     }
@@ -202,21 +175,13 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should be able to recharge after discharge")
     public void testRechargeAfterDischarge() {
-        // Charge
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         assertTrue(shieldGenerator.charge(mockBattery));
-
-        // Discharge
         shieldGenerator.discharge();
-
-        // Recharge
-        BatteryCompartment secondBattery = mock(BatteryCompartment.class);
-        when(secondBattery.getChargeLevel()).thenReturn(3);
-        when(secondBattery.discharge(1)).thenReturn(1);
-
+        BatteryCompartment secondBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         assertTrue(shieldGenerator.charge(secondBattery));
         assertTrue(shieldGenerator.isCharged());
+        assertEquals(2, secondBattery.getChargeLevel());
     }
 
     // ===== ACTIVE STATE TESTS (via reflection or behavior testing) =====
@@ -224,16 +189,9 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should not be active when damaged")
     public void testNotActiveWhenDamaged() {
-        // Charge first
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         shieldGenerator.charge(mockBattery);
-
-        // Damage the component
         shieldGenerator.setDamaged(true);
-
-        // Since isActive is private, we test behavior that depends on it
-        // For now, we can only test the state that would make it inactive
         assertTrue(shieldGenerator.isDamaged());
         assertTrue(shieldGenerator.isCharged());
     }
@@ -270,10 +228,10 @@ public class ShieldGeneratorTest {
         assertEquals(2, shieldGenerator.getProtectedDirections().size());
 
         // Charge
-        when(mockBattery.getChargeLevel()).thenReturn(10);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         assertTrue(shieldGenerator.charge(mockBattery));
         assertTrue(shieldGenerator.isCharged());
+        assertEquals(9, mockBattery.getChargeLevel());
 
         // Remove a direction
         shieldGenerator.remove(Direction.NORTH);
@@ -295,8 +253,7 @@ public class ShieldGeneratorTest {
         assertEquals(1, shieldGenerator.getEnergyConsumption());
 
         // After charging
-        when(mockBattery.getChargeLevel()).thenReturn(5);
-        when(mockBattery.discharge(1)).thenReturn(1);
+        mockBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         shieldGenerator.charge(mockBattery);
         assertEquals(1, shieldGenerator.getEnergyConsumption());
 

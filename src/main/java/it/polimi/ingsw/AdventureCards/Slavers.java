@@ -45,12 +45,12 @@ public class Slavers extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -126,7 +126,7 @@ public class Slavers extends AdventureCard {
         int playerCrew = player.getShip().getTotalCrewCount();
         
         if (playerCrew <= crewLoss) {
-            player.removeCrewMembers(playerCrew);
+            player.getShip().removeCrewMembers(playerCrew);
         }else{
             //TODO scelta del giocatore UI
             player.getShip().removeCrewMembers(crewLoss);

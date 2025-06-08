@@ -6,20 +6,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class CrewTest {
 
-    @Mock
-    private Cabin mockCabin;
+    private Cabin testCabin;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        testCabin = new Cabin();
     }
 
     @Nested
@@ -43,23 +39,17 @@ class CrewTest {
         @Test
         @DisplayName("Test canLiveIn with brown life support - should return true")
         void testCanLiveInWithBrownLifeSupport() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(true);
-
-            boolean result = brownAlienCrew.canLiveIn(mockCabin);
-
+            testCabin.connectLifeSupport(LifeSupportSystemType.BROWN);
+            boolean result = brownAlienCrew.canLiveIn(testCabin);
             assertTrue(result);
-            verify(mockCabin, times(1)).hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
         }
 
         @Test
         @DisplayName("Test canLiveIn without brown life support - should return false")
         void testCanLiveInWithoutBrownLifeSupport() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(false);
-
-            boolean result = brownAlienCrew.canLiveIn(mockCabin);
-
+            // Nessun supporto vitale connesso
+            boolean result = brownAlienCrew.canLiveIn(testCabin);
             assertFalse(result);
-            verify(mockCabin, times(1)).hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
         }
 
         @Test
@@ -73,12 +63,9 @@ class CrewTest {
         @Test
         @DisplayName("Test multiple calls to canLiveIn")
         void testMultipleCallsToCanLiveIn() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(true);
-
-            assertTrue(brownAlienCrew.canLiveIn(mockCabin));
-            assertTrue(brownAlienCrew.canLiveIn(mockCabin));
-
-            verify(mockCabin, times(2)).hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
+            testCabin.connectLifeSupport(LifeSupportSystemType.BROWN);
+            assertTrue(brownAlienCrew.canLiveIn(testCabin));
+            assertTrue(brownAlienCrew.canLiveIn(testCabin));
         }
 
         @Test
@@ -109,25 +96,17 @@ class CrewTest {
         @Test
         @DisplayName("Test canLiveIn always returns true")
         void testCanLiveInAlwaysReturnsTrue() {
-            boolean result = humanCrew.canLiveIn(mockCabin);
-
+            boolean result = humanCrew.canLiveIn(testCabin);
             assertTrue(result);
-            // Verify that no methods are called on the cabin mock
-            verifyNoInteractions(mockCabin);
         }
 
         @Test
         @DisplayName("Test canLiveIn with different cabin states")
         void testCanLiveInWithDifferentCabinStates() {
-            // Test with various mock cabin setups to ensure it always returns true
-            when(mockCabin.hasConnectedLifeSupport(any())).thenReturn(false);
-            assertTrue(humanCrew.canLiveIn(mockCabin));
-
-            when(mockCabin.hasConnectedLifeSupport(any())).thenReturn(true);
-            assertTrue(humanCrew.canLiveIn(mockCabin));
-
-            // The human crew should not even check life support
-            verify(mockCabin, never()).hasConnectedLifeSupport(any());
+            // Test con vari stati della cabina, sempre true
+            assertTrue(humanCrew.canLiveIn(testCabin));
+            testCabin.connectLifeSupport(LifeSupportSystemType.BROWN);
+            assertTrue(humanCrew.canLiveIn(testCabin));
         }
 
         @Test
@@ -140,11 +119,9 @@ class CrewTest {
         @Test
         @DisplayName("Test multiple calls to canLiveIn")
         void testMultipleCallsToCanLiveIn() {
-            assertTrue(humanCrew.canLiveIn(mockCabin));
-            assertTrue(humanCrew.canLiveIn(mockCabin));
-            assertTrue(humanCrew.canLiveIn(mockCabin));
-
-            verifyNoInteractions(mockCabin);
+            assertTrue(humanCrew.canLiveIn(testCabin));
+            assertTrue(humanCrew.canLiveIn(testCabin));
+            assertTrue(humanCrew.canLiveIn(testCabin));
         }
 
         @Test
@@ -175,37 +152,31 @@ class CrewTest {
         @Test
         @DisplayName("Test canLiveIn with purple life support - should return true")
         void testCanLiveInWithPurpleLifeSupport() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(true);
+            testCabin.connectLifeSupport(LifeSupportSystemType.PURPLE);
 
-            boolean result = purpleAlienCrew.canLiveIn(mockCabin);
+            boolean result = purpleAlienCrew.canLiveIn(testCabin);
 
             assertTrue(result);
-            verify(mockCabin, times(1)).hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
         }
 
         @Test
         @DisplayName("Test canLiveIn without purple life support - should return false")
         void testCanLiveInWithoutPurpleLifeSupport() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(false);
-
-            boolean result = purpleAlienCrew.canLiveIn(mockCabin);
+            // Nessun supporto vitale connesso
+            boolean result = purpleAlienCrew.canLiveIn(testCabin);
 
             assertFalse(result);
-            verify(mockCabin, times(1)).hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
         }
 
         @Test
         @DisplayName("Test canLiveIn with wrong life support type")
         void testCanLiveInWithWrongLifeSupportType() {
-            // Mock cabin has brown life support but not purple
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(false);
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(true);
+            // La cabina ha solo il supporto vitale marrone connesso
+            testCabin.connectLifeSupport(LifeSupportSystemType.BROWN);
 
-            boolean result = purpleAlienCrew.canLiveIn(mockCabin);
+            boolean result = purpleAlienCrew.canLiveIn(testCabin);
 
             assertFalse(result);
-            verify(mockCabin, times(1)).hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
-            verify(mockCabin, never()).hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
         }
 
         @Test
@@ -219,12 +190,10 @@ class CrewTest {
         @Test
         @DisplayName("Test multiple calls to canLiveIn")
         void testMultipleCallsToCanLiveIn() {
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(true);
+            testCabin.connectLifeSupport(LifeSupportSystemType.PURPLE);
 
-            assertTrue(purpleAlienCrew.canLiveIn(mockCabin));
-            assertTrue(purpleAlienCrew.canLiveIn(mockCabin));
-
-            verify(mockCabin, times(2)).hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
+            assertTrue(purpleAlienCrew.canLiveIn(testCabin));
+            assertTrue(purpleAlienCrew.canLiveIn(testCabin));
         }
 
         @Test
@@ -261,34 +230,34 @@ class CrewTest {
         @DisplayName("Test crew behavior differences")
         void testCrewBehaviorDifferences() {
             // Setup cabin with no life support
-            when(mockCabin.hasConnectedLifeSupport(any())).thenReturn(false);
+            testCabin.disconnectLifeSupport(LifeSupportSystemType.BROWN);
+            testCabin.disconnectLifeSupport(LifeSupportSystemType.PURPLE);
 
             // Human should always be able to live in any cabin
-            assertTrue(humanCrew.canLiveIn(mockCabin));
+            assertTrue(humanCrew.canLiveIn(testCabin));
 
             // Aliens should not be able to live without their specific life support
-            assertFalse(brownAlienCrew.canLiveIn(mockCabin));
-            assertFalse(purpleAlienCrew.canLiveIn(mockCabin));
+            assertFalse(brownAlienCrew.canLiveIn(testCabin));
+            assertFalse(purpleAlienCrew.canLiveIn(testCabin));
         }
 
         @Test
         @DisplayName("Test crew behavior with specific life supports")
         void testCrewBehaviorWithSpecificLifeSupports() {
             // Setup cabin with brown life support only
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(true);
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(false);
+            testCabin.connectLifeSupport(LifeSupportSystemType.BROWN);
 
-            assertTrue(humanCrew.canLiveIn(mockCabin)); // Humans can live anywhere
-            assertTrue(brownAlienCrew.canLiveIn(mockCabin)); // Brown aliens can live with brown support
-            assertFalse(purpleAlienCrew.canLiveIn(mockCabin)); // Purple aliens need purple support
+            assertTrue(humanCrew.canLiveIn(testCabin)); // Humans can live anywhere
+            assertTrue(brownAlienCrew.canLiveIn(testCabin)); // Brown aliens can live with brown support
+            assertFalse(purpleAlienCrew.canLiveIn(testCabin)); // Purple aliens need purple support
 
             // Setup cabin with purple life support only
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN)).thenReturn(false);
-            when(mockCabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE)).thenReturn(true);
+            testCabin.disconnectLifeSupport(LifeSupportSystemType.BROWN);
+            testCabin.connectLifeSupport(LifeSupportSystemType.PURPLE);
 
-            assertTrue(humanCrew.canLiveIn(mockCabin)); // Humans can live anywhere
-            assertFalse(brownAlienCrew.canLiveIn(mockCabin)); // Brown aliens need brown support
-            assertTrue(purpleAlienCrew.canLiveIn(mockCabin)); // Purple aliens can live with purple support
+            assertTrue(humanCrew.canLiveIn(testCabin)); // Humans can live anywhere
+            assertFalse(brownAlienCrew.canLiveIn(testCabin)); // Brown aliens need brown support
+            assertTrue(purpleAlienCrew.canLiveIn(testCabin)); // Purple aliens can live with purple support
         }
 
         @Test

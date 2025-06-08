@@ -26,12 +26,12 @@ public class Epidemic extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Apply epidemic to a single player
         applyEpidemic(p);
     }
