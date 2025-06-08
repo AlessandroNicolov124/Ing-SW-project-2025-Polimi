@@ -198,8 +198,16 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public Component pickComponentCard() throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot pick component: local player not set");
+        }
+        
+        try {
+            Component component = server.pickComponent(localPlayer.getId());
+            return component;
+        } catch (RemoteException e) {
+            throw new RemoteException("Error picking component", e);
+        }
     }
 
 }

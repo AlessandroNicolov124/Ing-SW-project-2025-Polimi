@@ -292,8 +292,18 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public Component pickComponentCard() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot pick component: local player not set");
+        }
+        
+        synchronized (out) {
+            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest(
+                localPlayer.getId()));
+            out.flush();
+        }
+        
+        // Note: This is asynchronous - the actual component will be returned via PickComponentResponse
+        return null;
     }
 
     public void rotateComponent(Position position, RotationType rotationType) throws Exception {

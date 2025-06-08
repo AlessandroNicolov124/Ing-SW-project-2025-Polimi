@@ -321,5 +321,42 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
     }
 
+    public void pickComponentCard(int playerId) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, null, false, "Match not found"));
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, null, false, "Match not in progress"));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, null, false, "Player not found"));
+            return;
+        }
+
+        Component component = controller.getCompFromDeck(player);
+        String message = component != null ? "Component picked successfully" : "No more components available";
+        boolean success = component != null;
+        
+        System.out.println("[ServerSocket] Component pick for player " + playerId + ": " + 
+            (component != null ? component.getClass().getSimpleName() : "null"));
+        
+        // Send response back to the requesting client
+        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            playerId, component, success, message));
+    }
+
 
 }

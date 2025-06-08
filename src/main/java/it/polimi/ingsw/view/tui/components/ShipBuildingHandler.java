@@ -19,6 +19,7 @@ public class ShipBuildingHandler {
     private final GeneralClientIf simpleClient; // Added socket client
 
     private final Random random = new Random();
+    private Component currentComponent = null;
 
 
     public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer) {
@@ -35,6 +36,15 @@ public class ShipBuildingHandler {
         console.printMessage("===================");
     }
 
+    // Method to set the current component from async response
+    public void setCurrentComponent(Component component) {
+        this.currentComponent = component;
+        if (component != null) {
+            console.printMessage("Current component: " + component.getClass().getSimpleName());
+            displayComponent(component);
+        }
+    }
+
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
@@ -46,7 +56,7 @@ public class ShipBuildingHandler {
 
         //il primo elemento è sempre la cabina di pilotaggio
         // create method in the controllet to generate a starting cabin
-        Component currentComponent = createCabin(true);
+        currentComponent = createCabin(true);
         displayComponent(currentComponent);
         handlePlaceComponent(currentComponent);
         currentComponent = null;
@@ -58,15 +68,20 @@ public class ShipBuildingHandler {
             // Se non abbiamo un componente corrente, peschiamone uno
             if (currentComponent == null) {
                 try {
-                    currentComponent = simpleClient.pickComponentCard();
+                    Component pickedComponent = simpleClient.pickComponentCard();
+                    if (pickedComponent != null) {
+                        // Synchronous response (RMI)
+                        currentComponent = pickedComponent;
+                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
+                    } else {
+                        // Asynchronous response (Socket) - component will be set via setCurrentComponent()
+                        console.printMessage("\nRequesting component from server...");
+                        // Continue to the menu - component will be set when response arrives
+                    }
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    console.printError("Error picking component: " + e.getMessage());
+                    continue; // Skip this iteration and try again
                 }
-
-
-                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-            } else if (currentComponent == null) {
-                console.printMessage("\nNo more components available!");
             }
 
             if (currentComponent != null) {
@@ -120,6 +135,26 @@ public class ShipBuildingHandler {
                         displayComponent(currentComponent);
                     } else {
                         console.printMessage("No current component to display.");
+                    }
+                    break;
+                case "pick": // Manually pick a component
+                    if (currentComponent == null) {
+                        try {
+                            Component pickedComponent = simpleClient.pickComponentCard();
+                            if (pickedComponent != null) {
+                                // Synchronous response (RMI)
+                                currentComponent = pickedComponent;
+                                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
+                                displayComponent(currentComponent);
+                            } else {
+                                // Asynchronous response (Socket)
+                                console.printMessage("\nComponent request sent to server...");
+                            }
+                        } catch (Exception e) {
+                            console.printError("Error picking component: " + e.getMessage());
+                        }
+                    } else {
+                        console.printMessage("You already have a component: " + currentComponent.getClass().getSimpleName());
                     }
                     break;
                 case "v": // Validate and finish

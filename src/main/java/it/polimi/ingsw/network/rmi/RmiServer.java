@@ -279,8 +279,40 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public Component pickComponent(int playerId) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponent'");
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            broadcastErrorToAllClients(playerId, "Match not found");
+            return null;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            broadcastErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
+            return null;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            broadcastErrorToMatch(match.getMatchId(), playerId, "Player not found");
+            return null;
+        }
+
+        Component component = controller.getCompFromDeck(player);
+        String message = component != null ? "Component picked successfully" : "No more components available";
+        boolean success = component != null;
+        
+        System.out.println("[ServerRMI] Component pick for player " + playerId + ": " + 
+            (component != null ? component.getClass().getSimpleName() : "null"));
+        
+        // Send response to all clients in the match (they can filter by player ID)
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, component, success, message));
+        
+        return component;
     }
 
     @Override
@@ -331,6 +363,24 @@ public class RmiServer extends UnicastRemoteObject
         try {
             lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
                 playerId, component, position, false, errorMessage));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast error to match: " + e.getMessage());
+        }
+    }
+
+    private void broadcastErrorToAllClients(int playerId, String errorMessage) {
+        try {
+            lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, null, false, errorMessage));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast error to all clients: " + e.getMessage());
+        }
+    }
+
+    private void broadcastErrorToMatch(UUID matchId, int playerId, String errorMessage) {
+        try {
+            lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                playerId, null, false, errorMessage));
         } catch (Exception e) {
             System.err.println("[ServerRMI] Failed to broadcast error to match: " + e.getMessage());
         }

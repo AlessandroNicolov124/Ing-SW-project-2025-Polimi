@@ -642,5 +642,24 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
     }
 
+    @Override
+    public void componentPicked(int playerId, Component component, boolean success, String message) {
+        synchronized (displayMutex) {
+            // Check if this response is for the current player
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                if (success && component != null) {
+                    console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
+                    // Pass the component to the ship building handler if it's active
+                    if (activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.setCurrentComponent(component);
+                    }
+                } else {
+                    console.printError("✗ Failed to pick component: " + message);
+                }
+            }
+            // If it's not for our player, ignore the response
+        }
+    }
+
 
 }
