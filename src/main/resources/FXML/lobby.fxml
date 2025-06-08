@@ -10,16 +10,17 @@
     <top>
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
             <Label fx:id="welcomeLabel" text="Welcome, PlayerName!" />
-            <Button fx:id="logoutButton" text="Log out" />
         </HBox>
     </top>
     <center>
         <VBox spacing="8" alignment="TOP_CENTER" style="-fx-padding: 20;">
             <Label text="Available Matches:" style="-fx-font-size: 16;" />
             <ListView fx:id="matchesListView" prefHeight="300" />
+            <ListView fx:id="playersListView" prefHeight="180" />
         </VBox>
     </center>
     <bottom>
+
         <HBox spacing="12" alignment="CENTER" style="-fx-padding: 12;">
             <Button fx:id="createMatchButton" text="Create Match" />
             <Button fx:id="joinMatchButton" text="Join Selected Match" />

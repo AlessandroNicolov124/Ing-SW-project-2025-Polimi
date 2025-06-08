@@ -303,13 +303,14 @@ public class AppContext implements GameListener {
     @Override
     public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
         this.currentMatchId = matchId;
-        //LobbyController.updateMatchListListener(matchId.toString());
+
+        LobbyController.matchCreatedListener(matchId.toString());
     }
 
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
         if (matchId == this.currentMatchId) {
-            LobbyController.playerJoinedMatchNotification(playerName);
+            //LobbyController.playerJoinedMatchNotification(playerName);
         }
     }
 
@@ -323,7 +324,6 @@ public class AppContext implements GameListener {
     @Override
     public void updateAvailableMatches(List<String> matchNames) {
         LobbyController.updateMatchListListener(matchNames);
-
     }
 
     @Override
@@ -343,7 +343,9 @@ public class AppContext implements GameListener {
 
     @Override
     public void playersInMatch(UUID matchId, List<String> players, int hostId) {
-
+        if (matchId == this.currentMatchId) {
+            LobbyController.playerJoinedMatchNotification(players);
+        }
     }
 
     @Override

@@ -20,10 +20,13 @@ public class LobbyController extends GuiContoller {
     @FXML
     private ListView<String> matchesListView;
     @FXML
+    private ListView<String> playersListView;
+    @FXML
     private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton;
 
     // Suppose you have a Match class with a nice toString()
     private static ObservableList<String> matchList = FXCollections.observableArrayList();
+    private static ObservableList<String> playerList = FXCollections.observableArrayList();
 
     public void initialize() {
         matchesListView.setItems(matchList);
@@ -78,6 +81,15 @@ public class LobbyController extends GuiContoller {
         }
     }
 
+    public static void matchCreatedListener(String newMatch) {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                matchList.add(newMatch);
+            }
+        });
+    }
+
     public static void updateMatchListListener(List<String> newMatches) {
         Platform.runLater(new Runnable(){
             @Override
@@ -88,7 +100,13 @@ public class LobbyController extends GuiContoller {
         });
     }
 
-    public static void playerJoinedMatchNotification(String name) {
-
+    public static void playerJoinedMatchNotification(List<String> playersInMatch) {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                matchList.clear();
+                matchList.addAll(playersInMatch);
+            }
+        });
     }
 }
