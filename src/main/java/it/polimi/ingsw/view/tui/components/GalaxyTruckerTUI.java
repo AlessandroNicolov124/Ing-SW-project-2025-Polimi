@@ -503,6 +503,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             } else {
                 console.printError("✗ Cannot place component: player or ship not available");
             }
+            
+            // Show menu again after component placement if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshMenuDisplay();
+            }
         }
     }
 
@@ -515,6 +520,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     currentPlayer.getShip().removeComponent(removed);
                     console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
                 }
+            }
+            
+            // Show menu again after component removal if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
     }
@@ -540,8 +550,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
         }
     }
-
-
 
     @Override
     public void playerCreated(int playerId, String username) {
@@ -652,9 +660,17 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     // Pass the component to the ship building handler if it's active
                     if (activeShipBuildingHandler != null) {
                         activeShipBuildingHandler.setCurrentComponent(component);
+                        // Show menu again after component pick if we're in ship building mode
+                        if (state == TuiState.SHIP_BUILDING) {
+                            activeShipBuildingHandler.refreshMenuDisplay();
+                        }
                     }
                 } else {
                     console.printError("✗ Failed to pick component: " + message);
+                    // Still show menu after failed component pick
+                    if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.refreshMenuDisplay();
+                    }
                 }
             }
             // If it's not for our player, ignore the response

@@ -36,13 +36,18 @@ public class ShipBuildingHandler {
         console.printMessage("===================");
     }
 
+    // Method to redisplay the ship building menu after async operations
+    public void refreshMenuDisplay() {
+        if (currentComponent != null) {
+            console.printMessage("Current component: " + currentComponent.getClass().getSimpleName());
+            displayComponent(currentComponent);
+        }
+        printShipBuildingMenu(currentComponent != null);
+    }
+
     // Method to set the current component from async response
     public void setCurrentComponent(Component component) {
         this.currentComponent = component;
-        if (component != null) {
-            console.printMessage("Current component: " + component.getClass().getSimpleName());
-            displayComponent(component);
-        }
     }
 
     public void manageShipBuilding() {
