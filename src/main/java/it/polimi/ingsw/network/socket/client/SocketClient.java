@@ -18,6 +18,9 @@ import it.polimi.ingsw.network.messages.lobby.GetMatchesRequest;
 import it.polimi.ingsw.network.messages.lobby.JoinMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.StartMatchRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Player;
@@ -278,7 +281,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
         }
         
         synchronized (out) {
-            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest(
+            out.writeObject(new PlaceComponentRequest(
                 localPlayer.getId(), component, position));
             out.flush();
         }
@@ -297,7 +300,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
         }
         
         synchronized (out) {
-            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest(
+            out.writeObject(new PickComponentRequest(
                 localPlayer.getId()));
             out.flush();
         }
@@ -313,7 +316,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
         }
         
         synchronized (out) {
-            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest(
+            out.writeObject(new RemoveComponentRequest(
                 localPlayer.getId(), position));
             out.flush();
         }

@@ -23,6 +23,9 @@ import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.io.*;
 import java.net.Socket;
@@ -258,7 +261,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void placeComponent(Component component, Position position) throws Exception {
         if (currentPlayerId == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            showUpdate(new PlaceComponentResponse(
                 -1, component, position, false, "No player ID set"));
             return;
         }
@@ -266,14 +269,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            showUpdate(new PlaceComponentResponse(
                 currentPlayerId, component, position, false, "Match not found"));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            showUpdate(new PlaceComponentResponse(
                 currentPlayerId, component, position, false, "Match not in progress"));
             return;
         }
@@ -282,7 +285,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(currentPlayerId);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            showUpdate(new PlaceComponentResponse(
                 currentPlayerId, component, position, false, "Player not found"));
             return;
         }
@@ -293,7 +296,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         System.out.println("[ServerSocket] Component placement for player " + currentPlayerId + ": " + success);
         
         // Send response back to the requesting client
-        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+        showUpdate(new PlaceComponentResponse(
             currentPlayerId, component, position, success, message));
         
         // Optionally broadcast to other players in the match
@@ -311,7 +314,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void removeComponent(Position position) throws Exception {
         if (currentPlayerId == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            showUpdate(new RemoveComponentResponse(
                 -1, position, false, "No player ID set"));
             return;
         }
@@ -319,14 +322,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            showUpdate(new RemoveComponentResponse(
                 currentPlayerId, position, false, "Match not found"));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            showUpdate(new RemoveComponentResponse(
                 currentPlayerId, position, false, "Match not in progress"));
             return;
         }
@@ -335,7 +338,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(currentPlayerId);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            showUpdate(new RemoveComponentResponse(
                 currentPlayerId, position, false, "Player not found"));
             return;
         }
@@ -344,7 +347,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Component componentToRemove = player.getShip().getComponentAt(position);
         if (componentToRemove == null) {
             System.out.println("[ServerSocket] No component found at position " + position + " for player " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            showUpdate(new RemoveComponentResponse(
                 currentPlayerId, position, false, "No component found at position"));
             return;
         }
@@ -367,7 +370,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         System.out.println("[ServerSocket] Component removal for player " + currentPlayerId + " at " + position + ": " + success);
         
         // Send response back to the requesting client
-        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+        showUpdate(new RemoveComponentResponse(
             currentPlayerId, position, success, message));
     }
 
@@ -387,7 +390,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public Component pickComponentCard() throws Exception {
         if (currentPlayerId == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            showUpdate(new PickComponentResponse(
                 -1, null, false, "No player ID set"));
             return null;
         }
@@ -395,14 +398,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            showUpdate(new PickComponentResponse(
                 currentPlayerId, null, false, "Match not found"));
             return null;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            showUpdate(new PickComponentResponse(
                 currentPlayerId, null, false, "Match not in progress"));
             return null;
         }
@@ -411,7 +414,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(currentPlayerId);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            showUpdate(new PickComponentResponse(
                 currentPlayerId, null, false, "Player not found"));
             return null;
         }
@@ -424,7 +427,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             (component != null ? component.getClass().getSimpleName() : "null"));
         
         // Send response back to the requesting client
-        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+        showUpdate(new PickComponentResponse(
             currentPlayerId, component, success, message));
         
         return component;

@@ -18,6 +18,9 @@ import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -309,7 +312,7 @@ public class RmiServer extends UnicastRemoteObject
         
         // Send response to all clients in the match (they can filter by player ID)
         lobbyManager.multicastToMatch(match.getMatchId(), 
-            new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            new PickComponentResponse(
                 playerId, component, success, message));
         
         return component;
@@ -346,13 +349,13 @@ public class RmiServer extends UnicastRemoteObject
         
         // Send response to all clients in the match (they can filter by player ID)
         lobbyManager.multicastToMatch(match.getMatchId(), 
-            new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            new PlaceComponentResponse(
                 playerId, component, position, success, message));
     }
 
     private void broadcastErrorToAllClients(int playerId, Component component, Position position, String errorMessage) {
         try {
-            lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            lobbyManager.broadcastToAll(new PlaceComponentResponse(
                 playerId, component, position, false, errorMessage));
         } catch (Exception e) {
             System.err.println("[ServerRMI] Failed to broadcast error to all clients: " + e.getMessage());
@@ -361,7 +364,7 @@ public class RmiServer extends UnicastRemoteObject
 
     private void broadcastErrorToMatch(UUID matchId, int playerId, Component component, Position position, String errorMessage) {
         try {
-            lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+            lobbyManager.multicastToMatch(matchId, new PlaceComponentResponse(
                 playerId, component, position, false, errorMessage));
         } catch (Exception e) {
             System.err.println("[ServerRMI] Failed to broadcast error to match: " + e.getMessage());
@@ -370,7 +373,7 @@ public class RmiServer extends UnicastRemoteObject
 
     private void broadcastErrorToAllClients(int playerId, String errorMessage) {
         try {
-            lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            lobbyManager.broadcastToAll(new PickComponentResponse(
                 playerId, null, false, errorMessage));
         } catch (Exception e) {
             System.err.println("[ServerRMI] Failed to broadcast error to all clients: " + e.getMessage());
@@ -379,7 +382,7 @@ public class RmiServer extends UnicastRemoteObject
 
     private void broadcastErrorToMatch(UUID matchId, int playerId, String errorMessage) {
         try {
-            lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            lobbyManager.multicastToMatch(matchId, new PickComponentResponse(
                 playerId, null, false, errorMessage));
         } catch (Exception e) {
             System.err.println("[ServerRMI] Failed to broadcast error to match: " + e.getMessage());
@@ -389,10 +392,10 @@ public class RmiServer extends UnicastRemoteObject
     private void broadcastRemovalErrorToMatch(UUID matchId, int playerId, Position position, String errorMessage) {
         try {
             if (matchId != null) {
-                lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                lobbyManager.multicastToMatch(matchId, new RemoveComponentResponse(
                     playerId, position, false, errorMessage));
             } else {
-                lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                lobbyManager.broadcastToAll(new RemoveComponentResponse(
                     playerId, position, false, errorMessage));
             }
         } catch (Exception e) {
@@ -428,7 +431,7 @@ public class RmiServer extends UnicastRemoteObject
         if (componentToRemove == null) {
             System.out.println("[ServerRMI] No component found at position " + position + " for player " + playerId);
             lobbyManager.multicastToMatch(match.getMatchId(), 
-                new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                new RemoveComponentResponse(
                     playerId, position, false, "No component found at position"));
             return;
         }
@@ -452,7 +455,7 @@ public class RmiServer extends UnicastRemoteObject
         
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(), 
-            new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            new RemoveComponentResponse(
                 playerId, position, success, message));
     }
 
