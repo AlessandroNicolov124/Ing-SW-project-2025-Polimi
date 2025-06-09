@@ -21,6 +21,9 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     void placeComponent(Component component, Position position) throws RemoteException;
 
     @Override
+    void removeComponent(Position position) throws RemoteException;
+
+    @Override
     void showUpdate(ResponseMessage message) throws RemoteException;
 
     @Override

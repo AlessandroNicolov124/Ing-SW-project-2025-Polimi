@@ -417,10 +417,12 @@ public class ShipBuildingHandler {
 
         // Send remove request via network
         try {
-            //simpleClient.removeComponent(posToRemove);
+            simpleClient.removeComponent(posToRemove);
             console.printMessage("Remove request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
-            // Success/failure message handled asynchronously by ComponentRemovedMessage
+            // Success/failure message handled asynchronously by RemoveComponentResponse
         } catch (IllegalStateException e) {
+            console.printError("Error sending remove request: " + e.getMessage());
+        } catch (Exception e) {
             console.printError("Error sending remove request: " + e.getMessage());
         }
 

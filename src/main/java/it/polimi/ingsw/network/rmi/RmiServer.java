@@ -386,10 +386,74 @@ public class RmiServer extends UnicastRemoteObject
         }
     }
 
+    private void broadcastRemovalErrorToMatch(UUID matchId, int playerId, Position position, String errorMessage) {
+        try {
+            if (matchId != null) {
+                lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                    playerId, position, false, errorMessage));
+            } else {
+                lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                    playerId, position, false, errorMessage));
+            }
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast removal error: " + e.getMessage());
+        }
+    }
+
     @Override
     public void removeComponent(int playerId, Position position) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeComponent'");
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            broadcastRemovalErrorToMatch(null, playerId, position, "Match not found");
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            broadcastRemovalErrorToMatch(match.getMatchId(), playerId, position, "Match not in progress");
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            broadcastRemovalErrorToMatch(match.getMatchId(), playerId, position, "Player not found");
+            return;
+        }
+
+        // Get the component at the specified position
+        Component componentToRemove = player.getShip().getComponentAt(position);
+        if (componentToRemove == null) {
+            System.out.println("[ServerRMI] No component found at position " + position + " for player " + playerId);
+            lobbyManager.multicastToMatch(match.getMatchId(), 
+                new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                    playerId, position, false, "No component found at position"));
+            return;
+        }
+
+        boolean success = controller.removeComponentForPlayer(player, componentToRemove);
+        String message;
+        if (success) {
+            message = "Component removed successfully";
+        } else {
+            // Provide more specific error messages
+            if (componentToRemove.isStartingCabin()) {
+                message = "Cannot remove starting cabin - it's the ship's core";
+            } else if (player.getShip().getComponents().size() == 1) {
+                message = "Cannot remove the only component on the ship";
+            } else {
+                message = "Cannot remove component - would disconnect the ship";
+            }
+        }
+        
+        System.out.println("[ServerRMI] Component removal for player " + playerId + " at " + position + ": " + success);
+        
+        // Send response to all clients in the match
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                playerId, position, success, message));
     }
 
     @Override

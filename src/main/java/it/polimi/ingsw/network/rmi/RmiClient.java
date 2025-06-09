@@ -186,6 +186,19 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     }
 
     @Override
+    public void removeComponent(Position position) throws RemoteException {
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot remove component: local player not set");
+        }
+        
+        try {
+            server.removeComponent(localPlayer.getId(), position);
+        } catch (RemoteException e) {
+            throw new RemoteException("Error removing component", e);
+        }
+    }
+
+    @Override
     public void rotateComponent(Position position, RotationType rotationType) throws RemoteException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");

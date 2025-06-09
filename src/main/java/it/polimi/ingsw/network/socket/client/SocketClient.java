@@ -306,6 +306,19 @@ public class SocketClient implements Runnable, GeneralClientIf {
         return null;
     }
 
+    @Override
+    public void removeComponent(Position position) throws Exception {
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot remove component: local player not set");
+        }
+        
+        synchronized (out) {
+            out.writeObject(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest(
+                localPlayer.getId(), position));
+            out.flush();
+        }
+    }
+
     public void rotateComponent(Position position, RotationType rotationType) throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");

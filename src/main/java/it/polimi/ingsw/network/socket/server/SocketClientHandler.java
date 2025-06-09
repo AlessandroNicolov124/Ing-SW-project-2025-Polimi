@@ -304,6 +304,12 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     }
 
     @Override
+    public void removeComponent(Position position) throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'removeComponent'");
+    }
+
+    @Override
     public void rotateComponent(Position position, RotationType rotationType) throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
@@ -356,6 +362,62 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         // Send response back to the requesting client
         showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
             playerId, component, success, message));
+    }
+
+    public void removeComponent(int playerId, Position position) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                playerId, position, false, "Match not found"));
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                playerId, position, false, "Match not in progress"));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                playerId, position, false, "Player not found"));
+            return;
+        }
+
+        // Get the component at the specified position
+        Component componentToRemove = player.getShip().getComponentAt(position);
+        if (componentToRemove == null) {
+            System.out.println("[ServerSocket] No component found at position " + position + " for player " + playerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                playerId, position, false, "No component found at position"));
+            return;
+        }
+
+        boolean success = controller.removeComponentForPlayer(player, componentToRemove);
+        String message;
+        if (success) {
+            message = "Component removed successfully";
+        } else {
+            // Provide more specific error messages
+            if (componentToRemove instanceof it.polimi.ingsw.Components.Cabin cabin && cabin.isStartingCabin()) {
+                message = "Cannot remove starting cabin - it's the ship's core";
+            } else if (player.getShip().getComponents().size() == 1) {
+                message = "Cannot remove the only component on the ship";
+            } else {
+                message = "Cannot remove component - would disconnect the ship";
+            }
+        }
+        
+        System.out.println("[ServerSocket] Component removal for player " + playerId + " at " + position + ": " + success);
+        
+        // Send response back to the requesting client
+        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+            playerId, position, success, message));
     }
 
 
