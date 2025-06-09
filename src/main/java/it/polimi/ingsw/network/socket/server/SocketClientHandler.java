@@ -35,6 +35,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     private final SocketServer server;
     private final ObjectInputStream  in;
     private final ObjectOutputStream out;
+    private int currentPlayerId = -1;
 
     public SocketClientHandler(Socket s, LobbyManager lobbyManager, SocketServer srv) throws IOException {
         socket = s; 
@@ -90,6 +91,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         }
 
         try {
+            this.currentPlayerId = id;
             showUpdate(new AddPlayerResponse(id, username));
         } catch (Exception e) {
             showUpdate(new UsernameRejectedResponse("Error creating player: " + e.getMessage()));
@@ -254,47 +256,49 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void placeComponent(Component component, Position position) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'placeComponent'");
-    }
-
-    public void placeComponent(int playerId, Component component, Position position) throws Exception {
-        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
-        if (match == null) {
-            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
+        if (currentPlayerId == -1) {
+            System.out.println("[ServerSocket] No player ID set for client handler");
             showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
-                playerId, component, position, false, "Match not found"));
+                -1, component, position, false, "No player ID set"));
+            return;
+        }
+
+        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
+                currentPlayerId, component, position, false, "Match not found"));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
-            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
             showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
-                playerId, component, position, false, "Match not in progress"));
+                currentPlayerId, component, position, false, "Match not in progress"));
             return;
         }
 
         GameController controller = match.getController();
-        Player player = controller.getPlayerById(playerId);
+        Player player = controller.getPlayerById(currentPlayerId);
         if (player == null) {
-            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
+            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
             showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
-                playerId, component, position, false, "Player not found"));
+                currentPlayerId, component, position, false, "Player not found"));
             return;
         }
 
         boolean success = controller.addComponentForPlayer(player, component, position);
         String message = success ? "Component placed successfully" : "Failed to place component";
         
-        System.out.println("[ServerSocket] Component placement for player " + playerId + ": " + success);
+        System.out.println("[ServerSocket] Component placement for player " + currentPlayerId + ": " + success);
         
         // Send response back to the requesting client
         showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse(
-            playerId, component, position, success, message));
+            currentPlayerId, component, position, success, message));
         
         // Optionally broadcast to other players in the match
         // lobbyManager.multicastToMatchExceptOne(match.getMatchId(), 
-        //     new PlaceComponentResponse(playerId, component, position, success, message), this);
+        //     new PlaceComponentResponse(currentPlayerId, component, position, success, message), this);
     }
 
     @Override
@@ -305,96 +309,43 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void removeComponent(Position position) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'removeComponent'");
-    }
+        if (currentPlayerId == -1) {
+            System.out.println("[ServerSocket] No player ID set for client handler");
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                -1, position, false, "No player ID set"));
+            return;
+        }
 
-    @Override
-    public void rotateComponent(Position position, RotationType rotationType) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
-    }
-
-    @Override
-    public void setLocalPlayer(Player player) throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setLocalPlayer'");
-    }
-
-    @Override
-    public Component pickComponentCard() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
-    }
-
-    public void pickComponentCard(int playerId) throws Exception {
-        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
         if (match == null) {
-            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
-                playerId, null, false, "Match not found"));
+            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                currentPlayerId, position, false, "Match not found"));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
-            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
-                playerId, null, false, "Match not in progress"));
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
+                currentPlayerId, position, false, "Match not in progress"));
             return;
         }
 
         GameController controller = match.getController();
-        Player player = controller.getPlayerById(playerId);
+        Player player = controller.getPlayerById(currentPlayerId);
         if (player == null) {
-            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
-                playerId, null, false, "Player not found"));
-            return;
-        }
-
-        Component component = controller.getCompFromDeck(player);
-        String message = component != null ? "Component picked successfully" : "No more components available";
-        boolean success = component != null;
-        
-        System.out.println("[ServerSocket] Component pick for player " + playerId + ": " + 
-            (component != null ? component.getClass().getSimpleName() : "null"));
-        
-        // Send response back to the requesting client
-        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
-            playerId, component, success, message));
-    }
-
-    public void removeComponent(int playerId, Position position) throws Exception {
-        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
-        if (match == null) {
-            System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
+            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
             showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
-                playerId, position, false, "Match not found"));
-            return;
-        }
-
-        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
-            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
-                playerId, position, false, "Match not in progress"));
-            return;
-        }
-
-        GameController controller = match.getController();
-        Player player = controller.getPlayerById(playerId);
-        if (player == null) {
-            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
-            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
-                playerId, position, false, "Player not found"));
+                currentPlayerId, position, false, "Player not found"));
             return;
         }
 
         // Get the component at the specified position
         Component componentToRemove = player.getShip().getComponentAt(position);
         if (componentToRemove == null) {
-            System.out.println("[ServerSocket] No component found at position " + position + " for player " + playerId);
+            System.out.println("[ServerSocket] No component found at position " + position + " for player " + currentPlayerId);
             showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
-                playerId, position, false, "No component found at position"));
+                currentPlayerId, position, false, "No component found at position"));
             return;
         }
 
@@ -413,12 +364,73 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             }
         }
         
-        System.out.println("[ServerSocket] Component removal for player " + playerId + " at " + position + ": " + success);
+        System.out.println("[ServerSocket] Component removal for player " + currentPlayerId + " at " + position + ": " + success);
         
         // Send response back to the requesting client
         showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse(
-            playerId, position, success, message));
+            currentPlayerId, position, success, message));
     }
+
+    @Override
+    public void rotateComponent(Position position, RotationType rotationType) throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
+    }
+
+    @Override
+    public void setLocalPlayer(Player player) throws Exception {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setLocalPlayer'");
+    }
+
+    @Override
+    public Component pickComponentCard() throws Exception {
+        if (currentPlayerId == -1) {
+            System.out.println("[ServerSocket] No player ID set for client handler");
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                -1, null, false, "No player ID set"));
+            return null;
+        }
+
+        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                currentPlayerId, null, false, "Match not found"));
+            return null;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                currentPlayerId, null, false, "Match not in progress"));
+            return null;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(currentPlayerId);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
+            showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+                currentPlayerId, null, false, "Player not found"));
+            return null;
+        }
+
+        Component component = controller.getCompFromDeck(player);
+        String message = component != null ? "Component picked successfully" : "No more components available";
+        boolean success = component != null;
+        
+        System.out.println("[ServerSocket] Component pick for player " + currentPlayerId + ": " + 
+            (component != null ? component.getClass().getSimpleName() : "null"));
+        
+        // Send response back to the requesting client
+        showUpdate(new it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse(
+            currentPlayerId, component, success, message));
+        
+        return component;
+    }
+
+
 
 
 }
