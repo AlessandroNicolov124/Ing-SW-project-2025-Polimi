@@ -4,7 +4,8 @@ import java.util.List;
 
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+
+import it.polimi.ingsw.network.messages.RotationType;
 
 public interface GameStateUpdateListener {
     void gameStateUpdate();

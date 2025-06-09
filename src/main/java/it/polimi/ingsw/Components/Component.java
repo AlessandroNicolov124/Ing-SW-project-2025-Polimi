@@ -145,6 +145,16 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         this.damaged = damaged;
     }
 
+    /**
+     * Determines if this component is a starting cabin that cannot be removed.
+     * Default implementation returns false. Cabin class overrides this.
+     * 
+     * @return true if this is a starting cabin, false otherwise
+     */
+    public boolean isStartingCabin() {
+        return false;
+    }
+
     public void setComponentDirection(Direction direction) {
         componentDirection = direction;
     }
@@ -216,8 +226,6 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         }
         return sb.toString();
     }
-
-
 }
 
 

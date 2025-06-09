@@ -4,9 +4,10 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+//import it.polimi.ingsw.network.socket.client;
+import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
+
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -17,10 +18,10 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundSize;
+
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
+
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -455,8 +456,8 @@ public class ShipBuilderController implements GameStateUpdateListener {
             try {
                 System.out.println("[ShipBuilder] Sending clockwise rotation request for position: " + selectedPosition);
                 selectedImageView.setRotate(selectedImageView.getRotate() + 90);
-                context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
-                context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
+                //context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
+                //context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
                 statusLabel.setText("Rotating component clockwise...");
             } catch (Exception e) {
                 System.err.println("[ShipBuilder] Error during clockwise rotation: " + e.getMessage());
@@ -496,7 +497,7 @@ public class ShipBuilderController implements GameStateUpdateListener {
             try {
                 System.out.println("[ShipBuilder] Sending counter-clockwise rotation request for position: " + selectedPosition);
                 selectedImageView.setRotate(selectedImageView.getRotate() - 90);
-                context.getClient().rotateComponent(selectedPosition, RotationType.ANTI_CLOCKWISE);
+                //context.getClient().rotateComponent(selectedPosition, RotationType.ANTI_CLOCKWISE);
 
                 statusLabel.setText("Rotating component counter-clockwise...");
             } catch (Exception e) {
@@ -602,7 +603,6 @@ public class ShipBuilderController implements GameStateUpdateListener {
 
     public void removeComponentAt(Position position) {
         try {
-            // implement method on client 
             statusLabel.setText("Removing component at (" + position.getX() + ", " + position.getY() + ")...");
         } catch (Exception e) {
             showErrorDialog("Removal Failed", "Failed to remove component: " + e.getMessage());
@@ -653,11 +653,11 @@ public class ShipBuilderController implements GameStateUpdateListener {
         statusLabel.setText("Component placed successfully!");
         this.component = null;
         cardImage.setImage(null);
-        ImageView iv = createImageViewFor(component);
-        anchorPane.getChildren().add(iv);
-        cellViews.put(position, iv);
-        updateButtonStates();
-
+        //ImageView iv = createImageViewFor(component);
+        //anchorPane.getChildren().add(iv);
+        //cellViews.put(position, iv);
+        //updateButtonStates();
+        //TODO implement component drop here 
         
         refreshShipDisplay();
     }

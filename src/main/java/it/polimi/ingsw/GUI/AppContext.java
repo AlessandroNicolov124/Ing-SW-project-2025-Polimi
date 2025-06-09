@@ -1,12 +1,13 @@
 package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.GUI.Controllers.LobbyController;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
-import it.polimi.ingsw.network.socket.messages.RotationType;
+import it.polimi.ingsw.network.messages.RotationType;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -16,6 +17,10 @@ import javafx.stage.Stage;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+
+import static it.polimi.ingsw.network.messages.RotationType.*;
+import static java.lang.System.in;
 
 public class AppContext implements GameListener {
     private String username;
@@ -24,6 +29,7 @@ public class AppContext implements GameListener {
     private Player localPlayerReference;
     private int serverPort;
     private int playerId;
+    private UUID currentMatchId;
 
     private GeneralClientIf client;
 
@@ -154,6 +160,15 @@ public class AppContext implements GameListener {
         needsRefresh = false;
     }
 
+    public void setCurrentMatchId(UUID currentMatchId) {
+        this.currentMatchId = currentMatchId;
+    }
+
+    @Override
+    public void playerCreated(int playerId, String playerName) {
+
+    }
+
     @Override
     public void displayRefresh() {
         Platform.runLater(() -> {
@@ -185,6 +200,20 @@ public class AppContext implements GameListener {
                     listener.gameComponentPlaced(component, position);
                 } catch (Exception e) {
                     System.err.println("Error notifying component placed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentPicked(int playerId, Component component, boolean success, String message) {
+        Platform.runLater(() -> {
+            if (playerId == this.playerId) {
+                if (success && component != null) {
+                    showInfoMessage("Component Picked", 
+                        "Successfully picked: " + component.getClass().getSimpleName());
+                } else {
+                    showErrorMessage("Component Pick Failed", message);
                 }
             }
         });
@@ -287,5 +316,65 @@ public class AppContext implements GameListener {
             System.out.println("[GUI] Server message: " + message);
             showInfoMessage("Server Message", message);
         });
+    }
+
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
+        this.currentMatchId = matchId;
+
+        LobbyController.matchCreatedListener(matchId.toString());
+    }
+
+    @Override
+    public void playerJoinedMatch(UUID matchId, String playerName) {
+            LobbyController.playerJoinedMatchNotification(playerName);
+    }
+
+    @Override
+    public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
+        if (matchId == this.currentMatchId) {
+
+        }
+    }
+
+    @Override
+    public void updateAvailableMatches(List<String> matchNames) {
+        System.out.println("[GUI] Available matches updated: " + matchNames);
+        LobbyController.updateMatchListListener(matchNames);
+    }
+
+    @Override
+    public void updateHost(UUID matchId, int playerId, String playerName) {
+
+    }
+
+    @Override
+    public void matchStarted(UUID matchId, String username) {
+
+    }
+
+    @Override
+    public void loadingStatus(UUID matchId, int playersReady, int totalPlayers) {
+
+    }
+
+    @Override
+    public void playersInMatch(UUID matchId, List<String> players, int hostId) {
+            LobbyController.playersInCurrentMatch(players);
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
+
+    }
+
+    @Override
+    public void shipBuildingStart(UUID matchId, int readyPlayers) {
+
+    }
+
+    @Override
+    public void usernameRejected(String errorMessage) {
+
     }
 }
