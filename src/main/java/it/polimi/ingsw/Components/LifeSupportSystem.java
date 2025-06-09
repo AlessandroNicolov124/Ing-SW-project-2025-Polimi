@@ -13,4 +13,10 @@ public final class LifeSupportSystem extends Component {
         return type;
     }
 
+    @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += type.toString().toLowerCase() + "_" + getConnectionsString();
+        return s;
+    }
 }

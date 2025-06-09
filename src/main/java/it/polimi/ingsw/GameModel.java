@@ -3,7 +3,6 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.*;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class GameModel {
@@ -14,6 +13,7 @@ public class GameModel {
     private List<AdventureCard> deck;
     private HashMap<Player, Integer> credits;
     private Queue<Component> componentDeck;
+    private Queue<Component> startingCabinDeck;
     private final Random random;
 
     public void addPlayer(Player player) {
@@ -63,7 +63,14 @@ public class GameModel {
 
     public Component pickOneComponentCardFromDeck(Player p)
     {
-        Component c = componentDeck.poll();
+        Component c = null;
+        if(p.getShip().getComponents().isEmpty()){
+            //deve essere pescata una starting cabin
+            c = startingCabinDeck.poll();
+        }
+        if(c==null){
+            c = componentDeck.poll();
+        }
         return c;
     }
 
@@ -214,6 +221,11 @@ public class GameModel {
         // in base alle regole del gioco e alla rarità dei componenti.
         List<Component> allComponents = new ArrayList<>();
 
+        for (int i = 0; i < 4; i++) allComponents.add(createCabin(true));
+        Collections.shuffle(allComponents);
+        startingCabinDeck = new LinkedList<>(allComponents);
+
+        allComponents = new ArrayList<>();
         // Aggiungi un mix di componenti (potrebbe essere configurato in base al livello di difficoltà)
         // TODO add defines or const values???
         for (int i = 0; i < 4; i++) allComponents.add(createCabin(false));
@@ -234,6 +246,7 @@ public class GameModel {
         // Mescola la lista e converti in coda
         Collections.shuffle(allComponents);
         componentDeck = new LinkedList<>(allComponents);
+
     }
 
     // Factory methods per creare i diversi tipi di componenti
@@ -362,6 +375,7 @@ public class GameModel {
 
         component.initializeConnectors(north, east, south, west);
     }
+
 
 }
 

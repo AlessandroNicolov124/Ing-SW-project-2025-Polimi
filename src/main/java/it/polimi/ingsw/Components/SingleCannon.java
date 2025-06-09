@@ -7,6 +7,13 @@ public final class SingleCannon extends Cannon {
         super(1,0);
     }
 
+    @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString();
+        return s;
+    }
+
 
     @Override
     public boolean fire() {

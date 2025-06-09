@@ -12,6 +12,13 @@ public final class DoubleEngine extends Engine {
     }
 
     @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString().toLowerCase();
+        return s;
+    }
+
+    @Override
     public int getEffectivePower() {
         if (damaged) {
             return 0;

@@ -6,7 +6,7 @@
 
 /* Style for the login label */
 .label {
-    -fx-text-fill: #ecf0f1; /* light text */
+    -fx-text-fill: #1d1d1e; /* light text */
     -fx-font-size: 18px;
 }
 

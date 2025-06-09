@@ -200,6 +200,23 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         connections.add(new Connector(Direction.WEST, w));
     }
 
+    public abstract String getComponentString();
+
+    public String getConnectionsString(){
+        StringBuilder sb = new StringBuilder();
+
+        for(Direction d : Direction.values()){
+        Connector c = getConnectorByDirection(d);
+            switch(c.getConnectorType()){
+                case NullConnectorType n -> sb.append("N");
+                case SingleConnectorType n -> sb.append("S");
+                case DoubleConnectorType n -> sb.append("D");
+                case UniversalConnectorType n -> sb.append("U");
+            }
+        }
+        return sb.toString();
+    }
+
 
 }
 

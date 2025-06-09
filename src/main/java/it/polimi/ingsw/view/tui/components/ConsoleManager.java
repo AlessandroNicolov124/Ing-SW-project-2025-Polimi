@@ -1,18 +1,39 @@
 package it.polimi.ingsw.view.tui.components;
 
 import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class ConsoleManager {
     private final Scanner scanner;
+    private final BlockingQueue<String> queue = new LinkedBlockingQueue<>();
 
     public ConsoleManager() {
         this.scanner = new Scanner(System.in);
+
+        Thread reader = new Thread(() -> {
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine().trim();
+                queue.offer(line);
+            }
+        }, "stdin-input-reader");
+        reader.setDaemon(true);
+        reader.start();
     }
 
     public void printBanner() {
-        System.out.println("===================================");
-        System.out.println("=          GALAXY TRUCKER         =");
-        System.out.println("===================================");
+        System.out.println();
+        System.out.println();
+        System.out.println("   ********             **                                  **********                        **                   ");
+        System.out.println("  **//////**           /**                    **   **      /////**///                        /**                   ");
+        System.out.println(" **      //   ******   /**  ******   **   ** //** **           /**     ****** **   **  ***** /**  **  *****  ******");
+        System.out.println("/**          //////**  /** //////** //** **   //***            /**    //**//*/**  /** **///**/** **  **///**//**//*");
+        System.out.println("/**    *****  *******  /**  *******  //***     /**             /**     /** / /**  /**/**  // /****  /******* /** / ");
+        System.out.println("//**  ////** **////**  /** **////**   **/**    **              /**     /**   /**  /**/**   **/**/** /**////  /**   ");
+        System.out.println(" //******** //******** ***//******** ** //**  **               /**    /***   //******//***** /**//**//******/***   ");
+        System.out.println("  ////////   //////// ///  //////// //   //  //                //     ///     //////  /////  //  //  ////// ///    ");
+        System.out.println();
         System.out.println();
     }
 
@@ -27,18 +48,36 @@ public class ConsoleManager {
 
     public String readCommand() {
         System.out.print("> ");
-        return scanner.nextLine().trim();
+        return blockingReadLine();
+    }
+
+    public String pollCommand(long millis) {
+        try {
+            return queue.poll(millis, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    private String blockingReadLine() {
+        try {
+            return queue.take();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return "";
+        }
     }
 
     public String askUsername() {
         System.out.print("Enter username: ");
-        return scanner.nextLine().trim();
+        return blockingReadLine();
     }
 
     public String askConnectionType() {
         while (true) {
             System.out.print("Choose connection type (rmi/socket): ");
-            String input = scanner.nextLine().trim().toLowerCase();
+            String input = blockingReadLine().toLowerCase();
             if (input.equals("rmi") || input.equals("socket")) {
                 return input;
             }
@@ -48,7 +87,7 @@ public class ConsoleManager {
 
     public String askServerAddress() {
         System.out.print("Enter server address (default: localhost): ");
-        String address = scanner.nextLine().trim();
+        String address = blockingReadLine();
         return address.isEmpty() ? "localhost" : address;
     }
 
@@ -56,7 +95,7 @@ public class ConsoleManager {
         int defaultPort = connectionType.equals("rmi") ? 1099 : 7777;
         while (true) {
             System.out.print("Enter server port (default: " + defaultPort + "): ");
-            String portStr = scanner.nextLine().trim();
+            String portStr = blockingReadLine();
             
             if (portStr.isEmpty()) {
                 return defaultPort;
@@ -74,30 +113,17 @@ public class ConsoleManager {
         }
     }
 
-    //public void printHelp() {
-    //    System.out.println("Available commands:");
-    //    /////
-    //    System.out.println("  x     - Increment the counter");
-    //    System.out.println("  y     - Reset the counter to 0");
-    //    /////
-    //    System.out.println("  help  - Show this help message");
-    //    System.out.println("  quit  - Exit the application");
-    //}
-
     public void printConnectingMessage(String type, String address, int port) {
         System.out.println("Connecting to " + address + ":" + port + " using " + type.toUpperCase() + "...");
     }
 
-    ////////
-    public void AskAreYouReadyQuestion() {
-        System.out.println("Press 'yes' to continue start the game when you are ready.");
-        //String input = scanner.nextLine().trim();
-    }
-    /////////
-
     public String askQuestion(String prompt) {
         System.out.print(prompt + " ");
-        return scanner.nextLine().trim();
+        return blockingReadLine();
+    }
+
+    public Scanner getScanner() {
+        return scanner;
     }
 
     public void close() {

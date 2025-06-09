@@ -6,24 +6,18 @@ import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import it.polimi.ingsw.GameController;
-import it.polimi.ingsw.network.socket.messages.GenericMessage;
+import it.polimi.ingsw.network.LobbyManager;
 
 public class SocketServer implements Runnable {
     
     private final int port;
-    private final GameController controller;
+    private final LobbyManager lobbyManager;
     private final List<SocketClientHandler> clients = new CopyOnWriteArrayList<>();
     private ServerSocket ss;
 
-    public SocketServer(int port, GameController ctrl) { 
+    public SocketServer(int port, LobbyManager lobbyManager) { 
         this.port = port; 
-        this.controller = ctrl; 
-    }
-
-    public SocketServer(int port) { 
-        this.port = port; 
-        controller = null; 
+        this.lobbyManager = lobbyManager; 
     }
 
     @Override
@@ -33,7 +27,7 @@ public class SocketServer implements Runnable {
                 System.out.println("Socket-Server listening at port " + port);
                 while (!srv.isClosed()) {
                     Socket s = srv.accept();
-                    SocketClientHandler h = new SocketClientHandler(s, controller, this);
+                    SocketClientHandler h = new SocketClientHandler(s, lobbyManager, this);
                     clients.add(h);
                     new Thread(h, "client-" + s.getInetAddress()).start();
                 }
@@ -41,10 +35,6 @@ public class SocketServer implements Runnable {
                 System.err.println("Server closed: " + e.getMessage());
             }
         }
-
-    void broadcast(GenericMessage m) { 
-        clients.forEach(c -> c.sendUpdate(m)); 
-    }
 
     void removeClient(SocketClientHandler c) { 
         clients.remove(c); 

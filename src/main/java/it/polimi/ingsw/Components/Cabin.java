@@ -22,6 +22,15 @@ public final class Cabin extends Component {
         this(false);
     }
 
+    @Override
+    public String getComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        if(isStartingCabin){
+            s += "starting";
+        }
+        return s;
+    }
+
     public Cabin(boolean isStartingCabin) {
         super();
         this.crew = new ArrayList<>();
