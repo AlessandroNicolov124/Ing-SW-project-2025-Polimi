@@ -124,19 +124,30 @@ public class ShipBuilder {
             return false;
         }
 
-        // Check if removing this component would disconnect the ship
-        if (components.size() > 1 && component.isDamaged()) {
-            if(!wouldDisconnectShip(component)){
-                components.remove(component);
-            }else{
-                //TODO vanno gestiti i componenti rimossi
+        // Handle single component case
+        if (components.size() == 1) {
+            // Don't allow removing the only component if it's a starting cabin
+            if (component.isStartingCabin()) {
+                return false; // Cannot remove starting cabin
             }
+            // Otherwise allow removal during ship building
+            components.remove(component);
             return true;
-        }else{
-            return false;
         }
 
+        // For multiple components: check connectivity and cabin protection
+        if (component.isStartingCabin()) {
+            return false; // Never allow removing starting cabin
+        }
 
+        // Check if removing this component would disconnect the ship
+        if (wouldDisconnectShip(component)) {
+            return false; // Don't allow removal if it would disconnect the ship
+        }
+
+        // Remove the component
+        components.remove(component);
+        return true;
     }
 
     private boolean areAllComponentsConnected() {

@@ -22,6 +22,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private final ConsoleManager console;
     private TuiState state;
+    private final Object displayMutex = new Object(); // Add synchronization for display operations
 
     private String username;
     private String connectionType;
@@ -395,8 +396,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void displayRefresh() {
-        if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
-            activeShipBuildingHandler.refreshDisplay();
+        synchronized (displayMutex) {
+            if (activeShipBuildingHandler != null && state == TuiState.SHIP_BUILDING) {
+                activeShipBuildingHandler.refreshDisplay();
+            }
         }
     }
 
@@ -482,49 +485,82 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         console.printMessage(message);
     }
 
+    public Player getCurrentPlayer() {
+        return currentPlayer;
+    }
+
     @Override
     public void componentPlaced(Component component, Position position) {
-        if (currentPlayer != null && currentPlayer.getShip() != null) {
-            currentPlayer.getShip().placeComponent(component, position);
-            console.printMessage("Component " + component.getClass().getSimpleName() + 
-                               " placed at (" + position.getX() + "," + position.getY() + ")");
+        synchronized (displayMutex) {
+            if (currentPlayer != null && currentPlayer.getShip() != null) {
+                boolean placed = currentPlayer.getShip().placeComponent(component, position);
+                // Note: Success message is handled by PlaceComponentResponse
+                // Only update the ship model here, display refresh will be called separately
+                if (!placed) {
+                    console.printError("✗ Failed to place component " + component.getClass().getSimpleName() + 
+                                     " at (" + position.getX() + "," + position.getY() + ") locally");
+                }
+            } else {
+                console.printError("✗ Cannot place component: player or ship not available");
+            }
+            
+            // Show menu again after component placement if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshMenuDisplay();
+            }
         }
     }
 
     @Override
     public void componentRemoved(Position position) {
-        if (currentPlayer != null && currentPlayer.getShip() != null) {
-            Component removed = currentPlayer.getShip().getComponentAt(position);
-            if (removed != null) {
-                currentPlayer.getShip().removeComponent(removed);
-                console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+        synchronized (displayMutex) {
+            if (currentPlayer != null && currentPlayer.getShip() != null) {
+                Component removed = currentPlayer.getShip().getComponentAt(position);
+                if (removed != null) {
+                    currentPlayer.getShip().removeComponent(removed);
+                    console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+                }
+            }
+            
+            // Show menu again after component removal if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
     }
 
     @Override
     public void componentRotated(Position position, RotationType rotationType) {
-        console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
-                           ") rotated " + rotationType);
+        synchronized (displayMutex) {
+            console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
+                               ") rotated " + rotationType);
+        }
     }
 
     @Override
     public void shipValidated(boolean isValid, String message) {
-        if (isValid) {
-            console.printMessage("✓ " + message);
-            if (state == TuiState.SHIP_BUILDING) {
-                //state = TuiState.NEXT_STATE; // to be defined
+        synchronized (displayMutex) {
+            if (isValid) {
+                console.printMessage("✓ " + message);
+                if (state == TuiState.SHIP_BUILDING) {
+                    //state = TuiState.NEXT_STATE; // to be defined
+                }
+            } else {
+                console.printError("✗ " + message);
             }
-        } else {
-            console.printError("✗ " + message);
         }
     }
-
-
 
     @Override
     public void playerCreated(int playerId, String username) {
         this.currentPlayer = new Player(playerId, username, true);
+        
+        // Set the local player in the client so it can track the player ID for requests
+        try {
+            client.setLocalPlayer(currentPlayer);
+        } catch (Exception e) {
+            console.printError("Failed to set local player in client: " + e.getMessage());
+        }
         
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());
@@ -593,8 +629,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void shipBuildingStart(UUID matchId, int readyPlayers) {
-        lobbyHandler.shipBuildingStartCallback(matchId, readyPlayers);
-        this.state = TuiState.SHIP_BUILDING;
+        synchronized (displayMutex) {
+            lobbyHandler.shipBuildingStartCallback(matchId, readyPlayers);
+            
+            // Add a small delay to allow any pending console output to complete
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            
+            this.state = TuiState.SHIP_BUILDING;
+        }
     }
 
 
@@ -602,6 +648,33 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     public void showAvailablePositions(List<Integer> positions) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
+    }
+
+    @Override
+    public void componentPicked(int playerId, Component component, boolean success, String message) {
+        synchronized (displayMutex) {
+            // Check if this response is for the current player
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                if (success && component != null) {
+                    console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
+                    // Pass the component to the ship building handler if it's active
+                    if (activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.setCurrentComponent(component);
+                        // Show menu again after component pick if we're in ship building mode
+                        if (state == TuiState.SHIP_BUILDING) {
+                            activeShipBuildingHandler.refreshMenuDisplay();
+                        }
+                    }
+                } else {
+                    console.printError("✗ Failed to pick component: " + message);
+                    // Still show menu after failed component pick
+                    if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.refreshMenuDisplay();
+                    }
+                }
+            }
+            // If it's not for our player, ignore the response
+        }
     }
 
 

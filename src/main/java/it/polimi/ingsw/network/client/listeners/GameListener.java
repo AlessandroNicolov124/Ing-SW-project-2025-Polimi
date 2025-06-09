@@ -33,5 +33,6 @@ public interface GameListener {
     void playerReady(UUID matchId, int readyPlayers, int totalPlayers);
     void shipBuildingStart(UUID matchId, int readyPlayers);
     void usernameRejected(String errorMessage);
+    void componentPicked(int playerId, Component component, boolean success, String message);
 
 }

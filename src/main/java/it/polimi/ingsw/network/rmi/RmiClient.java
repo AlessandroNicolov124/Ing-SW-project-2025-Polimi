@@ -29,6 +29,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     private final VirtualServer server;
     private final BlockingQueue<ResponseMessage> incoming = new LinkedBlockingQueue<>();
     private GameListener listener;
+    private Player localPlayer;
 
 
     private RmiClient(VirtualServer server, GameListener listener) throws RemoteException {
@@ -167,14 +168,34 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void placeComponent(Component component, Position position) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'placeComponent'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot place component: local player not set");
+        }
+        
+        try {
+            server.placeComponent(localPlayer.getId(), component, position);
+        } catch (RemoteException e) {
+            throw new RemoteException("Error placing component", e);
+        }
     }
 
     @Override
     public void validateShip() throws RemoteException {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
+    }
+
+    @Override
+    public void removeComponent(Position position) throws RemoteException {
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot remove component: local player not set");
+        }
+        
+        try {
+            server.removeComponent(localPlayer.getId(), position);
+        } catch (RemoteException e) {
+            throw new RemoteException("Error removing component", e);
+        }
     }
 
     @Override
@@ -185,14 +206,21 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void setLocalPlayer(Player player) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setLocalPlayer'");
+        this.localPlayer = player;
     }
 
     @Override
     public Component pickComponentCard() throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'pickComponentCard'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot pick component: local player not set");
+        }
+        
+        try {
+            Component component = server.pickComponent(localPlayer.getId());
+            return component;
+        } catch (RemoteException e) {
+            throw new RemoteException("Error picking component", e);
+        }
     }
 
 }

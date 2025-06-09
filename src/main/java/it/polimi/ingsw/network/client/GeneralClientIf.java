@@ -27,6 +27,8 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void placeComponent(Component component, Position position) throws Exception;
 
+    void removeComponent(Position position) throws Exception;
+
     void validateShip() throws Exception;
 
     void rotateComponent(Position position, RotationType rotationType) throws Exception;

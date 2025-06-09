@@ -206,6 +206,20 @@ public class AppContext implements GameListener {
     }
 
     @Override
+    public void componentPicked(int playerId, Component component, boolean success, String message) {
+        Platform.runLater(() -> {
+            if (playerId == this.playerId) {
+                if (success && component != null) {
+                    showInfoMessage("Component Picked", 
+                        "Successfully picked: " + component.getClass().getSimpleName());
+                } else {
+                    showErrorMessage("Component Pick Failed", message);
+                }
+            }
+        });
+    }
+
+    @Override
     public void componentRemoved(Position position) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component removed from position: " + position);
