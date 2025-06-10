@@ -163,10 +163,9 @@ public class ShipBuildingHandler {
                     }
                     break;
                 case "v": // Validate and finish
-                    handleValidateAndFinish();
-                    // Always exit ship building after validation request is sent
-                    console.printMessage("Ship building phase ended. Waiting for server validation...");
-                    buildingDone = true;
+                    if (handleValidateAndFinish()) {
+                        buildingDone = true;
+                    }
                     break;
                 case "q": // Quit ship building (for now, just exits this phase)
                     console.printMessage("Exiting ship building...");
@@ -177,12 +176,12 @@ public class ShipBuildingHandler {
                     try {
                         simpleClient.validateShip();
                         console.printMessage("[DEBUG] Debug validation request sent. Waiting for server to assign position...");
-                        console.printMessage("[DEBUG] Ship building phase ended. No more component manipulation allowed.");
-                        buildingDone = true; // Exit immediately after sending validation request
+                        // Don't exit the loop - wait for server response to assign position
+                        // The server will handle validation and position assignment
                     } catch (Exception e) {
                         console.printError("[DEBUG] Error sending debug validation: " + e.getMessage());
                         console.printMessage("[DEBUG] Fallback: Proceeding without server validation.");
-                        buildingDone = true; // Exit regardless of success/failure
+                        buildingDone = true; // Only exit if server communication fails
                     }
                     break;
                 default:
@@ -528,17 +527,26 @@ public class ShipBuildingHandler {
         return component;
     }
 
-    private void handleValidateAndFinish() {
+    private boolean handleValidateAndFinish() {
         console.printMessage("Sending validation request to server...");
         try {
             simpleClient.validateShip();
+            // We sent the request. Now we need to wait for the ShipValidationResultMessage.
+            // The TUI loop cannot simply proceed here.
+            // For now, we just return false and let the message handler update the state later.
             console.printMessage("Validation request sent. Waiting for server response...");
-        } catch (IOException e) {
+            // The actual result (isValid) is not available synchronously here.
+            // The TUI state needs to be updated when ShipValidationResultMessage arrives.
+            return false; // Indicate building is NOT done yet, waiting for server.
+    } catch (IOException e) {
             console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
         } catch (IllegalStateException e) {
             console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
         } catch (Exception e) {
             console.printError("Error sending validation request: " + e.getMessage());
+            return false; // Building not done.
         }
     }
 
