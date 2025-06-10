@@ -1,6 +1,5 @@
 package it.polimi.ingsw.view.tui.components;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -76,7 +75,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case LOADING              -> handleLoadingMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
-                case CHOOSE_START_POSITION -> handleChooseStartPositionState();
+                //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case RUNNING              -> handleRunningState();
                 case TERMINATED           -> { return; }
@@ -267,60 +266,96 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         activeShipBuildingHandler.manageShipBuilding();
         activeShipBuildingHandler = null;
 
-        console.printMessage("Ship building phase completed.");
-        
-        // If we're still in SHIP_BUILDING state (e.g., due to DEBUGSKIP or quit),
-        // transition to the next appropriate state
-        if (state == TuiState.SHIP_BUILDING) {
-            console.printMessage("Transitioning to position assignment...");
-            // Don't assign position locally - let the server handle it based on completion order
-            console.printMessage("Waiting for position assignment based on completion order...");
-            state = TuiState.CHOOSE_START_POSITION;
-        }
-        
-        // Note: For normal validation, state transition to CHOOSE_START_POSITION 
-        // happens in shipValidated() callback when the server confirms the ship is valid
+        console.printMessage("Ship building complete. Proceeding to choose starting position...");
+        state = TuiState.CHOOSE_START_POSITION;
     }
 
-    private void handleChooseStartPositionState() {
-        console.printMessage("\n=== Starting Position Assignment ===");
-        console.printMessage("Position assignment is based on ship building completion order:");
-        console.printMessage("- First player to finish gets position 1");
-        console.printMessage("- Second player to finish gets position 2");
-        console.printMessage("- And so on...");
-        console.printMessage("Your position will be assigned automatically by the server...");
-        
-        // For debug/offline mode where there's no server, simulate position assignment
-        if (client == null || connectionType.equals("debug")) {
-            console.printMessage("✓ [DEBUG] You have been assigned starting position: 1");
-            console.printMessage("All players positioned. Proceeding to game...");
-            state = TuiState.RUNNING;
-        } else {
-            // In online mode, wait for server to assign position
-            console.printMessage("Waiting for server to assign your position...");
-            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-        }
-    }
+//     private void handleChooseStartPositionState() {
+//         if (this.currentPlayer == null) {
+//             console.printError("Cannot choose starting position: current player not set.");
+//             state = TuiState.ASK_USERNAME;
+//             return;
+//         }
+
+//         console.printMessage("\n=== Choose Your Starting Position ===");
+
+//         try {
+//             // Request available positions from server 
+//             if (socketClient != null) {
+//                 socketClient.requestAvailablePositions();
+//                 console.printMessage("Requesting available positions from server...");
+//             } else {
+//                 // Fall back to local positions if no socket client
+//                 //availablePositions = client.getAvailableStartingPositions();
+//                 showAvailablePositions(availablePositions);
+//             }
+//         } catch (IOException e) {
+//             console.printError("Error requesting available positions: " + e.getMessage());
+//             state = TuiState.TERMINATED;
+//             return;
+//         }
+
+//         boolean positionChosen = false;
+//         while (!positionChosen) {
+//             if (availablePositions == null || availablePositions.isEmpty()) {
+//                 console.printMessage("Waiting for server to provide available positions...");
+//                 try {
+//                     Thread.sleep(1000);
+//                 } catch (InterruptedException e) {
+//                     Thread.currentThread().interrupt();
+//                 }
+//                 continue;
+//             }
+
+//             String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
+
+//             try {
+//                 int chosenPosition = Integer.parseInt(input);
+                
+//                 // Validate position selection - use local data when connected to server, controller when offline
+// //                boolean isValid = (socketClient != null) ?
+// //                    availablePositions.contains(chosenPosition) :
+//                     //client.isPositionSelectionValid(chosenPosition);
+                    
+//                 if (!true) {
+//                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
+//                     continue;
+//                 }
+
+//                 try {
+//                     if (socketClient != null) {
+//                         socketClient.selectPosition(chosenPosition);
+//                         console.printMessage("Position request sent to server. Waiting for confirmation...");
+//                         // The response will be handled by notifyPositionResponse
+//                         positionChosen = true;
+//                         // Don't transition state yet - wait for server confirmation
+//                     } else {
+//                         //TODO implemet corretly using client
+//                         // Fall back to local controller if no socket client
+//                         /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
+//                             positionChosen = true;
+//                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
+//                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+//                         } else {
+//                             console.printError("Failed to set position. It might be taken or invalid. Please try again.");
+//                         }*/
+//                     }
+//                 } catch (Exception e) {
+//                     console.printError("Error selecting position: " + e.getMessage());
+//                 }
+//             } catch (NumberFormatException e) {
+//                 console.printError("Invalid input. Please enter a number.");
+//             }
+//         }
+//     }
 
     private void handleWaitForAllPlayersPositionedState() {
-        // This state waits for position assignment from server
-        console.printMessage("Waiting for position assignment from server...");
-        
-        // Poll for user input or timeout to prevent infinite loop
-        String input = console.pollCommand(2000); // 2 second timeout
-        
-        if (input != null) {
-            if ("skip".equalsIgnoreCase(input.trim())) {
-                console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to game...");
-                state = TuiState.RUNNING;
-            } else if ("status".equalsIgnoreCase(input.trim())) {
-                console.printMessage("Current state: Waiting for position assignment");
-                console.printMessage("Type 'skip' to bypass waiting (debug only)");
-            }
+        console.printMessage("Waiting for all players to choose their positions...");
+        try {
+            Thread.sleep(2000); // Small sleep to prevent tight loop
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
-        
-        // Add a fallback timeout to prevent infinite waiting
-        // In a real implementation, this would be removed and proper server communication would handle state transitions
     }
 
     /**
@@ -350,34 +385,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     private void handleRunningState() {
-        console.printMessage("\n=== GAME STARTED ===");
-        console.printMessage("The game is now running!");
-        console.printMessage("Type 'help' for available commands, 'quit' to exit");
-        
-        while (state == TuiState.RUNNING) {
+        while (true) {
             String cmd = console.readCommand();
-            if (cmd == null) continue;
-            
-            cmd = cmd.trim().toLowerCase();
-            switch (cmd) {
-                case "help":
-                    console.printMessage("Available commands:");
-                    console.printMessage("  status - Show game status");
-                    console.printMessage("  quit   - Exit the game");
-                    break;
-                case "status":
-                    if (currentPlayer != null) {
-                        console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
-                        console.printMessage("Game state: Running");
-                    }
-                    break;
-                case "quit":
-                    console.printMessage("Exiting game...");
-                    state = TuiState.TERMINATED;
-                    return;
-                default:
-                    console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
-                    break;
+            if (!lobbyHandler.executeCommand(cmd)) {
+                state = TuiState.TERMINATED;
+                return;
             }
         }
     }
@@ -434,15 +446,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     /**
      * Called by network messages to update available positions display
      */
-    @Override
-    public void showAvailablePositions(List<Integer> positions) {
-        this.availablePositions = positions;
-        if (positions == null || positions.isEmpty()) {
-            console.printMessage("No positions available currently.");
-        } else {
-            console.printMessage("Available positions: " + positions);
-        }
-    }
+    // public void showAvailablePositions(List<Integer> positions) {
+    //     this.availablePositions = positions;
+    //     if (positions.isEmpty()) {
+    //         console.printMessage("No positions available currently. Please wait...");
+    //     } else {
+    //         console.printMessage("Available positions: " + positions);
+    //     }
+    // }
     
     /**
      * Called by PositionUpdateMessage to update a player's position
@@ -532,19 +543,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             if (isValid) {
                 console.printMessage("✓ " + message);
                 if (state == TuiState.SHIP_BUILDING) {
-                    console.printMessage("Ship building complete. Position assigned. Proceeding to game...");
-                    state = TuiState.RUNNING; // Skip the waiting states since position is already assigned
-                } else if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                    console.printMessage("Position assigned. Proceeding to game...");
-                    state = TuiState.RUNNING;
+                    //state = TuiState.NEXT_STATE; // to be defined
                 }
             } else {
                 console.printError("✗ " + message);
-                // If validation failed, go back to ship building
-                if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                    console.printMessage("Returning to ship building...");
-                    state = TuiState.SHIP_BUILDING;
-                }
             }
         }
     }
@@ -641,6 +643,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+
+    @Override
+    public void showAvailablePositions(List<Integer> positions) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
+    }
 
     @Override
     public void componentPicked(int playerId, Component component, boolean success, String message) {

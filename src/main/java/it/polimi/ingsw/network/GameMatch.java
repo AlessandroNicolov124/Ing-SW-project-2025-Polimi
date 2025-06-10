@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
@@ -21,10 +19,6 @@ public class GameMatch {
     private MatchStates matchState;
     private Player hostPlayer;
     private Map<Integer, Boolean> readyPlayersMap;
-    
-    // Position tracking for ship building completion order
-    private final Map<Integer, Integer> playerPositions = new ConcurrentHashMap<>();
-    private final AtomicInteger nextPosition = new AtomicInteger(1);
 
     public GameMatch(String matchName, int hostId, String hostName) {
         this.matchId = UUID.randomUUID();
@@ -213,70 +207,6 @@ public class GameMatch {
         this.matchState = MatchStates.FINISHED;
         System.out.println("[GameMatch " + matchId + "] Match " + matchName + " has ended.");
         // TODO: handle end of match logic
-    }
-
-    /**
-     * Assigns a position to a player based on ship building completion order.
-     * The first player to complete gets position 1, second gets position 2, etc.
-     * 
-     * @param playerId The ID of the player who completed ship building
-     * @return The assigned position (1-4), or -1 if player not found or already assigned
-     */
-    public synchronized int assignPlayerPosition(int playerId) {
-        // Check if player is in the match
-        if (!isPlayerInMatchById(playerId)) {
-            System.out.println("[GameMatch " + matchId + "] Cannot assign position: Player ID " + playerId + " not in match");
-            return -1;
-        }
-        
-        // Check if player already has a position assigned
-        if (playerPositions.containsKey(playerId)) {
-            int existingPosition = playerPositions.get(playerId);
-            System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " already has position " + existingPosition);
-            return existingPosition;
-        }
-        
-        // Assign the next available position
-        int assignedPosition = nextPosition.getAndIncrement();
-        if (assignedPosition > MAX_PLAYERS) {
-            System.out.println("[GameMatch " + matchId + "] No more positions available for player ID " + playerId);
-            return -1;
-        }
-        
-        playerPositions.put(playerId, assignedPosition);
-        Player player = getPlayerById(playerId);
-        String playerName = player != null ? player.getNickName() : "Unknown";
-        
-        System.out.println("[GameMatch " + matchId + "] Player " + playerName + " (ID: " + playerId + ") assigned position " + assignedPosition);
-        return assignedPosition;
-    }
-    
-    /**
-     * Gets the assigned position for a player
-     * 
-     * @param playerId The player ID
-     * @return The assigned position, or -1 if not assigned
-     */
-    public int getPlayerPosition(int playerId) {
-        return playerPositions.getOrDefault(playerId, -1);
-    }
-    
-    /**
-     * Checks if all players have been assigned positions
-     * 
-     * @return true if all players have positions, false otherwise
-     */
-    public boolean allPlayersPositioned() {
-        return playerPositions.size() == players.size();
-    }
-    
-    /**
-     * Gets the current position assignments
-     * 
-     * @return Map of player ID to assigned position
-     */
-    public Map<Integer, Integer> getPlayerPositions() {
-        return new ConcurrentHashMap<>(playerPositions);
     }
 
     // TODO: implement something to retrieve match statistics or results 

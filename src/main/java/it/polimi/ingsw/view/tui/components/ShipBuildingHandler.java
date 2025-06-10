@@ -172,17 +172,8 @@ public class ShipBuildingHandler {
                     buildingDone = true;
                     break;
                 case "debugskip": // DEBUG: Force skip ship building validation
-                    console.printMessage("[DEBUG] Sending validation request to server (debug mode - will proceed regardless of ship state)...");
-                    try {
-                        simpleClient.validateShip();
-                        console.printMessage("[DEBUG] Debug validation request sent. Waiting for server to assign position...");
-                        // Don't exit the loop - wait for server response to assign position
-                        // The server will handle validation and position assignment
-                    } catch (Exception e) {
-                        console.printError("[DEBUG] Error sending debug validation: " + e.getMessage());
-                        console.printMessage("[DEBUG] Fallback: Proceeding without server validation.");
-                        buildingDone = true; // Only exit if server communication fails
-                    }
+                    console.printMessage("[DEBUG] Forcing skip of ship validation. Proceeding to next phase.");
+                    buildingDone = true; // Exit the loop, bypassing validation
                     break;
                 default:
                     console.printError("Invalid choice. Please try again.");
@@ -577,7 +568,5 @@ public class ShipBuildingHandler {
 
         component.initializeConnectors(north, east, south, west);
     }
-
-
 
 } 
