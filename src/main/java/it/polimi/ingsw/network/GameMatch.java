@@ -279,6 +279,48 @@ public class GameMatch {
         return new ConcurrentHashMap<>(playerPositions);
     }
 
+    /**
+     * Gets the next player's turn for adventure card picking based on position order.
+     * Returns -1 if all players have had their turn.
+     * 
+     * @param currentPlayerId The ID of the player who just picked a card
+     * @return The next player's ID, or -1 if phase is complete
+     */
+    public synchronized int getNextPlayerTurnForAdventure(int currentPlayerId) {
+        // Get current player's position
+        int currentPosition = playerPositions.getOrDefault(currentPlayerId, -1);
+        if (currentPosition == -1) {
+            return -1; // Player not found
+        }
+        
+        // Find the next position in order (1, 2, 3, 4)
+        int nextPosition = currentPosition + 1;
+        
+        // Find the player with the next position
+        for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+            if (entry.getValue() == nextPosition) {
+                return entry.getKey(); // Return the player ID with next position
+            }
+        }
+        
+        // If no next position found, adventure phase is complete
+        return -1;
+    }
+
+    /**
+     * Gets the player ID of the player in position 1 (first to act in adventure phase).
+     * 
+     * @return The player ID of the player in position 1, or -1 if not found
+     */
+    public synchronized int getFirstPlayerToAct() {
+        for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+            if (entry.getValue() == 1) {
+                return entry.getKey(); // Return the player ID with position 1
+            }
+        }
+        return -1; // No player in position 1 found
+    }
+
     // TODO: implement something to retrieve match statistics or results 
 
 }

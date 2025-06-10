@@ -58,5 +58,8 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void playerReady(UUID matchId, int playerId) throws RemoteException;
+    
+    @Override
+    void pickAdventureCard() throws RemoteException;
 
 }

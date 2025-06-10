@@ -58,6 +58,12 @@ public class Slavers extends AdventureCard {
     public void effect() {
         // This would be called when the card is drawn
     }
+
+    @Override
+    public String getDescription() {
+        return "Slaver encounter! Fight with your crew strength against " + slaverStrength + " slaver strength. " +
+               "Victory rewards " + rewardCredits + " credits. Defeat costs " + crewLoss + " crew member(s).";
+    }
     
     /**
      * Attempt to fight slavers

@@ -37,6 +37,12 @@ public class Stardust extends AdventureCard {
     public void effect() {
         // This would be called when the card is drawn
     }
+
+    @Override
+    public String getDescription() {
+        return "Stardust event! Every player loses 1 flight day for each exposed connector on their ship. " +
+               "Players move backward in reverse order (last player moves first).";
+    }
     
     /**
      * Apply stardust effects to all players

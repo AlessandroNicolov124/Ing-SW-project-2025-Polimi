@@ -45,5 +45,7 @@ public interface VirtualServer extends Remote {
     boolean loadingAck(UUID matchId) throws RemoteException;
 
     boolean playerReady(UUID matchId, int playerId) throws RemoteException;
+    
+    void pickAdventureCard(int playerId) throws RemoteException;
 
 }

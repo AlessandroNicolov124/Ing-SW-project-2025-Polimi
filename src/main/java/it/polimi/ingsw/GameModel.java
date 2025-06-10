@@ -29,21 +29,32 @@ public class GameModel {
         this.turnNumber = 1;
         random = new Random();
         this.initializeComponentDeck();
+        
+        // Initialize adventure cards immediately for testing
+        // TODO: This should ideally be called from startGame() when the match actually starts
+        System.out.println("[GameModel] Constructor: Initializing adventure cards for immediate availability");
+        loadAdventureCardTurn1();
     }
 
     // Metodo per pescare una carta dall'avventura
     public void pickAdventureCardForPlayer(Player player) {
+        System.out.println("[GameModel] Adventure deck size before pick: " + deck.size());
         if (!deck.isEmpty()) {
-            player.pickCard(deck.remove(0));
+            AdventureCard card = deck.remove(0);
+            System.out.println("[GameModel] Picking adventure card: " + card.getClass().getSimpleName() + " for player " + player.getNickName());
+            player.pickCard(card);
             //return deck.remove(0); // Rimuove e restituisce la prima carta
             //TODO implement different card picking
         }
-        else
+        else {
+            System.out.println("[GameModel] Adventure deck is empty! Cannot pick card for player " + player.getNickName());
             player.pickCard(null);
+        }
         //return null; // Nessuna carta disponibile
     }
 
     private void loadAdventureCardTurn1(){
+        System.out.println("[GameModel] Loading adventure cards for turn 1...");
         deck.add(new Planets());
         //deck.add(new AbandonedStation());
         //deck.add(new AbandonedShip());
@@ -58,6 +69,7 @@ public class GameModel {
         deck.add(new Sabotage());
         //deck.add(new CombatZone());
 
+        System.out.println("[GameModel] Adventure cards loaded. Total cards in deck: " + deck.size());
         System.out.println("Tutte le carte avventura sono state caricate.");
     }
 
@@ -144,6 +156,7 @@ public class GameModel {
     }
 
     public void startGame() {
+        System.out.println("[GameModel] Starting game with turn number: " + turnNumber);
         // Aggiungi tutti i giocatori al FlightBoard
         for (Player player : players) {
             flightBoard.addPlayer(player);
@@ -152,6 +165,7 @@ public class GameModel {
 
         //TODO This thing is ambiguous ... try to generalize and perhaps avoid magic numbers
         if (turnNumber == 1) {
+            System.out.println("[GameModel] Turn number is 1, loading adventure cards...");
             loadAdventureCardTurn1();
             //navi piccole e mazzo avventura composto da 8 carte di livello I
 //            "Open Space" (Spazio aperto)

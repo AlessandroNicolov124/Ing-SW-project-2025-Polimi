@@ -339,4 +339,17 @@ public class SocketClient implements Runnable, GeneralClientIf {
         this.localPlayer = player;
     }
 
+    @Override
+    public void pickAdventureCard() throws Exception {
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot pick adventure card: local player not set");
+        }
+        
+        synchronized (out) {
+            out.writeObject(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest(
+                localPlayer.getId()));
+            out.flush();
+        }
+    }
+
 }

@@ -78,6 +78,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case SHIP_BUILDING        -> handleShipBuildingState();
                 case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
+                case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
                 case TERMINATED           -> { return; }
             }
@@ -303,24 +304,45 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     private void handleWaitForAllPlayersPositionedState() {
-        // This state waits for position assignment from server
-        console.printMessage("Waiting for position assignment from server...");
+        console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
+        console.printMessage("Your ship has been validated and you have been assigned a position.");
+        console.printMessage("Waiting for other players to complete ship building...");
+        console.printMessage("Adventure cards will be picked once all players are ready.");
+        console.printMessage("Type 'status' to check current state or 'help' for available commands.");
         
-        // Poll for user input or timeout to prevent infinite loop
-        String input = console.pollCommand(2000); // 2 second timeout
-        
-        if (input != null) {
-            if ("skip".equalsIgnoreCase(input.trim())) {
-                console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to game...");
-                state = TuiState.RUNNING;
-            } else if ("status".equalsIgnoreCase(input.trim())) {
-                console.printMessage("Current state: Waiting for position assignment");
-                console.printMessage("Type 'skip' to bypass waiting (debug only)");
+        while (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+            String input = console.pollCommand(2000); // 2 second timeout
+            
+            if (input != null) {
+                input = input.trim().toLowerCase();
+                switch (input) {
+                    case "status":
+                        console.printMessage("Current state: Waiting for all players to complete ship building");
+                        if (currentPlayer != null) {
+                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                        }
+                        console.printMessage("Once all players are positioned, the adventure card phase will begin.");
+                        break;
+                    case "help":
+                        console.printMessage("Available commands:");
+                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  skip   - Skip waiting (debug only)");
+                        console.printMessage("  quit   - Exit the game");
+                        break;
+                    case "skip":
+                        console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to adventure phase...");
+                        state = TuiState.ADVENTURE_PHASE;
+                        break;
+                    case "quit":
+                        console.printMessage("Exiting game...");
+                        state = TuiState.TERMINATED;
+                        return;
+                    default:
+                        console.printMessage("Unknown command: " + input + ". Type 'help' for available commands.");
+                        break;
+                }
             }
         }
-        
-        // Add a fallback timeout to prevent infinite waiting
-        // In a real implementation, this would be removed and proper server communication would handle state transitions
     }
 
     /**
@@ -346,6 +368,50 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
         } else {
             console.printMessage("Waiting for more players to choose their positions...");
+                }
+    }
+
+    private void handleAdventurePhaseState() {
+        console.printMessage("\n=== ADVENTURE CARD PHASE ===");
+        console.printMessage("Players pick adventure cards in position order (1st, 2nd, 3rd, 4th)");
+        console.printMessage("Wait for your turn or type 'status' to check current state");
+        
+        while (state == TuiState.ADVENTURE_PHASE) {
+            String cmd = console.pollCommand(1000); // Poll with timeout
+            
+            if (cmd != null) {
+                cmd = cmd.trim().toLowerCase();
+                switch (cmd) {
+                    case "pick":
+                        // Try to pick an adventure card
+                        try {
+                            client.pickAdventureCard();
+                            console.printMessage("Adventure card pick request sent. Waiting for response...");
+                        } catch (Exception e) {
+                            console.printError("Error picking adventure card: " + e.getMessage());
+                        }
+                        break;
+                    case "status":
+                        if (currentPlayer != null) {
+                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                            console.printMessage("Game state: Adventure Phase - picking cards in position order");
+                        }
+                        break;
+                    case "help":
+                        console.printMessage("Available commands:");
+                        console.printMessage("  pick   - Pick an adventure card (only when it's your turn)");
+                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  quit   - Exit the game");
+                        break;
+                    case "quit":
+                        console.printMessage("Exiting game...");
+                        state = TuiState.TERMINATED;
+                        return;
+                    default:
+                        console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
+                        break;
+                }
+            }
         }
     }
 
@@ -532,11 +598,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             if (isValid) {
                 console.printMessage("✓ " + message);
                 if (state == TuiState.SHIP_BUILDING) {
-                    console.printMessage("Ship building complete. Position assigned. Proceeding to game...");
-                    state = TuiState.RUNNING; // Skip the waiting states since position is already assigned
+                    console.printMessage("Ship building complete. Position assigned. Waiting for all players to finish...");
+                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED; // Wait for all players
                 } else if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                    console.printMessage("Position assigned. Proceeding to game...");
-                    state = TuiState.RUNNING;
+                    console.printMessage("Position assigned. Waiting for all players to finish...");
+                    // Stay in the same state - wait for adventure phase start message
                 }
             } else {
                 console.printError("✗ " + message);
@@ -666,6 +732,141 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 }
             }
             // If it's not for our player, ignore the response
+        }
+    }
+
+    @Override
+    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+        synchronized (displayMutex) {
+            console.printMessage("[DEBUG] Adventure card response received: playerId=" + playerId + ", success=" + success + ", message=" + message + ", adventureCard=" + (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+            
+            if (success && adventureCard != null) {
+                // Find player name for display
+                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                    "You" : "Player " + playerId;
+                
+                console.printMessage("✓ " + playerName + " picked adventure card: " + adventureCard.getName());
+                
+                // Show detailed card information if it's the current player's card
+                if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                    displayAdventureCard(adventureCard);
+                    adventureCard.effect();
+                } else {
+                    // For other players, just show basic info
+                    console.printMessage("Description: " + adventureCard.getDescription());
+                }
+                
+                // Check if there's a next player or if phase is complete
+                if (nextPlayerTurn == -1) {
+                    console.printMessage("All players have picked their adventure cards. Proceeding to main game...");
+                    state = TuiState.RUNNING;
+                } else {
+                    if (currentPlayer != null && currentPlayer.getId() == nextPlayerTurn) {
+                        console.printMessage("It's your turn to pick an adventure card! Type 'pick' to draw a card.");
+                    } else {
+                        console.printMessage("Waiting for Player " + nextPlayerTurn + " to pick their adventure card...");
+                    }
+                }
+            } else {
+                console.printError("✗ Failed to pick adventure card: " + message);
+            }
+        }
+    }
+
+    /**
+     * Displays detailed information about an adventure card
+     */
+    private void displayAdventureCard(it.polimi.ingsw.AdventureCards.AdventureCard adventureCard) {
+        console.printMessage("\n╔══════════════════════════════════════════════════════════════════════╗");
+        console.printMessage("║                        ADVENTURE CARD DRAWN                         ║");
+        console.printMessage("╠══════════════════════════════════════════════════════════════════════╣");
+        console.printMessage("║ Card Name: " + String.format("%-55s", adventureCard.getName()) + " ║");
+        console.printMessage("║                                                                      ║");
+        
+        // Split description into multiple lines if it's too long
+        String description = adventureCard.getDescription();
+        String[] descriptionLines = wrapText(description, 68);
+        console.printMessage("║ Description:                                                         ║");
+        for (String line : descriptionLines) {
+            console.printMessage("║ " + String.format("%-68s", line) + " ║");
+        }
+        
+        console.printMessage("║                                                                      ║");
+        
+        // Show additional properties if available
+        if (adventureCard.getDuration() > 1) {
+            console.printMessage("║ Duration: " + String.format("%-59s", adventureCard.getDuration() + " rounds") + " ║");
+        }
+        if (adventureCard.getCost() > 0) {
+            console.printMessage("║ Cost: " + String.format("%-63s", adventureCard.getCost() + " credits") + " ║");
+        }
+        
+        console.printMessage("╚══════════════════════════════════════════════════════════════════════╝");
+        console.printMessage("");
+    }
+
+    /**
+     * Wraps text to fit within specified width
+     */
+    private String[] wrapText(String text, int maxWidth) {
+        if (text.length() <= maxWidth) {
+            return new String[]{text};
+        }
+        
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        StringBuilder currentLine = new StringBuilder();
+        
+        for (String word : words) {
+            if (currentLine.length() + word.length() + 1 <= maxWidth) {
+                if (currentLine.length() > 0) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
+            } else {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(word);
+                } else {
+                    // Word is longer than maxWidth, just add it anyway
+                    lines.add(word);
+                }
+            }
+        }
+        
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+        
+        return lines.toArray(new String[0]);
+    }
+
+    @Override
+    public void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
+        synchronized (displayMutex) {
+            console.printMessage("\n=== ALL PLAYERS POSITIONED ===");
+            console.printMessage("Final positions:");
+            
+            // Display all player positions
+            for (java.util.Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+                int playerId = entry.getKey();
+                int position = entry.getValue();
+                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                    "You" : "Player " + playerId;
+                console.printMessage("  " + playerName + " is in position " + position);
+            }
+            
+            console.printMessage("\nStarting adventure card phase...");
+            
+            // Check if current player is first to act
+            if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
+                console.printMessage("You are in position 1! It's your turn to pick the first adventure card. Type 'pick' to draw a card.");
+            } else {
+                console.printMessage("Player " + firstPlayerToAct + " (position 1) will pick the first adventure card. Please wait for your turn.");
+            }
+            
+            // Transition to adventure phase
+            state = TuiState.ADVENTURE_PHASE;
         }
     }
 

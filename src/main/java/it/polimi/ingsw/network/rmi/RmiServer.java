@@ -523,6 +523,15 @@ public class RmiServer extends UnicastRemoteObject
         lobbyManager.multicastToMatch(match.getMatchId(), 
             new ValidateShipResponse(
                 playerId, isValid, message, assignedPosition));
+        
+        // Check if all players are now positioned and can start adventure phase
+        if (isValid && assignedPosition > 0 && match.allPlayersPositioned()) {
+            System.out.println("[ServerRMI] All players positioned. Starting adventure phase...");
+            int firstPlayerToAct = match.getFirstPlayerToAct();
+            lobbyManager.multicastToMatch(match.getMatchId(), 
+                new it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse(
+                    match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+        }
     }
 
     private void broadcastValidationErrorToAllClients(int playerId, String errorMessage) {
@@ -643,5 +652,64 @@ public class RmiServer extends UnicastRemoteObject
     }
         
 */
+
+    @Override
+    public void pickAdventureCard(int playerId) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            broadcastAdventureCardErrorToAllClients(playerId, "Match not found");
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Player not found");
+            return;
+        }
+
+        // Pick adventure card using the controller
+        controller.pickCardForPlayer(player);
+        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        String message = adventureCard != null ? "Adventure card picked successfully" : "No more adventure cards available";
+        boolean success = adventureCard != null;
+        
+        // Determine next player's turn
+        int nextPlayerTurn = match.getNextPlayerTurnForAdventure(playerId);
+        
+        System.out.println("[ServerRMI] Adventure card pick for player " + playerId + ": " + 
+            (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+        
+        // Send response to all clients in the match
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                playerId, adventureCard, success, message, nextPlayerTurn));
+    }
+
+    private void broadcastAdventureCardErrorToAllClients(int playerId, String errorMessage) {
+        try {
+            lobbyManager.broadcastToAll(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                playerId, null, false, errorMessage, -1));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast adventure card error to all clients: " + e.getMessage());
+        }
+    }
+
+    private void broadcastAdventureCardErrorToMatch(UUID matchId, int playerId, String errorMessage) {
+        try {
+            lobbyManager.multicastToMatch(matchId, new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                playerId, null, false, errorMessage, -1));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast adventure card error to match: " + e.getMessage());
+        }
+    }
 
 }

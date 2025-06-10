@@ -66,6 +66,12 @@ public class Pirates extends AdventureCard {
         // This would be called when the card is drawn
     }
 
+    @Override
+    public String getDescription() {
+        return "Encounter pirates! Fight with cannons (strength " + pirateStrength + ") or face cannon fire. " +
+               "Victory rewards " + rewardCredits + " credits and " + flightDaysCost + " flight days.";
+    }
+
     /**
      * Attempt to fight pirates
      * @param gameModel The current game state

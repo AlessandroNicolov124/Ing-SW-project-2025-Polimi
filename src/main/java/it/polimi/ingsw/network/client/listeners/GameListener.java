@@ -34,5 +34,9 @@ public interface GameListener {
     void shipBuildingStart(UUID matchId, int readyPlayers);
     void usernameRejected(String errorMessage);
     void componentPicked(int playerId, Component component, boolean success, String message);
+    
+    void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
+    
+    void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
 
 }

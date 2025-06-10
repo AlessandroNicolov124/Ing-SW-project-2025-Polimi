@@ -41,6 +41,12 @@ public class OpenSpace extends AdventureCard {
     public void effect() {
         // This would be called when the card is drawn
     }
+
+    @Override
+    public String getDescription() {
+        return "Open Space! Each player declares engine strength and moves forward that many spaces. " +
+               "Use battery power for double engines. The leader goes first, followed by others in order.";
+    }
     
     /**
      * Apply the Open Space effect to all players in order
