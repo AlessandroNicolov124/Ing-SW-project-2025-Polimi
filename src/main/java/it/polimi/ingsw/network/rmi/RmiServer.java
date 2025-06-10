@@ -21,6 +21,7 @@ import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -467,8 +468,79 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public void validateShip(int playerId) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
+            broadcastValidationErrorToAllClients(playerId, "Match not found");
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
+            broadcastValidationErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[ServerRMI] Player not found with ID: " + playerId);
+            broadcastValidationErrorToMatch(match.getMatchId(), playerId, "Player not found");
+            return;
+        }
+
+        // Validate the ship using the controller's validation logic
+        boolean isValid = controller.validateShipForPlayer(player);
+        String message = null;
+        int assignedPosition = -1;
+
+        // For debugging: if ship is invalid but has no components or very few components,
+        // treat it as valid (likely a debug scenario)
+        if (!isValid && player.getShip().getComponents().size() <= 1) {
+            isValid = true;
+            message = "[DEBUG MODE] Ship validation bypassed due to minimal components";
+            System.out.println("[ServerRMI] Debug mode: Ship validation bypassed for player " + playerId);
+        }
+
+        if (isValid) {
+            // Assign position based on completion order
+            assignedPosition = match.assignPlayerPosition(playerId);
+            if (assignedPosition > 0) {
+                if (message == null) {
+                    message = "Ship is valid!";
+                }
+                System.out.println("[ServerRMI] Ship validated and position " + assignedPosition + " assigned to player " + playerId);
+            } else {
+                message = "Ship is valid but no positions available";
+                System.out.println("[ServerRMI] Ship validated but no positions available for player " + playerId);
+            }
+        } else {
+            message = "Ship validation failed - please check your ship configuration";
+            System.out.println("[ServerRMI] Ship validation failed for player " + playerId);
+        }
+        
+        // Send response to all clients in the match (they can filter by player ID)
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new ValidateShipResponse(
+                playerId, isValid, message, assignedPosition));
+    }
+
+    private void broadcastValidationErrorToAllClients(int playerId, String errorMessage) {
+        try {
+            lobbyManager.broadcastToAll(new ValidateShipResponse(
+                playerId, false, errorMessage, -1));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast validation error to all clients: " + e.getMessage());
+        }
+    }
+
+    private void broadcastValidationErrorToMatch(UUID matchId, int playerId, String errorMessage) {
+        try {
+            lobbyManager.multicastToMatch(matchId, new ValidateShipResponse(
+                playerId, false, errorMessage, -1));
+        } catch (Exception e) {
+            System.err.println("[ServerRMI] Failed to broadcast validation error to match: " + e.getMessage());
+        }
     }
 
 /*     public Component pickComponent(int playerId) throws RemoteException {

@@ -181,8 +181,15 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void validateShip() throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot validate ship: local player not set");
+        }
+        
+        try {
+            server.validateShip(localPlayer.getId());
+        } catch (RemoteException e) {
+            throw new RemoteException("Error validating ship", e);
+        }
     }
 
     @Override

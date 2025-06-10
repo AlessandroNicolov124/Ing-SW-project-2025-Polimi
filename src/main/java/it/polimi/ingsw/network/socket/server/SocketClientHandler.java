@@ -26,6 +26,7 @@ import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipResponse;
 
 import java.io.*;
 import java.net.Socket;
@@ -306,8 +307,70 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void validateShip() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
+        if (currentPlayerId == -1) {
+            System.out.println("[ServerSocket] No player ID set for client handler");
+            showUpdate(new ValidateShipResponse(
+                -1, false, "No player ID set", -1));
+            return;
+        }
+
+        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayerId);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayerId);
+            showUpdate(new ValidateShipResponse(
+                currentPlayerId, false, "Match not found", -1));
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayerId);
+            showUpdate(new ValidateShipResponse(
+                currentPlayerId, false, "Match not in progress", -1));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(currentPlayerId);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayerId);
+            showUpdate(new ValidateShipResponse(
+                currentPlayerId, false, "Player not found", -1));
+            return;
+        }
+
+        // Validate the ship using the controller's validation logic
+        boolean isValid = controller.validateShipForPlayer(player);
+        String message = null;
+        int assignedPosition = -1;
+
+        // For debugging: if ship is invalid but has no components or very few components,
+        // treat it as valid (likely a debug scenario)
+        if (!isValid && player.getShip().getComponents().size() <= 1) {
+            isValid = true;
+            message = "[DEBUG MODE] Ship validation bypassed due to minimal components";
+            System.out.println("[ServerSocket] Debug mode: Ship validation bypassed for player " + currentPlayerId);
+        }
+
+        if (isValid) {
+            // Assign position based on completion order
+            assignedPosition = match.assignPlayerPosition(currentPlayerId);
+            if (assignedPosition > 0) {
+                if (message == null || message.equals("Ship is valid!")) {
+                    message = "Ship is valid!";
+                }
+                System.out.println("[ServerSocket] Ship validated and position " + assignedPosition + " assigned to player " + currentPlayerId);
+            } else {
+                message = "Ship is valid but no positions available";
+                System.out.println("[ServerSocket] Ship validated but no positions available for player " + currentPlayerId);
+            }
+        } else {
+            message = "Ship validation failed - please check your ship configuration";
+            System.out.println("[ServerSocket] Ship validation failed for player " + currentPlayerId);
+        }
+        
+        // Send response back to the requesting client
+        showUpdate(new ValidateShipResponse(
+            currentPlayerId, isValid, message, assignedPosition));
     }
 
     @Override

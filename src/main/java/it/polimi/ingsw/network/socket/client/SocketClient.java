@@ -21,6 +21,7 @@ import it.polimi.ingsw.network.messages.lobby.StartMatchRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Player;
@@ -289,8 +290,14 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void validateShip() throws Exception {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
+        if (localPlayer == null) {
+            throw new IllegalStateException("Cannot validate ship: local player not set");
+        }
+        
+        synchronized (out) {
+            out.writeObject(new ValidateShipRequest(localPlayer.getId()));
+            out.flush();
+        }
     }
 
     @Override
