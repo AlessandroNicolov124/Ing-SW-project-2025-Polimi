@@ -24,7 +24,7 @@ public class LobbyController extends GuiContoller {
     private ListView<String> playersListView;
 
     @FXML
-    private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton;
+    private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton, readyButton;
 
     // Suppose you have a Match class with a nice toString()
     private static ObservableList<String> matchList = FXCollections.observableArrayList();
@@ -39,6 +39,7 @@ public class LobbyController extends GuiContoller {
         createMatchButton.setOnAction(e -> showCreateMatchDialog());
         joinMatchButton.setOnAction(e -> joinSelectedMatch());
         startMatchButton.setOnAction(e -> startSelectedMatch());
+        readyButton.setOnAction(e -> setPlayerReady());
     }
 
     private void loadMatchesFromServer() {
@@ -77,6 +78,17 @@ public class LobbyController extends GuiContoller {
         }
     }
 
+    private void setPlayerReady()
+    {
+        String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
+        String matchID = selected[0];
+        try{
+            super.context.getClient().playerReady(UUID.fromString(matchID), context.getPlayerId());
+        }catch (Exception e){
+            System.err.println("Error notifying player ready: " + e.getMessage());
+        }
+    }
+
     private void startSelectedMatch() {
         String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
         String matchID = selected[0];
@@ -84,7 +96,6 @@ public class LobbyController extends GuiContoller {
         if (selected != null) {
             try {
                 super.context.getClient().startMatch(UUID.fromString(matchID), context.getPlayerId(), context.getUsername());
-                //super.context.getClient().playerReady(UUID.fromString(matchID), context.getPlayerId());
             } catch (Exception e) {
                 showErrorDialog("Impossible to start match:", e.getMessage());
             }
@@ -95,7 +106,9 @@ public class LobbyController extends GuiContoller {
         Platform.runLater(new Runnable(){
             @Override
             public void run() {
-                matchList.add(newMatch);
+                if (matchList.isEmpty()) {
+                    matchList.add(newMatch);
+                }
             }
         });
     }

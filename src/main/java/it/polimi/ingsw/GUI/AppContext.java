@@ -350,17 +350,10 @@ public class AppContext implements GameListener {
 
     @Override
     public void matchStarted(UUID matchId, String username) {
-        try{
-            this.getClient().playerReady(this.currentMatchId, this.playerId);
-        }catch (Exception e){
-            System.err.println("Error notifying player ready: " + e.getMessage());
-        }
-
         Platform.runLater(new Runnable(){
             @Override
             public void run() {
-                showMessage(Alert.AlertType.CONFIRMATION, "Match has started!", "You will be redirected to ship building page");
-
+                showMessage(Alert.AlertType.CONFIRMATION, "Match has started!", "You will be redirected to ship building page as soon as you press on ready button");
             }
         });
 
