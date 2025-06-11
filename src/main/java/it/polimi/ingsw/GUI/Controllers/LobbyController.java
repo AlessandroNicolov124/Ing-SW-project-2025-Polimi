@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.GUI.GUIApp;
 import it.polimi.ingsw.GUI.MatchRowDisplay;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -77,10 +78,13 @@ public class LobbyController extends GuiContoller {
     }
 
     private void startSelectedMatch() {
-        String selected = matchesListView.getSelectionModel().getSelectedItem();
+        String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
+        String matchID = selected[0];
+
         if (selected != null) {
             try {
-                super.context.getClient().startMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
+                super.context.getClient().startMatch(UUID.fromString(matchID), context.getPlayerId(), context.getUsername());
+                //super.context.getClient().playerReady(UUID.fromString(matchID), context.getPlayerId());
             } catch (Exception e) {
                 showErrorDialog("Impossible to start match:", e.getMessage());
             }
@@ -125,6 +129,19 @@ public class LobbyController extends GuiContoller {
             public void run() {
                 playerList.clear();
                 playerList.addAll(playersInMatch);
+            }
+        });
+    }
+
+    public static void moveToShipBuilding() {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                GUIApp.showShipBuilder();
+                } catch (Exception e) {
+                    showErrorDialog("Error", "Impossible to load new page, please try again");
+                }
             }
         });
     }

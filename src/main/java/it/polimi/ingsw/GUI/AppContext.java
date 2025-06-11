@@ -350,6 +350,19 @@ public class AppContext implements GameListener {
 
     @Override
     public void matchStarted(UUID matchId, String username) {
+        try{
+            this.getClient().playerReady(this.currentMatchId, this.playerId);
+        }catch (Exception e){
+            System.err.println("Error notifying player ready: " + e.getMessage());
+        }
+
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                showMessage(Alert.AlertType.CONFIRMATION, "Match has started!", "You will be redirected to ship building page");
+
+            }
+        });
 
     }
 
@@ -360,7 +373,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void playersInMatch(UUID matchId, List<String> players, int hostId) {
-            LobbyController.playersInCurrentMatch(players);
+        LobbyController.playersInCurrentMatch(players);
     }
 
     @Override
@@ -370,7 +383,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void shipBuildingStart(UUID matchId, int readyPlayers) {
-
+        LobbyController.moveToShipBuilding();
     }
 
     @Override
