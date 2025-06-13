@@ -19,6 +19,7 @@ class CabinTest {
     @BeforeEach
     void setUp() {
         cabin = new Cabin();
+        cabin.initializeConnectors();
         startingCabin = new Cabin(true);
     }
 
@@ -432,14 +433,12 @@ class CabinTest {
             assertTrue(cabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN));
             assertTrue(cabin.canAddAlien(CrewType.BROWN_ALIEN));
 
-            // Try to add alien (should fail - already has one crew)
             BrownAlienCrew brownAlien = new BrownAlienCrew();
-            assertFalse(cabin.addCrew(brownAlien));
-            assertEquals(1, cabin.getCrew().size());
-
-            // Remove human and add alien
-            assertTrue(cabin.removeCrew(human));
             assertTrue(cabin.addCrew(brownAlien));
+            assertEquals(2, cabin.getCrew().size());
+
+            // Remove human
+            assertTrue(cabin.removeCrew(human));
             assertEquals(1, cabin.getCrew().size());
         }
 

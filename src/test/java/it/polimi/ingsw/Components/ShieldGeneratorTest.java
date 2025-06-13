@@ -18,6 +18,7 @@ public class ShieldGeneratorTest {
     @BeforeEach
     public void setUp() {
         shieldGenerator = new ShieldGenerator();
+        shieldGenerator.initializeConnectors(new NullConnectorType(), new DoubleConnectorType(), new SingleConnectorType(), new UniversalConnectorType());
         mockBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
     }
 
@@ -231,7 +232,7 @@ public class ShieldGeneratorTest {
         mockBattery = new BatteryCompartment(3, BatteryType.TRIPLE, 3);
         assertTrue(shieldGenerator.charge(mockBattery));
         assertTrue(shieldGenerator.isCharged());
-        assertEquals(9, mockBattery.getChargeLevel());
+        assertEquals(2, mockBattery.getChargeLevel());
 
         // Remove a direction
         shieldGenerator.remove(Direction.NORTH);

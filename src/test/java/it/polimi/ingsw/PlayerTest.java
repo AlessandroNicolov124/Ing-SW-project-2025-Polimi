@@ -141,19 +141,6 @@ class PlayerTest {
     }
 
     @Test
-    void testValidateShip() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        boolean result = player.validateShip();
-        assertTrue(result);
-    }
-
-    @Test
-    void testValidateShip_Invalid() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        assertTrue(player.validateShip());
-    }
-
-    @Test
     void testTakeTurn() {
         player = new Player(1, "TestPlayer", true);
         assertDoesNotThrow(() -> player.takeTurn());

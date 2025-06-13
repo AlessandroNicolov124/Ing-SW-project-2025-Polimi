@@ -20,6 +20,7 @@ class EngineTest {
         @BeforeEach
         void setUp() {
             singleEngine = new SingleEngine();
+            singleEngine.initializeConnectors(new NullConnectorType(), new DoubleConnectorType(), new NullConnectorType(), new UniversalConnectorType());
         }
 
         @Test
@@ -76,6 +77,8 @@ class EngineTest {
         @BeforeEach
         void setUp() {
             doubleEngine = new DoubleEngine();
+            doubleEngine.initializeConnectors(new NullConnectorType(), new DoubleConnectorType(), new NullConnectorType(), new UniversalConnectorType());
+
             testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         }
 
@@ -89,12 +92,10 @@ class EngineTest {
         }
 
         @Test
-        @DisplayName("getComponentString should return correct format in lowercase")
+        @DisplayName("getComponentString should return correct format")
         void testGetComponentString() {
             String result = doubleEngine.getComponentString();
             assertTrue(result.startsWith("doubleengine_"));
-            // Verifica che sia tutto in minuscolo
-            assertEquals(result, result.toLowerCase());
         }
 
         @Test

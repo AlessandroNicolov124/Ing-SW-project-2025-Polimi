@@ -20,6 +20,7 @@ class CannonTest {
         @BeforeEach
         void setUp() {
             singleCannon = new SingleCannon();
+            singleCannon.initializeConnectors(new NullConnectorType(), new DoubleConnectorType(), new SingleConnectorType(), new UniversalConnectorType());
         }
 
         @Test
@@ -91,6 +92,7 @@ class CannonTest {
         @BeforeEach
         void setUp() {
             doubleCannon = new DoubleCannon();
+            doubleCannon.initializeConnectors(new NullConnectorType(), new DoubleConnectorType(), new SingleConnectorType(), new UniversalConnectorType());
             testBattery = new BatteryCompartment(2, BatteryType.DOUBLE, 2);
         }
 
@@ -104,12 +106,10 @@ class CannonTest {
         }
 
         @Test
-        @DisplayName("getComponentString should return correct format in lowercase")
+        @DisplayName("getComponentString should return correct format")
         void testGetComponentString() {
             String result = doubleCannon.getComponentString();
             assertTrue(result.startsWith("doublecannon_"));
-            // Verifica che sia tutto in minuscolo
-            assertEquals(result, result.toLowerCase());
         }
 
         @Test

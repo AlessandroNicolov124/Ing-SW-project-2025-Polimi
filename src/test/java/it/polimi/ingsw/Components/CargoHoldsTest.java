@@ -22,6 +22,7 @@ class NormalCargoHoldsTest {
     @BeforeEach
     void setUp() {
         normalCargoHolds = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
+        normalCargoHolds.initializeConnectors(new UniversalConnectorType(),new UniversalConnectorType(), new SingleConnectorType(), new NullConnectorType());
         blueCargo = new BlueCargo();
         greenCargo = new GreenCargo();
         yellowCargo = new YellowCargo();
@@ -152,6 +153,8 @@ class SpecialCargoHoldsTest {
     @BeforeEach
     void setUp() {
         specialCargoHolds = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
+        specialCargoHolds.initializeConnectors(new UniversalConnectorType(),new UniversalConnectorType(), new SingleConnectorType(), new NullConnectorType());
+
         blueCargo = new BlueCargo();
         greenCargo = new GreenCargo();
         yellowCargo = new YellowCargo();

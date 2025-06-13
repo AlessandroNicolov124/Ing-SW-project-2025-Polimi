@@ -146,7 +146,7 @@ class PositionTest {
     @Test
     @DisplayName("Test getAdjacentPosition with null direction throws exception")
     void testGetAdjacentPositionWithNullDirection() {
-        assertThrows(IllegalStateException.class, () -> {
+        assertThrows(NullPointerException.class, () -> {
             position.getAdjacentPosition(null);
         });
     }

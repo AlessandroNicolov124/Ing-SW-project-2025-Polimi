@@ -12,6 +12,7 @@ public class StructuralModuleTest {
     @BeforeEach
     public void setUp() {
         structuralModule = new StructuralModule();
+        structuralModule.initializeConnectors(new UniversalConnectorType(), new NullConnectorType(), new NullConnectorType(), new UniversalConnectorType());
     }
 
     // ===== CONSTRUCTION TESTS =====
