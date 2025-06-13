@@ -216,8 +216,15 @@ public class GameModel {
         return turnNumber;
     }
 
-    public void updatePosition(Player player, int i) {
-        flightBoard.updatePosition(player, i);
+    /**
+     * Aggiorna la posizione di un giocatore sul tabellone di volo
+     * considerando le posizioni già occupate
+     *
+     * @param player Il giocatore la cui posizione deve essere aggiornata
+     * @param spaces Il numero di spazi da muovere (può essere positivo o negativo)
+     */
+    public void updatePosition(Player player, int spaces) {
+        flightBoard.updatePosition(player, spaces);
     }
 
     private void initializeComponentDeckDefault() {
