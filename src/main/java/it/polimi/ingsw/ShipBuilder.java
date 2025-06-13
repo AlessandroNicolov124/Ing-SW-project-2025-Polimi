@@ -1014,4 +1014,10 @@ public class ShipBuilder {
             }
         }
     }
+
+    public List<Component> getNonDamageComponents(){
+        return components.keySet().stream()
+                .filter(component -> !component.isDamaged())
+                .collect(Collectors.toList());
+    }
 }

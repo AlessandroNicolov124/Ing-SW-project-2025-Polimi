@@ -238,7 +238,7 @@ public class MeteorSwarm extends AdventureCard {
         }
 
         if (targetComponent == null) {
-            System.out.println("The cannon fire targets an empty space!");
+            System.out.println("The meteor targets an empty space!");
             return null;
         }
 
