@@ -60,6 +60,7 @@ public class AbandonedShip extends AdventureCard {
      */
     public boolean useOpportunity(Player player, GameModel gameModel) {
         if (opportunityUsed) {
+            System.out.println("Opportunity already used by another player.");
             return false; // Opportunity already used by another player
         }
 
@@ -68,6 +69,7 @@ public class AbandonedShip extends AdventureCard {
         Map<CrewType, Integer> playerCrewCounts = player.getShip().getCrewCounts();
         // Verify that player has enough crew of each required type
         if (playerCrewCounts == null || playerCrewCounts.isEmpty()) {
+            System.out.println("No crew available on the ship.");
             return false; // No crew available
         }
         for (Map.Entry<CrewType, Integer> requirement : crewTypeRequired.entrySet()) {
@@ -90,7 +92,7 @@ public class AbandonedShip extends AdventureCard {
                 // Rollback: riaggiungi i crew già rimossi (opzionale, se serve coerenza)
                 for (Map.Entry<CrewType, Integer> rollback : crewTypeRequired.entrySet()) {
                     if (rollback.getKey() == crewType) break;
-                    //player.getShip().addCrewOfType(rollback.getKey(), rollback.getValue());
+                    player.getShip().addCrewOfType(rollback.getKey(), rollback.getValue());
                 }
                 return false;
             }

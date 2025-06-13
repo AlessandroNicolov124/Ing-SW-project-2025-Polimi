@@ -345,9 +345,9 @@ public class ShipBuilder {
 
         // Prova ad aggiungere l'equipaggio
         if (cabin.addCrew(crew)) {
-            if (crew.getType() != CrewType.HUMAN) {
+            //if (crew.getType() != CrewType.HUMAN) {
                 crewCount.put(crew.getType(), crewCount.getOrDefault(crew.getType(), 0) + 1);
-            }
+            //}
             return true;
         }
 
@@ -494,30 +494,43 @@ public class ShipBuilder {
         List<Cabin> allCabins = getAllCabins();
         int added = 0;
 
-        for (Cabin cabin : allCabins) {
-            if (added >= count) break;
+        if (crewType != CrewType.HUMAN) {
+            // Solo un alieno per nave
+            if (crewCount.getOrDefault(crewType, 0) >= 1) return;
+            for (Cabin cabin : allCabins) {
+                Crew alien = switch (crewType) {
+                    case BROWN_ALIEN -> new BrownAlienCrew();
+                    case PURPLE_ALIEN -> new PurpleAlienCrew();
+                    default -> null;
+                };
+                if (alien != null && addCrewToCabin(alien, cabin)) {
+                    added++;
+                    //crewCount.put(crewType, crewCount.getOrDefault(crewType, 0) + 1);
+                    break; // Solo uno per nave
+                }
 
-            // Se alieno, massimo uno per nave
-            if (crewType != CrewType.HUMAN) {
-                if (crewCount.getOrDefault(crewType, 0) >= 1) break;
-                Crew alien;
-                if (crewType == CrewType.BROWN_ALIEN) {
-                    alien = new BrownAlienCrew();
-                } else if (crewType == CrewType.PURPLE_ALIEN) {
-                    alien = new PurpleAlienCrew();
-                } else {
-                    continue;
-                }
-                if (addCrewToCabin(alien, cabin)) {
-                    added++;
-                }
-                break; // Solo uno per nave
-            } else {
-                // Umani: aggiungi uno per volta
-                if (addCrewToCabin(new HumanCrew(), cabin)) {
-                    added++;
-                }
             }
+            if (added < count) {
+                System.out.println("Attenzione: non è stato possibile aggiungere tutti gli alieni richiesti (" + count + "). Aggiunti: " + added);
+            }
+            return;
+        }
+
+        // Per gli umani, aggiungi fino al numero richiesto
+        while (added < count && !allCabins.isEmpty()) {
+            // Prova ad aggiungere umani in ogni cabina
+            for (Cabin cabin : allCabins) {
+                if(!(cabin.getCrew().size() >= 2)) {// Se la cabina ha già 2 umani la salto
+                    if (addCrewToCabin(new HumanCrew(), cabin)) {
+                        added++;
+                        //crewCount.put(crewType, crewCount.getOrDefault(crewType, 0) + 1);
+                    }
+                }
+                if (added >= count) break;
+            }
+        }
+        if (added < count) {
+            System.out.println("Attenzione: non è stato possibile aggiungere tutti gli umani richiesti (" + count + "). Aggiunti: " + added);
         }
     }
 

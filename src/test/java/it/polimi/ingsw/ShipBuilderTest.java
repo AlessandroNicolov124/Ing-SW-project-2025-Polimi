@@ -262,4 +262,32 @@ class ShipBuilderTest {
         assertTrue(totalBrownAliens <= 1);
         assertTrue(totalPurpleAliens <= 1);
     }
+
+    @Test
+    @DisplayName("addCrewOfType aggiunge correttamente membri dell'equipaggio nelle cabine vuote")
+    void testAddCrewOfType() {
+        // Cabine vuote
+        Cabin cabin1 = new Cabin(true);
+        Cabin cabin2 = new Cabin(false);
+        cabin2.initializeConnectors();
+        shipBuilder.placeComponent(cabin1, shipBuilder.getStartingPosition());
+        shipBuilder.placeComponent(cabin2, shipBuilder.getStartingPosition().getAdjacentPosition(Direction.EAST));
+
+//        shipBuilder.addCrewOfType(CrewType.HUMAN, 3);
+//        // Verifica che siano stati aggiunti 3 umani in totale
+        int totalHumans = cabin1.getCrew().size() + cabin2.getCrew().size();
+        assertEquals(3, totalHumans);
+        assertEquals(3, shipBuilder.getHumanCount());
+
+        shipBuilder.removeCrewOfType(CrewType.HUMAN, 3);
+
+        LifeSupportSystem ss = new LifeSupportSystem(LifeSupportSystemType.BROWN);
+        ss.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(),
+                new UniversalConnectorType(), new UniversalConnectorType());
+        shipBuilder.placeComponent(ss, shipBuilder.getPositionOf(cabin2).getAdjacentPosition(Direction.SOUTH));
+        shipBuilder.updateLifeSupportConnections(ss);
+        shipBuilder.addCrewOfType(CrewType.BROWN_ALIEN, 2);
+        int totalAlien = cabin1.getCrew().size() + cabin2.getCrew().size();
+        assertEquals(1, totalAlien);
+    }
 }

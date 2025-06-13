@@ -1,6 +1,7 @@
 package it.polimi.ingsw.AdventureCards;
 
 import it.polimi.ingsw.*;
+import it.polimi.ingsw.Components.Cabin;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,13 +22,18 @@ class AbandonedShipTest {
         Map<CrewType, Integer> req = new HashMap<>();
         req.put(CrewType.HUMAN, 2);
         card = new AbandonedShip(1, 1, req, 5, 1);
-        ship = new ShipBuilder(5, 5);
+        ship = new ShipBuilder(7, 5);
         player = new Player(1, "Test", true, ship);
+
         gameModel = new GameModel();
         gameModel.addPlayer(player);
         gameModel.setCredits(player, 10);
+
+        Cabin c = new Cabin(true);
+        ship.placeComponent(c, ship.getStartingPosition());
         // Aggiungi 2 umani alla nave
         ship.addCrewOfType(CrewType.HUMAN, 2);
+        assertEquals(2, ship.getHumanCount());
     }
 
     @Test
