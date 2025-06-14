@@ -55,21 +55,8 @@ public class MeteorSwarmTest {
         assertEquals(4, initialComponents);
         meteorSwarm.processMeteorImpacts(gameModel);
         int afterComponents = player.getShip().getNonDamageComponents().size();
-        System.out.println(afterComponents);
+        System.out.println(initialComponents +" "+ afterComponents);
         assertTrue(afterComponents < initialComponents, "Un componente deve essere distrutto se non c'è cannone");
-    }
-
-    @Test
-    void testProcessMeteorImpactsWithCannonPreventsDestruction() {
-        // Aggiungi un cannone rivolto a nord nella posizione centrale
-        Cannon sc = new SingleCannon();
-        sc.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
-        ship.placeComponent(sc, ship.getStartingPosition().getAdjacentPosition(Direction.NORTH));
-
-        int initialComponents = player.getShip().getComponents().size();
-        meteorSwarm.processMeteorImpacts(gameModel);
-        int afterComponents = player.getShip().getComponents().size();
-        assertEquals(initialComponents, afterComponents, "Il cannone dovrebbe prevenire la distruzione");
     }
 
     @Test
@@ -80,5 +67,76 @@ public class MeteorSwarmTest {
             int result = (int) rollDice.invoke(meteorSwarm);
             assertTrue(result >= 2 && result <= 12, "Il risultato del dado deve essere tra 2 e 12");
         }
+    }
+
+    @Test
+    void testBigMeteorFromNorthDestroyedOnlyByForwardCannonInSameColumn() {
+        // Meteora grande da nord nella colonna 3
+        MeteorSwarm.Meteor meteor = new MeteorSwarm.Meteor(MeteorSwarm.MeteorSize.LARGE, Direction.NORTH);
+        List<MeteorSwarm.Meteor> meteors = List.of(meteor);
+        meteorSwarm = new MeteorSwarm(1, 1, new ArrayList<>(meteors));
+        // Posiziona un cannone rivolto a nord nella stessa colonna (3, qualsiasi riga)
+
+        SingleCannon cannon = new SingleCannon();
+        cannon.initializeConnectors(new UniversalConnectorType(), new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        ship.placeComponent(cannon, ship.getStartingPosition().getAdjacentPosition(Direction.NORTH));
+
+        System.out.println("cannon position: "+ ship.getPositionOf(cannon));
+
+        int initialComponents = player.getShip().getNonDamageComponents().size();
+        meteorSwarm.processMeteorImpactFor(player, meteor, 3);
+        int afterComponents = player.getShip().getNonDamageComponents().size();
+        assertEquals(initialComponents, afterComponents, "Il cannone in avanti nella stessa colonna deve distruggere la meteora");
+    }
+
+    @Test
+    void testBigMeteorFromNorthNotDestroyedBySideCannon() {
+        // Meteora grande da nord nella colonna 3
+        MeteorSwarm.Meteor meteor = new MeteorSwarm.Meteor(MeteorSwarm.MeteorSize.LARGE, Direction.NORTH);
+        List<MeteorSwarm.Meteor> meteors = List.of(meteor);
+        meteorSwarm = new MeteorSwarm(1, 1, new ArrayList<>(meteors));
+        // Posiziona un cannone rivolto a est nella stessa colonna (3, qualsiasi riga)
+
+        SingleCannon cannon = new SingleCannon();
+        cannon.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        ship.placeComponent(cannon, ship.getStartingPosition().getAdjacentPosition(Direction.NORTH));
+
+        int initialComponents = player.getShip().getNonDamageComponents().size();
+        meteorSwarm.processMeteorImpactFor(player, meteor, 4);
+        int afterComponents = player.getShip().getNonDamageComponents().size();
+
+        assertTrue(afterComponents < initialComponents, "Un cannone laterale non difende da meteora frontale");
+    }
+
+    @Test
+    void testBigMeteorFromEastDestroyedByCannonInSameDirection() {
+        // Meteora grande da est nella riga 1
+        MeteorSwarm.Meteor meteor = new MeteorSwarm.Meteor(MeteorSwarm.MeteorSize.LARGE, Direction.EAST);
+        List<MeteorSwarm.Meteor> meteors = List.of(meteor);
+        meteorSwarm = new MeteorSwarm(1, 1, new ArrayList<>(meteors));
+        // Posiziona un cannone rivolto a est nella stessa riga (qualsiasi colonna, riga 1)
+
+        SingleCannon cannon = new SingleCannon();
+        cannon.initializeConnectors(new UniversalConnectorType(), new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        cannon.setComponentDirection(Direction.EAST);
+        ship.placeComponent(cannon, ship.getStartingPosition().getAdjacentPosition(Direction.NORTH));
+
+        System.out.println("canno position: "+ ship.getPositionOf(cannon));
+
+        int initialComponents = player.getShip().getNonDamageComponents().size();
+        meteorSwarm.processMeteorImpactFor(player, meteor, 1);
+        int afterComponents = player.getShip().getNonDamageComponents().size();
+        assertEquals(initialComponents, afterComponents, "Il cannone laterale nella stessa direzione deve distruggere la meteora grande");
+
+        // Ora testiamo una riga adiacente
+        SingleCannon cannon1 = new SingleCannon();
+        cannon1.initializeConnectors(new NullConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        cannon1.setComponentDirection(Direction.EAST);
+        ship.placeComponent(cannon1, new Position(5, 2)); // Riga adiacente
+
+        int initial2 = player.getShip().getNonDamageComponents().size();
+        meteorSwarm.processMeteorImpactFor(player, meteor, 4);
+        int after2 = player.getShip().getNonDamageComponents().size();
+        assertEquals(initial2, after2, "Il cannone laterale nella stessa direzione deve distruggere la meteora grande anche se in riga adiacente");
     }
 }

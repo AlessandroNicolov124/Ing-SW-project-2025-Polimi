@@ -31,6 +31,15 @@ import java.util.stream.Collectors;
  * If you don't shoot a large meteor, the component it hits is destroyed.
  */
 
+/**
+ * Big Meteor Swarm
+
+ * Meteors can come at your ship from the left, the right, or even the rear!
+ * Large meteors coming from in front of you can be blown up only by a forward-pointing cannon in the column from which
+ * they are approaching, but large meteors from the side or the rear can be blown up by a cannon pointing toward the
+ * meteor in the same or adjacent row or column. A reminder is printed on the flight board.
+ */
+
 public class MeteorSwarm extends AdventureCard {
     private List<Meteor> meteors;
     private Random random;
@@ -99,7 +108,7 @@ public class MeteorSwarm extends AdventureCard {
         }
     }
 
-    private void processMeteorImpactFor(Player player, Meteor meteor, int diceRoll) {
+    protected void processMeteorImpactFor(Player player, Meteor meteor, int diceRoll) {
         // Check if meteor hits the ship
         Position hit = checkMeteorHit(player, meteor.getDirection(), diceRoll);
 
@@ -121,6 +130,7 @@ public class MeteorSwarm extends AdventureCard {
             } else {
                 // Large meteor: can only be stopped by cannon
                 Cannon cannonUsed = useCannon(player, meteor.getDirection(), hit);
+
                 if (cannonUsed == null) {
                     // Destroy component
                     player.getShip().destroyComponentAt(hit);
@@ -133,28 +143,67 @@ public class MeteorSwarm extends AdventureCard {
         }
     }
 
-    //cerco un cannone che possa essere usato dal giocatore per colpire il meteorite
-    // deve essere nella stessa colonna e puntare nella direzione specificata
+    //cerco un cannone che possa essere usato dal giocatore per colpire il meteorite grande
+    //se il meteorite è grande, e proviene da nord è necessario un cannone che punti a nord e si trovi nella stessa colonna
+    //se il meteorite è grande e proviene da est, ovest o sud, è necessario un cannone che punti a est, ovest o sud
     private Cannon useCannon(Player player, Direction direction, Position hit) {
         //Verifico che ci sia un cannone che punti nella direzione
-        switch(player.getShip().getComponentAt(hit)){
-            case SingleCannon sc:
-                if(sc.getComponentDirection() == direction && !sc.isDamaged()) {
-                    return sc;
-                }
-                return null;
-            case DoubleCannon dc:
-                if(dc.getComponentDirection() == direction&& !dc.isDamaged()) {
-                    // TODO UI scelta del giocatore su uso delle batterie
-                    // ipotizzo lo voglia fare
-                    if(player.getShip().chargeWeapon(dc)){
-                        return dc;
+        List<SingleCannon> sc = null;
+        List<DoubleCannon> dc = null;
+
+        switch (direction) {
+            case NORTH -> {
+                // Per meteore da nord, cerco cannone nella stessa colonna
+                //c = findCannonInColumn(player, direction, hit.getX());
+                sc = player.getShip().getOperationalSingleCannons().stream()
+                        .filter(cannon -> cannon.getComponentDirection() == direction && player.getShip().getPositionOf(cannon).getX() == hit.getX())
+                        .toList();
+                if(!sc.isEmpty()) {
+                    System.out.println("Using single cannon at position: " + player.getShip().getPositionOf(sc.getFirst()));
+                    return sc.getFirst(); // Prendo il primo cannone singolo che punta a nord
+                } else {
+                    //cerco un cannone doppio, e lo uso se carico
+                    dc = player.getShip().getOperationalDoubleCannons().stream()
+                            .filter(cannon -> cannon.getComponentDirection() == direction && player.getShip().getPositionOf(cannon).getX() == hit.getX())
+                            .toList();
+                    if(!dc.isEmpty()) {
+                        System.out.println("Using double cannon at position: " + player.getShip().getPositionOf(dc.getFirst()));
+
+                        // TODO UI scelta del giocatore su uso delle batterie
+                        // ipotizzo lo voglia fare
+                        if (player.getShip().chargeWeapon(dc.getFirst())) {
+                            return dc.getFirst();
+                        }
+                    }else{
+                        System.out.println("No cannon available to shoot at meteor from north.");
+                        return null; // Nessun cannone disponibile
                     }
                 }
-                return null;
-            default:
-                return null;
+            }
+            case SOUTH, EAST, WEST -> {
+                // Per meteore da est/ovest/sud, cerco cannone che punti in quella direzione
+                //c = findCannonInRow(player, direction, hit.getY());
+                sc = player.getShip().getOperationalSingleCannons().stream()
+                        .filter(cannon -> cannon.getComponentDirection() == direction)
+                        .toList();
+                if(!sc.isEmpty()) {
+                    return sc.getFirst(); // Prendo il primo cannone singolo che punta a nord
+                }else{
+                    dc = player.getShip().getOperationalDoubleCannons().stream()
+                            .filter(cannon -> cannon.getComponentDirection() == direction)
+                            .toList();
+                    if(!dc.isEmpty()) {
+                        // TODO UI scelta del giocatore su uso delle batterie
+                        // ipotizzo lo voglia fare
+                        if (player.getShip().chargeWeapon(dc.getFirst())) {
+                            return dc.getFirst();
+                        }
+                    }
+                }
+            }
+            default -> throw new IllegalArgumentException("Invalid direction for cannon use: " + direction);
         }
+        return null;
     }
 
     /**
@@ -205,7 +254,7 @@ public class MeteorSwarm extends AdventureCard {
 
         if(attack == Direction.SOUTH) {
             for(int i=player.getShip().getHeight()-1; i > 0; i--){
-                target = new Position(i,targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -213,7 +262,7 @@ public class MeteorSwarm extends AdventureCard {
             }
         }else if(attack == Direction.NORTH) {
             for(int i=0; i < player.getShip().getHeight(); i++){
-                target = new Position(i, targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -221,7 +270,7 @@ public class MeteorSwarm extends AdventureCard {
             }
         }else if(attack == Direction.WEST) {
             for(int i=0; i < player.getShip().getWidth(); i++){
-                target = new Position(targetCoord, i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -229,7 +278,7 @@ public class MeteorSwarm extends AdventureCard {
             }
         }else if(attack == Direction.EAST) {
             for(int i=player.getShip().getWidth()-1; i > 0; i--){
-                target = new Position(targetCoord,i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -240,6 +289,8 @@ public class MeteorSwarm extends AdventureCard {
         if (targetComponent == null) {
             System.out.println("The meteor targets an empty space!");
             return null;
+        }else{
+            System.out.println("The meteor hits the component (" + targetComponent.getClass().getSimpleName() + ")");
         }
 
         return target;
