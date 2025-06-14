@@ -165,6 +165,7 @@ public class CombatZone extends AdventureCard {
         // Find player with weakest cannons
         Player weakestCannons = findPlayerWithWeakestCannons(players);
         if (weakestCannons != null) {
+            //System.out.println("The player with the weakest cannons is: " + weakestCannons.getNickName());
 
             // Apply light cannon fire
             boolean lightHit = applyLightCannonFire(weakestCannons);
@@ -173,7 +174,10 @@ public class CombatZone extends AdventureCard {
 
             if (!lightHit && !heavyHit) {
                 System.out.println(weakestCannons.getNickName() + " got lucky! Both cannon shots missed.");
-
+            }else if(lightHit) {
+                System.out.println(weakestCannons.getNickName() + " was hit by light cannon fire!");
+            }else if(heavyHit) {
+                System.out.println(weakestCannons.getNickName() + " was hit by heavy cannon fire!");
             }
         }
 
@@ -311,8 +315,8 @@ public class CombatZone extends AdventureCard {
 
             // 3. Check if player can defend with shield
             ShieldGenerator defended = canDefendWithShield(player, ATTACK_DIRECTION);
-            
             if (defended==null) {
+
                 System.out.println("Light cannon fire hit component at position " + hit.toString());
                 // 4. Destroy component if no defense
                 player.getShip().destroyComponentAt(hit);
@@ -323,8 +327,6 @@ public class CombatZone extends AdventureCard {
             defended.discharge();
 
         }
-        System.out.println(player.getNickName() + "NOT defends with a shield!");
-
         return false;
     }
     
@@ -370,7 +372,7 @@ public class CombatZone extends AdventureCard {
 
         if(attack == Direction.SOUTH) {
             for(int i=player.getShip().getHeight()-1; i > 0; i--){
-                target = new Position(i,targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -378,7 +380,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.NORTH) {
             for(int i=0; i < player.getShip().getHeight(); i++){
-                target = new Position(i, targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -386,7 +388,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.WEST) {
             for(int i=0; i < player.getShip().getWidth(); i++){
-                target = new Position(targetCoord, i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -394,7 +396,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.EAST) {
             for(int i=player.getShip().getWidth()-1; i > 0; i--){
-                target = new Position(targetCoord,i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -403,7 +405,7 @@ public class CombatZone extends AdventureCard {
         }
 
         if (targetComponent == null) {
-            System.out.println("The cannon fire targets an empty space!");
+            System.out.println("The cannon fire targets an empty space! ");
             return null;
         }
 
