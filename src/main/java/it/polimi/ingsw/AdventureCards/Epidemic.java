@@ -53,10 +53,10 @@ public class Epidemic extends AdventureCard {
         
         // Check which cabins are connected to other cabins
         List<Cabin> connectedCabins = findConnectedCabins(cabins, player.getShip());
-        
+
         // Remove 1 crew member from each connected cabin
         for (Cabin cabin : connectedCabins) {
-            if (cabin.removeCrew(cabin.getCrew().getFirst())) {
+            if (player.getShip().removeCrewFromCabin(cabin.getCrew().getFirst(), cabin)) {
                 crewLost++;
             }
         }
@@ -89,11 +89,14 @@ public class Epidemic extends AdventureCard {
                 
                 switch (adjacentComponent) {
                     case Cabin c:
-                        if (!c.isOccuped()) {
+                        if (c.isOccuped()) {
                             // This cabin is connected to another occupied cabin
                             connectedCabins.add(cabin);
                             break;
                         }
+                        break;
+                    case null:
+                        // No component at this position, continue checking other directions
                         break;
                     default:
                         break;

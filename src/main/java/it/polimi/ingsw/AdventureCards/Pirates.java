@@ -77,6 +77,7 @@ public class Pirates extends AdventureCard {
                 playersDedeated.add(p);
             }else{
                 offerReward(p, gameModel, true);
+                break; // Only the first player to defeat pirates gets the reward if he chooses to accept it
             }
         }
         fireCannons(playersDedeated);
@@ -105,9 +106,11 @@ public class Pirates extends AdventureCard {
         
         if (playerWins) {
             // Player wins, offer reward
+            System.out.println("Player " + player.getNickName() + " defeated the pirates!");
             isDefeated = true;
             return true;
         } else {
+            System.out.println("Player " + player.getNickName() + " was defeated by the pirates!");
             // Player is defeated, pirates will fire at their ship
             return false;
         }

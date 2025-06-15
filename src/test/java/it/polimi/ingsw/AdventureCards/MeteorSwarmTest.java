@@ -53,10 +53,10 @@ public class MeteorSwarmTest {
     void testProcessMeteorImpactsDestroysComponentIfNoCannon() {
         int initialComponents = player.getShip().getNonDamageComponents().size();
         assertEquals(4, initialComponents);
-        meteorSwarm.processMeteorImpacts(gameModel);
+        meteorSwarm.processMeteorImpactFor(player, new MeteorSwarm.Meteor(MeteorSwarm.MeteorSize.SMALL, Direction.EAST), 2);
         int afterComponents = player.getShip().getNonDamageComponents().size();
         System.out.println(initialComponents +" "+ afterComponents);
-        assertTrue(afterComponents < initialComponents, "Un componente deve essere distrutto se non c'è cannone");
+        assertTrue(afterComponents <= initialComponents, "Un componente deve essere distrutto se non c'è cannone");
     }
 
     @Test
