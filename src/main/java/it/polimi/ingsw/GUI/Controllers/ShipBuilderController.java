@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ShipBuilderController implements GameStateUpdateListener {
+public class ShipBuilderController extends GuiContoller implements GameStateUpdateListener {
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -53,7 +53,6 @@ public class ShipBuilderController implements GameStateUpdateListener {
     private ImageView selectedImageView = null;
     private Rectangle selectedHighlight = null; // For visual feedback
 
-    private AppContext context;
     private Component component;
     private Position selectedPosition;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
@@ -231,21 +230,6 @@ public class ShipBuilderController implements GameStateUpdateListener {
             event.setDropCompleted(success);
             event.consume();
         });
-    }
-
-    private void showErrorDialog(String title, String message) {
-        try {
-            final Stage dialog = new Stage();
-            VBox dialogVbox = new VBox(20);
-            dialogVbox.getChildren().add(new Text(title));
-            dialogVbox.getChildren().add(new Text(message));
-            Scene dialogScene = new Scene(dialogVbox, 300, 150);
-            dialog.setScene(dialogScene);
-            dialog.setTitle(title);
-            dialog.show();
-        } catch (Exception e) {
-            System.err.println("Failed to show error dialog: " + e.getMessage());
-        }
     }
 
     private void selectImageView(ImageView imageView) {

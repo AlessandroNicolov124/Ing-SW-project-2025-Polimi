@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.GUI.GUIApp;
 import it.polimi.ingsw.GUI.MatchRowDisplay;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -23,7 +24,7 @@ public class LobbyController extends GuiContoller {
     private ListView<String> playersListView;
 
     @FXML
-    private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton;
+    private Button createMatchButton, joinMatchButton, startMatchButton, refreshButton, readyButton;
 
     // Suppose you have a Match class with a nice toString()
     private static ObservableList<String> matchList = FXCollections.observableArrayList();
@@ -38,6 +39,7 @@ public class LobbyController extends GuiContoller {
         createMatchButton.setOnAction(e -> showCreateMatchDialog());
         joinMatchButton.setOnAction(e -> joinSelectedMatch());
         startMatchButton.setOnAction(e -> startSelectedMatch());
+        readyButton.setOnAction(e -> setPlayerReady());
     }
 
     private void loadMatchesFromServer() {
@@ -76,11 +78,24 @@ public class LobbyController extends GuiContoller {
         }
     }
 
+    private void setPlayerReady()
+    {
+        String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
+        String matchID = selected[0];
+        try{
+            super.context.getClient().playerReady(UUID.fromString(matchID), context.getPlayerId());
+        }catch (Exception e){
+            System.err.println("Error notifying player ready: " + e.getMessage());
+        }
+    }
+
     private void startSelectedMatch() {
-        String selected = matchesListView.getSelectionModel().getSelectedItem();
+        String[] selected = matchesListView.getSelectionModel().getSelectedItem().split(":");
+        String matchID = selected[0];
+
         if (selected != null) {
             try {
-                super.context.getClient().startMatch(UUID.fromString(selected), context.getPlayerId(), context.getUsername());
+                super.context.getClient().startMatch(UUID.fromString(matchID), context.getPlayerId(), context.getUsername());
             } catch (Exception e) {
                 showErrorDialog("Impossible to start match:", e.getMessage());
             }
@@ -91,7 +106,9 @@ public class LobbyController extends GuiContoller {
         Platform.runLater(new Runnable(){
             @Override
             public void run() {
-                matchList.add(newMatch);
+                if (matchList.isEmpty()) {
+                    matchList.add(newMatch);
+                }
             }
         });
     }
@@ -125,6 +142,19 @@ public class LobbyController extends GuiContoller {
             public void run() {
                 playerList.clear();
                 playerList.addAll(playersInMatch);
+            }
+        });
+    }
+
+    public static void moveToShipBuilding() {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                try {
+                GUIApp.showShipBuilder();
+                } catch (Exception e) {
+                    showErrorDialog("Error", "Impossible to load new page, please try again");
+                }
             }
         });
     }

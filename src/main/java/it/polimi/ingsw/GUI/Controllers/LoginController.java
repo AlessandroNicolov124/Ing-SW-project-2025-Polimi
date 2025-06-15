@@ -13,7 +13,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
-public class LoginController {
+public class LoginController extends GuiContoller{
     @FXML
     private TextField usernameField;
 
@@ -26,23 +26,20 @@ public class LoginController {
     @FXML
     private TextField srvPortField;
 
-
-    private AppContext context;
-
-    private void showErrorDialog(String title, String message) {
-        try {
-            final Stage dialog = new Stage();
-            VBox dialogVbox = new VBox(20);
-            dialogVbox.getChildren().add(new Text(title));
-            dialogVbox.getChildren().add(new Text(message));
-            Scene dialogScene = new Scene(dialogVbox, 400, 200);
-            dialog.setScene(dialogScene);
-            dialog.setTitle(title);
-            dialog.show();
-        } catch (Exception e) {
-            System.err.println("Failed to show error dialog: " + e.getMessage());
-        }
-    }
+//    private void showErrorDialog(String title, String message) {
+//        try {
+//            final Stage dialog = new Stage();
+//            VBox dialogVbox = new VBox(20);
+//            dialogVbox.getChildren().add(new Text(title));
+//            dialogVbox.getChildren().add(new Text(message));
+//            Scene dialogScene = new Scene(dialogVbox, 400, 200);
+//            dialog.setScene(dialogScene);
+//            dialog.setTitle(title);
+//            dialog.show();
+//        } catch (Exception e) {
+//            System.err.println("Failed to show error dialog: " + e.getMessage());
+//        }
+//    }
 
     @FXML
     private void handleLogin(ActionEvent event) {
