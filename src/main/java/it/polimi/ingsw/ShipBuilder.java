@@ -1020,4 +1020,13 @@ public class ShipBuilder {
                 .filter(component -> !component.isDamaged())
                 .collect(Collectors.toList());
     }
+
+    public List<Cargo> getCargoList() {
+        return components.keySet().stream()
+                .flatMap(component -> switch (component) {
+                    case CargoHolds cargoHolds -> cargoHolds.getCargos().stream();
+                    default -> Stream.empty();
+                })
+                .collect(Collectors.toList());
+    }
 }
