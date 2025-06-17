@@ -124,24 +124,40 @@ public class ShipBuilder {
             return false;
         }
 
-        // Handle single component case
-        if (components.size() == 1) {
-            // Don't allow removing the only component if it's a starting cabin
-            if (component.isStartingCabin()) {
-                return false; // Cannot remove starting cabin
-            }
-            // Otherwise allow removal during ship building
-            components.remove(component);
-            return true;
-        }
+       switch(component) {
+           case Cabin cabin -> {
+               if(cabin.isOccuped()){
+                   removeCrewFromCabin(cabin.getCrew().getFirst(), cabin);
+               }
+               // TODO verificare che il giocatore abbia ancora umani altrimenti ha perso
+           }
+           case LifeSupportSystem lifeSupport -> {
+               disconnectLifeSupportConnections(lifeSupport);
+           }
+           default -> { /* Other components can be removed */ }
+       }
+
+
+//        // Handle single component case
+        //TODO se è ultimo componente il giocatore perde
+//        if (components.size() == 1) {
+//            // Don't allow removing the only component if it's a starting cabin
+//            if (component.isStartingCabin()) {
+//                return false; // Cannot remove starting cabin
+//            }
+//            // Otherwise allow removal during ship building
+//            components.remove(component);
+//            return true;
+//        }
 
         // For multiple components: check connectivity and cabin protection
-        if (component.isStartingCabin()) {
-            return false; // Never allow removing starting cabin
-        }
+//        if (component.isStartingCabin()) {
+//            return false; // Never allow removing starting cabin
+//        }
 
-        // Check if removing this component would disconnect the ship
+        //Check if removing this component would disconnect the ship
         if (wouldDisconnectShip(component)) {
+            //TODO fare scegliere al giocatore quale parte della navicella tenere
             return false; // Don't allow removal if it would disconnect the ship
         }
 
@@ -335,6 +351,32 @@ public class ShipBuilder {
         }
     }
 
+    //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
+    public void disconnectLifeSupportConnections(LifeSupportSystem lifeSupport) {
+        Position position = getPositionOf(lifeSupport);
+        LifeSupportSystemType type = lifeSupport.getType();
+
+        // Check adjacent positions for cabins
+        for (Direction dir : Direction.values()) {
+            Position adjacentPos = dir.getAdjacentPosition(position);
+            Component adjacentComponent = getComponentAt(adjacentPos);
+
+            switch (adjacentComponent) {
+                case Cabin cabin -> {
+                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
+                        cabin.disconnectLifeSupport(type);
+                    }
+                }
+                case null -> {
+                    // Non c'è un componente adiacente, non fare nulla
+                }
+                default -> {
+                }
+            }
+        }
+    }
+
+
     public boolean addCrewToCabin(Crew crew, Cabin cabin) {
         // Verifica limiti a livello di nave per gli alieni
         if (crew.getType() != CrewType.HUMAN) {
@@ -389,29 +431,44 @@ public class ShipBuilder {
      * @return Il numero effettivo di membri dell'equipaggio rimossi
      */
     public int removeCrewMembers(int count) {
-        if (count <= 0) {
-            return 0;  // Nessun membro da rimuovere
+//        if (count <= 0) {
+//            return 0;  // Nessun membro da rimuovere
+//        }
+//
+//        int removedCount = 0;
+//        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
+//
+//        for (Cabin cabin : cabinsWithCrew) {
+//            if (removedCount >= count) {
+//                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
+//            }
+//
+//            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+//            if (crewToRemove != null) {
+//                for (Crew crew : crewToRemove) {
+//                    if (removeCrewFromCabin(crew, cabin)) {
+//                        removedCount++;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return removedCount;
+
+        int remainingToRemove = count;
+
+        // First try to remove aliens
+        int aliensToRemove = Math.min(getAlienCount(), remainingToRemove);
+        if (aliensToRemove > 0) {
+            remainingToRemove -= removeAliens(aliensToRemove);
         }
 
-        int removedCount = 0;
-        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
-
-        for (Cabin cabin : cabinsWithCrew) {
-            if (removedCount >= count) {
-                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
-            }
-
-            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
-            if (crewToRemove != null) {
-                for (Crew crew : crewToRemove) {
-                    if (removeCrewFromCabin(crew, cabin)) {
-                        removedCount++;
-                    }
-                }
-            }
+        // Then remove humans if needed
+        if (remainingToRemove > 0) {
+            remainingToRemove -= removeHumans(Math.min(getHumanCount(), remainingToRemove));
         }
 
-        return removedCount;
+        return count - remainingToRemove; // Ritorna il numero di membri rimossi
     }
 
     /**

@@ -228,19 +228,20 @@ public class CombatZone extends AdventureCard {
      * @param count Number of crew members to remove
      */
     private void removeCrewMembers(Player player, int count) {
-        ShipBuilder ship = player.getShip();
-        int remainingToRemove = count;
-
-        // First try to remove aliens
-        int aliensToRemove = Math.min(ship.getAlienCount(), remainingToRemove);
-        if (aliensToRemove > 0) {
-            remainingToRemove -= ship.removeAliens(aliensToRemove);
-        }
-
-        // Then remove humans if needed
-        if (remainingToRemove > 0) {
-            ship.removeHumans(Math.min(ship.getHumanCount(), remainingToRemove));
-        }
+        player.getShip().removeCrewMembers(Math.min(player.getShip().getTotalCrewCount(), count));
+        //        ShipBuilder ship = player.getShip();
+//        int remainingToRemove = count;
+//
+//        // First try to remove aliens
+//        int aliensToRemove = Math.min(ship.getAlienCount(), remainingToRemove);
+//        if (aliensToRemove > 0) {
+//            remainingToRemove -= ship.removeAliens(aliensToRemove);
+//        }
+//
+//        // Then remove humans if needed
+//        if (remainingToRemove > 0) {
+//            ship.removeHumans(Math.min(ship.getHumanCount(), remainingToRemove));
+//        }
     }
 
     /**

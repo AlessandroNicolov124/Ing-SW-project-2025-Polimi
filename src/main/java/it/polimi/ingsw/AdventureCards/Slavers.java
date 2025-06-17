@@ -58,14 +58,31 @@ public class Slavers extends AdventureCard {
     public void effect() {
         // This would be called when the card is drawn
     }
+
+    /**
+     * Attempt to fight slavers
+     * @param gameModel The current game state
+     */
+    public void fightSlavers(GameModel gameModel) {
+        List<Player> playersDedeated = new ArrayList<>();
+        for(Player p : gameModel.getFlightBoard().getPlayersInFlightOrder()) {
+            if (!fightSlaversFor(p)){
+                playersDedeated.add(p);
+            }else{
+                // TODO This would be implemented in the UI
+                offerReward(p, gameModel, true);
+                break; // Only the first player to defeat pirates gets the reward if he chooses to accept it
+            }
+        }
+        surrenderCrew(playersDedeated);
+    }
     
     /**
      * Attempt to fight slavers
      * @param player The player trying to fight
-     * @param gameModel The current game state
      * @return true if slavers were defeated, false if player was defeated
      */
-    public boolean fightSlavers(Player player, GameModel gameModel) {
+    public boolean fightSlaversFor(Player player) {
         if (isDefeated) {
             return true; // Smugglers already defeated
         }
@@ -80,15 +97,12 @@ public class Slavers extends AdventureCard {
         // Check if player defeats slavers
         if (playerStrength >= slaverStrength) {
             // Player wins, offer reward
-
-            // This would be implemented in the UI
-            offerReward(player, gameModel, true); // Assuming player accepts reward
-
+            System.out.println("Player " + player.getNickName() + " defeated the slavers!");
             isDefeated = true;
             return true;
         } else {
             // Player is defeated, they must surrender crew
-            surrenderCrew(player);
+            System.out.println("Player " + player.getNickName() + " was defeated by the slavers!");
             return false;
         }
     }
@@ -103,7 +117,7 @@ public class Slavers extends AdventureCard {
         if (!isDefeated) {
             return; // Slavers weren't defeated
         }
-        
+
         if (acceptReward) {
             // Give credits to player
             int currentCredits = gameModel.getCredits(player);
@@ -117,31 +131,35 @@ public class Slavers extends AdventureCard {
     
     /**
      * Force a defeated player to surrender crew
-     * @param player The player who was defeated
+     * @param defeatedPlayers List of player who was defeated
      */
-    public void surrenderCrew(Player player) {
+    public void surrenderCrew(List<Player> defeatedPlayers) {
         // This implements the mechanism for player to choose which crew to surrender
 
-        // Verify player has crew to surrender
-        int playerCrew = player.getShip().getTotalCrewCount();
-        
-        if (playerCrew <= crewLoss) {
-            player.getShip().removeCrewMembers(playerCrew);
-        }else{
-            //TODO scelta del giocatore UI
-            player.getShip().removeCrewMembers(crewLoss);
-
-//            List<Cabin> cabinWithCrew = player.getShip().getAllCabins()
-//                    .stream().filter(c -> !c.getCrew().isEmpty()).toList();
-//            int count = 0;
-//            while(count < crewLoss) {
-//
-//                for(Cabin c : cabinWithCrew) {
-//                    c.getCrew();
-//                    count++;
-//                }
-//            }
+        if (defeatedPlayers.isEmpty()) {
+            return;
         }
+
+        for (Player player : defeatedPlayers) {
+            // Verify player has crew to surrender
+            int playerCrew = player.getShip().getTotalCrewCount();
+
+            //TODO scelta del giocatore UI
+            player.getShip().removeCrewMembers(Math.min(playerCrew, crewLoss));
+
+            //            List<Cabin> cabinWithCrew = player.getShip().getAllCabins()
+            //                    .stream().filter(c -> !c.getCrew().isEmpty()).toList();
+            //            int count = 0;
+            //            while(count < crewLoss) {
+            //
+            //                for(Cabin c : cabinWithCrew) {
+            //                    c.getCrew();
+            //                    count++;
+            //                }
+            //            }
+        }
+
+
     }
 
     /**
@@ -159,5 +177,9 @@ public class Slavers extends AdventureCard {
                 player.getShip().chargeWeapon(cannon);
             }
         }
+    }
+
+    public boolean isDefeated() {
+        return isDefeated;
     }
 }

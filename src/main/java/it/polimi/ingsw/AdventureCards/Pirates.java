@@ -72,7 +72,7 @@ public class Pirates extends AdventureCard {
      */
     public void fightPirates(GameModel gameModel) {
         List<Player> playersDedeated = new ArrayList<>();
-        for(Player p : gameModel.getPlayers()) {
+        for(Player p : gameModel.getFlightBoard().getPlayersInFlightOrder()) {
             if (!fightPiratesFor(p)){
                 playersDedeated.add(p);
             }else{

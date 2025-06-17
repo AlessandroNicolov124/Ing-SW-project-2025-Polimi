@@ -103,13 +103,13 @@ public class PiratesTest {
         Player winner2 = new Player(1, "winner2", true, ship1);
         gameModel.addPlayer(winner2);
         gameModel.setCredits(winner2, 0);
-        gameModel.getFlightBoard().setInitialPosition(winner2, 3);
+        gameModel.getFlightBoard().setInitialPosition(winner2, 4);
 
         pirates.fightPirates(gameModel);
         assertEquals(0, gameModel.getCredits(loser), "Il loser non deve ricevere crediti");
-        assertEquals(4, gameModel.getCredits(winner), "Il vincitore deve ricevere 4 crediti");
-        assertEquals(0, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 2");
-        assertEquals(3, gameModel.getFlightBoard().getPosition(winner2), "Il winner2 deve rimanere nella sua posizione");
-        assertEquals(0, gameModel.getCredits(winner2), "Il winner2 non può ricevere crediti");
+        assertEquals(4, gameModel.getCredits(winner2), "Il vincitore deve ricevere 4 crediti");
+        assertEquals(3, gameModel.getFlightBoard().getPosition(winner2), "Il vincitore deve essere spostato indietro di 2");
+        assertEquals(1, gameModel.getFlightBoard().getPosition(winner), "Il winner deve rimanere nella sua posizione");
+        assertEquals(0, gameModel.getCredits(winner), "Il winner non può ricevere crediti");
     }
 }
