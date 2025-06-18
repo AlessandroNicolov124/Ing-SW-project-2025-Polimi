@@ -165,7 +165,7 @@ public class CombatZone extends AdventureCard {
         // Find player with weakest cannons
         Player weakestCannons = findPlayerWithWeakestCannons(players);
         if (weakestCannons != null) {
-            //System.out.println("The player with the weakest cannons is: " + weakestCannons.getNickName());
+            System.out.println("The player with the weakest cannons is: " + weakestCannons.getNickName());
 
             // Apply light cannon fire
             boolean lightHit = applyLightCannonFire(weakestCannons);
@@ -287,7 +287,7 @@ public class CombatZone extends AdventureCard {
      * @param players List of players
      * @return The player with weakest cannons
      */
-    private Player findPlayerWithWeakestCannons(List<Player> players) {
+    protected Player findPlayerWithWeakestCannons(List<Player> players) {
         if (players.isEmpty()) {
             return null;
         }
@@ -304,7 +304,7 @@ public class CombatZone extends AdventureCard {
      * @param player The player being attacked
      * @return true if component was destroyed, false otherwise
      */
-    private boolean applyLightCannonFire(Player player) {
+    protected boolean applyLightCannonFire(Player player) {
         // 1. Roll dice to determine row/column of hit
         int diceRoll = rollDice();
 
@@ -312,13 +312,13 @@ public class CombatZone extends AdventureCard {
         Position hit = checkCannonHit(player, ATTACK_DIRECTION, diceRoll);
         
         if (hit!=null) {
-            System.out.println("Light cannon fire target component at position " + hit.toString());
+            //System.out.println("Light cannon fire target component at position " + hit.toString());
 
             // 3. Check if player can defend with shield
             ShieldGenerator defended = canDefendWithShield(player, ATTACK_DIRECTION);
             if (defended==null) {
 
-                System.out.println("Light cannon fire hit component at position " + hit.toString());
+                //System.out.println("Light cannon fire hit component at position " + hit.toString());
                 // 4. Destroy component if no defense
                 player.getShip().destroyComponentAt(hit);
                 return true;
@@ -366,7 +366,7 @@ public class CombatZone extends AdventureCard {
      * @param targetCoord The position (row/column) of the potential impact
      * @return Position hit if the fire hits the ship
      */
-    private Position checkCannonHit(Player player, Direction attack, int targetCoord) {
+    protected Position checkCannonHit(Player player, Direction attack, int targetCoord) {
         // 4. Check if there's a component at those coordinates
         Component targetComponent = null;
         Position target = null;
@@ -419,7 +419,7 @@ public class CombatZone extends AdventureCard {
      * @param direction The direction of the attack
      * @return ShieldGenerator activated if defense is successful
      */
-    private ShieldGenerator canDefendWithShield(Player player, Direction direction) {
+    protected ShieldGenerator canDefendWithShield(Player player, Direction direction) {
         // Check if player has a shield that can protect against this direction and position
         List<ShieldGenerator> shields = player.getShip().getShieldsProtecting(direction);
 

@@ -49,6 +49,31 @@ public class ShipBuilder {
 
         // Se non è il primo componente, deve essere collegato a un componente esistente
         if (!components.isEmpty()) {
+
+            Position adjPos = null;
+            switch(component){
+                case Engine e:
+                    if(e.getComponentDirection() != Direction.NORTH){
+                        System.out.println("  Engine must be placed facing North");
+                        return false;
+                    }
+                    adjPos = position.getAdjacentPosition(Direction.SOUTH);
+                    if(!isPositionValid(adjPos) || isPositionOccupied(adjPos)) {
+                        System.out.println("  No component under Engine");
+                        return false;
+                    }
+                    break;
+                case Cannon c:
+                    adjPos = position.getAdjacentPosition(c.getComponentDirection());
+                    if(!isPositionValid(adjPos) || isPositionOccupied(adjPos)) {
+                        System.out.println("  No component in front of Cannon");
+                        return false;
+                    }
+                    break;
+                default:
+                    break;
+            }
+
             boolean isConnected = true;
 
             for (Direction direction : Direction.values()) {

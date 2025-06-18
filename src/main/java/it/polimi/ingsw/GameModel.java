@@ -153,7 +153,6 @@ public class GameModel {
             flightBoard.addPlayer(player);
         }
 
-
         //TODO This thing is ambiguous ... try to generalize and perhaps avoid magic numbers
         if (turnNumber == 1) {
             loadAdventureCardTurn1();

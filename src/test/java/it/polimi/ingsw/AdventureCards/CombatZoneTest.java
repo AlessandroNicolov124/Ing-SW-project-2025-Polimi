@@ -18,6 +18,7 @@ public class CombatZoneTest {
     void setUp() {
         combatZone = new CombatZone(1, 1, 3, 2);
         gameModel = new GameModel();
+
         // Player 1: meno crew, meno engine, meno cannoni
         ShipBuilder ship1 = new ShipBuilder(7, 5);
         ship1.placeComponent(new Cabin(true), new Position(3, 2));
@@ -33,6 +34,7 @@ public class CombatZoneTest {
         ship1.addCrewOfType(CrewType.HUMAN, 2);
         player1 = new Player(1, "P1", true, ship1);
 
+        System.out.println("Player 1 Ship Components: " + player1.getShip().getComponents().size());
         // Player 2: più crew, più engine, più cannoni
         ShipBuilder ship2 = new ShipBuilder(7, 5);
         ship2.placeComponent(new Cabin(true), new Position(3, 2));
@@ -62,6 +64,7 @@ public class CombatZoneTest {
 
         gameModel.addPlayer(player1);
         gameModel.addPlayer(player2);
+
         gameModel.getFlightBoard().setInitialPosition(player1, 4);
         gameModel.getFlightBoard().setInitialPosition(player2, 3);
     }
@@ -102,5 +105,42 @@ public class CombatZoneTest {
         assertEquals(posBefore, posAfter, "Il giocatore più forte non perde giorni di volo");
         assertEquals(crewBefore, crewAfter, "Il giocatore più forte non perde membri equipaggio");
         assertEquals(compBefore, compAfter, "Il giocatore più forte non subisce danni da cannonate");
+    }
+
+    @Test
+    void testLightCannonHitWithShield() {
+        // Setup: nave con shield rivolto a EST e batteria carica
+        ShipBuilder ship = new ShipBuilder(7, 5);
+        Cabin cabin = new Cabin(true);
+        ship.placeComponent(cabin, new Position(3, 2));
+        ShieldGenerator shield = new ShieldGenerator();
+        shield.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        shield.add(Direction.NORTH);
+        shield.add(Direction.EAST);
+        ship.placeComponent(shield, new Position(3, 3)); // a EST della cabina
+        BatteryCompartment battery = new BatteryCompartment(2, BatteryType.DOUBLE, 1);
+        battery.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        ship.placeComponent(battery, new Position(3, 4));
+        Player p = new Player(3, "Shielded", true, ship);
+        gameModel.addPlayer(p);
+        gameModel.getFlightBoard().setInitialPosition(p, 2);
+
+        int batteryBefore = ship.calculateTotalBatteryCharge();
+        int compBefore = ship.getNonDamageComponents().size();
+
+        assertEquals(p, combatZone.findPlayerWithWeakestCannons(gameModel.getPlayers()), "Il giocatore con il cannone più debole deve essere trovato correttamente");
+        assertEquals(ship.getPositionOf(battery), combatZone.checkCannonHit(p, Direction.EAST, 4), "Il cannone deve colpire la posizione corretta");
+        assertEquals(shield, combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore deve essere difeso dallo scudo");
+        shield.discharge();
+        assertEquals(compBefore, ship.getNonDamageComponents().size(), "Il componente non deve essere distrutto se protetto da shield");
+        // La batteria deve essere scaricata di 1, e pure lo shield
+        assertEquals(batteryBefore - 1, ship.calculateTotalBatteryCharge(), "La batteria deve essere scaricata di 1");
+        assertFalse(shield.isCharged(), "Lo scudo deve essere scaricato");
+
+        //in caso di ulteriore attacco, lo scudo non deve difendere perché è scarico e non ci sono batterie cariche
+        assertNull(combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore non deve essere difeso dallo scudo");
+        p.getShip().destroyComponentAt(new Position(3,4));
+        assertEquals(compBefore-1, ship.getNonDamageComponents().size(), "Il componente deve essere distrutto se non protetto da shield");
+
     }
 }

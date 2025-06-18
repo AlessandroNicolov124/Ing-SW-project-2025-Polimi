@@ -180,7 +180,7 @@ class ShipBuilderTest {
         LifeSupportSystem brownSS = new LifeSupportSystem(LifeSupportSystemType.BROWN);
         brownSS.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(),
                 new UniversalConnectorType(), new UniversalConnectorType());
-        shipBuilder.placeComponent(brownSS, shipBuilder.getPositionOf(brownCabin).getAdjacentPosition(Direction.SOUTH));
+        shipBuilder.placeComponent(brownSS, shipBuilder.getPositionOf(brownCabin).getAdjacentPosition(Direction.EAST));
         shipBuilder.updateLifeSupportConnections(brownSS);
 
         // Cabina con supporto viola
@@ -190,22 +190,17 @@ class ShipBuilderTest {
         LifeSupportSystem purpleSS = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         purpleSS.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(),
                 new UniversalConnectorType(), new UniversalConnectorType());
-        shipBuilder.placeComponent(purpleSS, shipBuilder.getPositionOf(purpleCabin).getAdjacentPosition(Direction.SOUTH));
+        shipBuilder.placeComponent(purpleSS, shipBuilder.getPositionOf(purpleCabin).getAdjacentPosition(Direction.WEST));
         shipBuilder.updateLifeSupportConnections(purpleSS);
 
         // Cabina con doppio supporto (marrone e viola)
         Cabin doubleCabin = new Cabin(false);
         doubleCabin.initializeConnectors();
-        shipBuilder.placeComponent(doubleCabin, shipBuilder.getStartingPosition().getAdjacentPosition(Direction.NORTH));
-        LifeSupportSystem brownSS2 = new LifeSupportSystem(LifeSupportSystemType.BROWN);
-        brownSS2.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(),
-                new UniversalConnectorType(), new UniversalConnectorType());
-        shipBuilder.placeComponent(brownSS2, shipBuilder.getPositionOf(doubleCabin).getAdjacentPosition(Direction.EAST));
-        shipBuilder.updateLifeSupportConnections(brownSS2);
+        shipBuilder.placeComponent(doubleCabin, shipBuilder.getPositionOf(brownSS).getAdjacentPosition(Direction.SOUTH));
         LifeSupportSystem purpleSS2 = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         purpleSS2.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(),
                 new UniversalConnectorType(), new UniversalConnectorType());
-        shipBuilder.placeComponent(purpleSS2, shipBuilder.getPositionOf(doubleCabin).getAdjacentPosition(Direction.WEST));
+        shipBuilder.placeComponent(purpleSS2, shipBuilder.getPositionOf(doubleCabin).getAdjacentPosition(Direction.SOUTH));
         shipBuilder.updateLifeSupportConnections(purpleSS2);
 
         shipBuilder.distributeCrewAutomatically();
@@ -273,8 +268,9 @@ class ShipBuilderTest {
         shipBuilder.placeComponent(cabin1, shipBuilder.getStartingPosition());
         shipBuilder.placeComponent(cabin2, shipBuilder.getStartingPosition().getAdjacentPosition(Direction.EAST));
 
-//        shipBuilder.addCrewOfType(CrewType.HUMAN, 3);
-//        // Verifica che siano stati aggiunti 3 umani in totale
+        shipBuilder.addCrewOfType(CrewType.HUMAN, 3);
+
+        // Verifica che siano stati aggiunti 3 umani in totale
         int totalHumans = cabin1.getCrew().size() + cabin2.getCrew().size();
         assertEquals(3, totalHumans);
         assertEquals(3, shipBuilder.getHumanCount());
