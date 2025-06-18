@@ -943,10 +943,10 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
-    public List<Cargo> getAllCargo() {
+    public List<Cargo> getCargoList() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
-                    case CargoHolds de -> de.getCargos().stream();
+                    case CargoHolds cargoHolds -> cargoHolds.getCargos().stream();
                     default -> Stream.empty();
                 })
                 .collect(Collectors.toList());
@@ -1075,15 +1075,6 @@ public class ShipBuilder {
     public List<Component> getNonDamageComponents(){
         return components.keySet().stream()
                 .filter(component -> !component.isDamaged())
-                .collect(Collectors.toList());
-    }
-
-    public List<Cargo> getCargoList() {
-        return components.keySet().stream()
-                .flatMap(component -> switch (component) {
-                    case CargoHolds cargoHolds -> cargoHolds.getCargos().stream();
-                    default -> Stream.empty();
-                })
                 .collect(Collectors.toList());
     }
 }

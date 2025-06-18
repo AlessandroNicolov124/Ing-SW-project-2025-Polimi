@@ -95,10 +95,8 @@ public class Pirates extends AdventureCard {
         }
 
         activateDoubleCannons(player);
-
         // Calculate player's cannon strength
         double playerStrength = player.getShip().calculateFirePower();
-
         player.getShip().dischargeAllActiveDoubleCannon();
 
         // Check if player defeats pirates

@@ -61,7 +61,7 @@ public class Stardust extends AdventureCard {
      * @param gameModel The current game state
      * @return Ordered list of players starting with the last player
      */
-    private List<Player> getPlayersInReverseOrder(GameModel gameModel) {
+    protected List<Player> getPlayersInReverseOrder(GameModel gameModel) {
         List<Player> players = new ArrayList<>(gameModel.getFlightBoard().getPlayersInFlightOrder());
         Collections.reverse(players);
         return players;
@@ -84,37 +84,50 @@ public class Stardust extends AdventureCard {
             Component component = entry.getKey();
             Position componentPosition = entry.getValue();
 
+            //System.out.println("    Checking component at " + componentPosition + " of type " + component.getClass().getSimpleName());
             // Per ogni connettore nel componente
             for (Connector connector : component.getConnections()) {
-                Direction connectorDirection = connector.getDirection();
 
-                // Calcola la posizione verso cui punta il connettore
-                Position adjacentPosition = connectorDirection.getAdjacentPosition(componentPosition);
+                switch(connector.getConnectorType()) {
+                    case NullConnectorType NULL:
+                        //System.out.println("    Connector is NullConnectorType, skipping...");
+                        // I connettori nulli non sono considerati esposti
+                        continue;
+                    default:
+                        //System.out.println("    Connector is of type " + connector.getConnectorType().getClass().getSimpleName());
+                        // Altri tipi di connettori sono considerati esposti se non hanno un componente adiacente compatibile
 
-                // Verifica se c'è un componente adiacente in quella posizione
-                Component adjacentComponent = ship.getComponentAt(adjacentPosition);
+                        Direction connectorDirection = connector.getDirection();
 
-                if (adjacentComponent == null) {
-                    // Non c'è un componente adiacente, quindi il connettore è esposto
-                    exposedConnectors++;
-                } else {
-                    // C'è un componente adiacente
+                        // Calcola la posizione verso cui punta il connettore
+                        Position adjacentPosition = connectorDirection.getAdjacentPosition(componentPosition);
+                        //System.out.println("Checking connector in direction " + connectorDirection + " (adjacent position: " + adjacentPosition + ")");
 
-                    // essendo la navicella convalidata, se c'è un componente allora è sicuramente connesso
+                        // Verifica se c'è un componente adiacente in quella posizione
+                        Component adjacentComponent = ship.getComponentAt(adjacentPosition);
 
-                    // TODO? verifichiamo se ha un connettore compatibile
-                    boolean isConnected = false;
-                    Direction oppositeDirection = connectorDirection.getOpposite();
+                        if (adjacentComponent == null) {
+                            // Non c'è un componente adiacente, quindi il connettore è esposto
+                            exposedConnectors++;
+                        } else {
+                            // C'è un componente adiacente, verifica se ha un connettore compatibile
+                            boolean isConnected = false;
+                            Direction oppositeDirection = connectorDirection.getOpposite();
 
-                    if(adjacentComponent.getConnectorByDirection(oppositeDirection).isCompatibleWith(connector)){
-                        isConnected = true;
-                    }
+                            if(adjacentComponent.getConnectorByDirection(oppositeDirection).isCompatibleWith(connector)){
+                                isConnected = true;
+                            }
 
-                    // Se non c'è un connettore compatibile, il connettore è esposto
-                    if (!isConnected) {
-                        exposedConnectors++;
-                    }
+                            // Se non c'è un connettore compatibile, il connettore è esposto
+                            if (!isConnected) {
+                                exposedConnectors++;
+                            }
+                        }
+                        break;
+
                 }
+
+
             }
         }
 
