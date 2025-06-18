@@ -27,8 +27,22 @@ public class ShipBuilder {
 
     //posizione allinterno della plancia
     public boolean isPositionValid(Position position) {
-        return position.getX() >= 0 && position.getX() < width &&
-                position.getY() >= 0 && position.getY() < height;
+
+        boolean[][] VALID_SQUARES = {
+                {false, false, true,  false, true,  false, false},
+                {false, true,  true,  true,  true,  true,  false},
+                {true,  true,  true,  true,  true,  true,  true },
+                {true,  true,  true,  true,  true,  true,  true },
+                {true, true,  true,  false, true,  true,  true },
+        };
+
+        if(position.getX() >= 0 && position.getX() < width &&
+                position.getY() >= 0 && position.getY() < height){
+            return VALID_SQUARES[position.getY()][position.getX()];
+        }else {
+            return false; // fuori dai limiti della plancia
+        }
+
     }
 
     public boolean isPositionOccupied(Position position) {

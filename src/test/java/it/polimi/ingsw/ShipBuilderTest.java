@@ -286,4 +286,21 @@ class ShipBuilderTest {
         int totalAlien = cabin1.getCrew().size() + cabin2.getCrew().size();
         assertEquals(1, totalAlien);
     }
+
+    @Test
+    void testIsPositionValid() {
+        // Posizione centrale valida
+        assertTrue(shipBuilder.isPositionValid(new Position(3, 2)));
+        // Posizione bordo valida
+        assertTrue(shipBuilder.isPositionValid(new Position(0, 2)));
+        // Posizione angolo non valida
+        assertFalse(shipBuilder.isPositionValid(new Position(0, 0)));
+        // Posizione fuori dai limiti
+        assertFalse(shipBuilder.isPositionValid(new Position(-1, 2)));
+        assertFalse(shipBuilder.isPositionValid(new Position(3, 5)));
+        // Posizione valida secondo la matrice VALID_SQUARES
+        assertTrue(shipBuilder.isPositionValid(new Position(4, 0)));
+        // Posizione non valida secondo la matrice VALID_SQUARES
+        assertFalse(shipBuilder.isPositionValid(new Position(0, 1)));
+    }
 }
