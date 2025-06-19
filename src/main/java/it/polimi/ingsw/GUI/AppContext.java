@@ -350,6 +350,12 @@ public class AppContext implements GameListener {
 
     @Override
     public void matchStarted(UUID matchId, String username) {
+        Platform.runLater(new Runnable(){
+            @Override
+            public void run() {
+                showMessage(Alert.AlertType.CONFIRMATION, "Match has started!", "You will be redirected to ship building page as soon as you press on ready button");
+            }
+        });
 
     }
 
@@ -360,7 +366,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void playersInMatch(UUID matchId, List<String> players, int hostId) {
-            LobbyController.playersInCurrentMatch(players);
+        LobbyController.playersInCurrentMatch(players);
     }
 
     @Override
@@ -370,7 +376,7 @@ public class AppContext implements GameListener {
 
     @Override
     public void shipBuildingStart(UUID matchId, int readyPlayers) {
-
+        LobbyController.moveToShipBuilding();
     }
 
     @Override

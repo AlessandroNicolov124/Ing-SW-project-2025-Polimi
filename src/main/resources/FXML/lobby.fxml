@@ -9,13 +9,13 @@
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="it.polimi.ingsw.GUI.Controllers.LobbyController">
     <top>
         <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
-            <Label fx:id="welcomeLabel" text="Welcome, PlayerName!" />
         </HBox>
     </top>
     <center>
         <VBox spacing="8" alignment="TOP_CENTER" style="-fx-padding: 20;">
             <Label text="Available Matches:" style="-fx-font-size: 16;" />
             <ListView fx:id="matchesListView" prefHeight="300" />
+            <Label text="Players in match:" style="-fx-font-size: 16;" />
             <ListView fx:id="playersListView" prefHeight="180" />
         </VBox>
     </center>
@@ -26,6 +26,7 @@
             <Button fx:id="joinMatchButton" text="Join Selected Match" />
             <Button fx:id="startMatchButton" text="Start Match" />
             <Button fx:id="refreshButton" text="LoadMatches" />
+            <Button fx:id="readyButton" text="set Ready" />
         </HBox>
     </bottom>
 </BorderPane>

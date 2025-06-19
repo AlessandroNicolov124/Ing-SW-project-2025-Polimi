@@ -62,16 +62,6 @@ public class GUIApp extends Application {
         primaryStage.show();
     }
 
-    public static void showMatchPage() throws Exception {
-        //FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/ShipBuilderView.fxml"));
-    }
-
-    public static void showDashboardPage() throws Exception {
-        Parent root = FXMLLoader.load(GUIApp.class.getResource("Resources/ConnectionView.fxml"));
-        primaryStage.setScene(new Scene(root));
-        primaryStage.setTitle("Connection Page");
-    }
-
     public static void main(String[] args) {
         launch(args);
     }
