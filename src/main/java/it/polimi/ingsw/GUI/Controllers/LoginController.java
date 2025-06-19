@@ -2,6 +2,7 @@ package it.polimi.ingsw.GUI.Controllers;
 
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GUIApp;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 import javafx.event.ActionEvent;
@@ -26,21 +27,6 @@ public class LoginController extends GuiContoller{
     @FXML
     private TextField srvPortField;
 
-//    private void showErrorDialog(String title, String message) {
-//        try {
-//            final Stage dialog = new Stage();
-//            VBox dialogVbox = new VBox(20);
-//            dialogVbox.getChildren().add(new Text(title));
-//            dialogVbox.getChildren().add(new Text(message));
-//            Scene dialogScene = new Scene(dialogVbox, 400, 200);
-//            dialog.setScene(dialogScene);
-//            dialog.setTitle(title);
-//            dialog.show();
-//        } catch (Exception e) {
-//            System.err.println("Failed to show error dialog: " + e.getMessage());
-//        }
-//    }
-
     @FXML
     private void handleLogin(ActionEvent event) {
         // Dummy authentication: accept any non-empty username/password
@@ -50,6 +36,8 @@ public class LoginController extends GuiContoller{
                 String serverAddress = ipAddrField.getText();
                 int serverPort = Integer.parseInt(srvPortField.getText());
                 String connectionType = connTypeField.getText().toLowerCase();
+
+
 
                 if (!connectionType.equals("socket") && !connectionType.equals("rmi")) {
                     showErrorDialog("Invalid Connection Type", 
@@ -82,6 +70,7 @@ public class LoginController extends GuiContoller{
                 }
 
                 System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());
+
 
                 //GUIApp.showShipBuilder();
                 GUIApp.showLobbyPage();

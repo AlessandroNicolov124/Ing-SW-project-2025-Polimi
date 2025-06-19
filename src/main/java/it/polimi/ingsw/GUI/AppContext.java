@@ -166,7 +166,15 @@ public class AppContext implements GameListener {
 
     @Override
     public void playerCreated(int playerId, String playerName) {
+        Player p = new Player(playerId, playerName, true);
+        setLocalPlayerReference(p);
 
+        try {
+            client.setLocalPlayer(p);
+        } catch (Exception e) {
+            System.err.println("Server unable to set local player " + e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
