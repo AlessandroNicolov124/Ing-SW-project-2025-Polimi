@@ -2,8 +2,6 @@ package it.polimi.ingsw.network.socket.client;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;

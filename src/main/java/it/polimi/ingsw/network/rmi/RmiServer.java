@@ -105,7 +105,7 @@ public class RmiServer extends UnicastRemoteObject
 
         if (!lobbyManager.registerUsername(playerId, username)) {
             try {
-                client.showUpdate(new UsernameRejectedResponse("Username already taken: " + username));
+                client.showUpdate(new UsernameRejectedResponse("Username already taken: " + username + ". Please choose another one."));
             } catch (RemoteException e) {
                 System.err.println("Failed to send rejection message: " + e.getMessage());
             }

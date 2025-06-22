@@ -142,6 +142,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     private void handleWaitForPlayerCreationState() {
+        if (playerCreationFuture == null) {
+            console.printError("Internal error: player creation future is null");
+            state = TuiState.ASK_USERNAME;
+            return;
+        }
+        
         try {
             Player p = playerCreationFuture.get(15, TimeUnit.SECONDS);
 
@@ -159,8 +165,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             state = TuiState.ASK_USERNAME;
 
         } catch (ExecutionException e) {
-            console.printError("Errore nella creazione del giocatore: " + e.getCause());
+            console.printError("Errore nella creazione del giocatore: " + e.getCause().getMessage());
             state = TuiState.ASK_USERNAME;
+        } finally {
+            playerCreationFuture = null;
         }
     }
 
@@ -213,7 +221,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
         console.printMessage("Match started by: " + username + "! Waiting for other players to start!");
 
-        state = TuiState.WAIT_FOR_CALLBACK_PLAYER;
+        state = TuiState.WAITING_FOR_PLAYERS;
 
     }
 
@@ -570,7 +578,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void usernameRejected(String errorMessage) {
         console.printError(errorMessage);
-        state = TuiState.ASK_USERNAME;
+
+        if (playerCreationFuture != null && !playerCreationFuture.isDone()) {
+            playerCreationFuture.completeExceptionally(new RuntimeException("Username rejected: " + errorMessage));
+        }
+
     }
 
     @Override

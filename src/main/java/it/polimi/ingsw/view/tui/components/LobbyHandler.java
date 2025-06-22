@@ -135,7 +135,7 @@ public class LobbyHandler {
     }
 
     private void listAvailableMatches() throws Exception {
-        console.printMessage("Requesting available matches...");
+        //console.printMessage("Requesting available matches...");
         simpleClient.getAvailableMatches();
     }
 
@@ -151,8 +151,18 @@ public class LobbyHandler {
 
     private void joinMatch() throws Exception {
         if (availableMatches == null || availableMatches.isEmpty()) {
-            console.printMessage("No available matches");
-            return;
+            simpleClient.getAvailableMatches();
+            
+            // console.printMessage("Waiting for server response...");
+            // try {
+            //     Thread.sleep(1000);
+            // } catch (InterruptedException e) {
+            //     Thread.currentThread().interrupt();
+            // }
+            
+            if (availableMatches == null || availableMatches.isEmpty()) {
+                return;
+            }
         }
 
         console.printMessage("Available matches:");
