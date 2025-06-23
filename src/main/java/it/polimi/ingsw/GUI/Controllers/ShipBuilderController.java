@@ -70,10 +70,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     };
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
-            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_1.jpg"),
-//            Map.entry("cabin_starting_2", "/Images/tiles/cabin_starting_2.jpg"),
-//            Map.entry("cabin_starting_3", "/Images/tiles/cabin_starting_3.jpg"),
-//            Map.entry("cabin_starting_4", "/Images/tiles/cabin_starting_4.jpg"),
+            Map.entry("cabin_starting", "/Images/tiles/Cabin_Starting_1.jpg"),
+//            Map.entry("cabin_starting_2", "/Images/tiles/Cabin_Starting_2.jpg"),
+//            Map.entry("cabin_starting_3", "/Images/tiles/Cabin_Starting_3.jpg"),
+//            Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"),
 
             Map.entry("lifesupportsystem_brown_DSNS", "/Images/tiles/lifesupportsystem_brown_DSNS.jpg"),
             Map.entry("lifesupportsystem_brown_NDNT", "/Images/tiles/lifesupportsystem_brown_NDNT.jpg"),
@@ -396,26 +396,18 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     public void pickComponent() {
         if (context == null || context.getClient() == null) {
-            showErrorDialog("Error", "No connection available");
+            statusLabel.setText("Error: No connection available");
             return;
-        }
-
-        if (currentComponent != null) {
-            statusLabel.setText("You already have a component. Place it first!");
-            return;
-        }
+        }        
 
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
-            
-            Component picked = context.getClient().pickComponentCard(context.getPlayerId());
-            
+            context.getClient().pickComponentCard(context.getPlayerId());
             
         } catch (Exception e) {
             pickComponentButton.setDisable(false);
-            statusLabel.setText("Failed: " + e.getMessage());
-            showErrorDialog("Pick Failed", e.getMessage());
+            statusLabel.setText("Pick failed: " + e.getMessage());
         }
     }
 
@@ -472,7 +464,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             context.getClient().validateShip();
             statusLabel.setText("Validating ship...");
         } catch (Exception e) {
-            showErrorDialog("Validation Failed", e.getMessage());
+            statusLabel.setText("Validation failed: " + e.getMessage());
         }
     }
 

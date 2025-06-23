@@ -312,8 +312,12 @@ public class LobbyController extends GuiContoller implements LobbyListener {
         Platform.runLater(() -> {
             phase = Phase.NONE;
             statusLabel.setText("");
-            try { GUIApp.showShipBuilder(); }
-            catch (Exception ex) { showErrorDialog("Navigation", "Cannot open builder"); }
+            try {
+                GUIApp.showShipBuilder(); 
+            }
+            catch (Exception ex) { 
+                showErrorDialog("Navigation", "Cannot open builder"); 
+            }
         });
     }
 
