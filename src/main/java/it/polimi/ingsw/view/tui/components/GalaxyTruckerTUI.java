@@ -502,19 +502,19 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (currentPlayer != null && currentPlayer.getShip() != null) {
                 boolean placed = currentPlayer.getShip().placeComponent(component, position);
-                // Note: Success message is handled by PlaceComponentResponse
-                // Only update the ship model here, display refresh will be called separately
-                if (!placed) {
-                    console.printError("✗ Failed to place component " + component.getClass().getSimpleName() + 
-                                     " at (" + position.getX() + "," + position.getY() + ") locally");
+                if (placed) {
+                    console.printMessage("✓ Component " + component.getClass().getSimpleName() + 
+                                    " placed at (" + position.getX() + "," + position.getY() + ")");
+                    displayRefresh();
+                    
+                    // Clear current component in handler
+                    if (activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.componentPlacedSuccessfully();
+                        // Don't show menu here - it will be shown in the main loop
+                    }
+                } else {
+                    console.printError("✗ Failed to update local ship model");
                 }
-            } else {
-                console.printError("✗ Cannot place component: player or ship not available");
-            }
-            
-            // Show menu again after component placement if we're in ship building mode
-            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
-                activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
     }
@@ -526,12 +526,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 Component removed = currentPlayer.getShip().getComponentAt(position);
                 if (removed != null) {
                     currentPlayer.getShip().removeComponent(removed);
-                    console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+                    console.printMessage("✓ Component removed from (" + position.getX() + "," + position.getY() + ")");
+                    displayRefresh();
                 }
             }
             
-            // Show menu again after component removal if we're in ship building mode
-            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+            if (activeShipBuildingHandler != null) {
                 activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
@@ -669,23 +669,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             if (currentPlayer != null && currentPlayer.getId() == playerId) {
                 if (success && component != null) {
                     console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
-                    // Pass the component to the ship building handler if it's active
                     if (activeShipBuildingHandler != null) {
-                        activeShipBuildingHandler.setCurrentComponent(component);
-                        // Show menu again after component pick if we're in ship building mode
-                        if (state == TuiState.SHIP_BUILDING) {
+                        if (activeShipBuildingHandler.getCurrentComponent() == null) {
+                            activeShipBuildingHandler.setCurrentComponent(component);
                             activeShipBuildingHandler.refreshMenuDisplay();
                         }
                     }
                 } else {
-                    console.printError("✗ Failed to pick component: " + message);
-                    // Still show menu after failed component pick
-                    if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                    console.printError("✗ " + message);
+                    if (activeShipBuildingHandler != null) {
                         activeShipBuildingHandler.refreshMenuDisplay();
                     }
                 }
             }
-            // If it's not for our player, ignore the response
+            // Ignore responses for other players
         }
     }
 

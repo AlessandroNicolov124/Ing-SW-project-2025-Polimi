@@ -258,24 +258,21 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     @Override
     public void placeComponent(Component component, Position position, int playerId) throws Exception {
         if (playerId <= 0) {
-            System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new PlaceComponentResponse(
-                -1, component, position, false, "No player ID set"));
+            System.out.println("[ServerSocket] Invalid player ID: " + playerId);
+            showUpdate(new PlaceComponentResponse(playerId, component, position, false, "Invalid player ID"));
             return;
         }
 
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + playerId);
-            showUpdate(new PlaceComponentResponse(
-                playerId, component, position, false, "Match not found"));
+            showUpdate(new PlaceComponentResponse(playerId, component, position, false, "Match not found"));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
-            showUpdate(new PlaceComponentResponse(
-                playerId, component, position, false, "Match not in progress"));
+            showUpdate(new PlaceComponentResponse(playerId, component, position, false, "Match not in progress"));
             return;
         }
 
@@ -288,16 +285,11 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         }
 
         boolean success = controller.addComponentForPlayer(player, component, position);
-        String message = success ? "Component placed successfully" : "Failed to place component";
+        String message = success ? "Component placed successfully" : "Failed to place component at position";
         
-        System.out.println("[ServerSocket] Component placement for player " + playerId + ": " + success);
+        System.out.println("[ServerSocket] Component placement for player " + playerId + " at " + position + ": " + success);
         
-        // Send response back to the requesting client
         showUpdate(new PlaceComponentResponse(playerId, component, position, success, message));
-        
-        // Optionally broadcast to other players in the match
-        // lobbyManager.multicastToMatchExceptOne(match.getMatchId(), 
-        //     new PlaceComponentResponse(currentPlayerId, component, position, success, message), this);
     }
 
     @Override
@@ -309,9 +301,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     @Override
     public void removeComponent(Position position, int playerId) throws Exception {
         if (playerId <= 0) {
-            System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new RemoveComponentResponse(
-                -1, position, false, "No player ID set"));
+            System.out.println("[ServerSocket] Invalid player ID: " + playerId);
+            showUpdate(new RemoveComponentResponse(playerId, position, false, "Invalid player ID"));
             return;
         }
 
@@ -324,8 +315,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
-            showUpdate(new RemoveComponentResponse(
-                playerId, position, false, "Match not in progress"));
+            showUpdate(new RemoveComponentResponse(playerId, position, false, "Match not in progress"));
             return;
         }
 
@@ -333,17 +323,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + playerId);
-            showUpdate(new RemoveComponentResponse(
-                playerId, position, false, "Player not found"));
+            showUpdate(new RemoveComponentResponse(playerId, position, false, "Player not found"));
             return;
         }
 
-        // Get the component at the specified position
         Component componentToRemove = player.getShip().getComponentAt(position);
         if (componentToRemove == null) {
             System.out.println("[ServerSocket] No component found at position " + position + " for player " + playerId);
-            showUpdate(new RemoveComponentResponse(
-                playerId, position, false, "No component found at position"));
+            showUpdate(new RemoveComponentResponse(playerId, position, false, "No component found at position"));
             return;
         }
 
@@ -352,21 +339,18 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (success) {
             message = "Component removed successfully";
         } else {
-            // Provide more specific error messages
             if (componentToRemove instanceof it.polimi.ingsw.Components.Cabin cabin && cabin.isStartingCabin()) {
-                message = "Cannot remove starting cabin - it's the ship's core";
+                message = "Cannot remove starting cabin";
             } else if (player.getShip().getComponents().size() == 1) {
-                message = "Cannot remove the only component on the ship";
+                message = "Cannot remove the only component";
             } else {
-                message = "Cannot remove component - would disconnect the ship";
+                message = "Cannot remove - would disconnect ship";
             }
         }
         
         System.out.println("[ServerSocket] Component removal for player " + playerId + " at " + position + ": " + success);
         
-        // Send response back to the requesting client
-        showUpdate(new RemoveComponentResponse(
-            playerId, position, success, message));
+        showUpdate(new RemoveComponentResponse(playerId, position, success, message));
     }
 
     @Override
@@ -378,8 +362,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     @Override
     public Component pickComponentCard(int playerId) throws Exception {
         if (playerId <= 0) {
-            System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new PickComponentResponse(-1, null, false, "No player ID set"));
+            System.out.println("[ServerSocket] Invalid player ID: " + playerId);
+            showUpdate(new PickComponentResponse(playerId, null, false, "Invalid player ID"));
             return null;
         }
 
@@ -400,20 +384,18 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + playerId);
-            showUpdate(new PickComponentResponse(
-                playerId, null, false, "Player not found"));
+            showUpdate(new PickComponentResponse(playerId, null, false, "Player not found"));
             return null;
         }
 
         Component component = controller.getCompFromDeck(player);
-        String message = component != null ? "Component picked successfully" : "No more components available";
-        boolean success = component != null;
-        
-        System.out.println("[ServerSocket] Component pick for player " + playerId + ": " + 
-            (component != null ? component.getClass().getSimpleName() : "null"));
-        
-        // Send response back to the requesting client
-        showUpdate(new PickComponentResponse(playerId, component, success, message));
+        if (component != null) {
+            System.out.println("[ServerSocket] Component picked for player " + playerId + ": " + component.getClass().getSimpleName());
+            showUpdate(new PickComponentResponse(playerId, component, true, "Component picked successfully"));
+        } else {
+            System.out.println("[ServerSocket] No more components available for player " + playerId);
+            showUpdate(new PickComponentResponse(playerId, null, false, "No more components available"));
+        }
         
         return component;
     }

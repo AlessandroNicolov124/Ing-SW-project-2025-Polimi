@@ -21,7 +21,6 @@ import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.Player;
 
 
 public class SocketClient implements Runnable, GeneralClientIf {
