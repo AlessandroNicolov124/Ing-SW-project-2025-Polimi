@@ -26,7 +26,7 @@ public class RemoveComponentRequest implements RequestMessage {
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {
-            handler.removeComponent(position);
+            handler.removeComponent(position, playerId);
         } catch (Exception e) {
             System.err.println("Error handling removeComponent request: " + e.getMessage());
             e.printStackTrace();

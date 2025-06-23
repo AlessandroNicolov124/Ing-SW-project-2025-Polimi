@@ -563,12 +563,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     public void playerCreated(int playerId, String username) {
         this.currentPlayer = new Player(playerId, username, true);
         
-        // Set the local player in the client so it can track the player ID for requests
-        try {
-            client.setLocalPlayer(currentPlayer);
-        } catch (Exception e) {
-            console.printError("Failed to set local player in client: " + e.getMessage());
-        }
+        // // Set the local player in the client so it can track the player ID for requests
+        // try {
+        //     client.setLocalPlayer(currentPlayer);
+        // } catch (Exception e) {
+        //     console.printError("Failed to set local player in client: " + e.getMessage());
+        // }
         
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());

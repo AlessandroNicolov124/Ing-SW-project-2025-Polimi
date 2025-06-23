@@ -73,7 +73,7 @@ public class ShipBuildingHandler {
             // Se non abbiamo un componente corrente, peschiamone uno
             if (currentComponent == null) {
                 try {
-                    Component pickedComponent = simpleClient.pickComponentCard();
+                    Component pickedComponent = simpleClient.pickComponentCard(currentPlayer.getId());
                     if (pickedComponent != null) {
                         // Synchronous response (RMI)
                         currentComponent = pickedComponent;
@@ -145,7 +145,7 @@ public class ShipBuildingHandler {
                 case "pick": // Manually pick a component
                     if (currentComponent == null) {
                         try {
-                            Component pickedComponent = simpleClient.pickComponentCard();
+                            Component pickedComponent = simpleClient.pickComponentCard(currentPlayer.getId());
                             if (pickedComponent != null) {
                                 // Synchronous response (RMI)
                                 currentComponent = pickedComponent;
@@ -393,7 +393,7 @@ public class ShipBuildingHandler {
         // 4. Call network client to send message
         try {
              console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
-             simpleClient.placeComponent(component, pos);
+             simpleClient.placeComponent(component, pos, currentPlayer.getId());
              // Note: The actual success/failure message will come asynchronously
              // via the PlaceComponentResponse handled by simpleClient's run loop.
              // The ship display will be updated when the response arrives.
@@ -422,7 +422,7 @@ public class ShipBuildingHandler {
 
         // Send remove request via network
         try {
-            simpleClient.removeComponent(posToRemove);
+            simpleClient.removeComponent(posToRemove, currentPlayer.getId());
             console.printMessage("Remove request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
             // Success/failure message handled asynchronously by RemoveComponentResponse
         } catch (IllegalStateException e) {

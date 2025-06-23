@@ -18,10 +18,10 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     void createPlayer(String username) throws RemoteException;
 
     @Override
-    void placeComponent(Component component, Position position) throws RemoteException;
+    void placeComponent(Component component, Position position, int playerId) throws RemoteException;
 
     @Override
-    void removeComponent(Position position) throws RemoteException;
+    void removeComponent(Position position, int playerId) throws RemoteException;
 
     @Override
     void showUpdate(ResponseMessage message) throws RemoteException;
@@ -33,10 +33,7 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     void rotateComponent(Position position, RotationType rotationType) throws RemoteException;
 
     @Override
-    void setLocalPlayer(Player player) throws RemoteException;
-
-    @Override
-    Component pickComponentCard() throws RemoteException;
+    Component pickComponentCard(int playerId) throws RemoteException;
 
     @Override
     void createMatch(String matchName, int playerId, String username) throws RemoteException;

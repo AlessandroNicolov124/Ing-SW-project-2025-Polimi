@@ -4,11 +4,9 @@ import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
-//import it.polimi.ingsw.network.socket.client;
 import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
 
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -19,12 +17,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
 
-import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -74,7 +69,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     };
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
-            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_1.jpg"),
+            Map.entry("cabin_starting", "/Images/tiles/Cabin_Starting_1.jpg"),
 //            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_2.jpg"),
 //            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_3.jpg"),
 //            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_4.jpg"),
@@ -216,7 +211,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     // Be aware that col tells you the X coord. and row tells you the Y coord.
                     Position newPosition = new Position(col, row);
                     try {
-                        context.getClient().placeComponent(this.component, newPosition);
+                        context.getClient().placeComponent(this.component, newPosition, context.getPlayerId());
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -364,7 +359,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         
         try {
             System.out.println("[ShipBuilder] Requesting component from server...");
-            this.component = context.getClient().pickComponentCard();
+            this.component = context.getClient().pickComponentCard(context.getPlayerId());
             
             if (this.component == null) {
                 throw new IllegalStateException("Server returned null component");
@@ -425,7 +420,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     public void placeComponentAt(Position position) {
         if (component != null) {
             try {
-                context.getClient().placeComponent(component, position);
+                context.getClient().placeComponent(component, position, context.getPlayerId());
                 statusLabel.setText("Placing component at (" + position.getX() + ", " + position.getY() + ")...");
             } catch (Exception e) {
                 showErrorDialog("Placement Failed", "Failed to place component: " + e.getMessage());
