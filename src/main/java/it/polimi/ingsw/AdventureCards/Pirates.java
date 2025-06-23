@@ -52,12 +52,12 @@ public class Pirates extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -72,11 +72,12 @@ public class Pirates extends AdventureCard {
      */
     public void fightPirates(GameModel gameModel) {
         List<Player> playersDedeated = new ArrayList<>();
-        for(Player p : gameModel.getPlayers()) {
+        for(Player p : gameModel.getFlightBoard().getPlayersInFlightOrder()) {
             if (!fightPiratesFor(p)){
                 playersDedeated.add(p);
             }else{
                 offerReward(p, gameModel, true);
+                break; // Only the first player to defeat pirates gets the reward if he chooses to accept it
             }
         }
         fireCannons(playersDedeated);
@@ -94,10 +95,8 @@ public class Pirates extends AdventureCard {
         }
 
         activateDoubleCannons(player);
-
         // Calculate player's cannon strength
         double playerStrength = player.getShip().calculateFirePower();
-
         player.getShip().dischargeAllActiveDoubleCannon();
 
         // Check if player defeats pirates
@@ -105,9 +104,11 @@ public class Pirates extends AdventureCard {
         
         if (playerWins) {
             // Player wins, offer reward
+            System.out.println("Player " + player.getNickName() + " defeated the pirates!");
             isDefeated = true;
             return true;
         } else {
+            System.out.println("Player " + player.getNickName() + " was defeated by the pirates!");
             // Player is defeated, pirates will fire at their ship
             return false;
         }

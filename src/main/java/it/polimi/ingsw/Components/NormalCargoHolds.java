@@ -3,7 +3,11 @@ package it.polimi.ingsw.Components;
 public final class NormalCargoHolds extends CargoHolds {
 
     public NormalCargoHolds(CargoHoldsSize size) {
-        super(size.getCapacity());
+        super();
+        if(size == CargoHoldsSize.SINGLE) {
+            throw new IllegalArgumentException("NormalCargoHolds cannot be of SINGLE size");
+        }
+        this.setCapacity(size.getCapacity());
     }
 
     @Override
@@ -15,8 +19,9 @@ public final class NormalCargoHolds extends CargoHolds {
         };
     }
 
+    @Override
     public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        String s = this.getClass().getSimpleName().toLowerCase() + "_" + CargoHoldsSize.fromInt(this.getCapacity()).toString().toLowerCase() +"_";
         s += getConnectionsString();
         return s;
     }

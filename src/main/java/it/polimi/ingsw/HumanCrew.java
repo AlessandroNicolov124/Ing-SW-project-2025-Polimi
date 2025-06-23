@@ -14,8 +14,8 @@ public class HumanCrew extends Crew {
         return true;
     }
 
-    @Override
-    public void applyAbility(ShipBuilder ship) {
-
-    }
+//    @Override
+//    public void applyAbility(ShipBuilder ship) {
+//
+//    }
 }

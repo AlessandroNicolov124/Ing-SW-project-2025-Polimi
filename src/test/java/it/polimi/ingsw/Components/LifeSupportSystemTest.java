@@ -17,6 +17,6 @@ class LifeSupportSystemTest {
         LifeSupportSystem lifeSupport = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         // Verify connectors are set (requires getters or checking behavior)
         // For now, just ensure method runs without error
-        assertDoesNotThrow(() -> lifeSupport.initializeConnectors(ConnectorType.UNIVERSAL, ConnectorType.NULL, ConnectorType.NULL, ConnectorType.UNIVERSAL));
+        assertDoesNotThrow(() -> lifeSupport.initializeConnectors(new UniversalConnectorType(), new NullConnectorType(), new NullConnectorType(), new UniversalConnectorType()));
     }
 } 

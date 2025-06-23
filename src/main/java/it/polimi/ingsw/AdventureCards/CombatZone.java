@@ -66,12 +66,12 @@ public class CombatZone extends AdventureCard {
     }
 
     @Override
-    int additionalPls(){
+    protected int additionalPls(){
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -165,6 +165,7 @@ public class CombatZone extends AdventureCard {
         // Find player with weakest cannons
         Player weakestCannons = findPlayerWithWeakestCannons(players);
         if (weakestCannons != null) {
+            System.out.println("The player with the weakest cannons is: " + weakestCannons.getNickName());
 
             // Apply light cannon fire
             boolean lightHit = applyLightCannonFire(weakestCannons);
@@ -173,7 +174,10 @@ public class CombatZone extends AdventureCard {
 
             if (!lightHit && !heavyHit) {
                 System.out.println(weakestCannons.getNickName() + " got lucky! Both cannon shots missed.");
-
+            }else if(lightHit) {
+                System.out.println(weakestCannons.getNickName() + " was hit by light cannon fire!");
+            }else if(heavyHit) {
+                System.out.println(weakestCannons.getNickName() + " was hit by heavy cannon fire!");
             }
         }
 
@@ -224,19 +228,20 @@ public class CombatZone extends AdventureCard {
      * @param count Number of crew members to remove
      */
     private void removeCrewMembers(Player player, int count) {
-        ShipBuilder ship = player.getShip();
-        int remainingToRemove = count;
-
-        // First try to remove aliens
-        int aliensToRemove = Math.min(ship.getAlienCount(), remainingToRemove);
-        if (aliensToRemove > 0) {
-            remainingToRemove -= ship.removeAliens(aliensToRemove);
-        }
-
-        // Then remove humans if needed
-        if (remainingToRemove > 0) {
-            ship.removeHumans(Math.min(ship.getHumanCount(), remainingToRemove));
-        }
+        player.getShip().removeCrewMembers(Math.min(player.getShip().getTotalCrewCount(), count));
+        //        ShipBuilder ship = player.getShip();
+//        int remainingToRemove = count;
+//
+//        // First try to remove aliens
+//        int aliensToRemove = Math.min(ship.getAlienCount(), remainingToRemove);
+//        if (aliensToRemove > 0) {
+//            remainingToRemove -= ship.removeAliens(aliensToRemove);
+//        }
+//
+//        // Then remove humans if needed
+//        if (remainingToRemove > 0) {
+//            ship.removeHumans(Math.min(ship.getHumanCount(), remainingToRemove));
+//        }
     }
 
     /**
@@ -282,7 +287,7 @@ public class CombatZone extends AdventureCard {
      * @param players List of players
      * @return The player with weakest cannons
      */
-    private Player findPlayerWithWeakestCannons(List<Player> players) {
+    protected Player findPlayerWithWeakestCannons(List<Player> players) {
         if (players.isEmpty()) {
             return null;
         }
@@ -299,7 +304,7 @@ public class CombatZone extends AdventureCard {
      * @param player The player being attacked
      * @return true if component was destroyed, false otherwise
      */
-    private boolean applyLightCannonFire(Player player) {
+    protected boolean applyLightCannonFire(Player player) {
         // 1. Roll dice to determine row/column of hit
         int diceRoll = rollDice();
 
@@ -307,13 +312,13 @@ public class CombatZone extends AdventureCard {
         Position hit = checkCannonHit(player, ATTACK_DIRECTION, diceRoll);
         
         if (hit!=null) {
-            System.out.println("Light cannon fire target component at position " + hit.toString());
+            //System.out.println("Light cannon fire target component at position " + hit.toString());
 
             // 3. Check if player can defend with shield
             ShieldGenerator defended = canDefendWithShield(player, ATTACK_DIRECTION);
-            
             if (defended==null) {
-                System.out.println("Light cannon fire hit component at position " + hit.toString());
+
+                //System.out.println("Light cannon fire hit component at position " + hit.toString());
                 // 4. Destroy component if no defense
                 player.getShip().destroyComponentAt(hit);
                 return true;
@@ -323,8 +328,6 @@ public class CombatZone extends AdventureCard {
             defended.discharge();
 
         }
-        System.out.println(player.getNickName() + "NOT defends with a shield!");
-
         return false;
     }
     
@@ -363,14 +366,14 @@ public class CombatZone extends AdventureCard {
      * @param targetCoord The position (row/column) of the potential impact
      * @return Position hit if the fire hits the ship
      */
-    private Position checkCannonHit(Player player, Direction attack, int targetCoord) {
+    protected Position checkCannonHit(Player player, Direction attack, int targetCoord) {
         // 4. Check if there's a component at those coordinates
         Component targetComponent = null;
         Position target = null;
 
         if(attack == Direction.SOUTH) {
             for(int i=player.getShip().getHeight()-1; i > 0; i--){
-                target = new Position(i,targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -378,7 +381,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.NORTH) {
             for(int i=0; i < player.getShip().getHeight(); i++){
-                target = new Position(i, targetCoord);
+                target = new Position(targetCoord, i);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -386,7 +389,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.WEST) {
             for(int i=0; i < player.getShip().getWidth(); i++){
-                target = new Position(targetCoord, i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -394,7 +397,7 @@ public class CombatZone extends AdventureCard {
             }
         }else if(attack == Direction.EAST) {
             for(int i=player.getShip().getWidth()-1; i > 0; i--){
-                target = new Position(targetCoord,i);
+                target = new Position(i, targetCoord);
                 targetComponent = player.getShip().getComponentAt(target);
                 if(targetComponent != null) {
                     break;
@@ -403,7 +406,7 @@ public class CombatZone extends AdventureCard {
         }
 
         if (targetComponent == null) {
-            System.out.println("The cannon fire targets an empty space!");
+            System.out.println("The cannon fire targets an empty space! ");
             return null;
         }
 
@@ -416,7 +419,7 @@ public class CombatZone extends AdventureCard {
      * @param direction The direction of the attack
      * @return ShieldGenerator activated if defense is successful
      */
-    private ShieldGenerator canDefendWithShield(Player player, Direction direction) {
+    protected ShieldGenerator canDefendWithShield(Player player, Direction direction) {
         // Check if player has a shield that can protect against this direction and position
         List<ShieldGenerator> shields = player.getShip().getShieldsProtecting(direction);
 

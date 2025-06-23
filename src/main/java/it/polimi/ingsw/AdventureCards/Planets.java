@@ -41,6 +41,19 @@ public class Planets extends AdventureCard{
         this.flightDaysCost = flightDaysCost;
         this.landedPlayers = new HashMap<>();
     }
+
+    public List<Planet> getPlanets() {
+        return planets;
+    }
+
+    public int getFlightDaysCost() {
+        return flightDaysCost;
+    }
+
+    public Map<Planet, Player> getLandedPlayers() {
+        return landedPlayers;
+    }
+
     
     /**
      * Create default planets for the card
@@ -55,13 +68,13 @@ public class Planets extends AdventureCard{
         defaultCargo1.add(new RedCargo());
 
         List<Cargo> defaultCargo2 = new ArrayList<>();
-        defaultCargo1.add(new BlueCargo());
-        defaultCargo1.add(new BlueCargo());
-        defaultCargo1.add(new GreenCargo());
-        defaultCargo1.add(new GreenCargo());
+        defaultCargo2.add(new BlueCargo());
+        defaultCargo2.add(new BlueCargo());
+        defaultCargo2.add(new GreenCargo());
+        defaultCargo2.add(new GreenCargo());
 
         List<Cargo> defaultCargo3 = new ArrayList<>();
-        defaultCargo1.add(new YellowCargo());
+        defaultCargo3.add(new YellowCargo());
 
         defaultPlanets.add(new Planet("Alpha", defaultCargo1)); // Name and goods count
         defaultPlanets.add(new Planet("Beta", defaultCargo2));
@@ -70,12 +83,12 @@ public class Planets extends AdventureCard{
     }
 
     @Override
-    int additionalPls(){
+    protected int additionalPls(){
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -155,7 +168,7 @@ public class Planets extends AdventureCard{
      * @param player The player loading goods
      * @param planet The planet providing goods
      */
-    private void loadGoods(Player player, Planet planet) {
+    protected void loadGoods(Player player, Planet planet) {
         // Implementation of how goods are tracked
         // placeholder
         List<Cargo> goodsToLoad = planet.getGoodsToLoad();

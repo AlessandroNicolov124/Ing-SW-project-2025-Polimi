@@ -26,7 +26,9 @@ public final class ShieldGenerator extends Component {
     }
 
     public void add(Direction direction) {
-        protectedDirections.add(direction);
+        if( !protectedDirections.contains(direction)){
+            protectedDirections.add(direction);
+        }
     }
 
     public void remove(Direction direction) {

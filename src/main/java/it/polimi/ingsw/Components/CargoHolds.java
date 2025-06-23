@@ -7,8 +7,14 @@ public sealed abstract class CargoHolds extends Component permits NormalCargoHol
     private int capacity;
     private List<Cargo> cargos = new ArrayList<>();
 
-    public CargoHolds(int capacity) {
+    public CargoHolds() {
         super();
+    }
+
+    public void setCapacity(int capacity) {
+        if (capacity <= 0) {
+            throw new IllegalArgumentException("Capacity must be greater than zero");
+        }
         this.capacity = capacity;
     }
 
