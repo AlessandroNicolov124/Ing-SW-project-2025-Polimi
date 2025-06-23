@@ -325,10 +325,6 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component placed: " + component.getClass().getSimpleName() + " at position " + position);
             
-            showInfoMessage("Component Placed", 
-                "Successfully placed " + component.getClass().getSimpleName() + 
-                " at position (" + position.getX() + ", " + position.getY() + ")");
-            
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
                     listener.gameComponentPlaced(component, position);
@@ -344,12 +340,16 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             if (playerId == this.playerId) {
                 if (success && component != null) {
+                    for (GameStateUpdateListener listener : guiUpdateListeners) {
+                        listener.gameComponentPicked(component);
+                    }
                     showInfoMessage("Component Picked", 
                         "Successfully picked: " + component.getClass().getSimpleName());
                 } else {
                     showErrorMessage("Component Pick Failed", message);
                 }
             }
+            // Ignore responses for other players
         });
     }
 
@@ -357,9 +357,6 @@ public class AppContext implements GameListener {
     public void componentRemoved(Position position) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component removed from position: " + position);
-            
-            showInfoMessage("Component Removed", 
-                "Component removed from position (" + position.getX() + ", " + position.getY() + ")");
             
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {

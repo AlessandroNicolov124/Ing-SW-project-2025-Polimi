@@ -1,7 +1,6 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.client.RmiClientIf;
@@ -10,10 +9,12 @@ import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerResponse;
 import it.polimi.ingsw.network.messages.lobby.CreateMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.GetMatchesResponse;
-import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -173,8 +174,10 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         
         try {
             Component component = server.pickComponent(playerId);
+            showUpdate(new PickComponentResponse(playerId, component, true, "Component picked successfully"));
             return component;
         } catch (RemoteException e) {
+            showUpdate(new PickComponentResponse(playerId, null, false, e.getMessage()));
             throw new RemoteException("Error picking component", e);
         }
     }
@@ -187,8 +190,10 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         
         try {
             server.placeComponent(playerId, component, position);
+            showUpdate(new PlaceComponentResponse(playerId, component, position, true, "Component placed successfully"));
         } catch (RemoteException e) {
-            throw new RemoteException("Error placing component", e);
+            showUpdate(new PlaceComponentResponse(playerId, component, position, false, e.getMessage()));
+            throw new RemoteException("Error placing component: " + e.getMessage(), e);
         }
     }
 
@@ -200,8 +205,10 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         
         try {
             server.removeComponent(playerId, position);
+            showUpdate(new RemoveComponentResponse(playerId, position, true, "Component removed successfully"));
         } catch (RemoteException e) {
-            throw new RemoteException("Error removing component", e);
+            showUpdate(new RemoveComponentResponse(playerId, position, false, e.getMessage()));
+            throw new RemoteException("Error removing component: " + e.getMessage(), e);
         }
     }
 

@@ -44,22 +44,23 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Label statusLabel;
 
-
+    // Component management
+    private Component currentComponent = null;
+    private boolean isRemoveMode = false;
+    
+    // Visual elements tracking
     private ImageView selectedImageView = null;
-    private Rectangle selectedHighlight = null; // For visual feedback
-
-    private Component component;
-    private Position selectedPosition;
+    private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
+    private final Map<Position, Component> shipComponents = new HashMap<>();
 
-    // level 2 board related measures [px]
-    private static final int SQUARE_SIZE = 123; // width/height of a square (pixels)
-    private static final int GRID_ROWS = 5;    // number of rows
-    private static final int GRID_COLS = 7;    // number of columns
-    private static final double GRID_START_X = 38; // pixel position where leftmost valid square starts
-    private static final double GRID_START_Y = 31; // pixel position where topmost valid square starts
+    // Board configuration
+    private static final int SQUARE_SIZE = 123;
+    private static final int GRID_ROWS = 5;
+    private static final int GRID_COLS = 7;
+    private static final double GRID_START_X = 38;
+    private static final double GRID_START_Y = 31;
 
-    // true means valid square, false means no square
     private static final boolean[][] VALID_SQUARES = {
             {false, false, true,  false, true,  false, false},
             {false, true,  true,  true,  true,  true,  false},
@@ -70,9 +71,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
             Map.entry("cabin_starting", "/Images/tiles/Cabin_Starting_1.jpg"),
-//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_2.jpg"),
-//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_3.jpg"),
-//            Map.entry("cabin_starting", "/Images/tiles/cabin_starting_4.jpg"),
             Map.entry("batterycompartment_double_DSDS", "/Images/tiles/batterycompartment_double_DSDS.jpg"),
             Map.entry("batterycompartment_double_NNNU", "/Images/tiles/batterycompartment_double_NNNU.jpg"),
             Map.entry("batterycompartment_double_NNNU_2", "/Images/tiles/batterycompartment_double_NNNU_2.jpg"),
@@ -90,7 +88,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("batterycompartment_triple_NNNS", "/Images/tiles/batterycompartment_triple_NNNS.jpg"),
             Map.entry("batterycompartment_triple_SNDN", "/Images/tiles/batterycompartment_triple_SNDN.jpg"),
             Map.entry("batterycompartment_triple_SSDN", "/Images/tiles/batterycompartment_triple_SSDN.jpg"),
-
             Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
             Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
             Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
@@ -121,11 +118,16 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
-
-
     @FXML
     public void initialize() {
-        // Set background image (replace with your path)
+        setupBackground();
+        setupGrid();
+        setupDragAndDrop();
+        setupClickHandlers();
+        setupRemoveButton();
+    }
+
+    private void setupBackground() {
         Image bgImage = new Image(getClass().getResource("/Images/cardboard/cardboard-1b.jpg").toExternalForm());
         anchorPane.setBackground(new javafx.scene.layout.Background(
                 new javafx.scene.layout.BackgroundImage(
@@ -138,19 +140,9 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                         )
                 )
         ));
+    }
 
-        anchorPane.setOnMouseClicked(event -> {
-            // Only clear selection if clicking NOT on an image
-            if (event.getTarget() == anchorPane) {
-                if (selectedHighlight != null) {
-                    anchorPane.getChildren().remove(selectedHighlight);
-                    selectedHighlight = null;
-                }
-                selectedImageView = null;
-            }
-        });
-
-        // Draw only valid squares
+    private void setupGrid() {
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
                 if (VALID_SQUARES[row][col]) {
@@ -164,21 +156,30 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 }
             }
         }
+    }
 
-        // Drag-and-drop logic
+    private void setupDragAndDrop() {
         cardImage.setOnDragDetected(event -> {
-            if (cardImage.getImage() != null) {
+            if (cardImage.getImage() != null && currentComponent != null && !isRemoveMode) {
                 Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
                 content.putImage(cardImage.getImage());
                 db.setContent(content);
+                event.consume();
+            }
+        });
+
+        cardImage.setOnDragDone(event -> {
+            if (event.getTransferMode() == TransferMode.COPY) {
+                cardImage.setImage(null);
+                currentComponent = null;
             }
             event.consume();
         });
 
         anchorPane.setOnDragOver(event -> {
             if (event.getGestureSource() != anchorPane && event.getDragboard().hasImage()) {
-                event.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+                event.acceptTransferModes(TransferMode.COPY);
             }
             event.consume();
         });
@@ -186,51 +187,158 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         anchorPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-            if (db.hasImage()) {
-                // Snap to nearest grid square
-                int col = (int) ((event.getX() - GRID_START_X) / SQUARE_SIZE);
-                int row = (int) ((event.getY() - GRID_START_Y) / SQUARE_SIZE);
-
-                // Check bounds
-                if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS && VALID_SQUARES[row][col]) {
-                    double snappedX = GRID_START_X + col * SQUARE_SIZE;
-                    double snappedY = GRID_START_Y + row * SQUARE_SIZE;
-
-                    ImageView dropped = new ImageView(db.getImage());
-                    dropped.setFitWidth(SQUARE_SIZE);
-                    dropped.setFitHeight(SQUARE_SIZE);
-                    dropped.setLayoutX(snappedX);
-                    dropped.setLayoutY(snappedY);
-                    dropped.getProperties().put("row", row);
-                    dropped.getProperties().put("col", col);
-                    dropped.setOnMouseClicked(mouseclick -> {
-                        selectImageView(dropped);
-                    });
-                    anchorPane.getChildren().add(dropped);
-
-                    // Be aware that col tells you the X coord. and row tells you the Y coord.
-                    Position newPosition = new Position(col, row);
+            
+            if (db.hasImage() && currentComponent != null) {
+                Position dropPosition = calculateGridPosition(event.getX(), event.getY());
+                
+                if (isValidDropPosition(dropPosition)) {
                     try {
-                        context.getClient().placeComponent(this.component, newPosition, context.getPlayerId());
+                        context.getClient().placeComponent(currentComponent, dropPosition, context.getPlayerId());
+                        success = true;
+                        statusLabel.setText("Placing component...");
+                    } catch (Exception e) {
+                        statusLabel.setText("Failed to place: " + e.getMessage());
                     }
-                    catch (Exception e) {
-                        e.printStackTrace();
-                        this.showErrorDialog("Error", "Communicatiion error, try again");
-                    }
-                    //this.component = null;
-                    //cardImage = null;
-                    success = true;
+                } else {
+                    statusLabel.setText("Invalid position or position occupied!");
                 }
             }
+            
             event.setDropCompleted(success);
             event.consume();
         });
     }
 
-    private void selectImageView(ImageView imageView) {
-        if (selectedHighlight != null) {
-            anchorPane.getChildren().remove(selectedHighlight);
+    private void setupClickHandlers() {
+        anchorPane.setOnMouseClicked(event -> {
+            if (event.getTarget() == anchorPane) {
+                clearSelection();
+            }
+        });
+    }
+
+    private void setupRemoveButton() {
+        Button removeButton = new Button("Remove Mode");
+        removeButton.setLayoutX(10);
+        removeButton.setLayoutY(10);
+        removeButton.setPrefWidth(120);
+        
+        removeButton.setOnAction(event -> {
+            isRemoveMode = !isRemoveMode;
+            if (isRemoveMode) {
+                removeButton.setText("Exit Remove Mode");
+                removeButton.setStyle("-fx-background-color: #ff6666;");
+                statusLabel.setText("Remove mode: Click a component to remove it");
+                clearSelection();
+            } else {
+                removeButton.setText("Remove Mode");
+                removeButton.setStyle("");
+                statusLabel.setText("Ready");
+            }
+        });
+        
+        anchorPane.getChildren().add(removeButton);
+    }
+
+    @FXML
+    public void pickComponent() {
+        if (context == null || context.getClient() == null) {
+            showErrorDialog("Error", "No connection available");
+            return;
         }
+
+        if (currentComponent != null) {
+            statusLabel.setText("You already have a component. Place it first!");
+            return;
+        }
+
+        try {
+            statusLabel.setText("Requesting component...");
+            pickComponentButton.setDisable(true);
+            
+            Component picked = context.getClient().pickComponentCard(context.getPlayerId());
+            
+            
+        } catch (Exception e) {
+            pickComponentButton.setDisable(false);
+            statusLabel.setText("Failed: " + e.getMessage());
+            showErrorDialog("Pick Failed", e.getMessage());
+        }
+    }
+
+    @Override
+    public void gameComponentPicked(Component component) {
+        pickComponentButton.setDisable(false);
+        
+        if (component == null) {
+            statusLabel.setText("No components available");
+            return;
+        }
+
+        currentComponent = component;
+        String imagePath = getComponentImgPath(component);
+        
+        if (imagePath != null) {
+            InputStream imageStream = getClass().getResourceAsStream(imagePath);
+            if (imageStream != null) {
+                cardImage.setImage(new Image(imageStream));
+                statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " - Drag to place");
+            } else {
+                statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (no image)");
+            }
+        } else {
+            statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (unmapped)");
+        }
+    }
+
+    @FXML
+    public void rotateCardClockwise() {
+        if (selectedImageView == null) {
+            statusLabel.setText("Select a component on the ship first");
+            return;
+        }
+
+        selectedImageView.setRotate(selectedImageView.getRotate() + 90);
+        statusLabel.setText("Rotated clockwise (visual only)");
+    }
+
+    @FXML
+    public void rotateCardAntiClockwise() {
+        if (selectedImageView == null) {
+            statusLabel.setText("Select a component on the ship first");
+            return;
+        }
+
+        selectedImageView.setRotate(selectedImageView.getRotate() - 90);
+        statusLabel.setText("Rotated counter-clockwise (visual only)");
+    }
+
+    @FXML
+    public void validateShip() {
+        try {
+            context.getClient().validateShip();
+            statusLabel.setText("Validating ship...");
+        } catch (Exception e) {
+            showErrorDialog("Validation Failed", e.getMessage());
+        }
+    }
+
+    private Position calculateGridPosition(double x, double y) {
+        int col = (int) ((x - GRID_START_X) / SQUARE_SIZE);
+        int row = (int) ((y - GRID_START_Y) / SQUARE_SIZE);
+        return new Position(col, row);
+    }
+
+    private boolean isValidDropPosition(Position pos) {
+        return pos.getX() >= 0 && pos.getX() < GRID_COLS &&
+               pos.getY() >= 0 && pos.getY() < GRID_ROWS &&
+               VALID_SQUARES[pos.getY()][pos.getX()] &&
+               !cellViews.containsKey(pos);
+    }
+
+    private void selectImageView(ImageView imageView) {
+        clearSelection();
+        
         selectedImageView = imageView;
         selectedHighlight = new Rectangle(
                 imageView.getLayoutX(), imageView.getLayoutY(),
@@ -239,16 +347,111 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         selectedHighlight.setFill(Color.TRANSPARENT);
         selectedHighlight.setStroke(Color.YELLOWGREEN);
         selectedHighlight.setStrokeWidth(7);
+        selectedHighlight.setMouseTransparent(true);
+        
         anchorPane.getChildren().add(selectedHighlight);
-        selectedHighlight.toBack(); // so it doesn't cover the image
+        imageView.toFront();
+    }
+
+    private void clearSelection() {
+        if (selectedHighlight != null) {
+            anchorPane.getChildren().remove(selectedHighlight);
+            selectedHighlight = null;
+        }
+        selectedImageView = null;
+    }
+
+    private void handleComponentClick(ImageView imageView, Position position) {
+        if (isRemoveMode) {
+            try {
+                context.getClient().removeComponent(position, context.getPlayerId());
+                statusLabel.setText("Removing component...");
+            } catch (Exception e) {
+                statusLabel.setText("Remove failed: " + e.getMessage());
+            }
+        } else {
+            selectImageView(imageView);
+        }
+    }
+
+    private String getComponentImgPath(Component c) {
+        if (c == null) return null;
+        return COMP_IMAGE_MAP.get(c.getComponentString());
+    }
+
+    @Override
+    public void gameStateUpdate() {
+        updateButtonStates();
+    }
+
+    @Override
+    public void gameComponentPlaced(Component component, Position position) {
+        String imagePath = getComponentImgPath(component);
+        if (imagePath == null) return;
+
+        InputStream imageStream = getClass().getResourceAsStream(imagePath);
+        if (imageStream == null) return;
+
+        ImageView placed = new ImageView(new Image(imageStream));
+        placed.setFitWidth(SQUARE_SIZE);
+        placed.setFitHeight(SQUARE_SIZE);
+        placed.setLayoutX(GRID_START_X + position.getX() * SQUARE_SIZE);
+        placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
+        placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
+
+        anchorPane.getChildren().add(placed);
+        cellViews.put(position, placed);
+        shipComponents.put(position, component);
+
+        statusLabel.setText("Component placed successfully!");
+        currentComponent = null;
+        cardImage.setImage(null);
+    }
+
+    @Override
+    public void gameComponentRemoved(Position position) {
+        ImageView removed = cellViews.remove(position);
+        if (removed != null) {
+            anchorPane.getChildren().remove(removed);
+            shipComponents.remove(position);
+            clearSelection();
+            statusLabel.setText("Component removed!");
+        }
+    }
+
+    @Override
+    public void gameComponentRotated(Position position, RotationType rotationType) {
+        ImageView imageView = cellViews.get(position);
+        if (imageView != null) {
+            double delta = switch (rotationType) {
+                case CLOCKWISE -> 90;
+                case ANTI_CLOCKWISE -> -90;
+                case OPPOSITE -> 180;
+            };
+            imageView.setRotate(imageView.getRotate() + delta);
+            statusLabel.setText("Component rotated");
+        }
+    }
+
+    @Override
+    public void gameShipValidated(boolean isValid, String message) {
+        statusLabel.setText(isValid ? "Ship valid! " + message : "Invalid: " + message);
+    }
+
+    @Override
+    public void gameAvailablePositionsUpdate(List<Integer> positions) {
+
     }
 
     private void updateButtonStates() {
-        // implement logic to enable/disable buttons based on the current state
+        pickComponentButton.setDisable(currentComponent != null);
+        validateShipButton.setDisable(shipComponents.isEmpty());
+        rotateClockwiseButton.setDisable(selectedImageView == null);
+        rotateCounterClockwiseButton.setDisable(selectedImageView == null);
     }
 
     public void setContext(AppContext context) {
-        if (this.context != null){
+        if (this.context != null) {
             this.context.removeGameStateUpdateListener(this);
         }
 
@@ -259,302 +462,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         }
     }
 
-    @FXML
-    public void rotateCardClockwise(){
-        System.out.println("[ShipBuilder] Rotate clockwise button clicked");
-        
-        if (context == null) {
-            System.err.println("[ShipBuilder] Context is null!");
-            statusLabel.setText("Error: No connection to server");
-            return;
-        }
-        
-        if (context.getClient() == null) {
-            System.err.println("[ShipBuilder] Client is null!");
-            statusLabel.setText("Error: No client connection");
-            return;
-        }
-
-        if (selectedImageView != null)
-        {
-            int row = (int) selectedImageView.getProperties().get("row");
-            int col = (int) selectedImageView.getProperties().get("col");
-            selectedPosition = new Position(row, col);
-        }
-        
-        if (selectedPosition != null) {
-            try {
-                System.out.println("[ShipBuilder] Sending clockwise rotation request for position: " + selectedPosition);
-                selectedImageView.setRotate(selectedImageView.getRotate() + 90);
-                //context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
-                //context.getClient().rotateComponent(selectedPosition, RotationType.CLOCKWISE);
-                statusLabel.setText("Rotating component clockwise...");
-            } catch (Exception e) {
-                System.err.println("[ShipBuilder] Error during clockwise rotation: " + e.getMessage());
-                showErrorDialog("Rotation Failed", "Failed to rotate component: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("[ShipBuilder] No position selected for rotation");
-            statusLabel.setText("Please select a component on the ship first");
-        }
-    }
-
-    @FXML
-    public void rotateCardAntiClockwise(){
-        System.out.println("[ShipBuilder] Rotate counter-clockwise button clicked");
-        
-        if (context == null) {
-            System.err.println("[ShipBuilder] Context is null!");
-            statusLabel.setText("Error: No connection to server");
-            return;
-        }
-        
-        if (context.getClient() == null) {
-            System.err.println("[ShipBuilder] Client is null!");
-            statusLabel.setText("Error: No client connection");
-            return;
-        }
-
-        if (selectedImageView != null)
-        {
-            int row = (int) selectedImageView.getProperties().get("row");
-            int col = (int) selectedImageView.getProperties().get("col");
-            selectedPosition = new Position(row, col);
-        }
-
-            if (selectedPosition != null) {
-            try {
-                System.out.println("[ShipBuilder] Sending counter-clockwise rotation request for position: " + selectedPosition);
-                selectedImageView.setRotate(selectedImageView.getRotate() - 90);
-                //context.getClient().rotateComponent(selectedPosition, RotationType.ANTI_CLOCKWISE);
-
-                statusLabel.setText("Rotating component counter-clockwise...");
-            } catch (Exception e) {
-                System.err.println("[ShipBuilder] Error during counter-clockwise rotation: " + e.getMessage());
-                showErrorDialog("Rotation Failed", "Failed to rotate component: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            System.out.println("[ShipBuilder] No position selected for rotation");
-            statusLabel.setText("Please select a component on the ship first");
-        }
-    }
-
-    @FXML
-    public void pickComponent() {
-        System.out.println("[ShipBuilder] Pick component button clicked");
-        
-        if (context == null) {
-            System.err.println("[ShipBuilder] Context is null!");
-            showErrorDialog("Component pick failed", "No connection context available");
-            return;
-        }
-        
-        if (context.getClient() == null) {
-            System.err.println("[ShipBuilder] Client is null!");
-            showErrorDialog("Component pick failed", "No client connection available");
-            return;
-        }
-        
-        try {
-            System.out.println("[ShipBuilder] Requesting component from server...");
-            this.component = context.getClient().pickComponentCard(context.getPlayerId());
-            
-            if (this.component == null) {
-                throw new IllegalStateException("Server returned null component");
-            }
-            
-            System.out.println("[ShipBuilder] Received component: " + this.component.getClass().getSimpleName());
-
-            String path = getComponentImgPath(this.component);
-            if (path == null) {
-                System.err.println("[ShipBuilder] No image mapping found for: " + this.component.getClass().getSimpleName());
-                statusLabel.setText("Picked: " + this.component.getClass().getSimpleName() + " (no image)");
-                updateButtonStates();
-                return;
-            }
-
-            InputStream is = getClass().getResourceAsStream(path);
-            if (is == null) {
-                System.err.println("[ShipBuilder] Image not found in resources: " + path);
-                statusLabel.setText("Picked: " + this.component.getClass().getSimpleName() + " (image missing)");
-                updateButtonStates();
-                return;
-            }
-
-            cardImage.setImage(new Image(is));
-            statusLabel.setText("Picked: " + this.component.getClass().getSimpleName());
-            updateButtonStates();
-            
-            System.out.println("[ShipBuilder] Component picked successfully");
-            
-        } catch (Exception e) {
-            System.err.println("[ShipBuilder] Error picking component: " + e.getMessage());
-            e.printStackTrace();
-            showErrorDialog("Component pick failed", "Error: " + e.getMessage());
-
-            statusLabel.setText("Failed to pick component");
-        }
-    }
-
-    @FXML
-    public void validateShip() {
-        System.out.println("[ShipBuilder] Validate ship button clicked");
-        
-        if (context == null || context.getClient() == null) {
-            showErrorDialog("Validation Failed", "No connection to server");
-            return;
-        }
-        
-        try {
-            context.getClient().validateShip();
-            statusLabel.setText("Validating ship...");
-        } catch (Exception e) {
-            System.err.println("[ShipBuilder] Error during ship validation: " + e.getMessage());
-            showErrorDialog("Validation Failed", "Failed to validate ship: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public void placeComponentAt(Position position) {
-        if (component != null) {
-            try {
-                context.getClient().placeComponent(component, position, context.getPlayerId());
-                statusLabel.setText("Placing component at (" + position.getX() + ", " + position.getY() + ")...");
-            } catch (Exception e) {
-                showErrorDialog("Placement Failed", "Failed to place component: " + e.getMessage());
-                e.printStackTrace();
-            }
-        } else {
-            statusLabel.setText("Please pick a component first");
-        }
-    }
-
-    public void removeComponentAt(Position position) {
-        try {
-            statusLabel.setText("Removing component at (" + position.getX() + ", " + position.getY() + ")...");
-        } catch (Exception e) {
-            showErrorDialog("Removal Failed", "Failed to remove component: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    private String getComponentImgPath(Component c){
-        if (c == null) return null;
-        return COMP_IMAGE_MAP.get(c.getComponentString());
-    }
-
-    private ImageView createImageViewFor(Component component) {
-        String path = getComponentImgPath(component);
-        if (path != null) {
-            try {
-                InputStream is = getClass().getResourceAsStream(path);
-                if (is != null) {
-                    ImageView iv = new ImageView(new Image(is));
-                    iv.setFitWidth(50);
-                    iv.setFitHeight(50);
-                    return iv;
-                }
-            } catch (Exception e) {
-                System.err.println("Error creating ImageView: " + e.getMessage());
-            }
-        }
-        
-        ImageView iv = new ImageView();
-        iv.setFitWidth(50);
-        iv.setFitHeight(50);
-        return iv;
-    }
-
     public ShipBuilderController getController() {
         return this;
-    }
-
-    @Override
-    public void gameStateUpdate() {
-        System.out.println("[ShipBuilder] Game state updated");
-        updateButtonStates();
-    }
-
-    @Override
-    public void gameComponentPlaced(Component component, Position position) {
-        System.out.println("[ShipBuilder] Component placed: " + component.getClass().getSimpleName() + " at " + position);
-        statusLabel.setText("Component placed successfully!");
-        this.component = null;
-        cardImage.setImage(null);
-        //ImageView iv = createImageViewFor(component);
-        //anchorPane.getChildren().add(iv);
-        //cellViews.put(position, iv);
-        //updateButtonStates();
-        //TODO implement component drop here 
-        
-        refreshShipDisplay();
-    }
-
-    @Override
-    public void gameComponentRemoved(Position position) {
-        System.out.println("[ShipBuilder] Component removed from: " + position);
-        statusLabel.setText("Component removed successfully!");
-        
-        ImageView iv = cellViews.remove(position);
-        if (iv != null) {
-            anchorPane.getChildren().remove(iv);
-        }
-        
-        refreshShipDisplay();
-    }
-
-    @Override
-    public void gameComponentRotated(Position position, RotationType rotationType) {
-        System.out.println("[ShipBuilder] Component rotated at position: " + position + " - " + rotationType);
-        
-        ImageView iv = cellViews.get(position);
-        if (iv != null) {
-            double delta = switch (rotationType) {
-                case CLOCKWISE ->  90;
-                case ANTI_CLOCKWISE -> -90;
-                case OPPOSITE -> 180;
-            };
-            iv.setRotate(iv.getRotate() + delta);
-            System.out.println("[ShipBuilder] Visual rotation applied: " + delta + " degrees");
-        } else {
-            System.out.println("[ShipBuilder] No ImageView found for position: " + position);
-        }
-        
-        statusLabel.setText("Component rotated " + rotationType.toString().toLowerCase().replace("_", " "));
-    }
-
-    @Override
-    public void gameShipValidated(boolean isValid, String message) {
-        System.out.println("[ShipBuilder] Ship validation: " + isValid + " - " + message);
-        if (isValid) {
-            statusLabel.setText("Ship is valid! " + message);
-        } else {
-            statusLabel.setText("Ship validation failed: " + message);
-        }
-    }
-
-    @Override
-    public void gameAvailablePositionsUpdate(List<Integer> positions) {
-        System.out.println("[ShipBuilder] Available positions updated: " + positions);
-        // implement logic to update available positions in the UI if needed
-    }
-
-    private void refreshShipDisplay() {
-        System.out.println("[ShipBuilder] Refreshing ship display");
-        // implement logic to refresh the ship display
-    }
-
-    public void setSelectedPosition(Position position) {
-        this.selectedPosition = position;
-        updateButtonStates();
-        if (position != null) {
-            System.out.println("[ShipBuilder] Selected position: " + position);
-            statusLabel.setText("Selected position: (" + position.getX() + ", " + position.getY() + ")");
-        } else {
-            System.out.println("[ShipBuilder] Position deselected");
-            statusLabel.setText("No position selected");
-        }
     }
 }
