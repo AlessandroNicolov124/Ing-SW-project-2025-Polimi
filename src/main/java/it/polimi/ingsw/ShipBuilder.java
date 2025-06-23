@@ -67,23 +67,28 @@ public class ShipBuilder {
             Position adjPos = null;
             switch(component){
                 case Engine e:
-                    if(e.getComponentDirection() != Direction.NORTH){
-                        System.out.println("  Engine must be placed facing North");
-                        return false;
-                    }
-                    adjPos = position.getAdjacentPosition(Direction.SOUTH);
-                    if(!isPositionValid(adjPos) || isPositionOccupied(adjPos)) {
-                        System.out.println("  No component under Engine");
-                        return false;
-                    }
-                    break;
-                case Cannon c:
-                    adjPos = position.getAdjacentPosition(c.getComponentDirection());
-                    if(!isPositionValid(adjPos) || isPositionOccupied(adjPos)) {
-                        System.out.println("  No component in front of Cannon");
+                    Direction engineDir = e.getComponentDirection();
+                    Direction opposite = switch(engineDir) {
+                        case NORTH -> Direction.SOUTH;
+                        case SOUTH -> Direction.NORTH;
+                        case EAST  -> Direction.WEST;
+                        case WEST  -> Direction.EAST;
+                    };
+                    Position behind = position.getAdjacentPosition(opposite);
+                    if (isPositionValid(behind) && isPositionOccupied(behind)) {
+                        System.out.println("Cannot place Engine: cell immediately behind (" + behind + ") is occupied");
                         return false;
                     }
                     break;
+                case Cannon c: {
+                    Direction cannonDir = c.getComponentDirection();
+                    Position ahead = position.getAdjacentPosition(cannonDir);
+                    if (isPositionValid(ahead) && isPositionOccupied(ahead)) {
+                        System.out.println("  Cannot place Cannon: cell immediately ahead (" + ahead + ") is occupied");
+                        return false;
+                    }
+                    break;
+                }
                 default:
                     break;
             }

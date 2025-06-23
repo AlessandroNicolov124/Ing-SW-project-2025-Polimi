@@ -193,7 +193,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
             showUpdate(new PlaceComponentResponse(playerId, component, position, true, "Component placed successfully"));
         } catch (RemoteException e) {
             showUpdate(new PlaceComponentResponse(playerId, component, position, false, e.getMessage()));
-            throw new RemoteException("Error placing component: " + e.getMessage(), e);
+            throw new RemoteException("Error placing component: " + e.getMessage());
         }
     }
 

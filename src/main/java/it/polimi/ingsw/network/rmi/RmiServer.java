@@ -333,7 +333,8 @@ public class RmiServer extends UnicastRemoteObject
 
         boolean success = controller.addComponentForPlayer(player, component, position);
         if (!success) {
-            throw new RemoteException("Failed to place component at position");
+            throw new RemoteException("Cannot place component at position " + position + " for player " + playerId +
+                    ". Position may be occupied or invalid.");
         }
         
         System.out.println("[ServerRMI] Component placed successfully for player " + playerId);
