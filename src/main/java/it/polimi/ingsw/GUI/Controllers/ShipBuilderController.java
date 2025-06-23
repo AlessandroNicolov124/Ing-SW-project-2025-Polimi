@@ -225,7 +225,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NNDN_2", "/Images/tiles/singlecannon_NNDN.jpg"),
             Map.entry("singlecannon_NNDS", "/Images/tiles/singlecannon_NNDS.jpg"),
             Map.entry("singlecannon_NNDU", "/Images/tiles/singlecannon_NNDU.jpg"),
-            Map.entry("singlecannon_NND", "/Images/tiles/singlecannon_NND.jpg"),
+            Map.entry("singlecannon_NNND", "/Images/tiles/singlecannon_NNND.jpg"),
             Map.entry("singlecannon_NNNS", "/Images/tiles/singlecannon_NNNS.jpg"),
             Map.entry("singlecannon_NNSD", "/Images/tiles/singlecannon_NNSD.jpg"),
             Map.entry("singleengine_NNSN", "/Images/tiles/singleengine_NNSN.jpg"),
@@ -429,10 +429,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 cardImage.setImage(new Image(imageStream));
                 statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " - Drag to place");
             } else {
-                statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (no image)");
+                statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (no image)" + component.getComponentString());
             }
         } else {
-            statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (unmapped)");
+            statusLabel.setText("Picked: " + component.getClass().getSimpleName() + " (unmapped) : " + component.getComponentString());
         }
     }
 
