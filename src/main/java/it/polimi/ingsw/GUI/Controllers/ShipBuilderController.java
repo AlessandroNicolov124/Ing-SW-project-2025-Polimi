@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
@@ -304,7 +305,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             if (cardImage.getImage() != null && currentComponent != null && !isRemoveMode) {
                 Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
-                content.putImage(cardImage.getImage());
+                javafx.scene.image.WritableImage snapshot = cardImage.snapshot(null, null);
+                content.putImage(snapshot);
                 db.setContent(content);
                 event.consume();
             }
@@ -328,10 +330,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         anchorPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-
+            
             if (db.hasImage() && currentComponent != null) {
                 Position dropPosition = calculateGridPosition(event.getX(), event.getY());
-
+                
                 if (isValidDropPosition(dropPosition)) {
                     try {
                         context.getClient().placeComponent(currentComponent, dropPosition, context.getPlayerId());
@@ -344,7 +346,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     statusLabel.setText("Invalid position or position occupied!");
                 }
             }
-
+            
             event.setDropCompleted(success);
             event.consume();
         });
@@ -363,7 +365,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         removeButton.setLayoutX(10);
         removeButton.setLayoutY(10);
         removeButton.setPrefWidth(120);
-
+        
         removeButton.setOnAction(event -> {
             isRemoveMode = !isRemoveMode;
             if (isRemoveMode) {
@@ -377,7 +379,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 statusLabel.setText("Ready");
             }
         });
-
+        
         anchorPane.getChildren().add(removeButton);
     }
 
@@ -387,12 +389,21 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             statusLabel.setText("Error: No connection available");
             return;
         }
+        // Reset rotazione logica e grafica ogni volta che si pesca un nuovo componente
+        cardImage.setRotate(0);
+        if (currentComponent != null) {
+            if(currentComponent.getComponentDirection()!=Direction.NORTH){
+                //currentComponent.setComponentDirection(Direction.NORTH);
+                // Riporta anche i connettori alla posizione originale
+                System.out.println("ERRORE COMPONENT RUOTATO IMPLICITAMENTE");
+            }
 
+        }
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
             context.getClient().pickComponentCard(context.getPlayerId());
-
+            
         } catch (Exception e) {
             pickComponentButton.setDisable(false);
             statusLabel.setText("Pick failed: " + e.getMessage());
@@ -402,7 +413,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameComponentPicked(Component component) {
         pickComponentButton.setDisable(false);
-
+        
         if (component == null) {
             statusLabel.setText("No components available");
             return;
@@ -410,7 +421,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
         currentComponent = component;
         String imagePath = getComponentImgPath(component);
-
+        
         if (imagePath != null) {
             InputStream imageStream = getClass().getResourceAsStream(imagePath);
             if (imageStream != null) {
@@ -477,7 +488,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private void selectImageView(ImageView imageView) {
         clearSelection();
-
+        
         selectedImageView = imageView;
         selectedHighlight = new Rectangle(
                 imageView.getLayoutX(), imageView.getLayoutY(),
@@ -487,7 +498,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         selectedHighlight.setStroke(Color.YELLOWGREEN);
         selectedHighlight.setStrokeWidth(7);
         selectedHighlight.setMouseTransparent(true);
-
+        
         anchorPane.getChildren().add(selectedHighlight);
         imageView.toFront();
     }
@@ -544,6 +555,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         placed.setLayoutX(GRID_START_X + position.getX() * SQUARE_SIZE);
         placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
         placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
+        // Rotazione coerente con la logica del componente
+        double rotation = 0;
+        switch (component.getComponentDirection()) {
+            case NORTH -> rotation = 0;
+            case EAST -> rotation = 90;
+            case SOUTH -> rotation = 180;
+            case WEST -> rotation = 270;
+        }
+        placed.setRotate(rotation);
 
         anchorPane.getChildren().add(placed);
         cellViews.put(position, placed);
