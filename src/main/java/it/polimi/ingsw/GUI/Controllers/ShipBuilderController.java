@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
@@ -145,15 +146,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("normalcargoholds_triple_SNDS", "/Images/tiles/normalcargoholds_triple_SNDS.jpg"),
             Map.entry("normalcargoholds_triple_DNSD", "/Images/tiles/normalcargoholds_triple_DNSD.jpg"),
 
-            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargohold_single_DDDU.jpg"),
-            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargohold_single_DSNU.jpg"),
-            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargohold_single_NDSU.jpg"),
-            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargohold_single_NUNU.jpg"),
-            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargohold_single_UNNU.jpg"),
-            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargohold_single_SSSU.jpg"),
-            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargohold_double_NDNS.jpg"),
-            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargohold_double_NNND.jpg"),
-            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargohold_double_NNNS.jpg"),
+            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargoholds_single_DDDU.jpg"),
+            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargoholds_single_DSNU.jpg"),
+            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargoholds_single_NDSU.jpg"),
+            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargoholds_single_NUNU.jpg"),
+            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargoholds_single_UNNU.jpg"),
+            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargoholds_single_SSSU.jpg"),
+            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargoholds_double_NDNS.jpg"),
+            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargoholds_double_NNND.jpg"),
+            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargoholds_double_NNNS.jpg"),
 
             Map.entry("structuralmodule_SUDU", "/Images/tiles/structuralmodule_SUDU.jpg"),
             Map.entry("structuralmodule_SUNU", "/Images/tiles/structuralmodule_SUNU.jpg"),
@@ -304,7 +305,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             if (cardImage.getImage() != null && currentComponent != null && !isRemoveMode) {
                 Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
-                content.putImage(cardImage.getImage());
+                javafx.scene.image.WritableImage snapshot = cardImage.snapshot(null, null);
+                content.putImage(snapshot);
                 db.setContent(content);
                 event.consume();
             }
@@ -386,8 +388,17 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         if (context == null || context.getClient() == null) {
             statusLabel.setText("Error: No connection available");
             return;
-        }        
+        }
+        // Reset rotazione logica e grafica ogni volta che si pesca un nuovo componente
+        cardImage.setRotate(0);
+        if (currentComponent != null) {
+            if(currentComponent.getComponentDirection()!=Direction.NORTH){
+                //currentComponent.setComponentDirection(Direction.NORTH);
+                // Riporta anche i connettori alla posizione originale
+                System.out.println("ERRORE COMPONENT RUOTATO IMPLICITAMENTE");
+            }
 
+        }
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
@@ -544,6 +555,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         placed.setLayoutX(GRID_START_X + position.getX() * SQUARE_SIZE);
         placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
         placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
+        // Rotazione coerente con la logica del componente
+        double rotation = 0;
+        switch (component.getComponentDirection()) {
+            case NORTH -> rotation = 0;
+            case EAST -> rotation = 90;
+            case SOUTH -> rotation = 180;
+            case WEST -> rotation = 270;
+        }
+        placed.setRotate(rotation);
 
         anchorPane.getChildren().add(placed);
         cellViews.put(position, placed);
