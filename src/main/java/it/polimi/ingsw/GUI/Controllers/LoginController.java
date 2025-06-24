@@ -55,7 +55,7 @@ public class LoginController extends GuiContoller{
                     //methods to add a new player
                 }
                 else {
-                    RmiClient rmiClient = RmiClient.connectTo(serverAddress, context);
+                    RmiClient rmiClient = RmiClient.connectTo(serverAddress, serverPort, context);
                     if (rmiClient == null) {
                         throw new IllegalStateException("Failed to connect to RMI server.");
                     }
