@@ -57,9 +57,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private static final int SQUARE_SIZE = 123;
     private static final int GRID_ROWS = 5;
     private static final int GRID_COLS = 7;
-    private static final int STACK_CARDS = 2;
     private static final double GRID_START_X = 38;
     private static final double GRID_START_Y = 31;
+
+    private static final int STASH_CARDS = 2;
+    private static final int GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
+    private static final int GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+
 
     private static final boolean[][] VALID_SQUARES = {
             {false, false, true,  false, true,  false, false},
@@ -281,10 +285,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             }
         }
 
-        for (int col = 0; col < STACK_CARDS; col++) {
+        for (int col = 0; col < STASH_CARDS; col++) {
 
-            x = GRID_START_X + (5+col)*SQUARE_SIZE + 20;
-            y = GRID_START_Y - 8;
+            x = GRIST_STASH_CARDS_START_X + col * SQUARE_SIZE;
+            y = GRIST_STASH_CARDS_START_Y;
             Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
             rect.setFill(Color.TRANSPARENT);
             rect.setStroke(Color.WHITE);
