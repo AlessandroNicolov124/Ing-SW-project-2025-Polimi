@@ -162,7 +162,7 @@ shieldgenerator_SNSS
 
 # Life Support Systems (with color specification)
 lifesupportsystem_brown_DSNS
-lifesupportsystem_brown_NDNT
+lifesupportsystem_brown_NDNU
 lifesupportsystem_brown_NNNU
 lifesupportsystem_brown_NNSD
 lifesupportsystem_brown_SNNU
@@ -172,7 +172,7 @@ lifesupportsystem_purple_DDND
 lifesupportsystem_purple_DNNU
 lifesupportsystem_purple_NNDU
 lifesupportsystem_purple_NNNU
-lifesupportsystem_purple_NSNT
+lifesupportsystem_purple_NSNU
 lifesupportsystem_purple_SDND
 
 # Structural Modules
