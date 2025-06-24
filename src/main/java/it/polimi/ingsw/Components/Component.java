@@ -211,30 +211,31 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     public abstract String getComponentString();
-
+    /**
+     * Returns a string representation of the connections in the order: North, East, South, West.
+     * Each character represents the type of connector in that direction:
+     * 'N' for NullConnectorType, 'S' for SingleConnectorType,
+     * 'D' for DoubleConnectorType, 'U' for UniversalConnectorType.
+     *
+     * @return A string representing the connections of the component.
+     */
     public String getConnectionsString(){
         StringBuilder sb = new StringBuilder();
-
-        for(Direction d : Direction.values()){
-        Connector c = getConnectorByDirection(d);
-            switch(c.getConnectorType()){
-                case NullConnectorType n -> sb.append("N");
-                case SingleConnectorType n -> sb.append("S");
-                case DoubleConnectorType n -> sb.append("D");
-                case UniversalConnectorType n -> sb.append("U");
+        Direction dir = componentDirection;
+        for (int i = 0; i < 4; i++) {
+            Connector c = getConnectorByDirection(dir);
+            if (c == null) {
+                sb.append("N");
+            } else {
+                switch(c.getConnectorType()){
+                    case NullConnectorType n -> sb.append("N");
+                    case SingleConnectorType n -> sb.append("S");
+                    case DoubleConnectorType n -> sb.append("D");
+                    case UniversalConnectorType n -> sb.append("U");
+                }
             }
+            dir = dir.getClockwise();
         }
         return sb.toString();
     }
 }
-
-
-
-
-
-
-
-
-
-
-

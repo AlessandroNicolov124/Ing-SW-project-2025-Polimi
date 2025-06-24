@@ -426,24 +426,30 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @FXML
     public void rotateCardClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Seleziona prima un componente da piazzare");
             return;
         }
-
-        selectedImageView.setRotate(selectedImageView.getRotate() + 90);
-        statusLabel.setText("Rotated clockwise (visual only)");
+        // Rotazione logica
+        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
+        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() + 90);
+        statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
     }
 
     @FXML
     public void rotateCardAntiClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Seleziona prima un componente da piazzare");
             return;
         }
-
-        selectedImageView.setRotate(selectedImageView.getRotate() - 90);
-        statusLabel.setText("Rotated counter-clockwise (visual only)");
+        // Rotazione logica
+        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
+        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() - 90);
+        statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");
     }
 
     @FXML
@@ -519,11 +525,18 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentPlaced(Component component, Position position) {
+        System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
         String imagePath = getComponentImgPath(component);
-        if (imagePath == null) return;
+        if (imagePath == null) {
+            System.out.println("[DEBUG] imagePath nullo per componente: " + component);
+            return;
+        }
 
         InputStream imageStream = getClass().getResourceAsStream(imagePath);
-        if (imageStream == null) return;
+        if (imageStream == null) {
+            System.out.println("[DEBUG] imageStream nullo per path: " + imagePath);
+            return;
+        }
 
         ImageView placed = new ImageView(new Image(imageStream));
         placed.setFitWidth(SQUARE_SIZE);
@@ -539,6 +552,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         statusLabel.setText("Component placed successfully!");
         currentComponent = null;
         cardImage.setImage(null);
+        System.out.println("[DEBUG] Componente piazzato e GUI aggiornata");
     }
 
     @Override
