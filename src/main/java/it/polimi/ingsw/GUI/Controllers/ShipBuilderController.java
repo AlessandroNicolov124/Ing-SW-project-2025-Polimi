@@ -61,8 +61,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private static final double GRID_START_Y = 31;
 
     private static final int STASH_CARDS = 2;
-    private static final int GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
-    private static final int GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+    private static final double GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
+    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
 
 
     private static final boolean[][] VALID_SQUARES = {
