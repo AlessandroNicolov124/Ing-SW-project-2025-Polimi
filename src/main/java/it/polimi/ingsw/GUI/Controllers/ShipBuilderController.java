@@ -45,7 +45,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     // Component management
     private Component currentComponent = null;
     private boolean isRemoveMode = false;
-    
+
     // Visual elements tracking
     private ImageView selectedImageView = null;
     //private ImageView imageViewToBeRemoved = null;
@@ -145,15 +145,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("normalcargoholds_triple_SNDS", "/Images/tiles/normalcargoholds_triple_SNDS.jpg"),
             Map.entry("normalcargoholds_triple_DNSD", "/Images/tiles/normalcargoholds_triple_DNSD.jpg"),
 
-            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargohold_single_DDDU.jpg"),
-            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargohold_single_DSNU.jpg"),
-            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargohold_single_NDSU.jpg"),
-            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargohold_single_NUNU.jpg"),
-            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargohold_single_UNNU.jpg"),
-            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargohold_single_SSSU.jpg"),
-            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargohold_double_NDNS.jpg"),
-            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargohold_double_NNND.jpg"),
-            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargohold_double_NNNS.jpg"),
+            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargoholds_single_DDDU.jpg"),
+            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargoholds_single_DSNU.jpg"),
+            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargoholds_single_NDSU.jpg"),
+            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargoholds_single_NUNU.jpg"),
+            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargoholds_single_UNNU.jpg"),
+            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargoholds_single_SSSU.jpg"),
+            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargoholds_double_NDNS.jpg"),
+            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargoholds_double_NNND.jpg"),
+            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargoholds_double_NNNS.jpg"),
 
             Map.entry("structuralmodule_SUDU", "/Images/tiles/structuralmodule_SUDU.jpg"),
             Map.entry("structuralmodule_SUNU", "/Images/tiles/structuralmodule_SUNU.jpg"),
@@ -328,10 +328,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         anchorPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-            
+
             if (db.hasImage() && currentComponent != null) {
                 Position dropPosition = calculateGridPosition(event.getX(), event.getY());
-                
+
                 if (isValidDropPosition(dropPosition)) {
                     try {
                         context.getClient().placeComponent(currentComponent, dropPosition, context.getPlayerId());
@@ -344,7 +344,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     statusLabel.setText("Invalid position or position occupied!");
                 }
             }
-            
+
             event.setDropCompleted(success);
             event.consume();
         });
@@ -363,7 +363,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         removeButton.setLayoutX(10);
         removeButton.setLayoutY(10);
         removeButton.setPrefWidth(120);
-        
+
         removeButton.setOnAction(event -> {
             isRemoveMode = !isRemoveMode;
             if (isRemoveMode) {
@@ -377,7 +377,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 statusLabel.setText("Ready");
             }
         });
-        
+
         anchorPane.getChildren().add(removeButton);
     }
 
@@ -386,13 +386,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         if (context == null || context.getClient() == null) {
             statusLabel.setText("Error: No connection available");
             return;
-        }        
+        }
 
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
             context.getClient().pickComponentCard(context.getPlayerId());
-            
+
         } catch (Exception e) {
             pickComponentButton.setDisable(false);
             statusLabel.setText("Pick failed: " + e.getMessage());
@@ -402,7 +402,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameComponentPicked(Component component) {
         pickComponentButton.setDisable(false);
-        
+
         if (component == null) {
             statusLabel.setText("No components available");
             return;
@@ -410,7 +410,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
         currentComponent = component;
         String imagePath = getComponentImgPath(component);
-        
+
         if (imagePath != null) {
             InputStream imageStream = getClass().getResourceAsStream(imagePath);
             if (imageStream != null) {
@@ -471,7 +471,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private void selectImageView(ImageView imageView) {
         clearSelection();
-        
+
         selectedImageView = imageView;
         selectedHighlight = new Rectangle(
                 imageView.getLayoutX(), imageView.getLayoutY(),
@@ -481,7 +481,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         selectedHighlight.setStroke(Color.YELLOWGREEN);
         selectedHighlight.setStrokeWidth(7);
         selectedHighlight.setMouseTransparent(true);
-        
+
         anchorPane.getChildren().add(selectedHighlight);
         imageView.toFront();
     }
