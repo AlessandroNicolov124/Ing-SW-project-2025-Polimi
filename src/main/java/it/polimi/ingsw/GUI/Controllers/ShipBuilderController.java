@@ -524,12 +524,14 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameComponentRemoved(Position position) {
         ImageView removed = cellViews.get(position);
-        removed.setImage(null);
-        cellViews.remove(position);
-        anchorPane.getChildren().remove(removed);
-        shipComponents.remove(position);
-        clearSelection();
-        statusLabel.setText("Component removed!");
+        if (removed != null) {
+            removed.setImage(null);
+            cellViews.remove(position);
+            //anchorPane.getChildren().remove(removed);
+            shipComponents.remove(position);
+            clearSelection();
+            statusLabel.setText("Component removed!");
+        }
 
     }
 
