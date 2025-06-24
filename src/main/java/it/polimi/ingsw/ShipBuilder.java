@@ -60,56 +60,56 @@ public class ShipBuilder {
         if (components.isEmpty() && !position.equals(this.startingPosition)) {
             return false;
         }
-
+        //TODO ALE: Cancellare
         // Se non è il primo componente, deve essere collegato a un componente esistente
-        if (!components.isEmpty()) {
-
-            Position adjPos = null;
-            switch(component){
-                case Engine e:
-                    Direction engineDir = e.getComponentDirection();
-                    Direction opposite = switch(engineDir) {
-                        case NORTH -> Direction.SOUTH;
-                        case SOUTH -> Direction.NORTH;
-                        case EAST  -> Direction.WEST;
-                        case WEST  -> Direction.EAST;
-                    };
-                    Position behind = position.getAdjacentPosition(opposite);
-                    if (isPositionValid(behind) && isPositionOccupied(behind)) {
-                        System.out.println("Cannot place Engine: cell immediately behind (" + behind + ") is occupied");
-                        return false;
-                    }
-                    break;
-                case Cannon c: {
-                    Direction cannonDir = c.getComponentDirection();
-                    Position ahead = position.getAdjacentPosition(cannonDir);
-                    if (isPositionValid(ahead) && isPositionOccupied(ahead)) {
-                        System.out.println("  Cannot place Cannon: cell immediately ahead (" + ahead + ") is occupied");
-                        return false;
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            boolean isConnected = true;
-
-            for (Direction direction : Direction.values()) {
-                Position adjacentPosition = direction.getAdjacentPosition(position);
-                Component adjacentComponent = getComponentAt(adjacentPosition);
-
-                if (adjacentComponent != null && !component.canConnectTo(adjacentComponent, direction)) {
-                    isConnected = false;
-                    break;
-                }
-            }
-
-            if (!isConnected) {
-                System.out.print(" not connected, ");
-                return false;
-            }
-        }
+//        if (!components.isEmpty()) {
+//
+//            Position adjPos = null;
+//            switch(component){
+//                case Engine e:
+//                    Direction engineDir = e.getComponentDirection();
+//                    Direction opposite = switch(engineDir) {
+//                        case NORTH -> Direction.SOUTH;
+//                        case SOUTH -> Direction.NORTH;
+//                        case EAST  -> Direction.WEST;
+//                        case WEST  -> Direction.EAST;
+//                    };
+//                    Position behind = position.getAdjacentPosition(opposite);
+//                    if (isPositionValid(behind) && isPositionOccupied(behind)) {
+//                        System.out.println("Cannot place Engine: cell immediately behind (" + behind + ") is occupied");
+//                        return false;
+//                    }
+//                    break;
+//                case Cannon c: {
+//                    Direction cannonDir = c.getComponentDirection();
+//                    Position ahead = position.getAdjacentPosition(cannonDir);
+//                    if (isPositionValid(ahead) && isPositionOccupied(ahead)) {
+//                        System.out.println("  Cannot place Cannon: cell immediately ahead (" + ahead + ") is occupied");
+//                        return false;
+//                    }
+//                    break;
+//                }
+//                default:
+//                    break;
+//            }
+//
+//            boolean isConnected = true;
+//
+//            for (Direction direction : Direction.values()) {
+//                Position adjacentPosition = direction.getAdjacentPosition(position);
+//                Component adjacentComponent = getComponentAt(adjacentPosition);
+//
+//                if (adjacentComponent != null && !component.canConnectTo(adjacentComponent, direction)) {
+//                    isConnected = false;
+//                    break;
+//                }
+//            }
+//
+//            if (!isConnected) {
+//                System.out.print(" not connected, ");
+//                return false;
+//            }
+//        }
 
         // Posiziona il componente
         components.put(component, position);
@@ -175,35 +175,11 @@ public class ShipBuilder {
                }
                // TODO verificare che il giocatore abbia ancora umani altrimenti ha perso
            }
-           case LifeSupportSystem lifeSupport -> {
-               disconnectLifeSupportConnections(lifeSupport);
-           }
+//           case LifeSupportSystem lifeSupport -> {
+//               disconnectLifeSupportConnections(lifeSupport);
+//           }
            default -> { /* Other components can be removed */ }
        }
-
-
-//        // Handle single component case
-        //TODO se è ultimo componente il giocatore perde
-//        if (components.size() == 1) {
-//            // Don't allow removing the only component if it's a starting cabin
-//            if (component.isStartingCabin()) {
-//                return false; // Cannot remove starting cabin
-//            }
-//            // Otherwise allow removal during ship building
-//            components.remove(component);
-//            return true;
-//        }
-
-        // For multiple components: check connectivity and cabin protection
-//        if (component.isStartingCabin()) {
-//            return false; // Never allow removing starting cabin
-//        }
-
-        //Check if removing this component would disconnect the ship
-//        if (wouldDisconnectShip(component)) {
-//            //TODO fare scegliere al giocatore quale parte della navicella tenere
-//            return false; // Don't allow removal if it would disconnect the ship
-//        }
 
         // Remove the component
         components.remove(component);
