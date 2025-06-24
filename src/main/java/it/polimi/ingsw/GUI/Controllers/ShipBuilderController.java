@@ -34,8 +34,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Button pickComponentButton;
     @FXML
-    private Button pickFistComponentButton;
-    @FXML
     private Button rotateClockwiseButton;
     @FXML
     private Button rotateCounterClockwiseButton;
@@ -50,6 +48,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     
     // Visual elements tracking
     private ImageView selectedImageView = null;
+    //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
@@ -478,7 +477,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private void handleComponentClick(ImageView imageView, Position position) {
         if (isRemoveMode) {
             try {
-                imageView = null;
+                //imageViewToBeRemoved = imageView;
                 context.getClient().removeComponent(position, context.getPlayerId());
                 statusLabel.setText("Removing component...");
             } catch (Exception e) {
@@ -525,7 +524,9 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentRemoved(Position position) {
-        ImageView removed = cellViews.remove(position);
+        ImageView removed = cellViews.get(position);
+        removed.setImage(null);
+        cellViews.remove(position);
         if (removed != null) {
             anchorPane.getChildren().remove(removed);
             shipComponents.remove(position);
