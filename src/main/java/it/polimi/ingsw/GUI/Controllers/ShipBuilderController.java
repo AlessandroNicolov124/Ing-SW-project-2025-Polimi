@@ -34,8 +34,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Button pickComponentButton;
     @FXML
-    private Button pickFistComponentButton;
-    @FXML
     private Button rotateClockwiseButton;
     @FXML
     private Button rotateCounterClockwiseButton;
@@ -50,6 +48,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     
     // Visual elements tracking
     private ImageView selectedImageView = null;
+    //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
@@ -60,6 +59,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private static final int GRID_COLS = 7;
     private static final double GRID_START_X = 38;
     private static final double GRID_START_Y = 31;
+
+    private static final int STASH_CARDS = 2;
+    private static final int GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
+    private static final int GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+
 
     private static final boolean[][] VALID_SQUARES = {
             {false, false, true,  false, true,  false, false},
@@ -238,37 +242,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
             Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
 
-
-
-
-//            Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
-//            Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
-//            Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
-//            Map.entry("Cannon", "/Images/tiles/GT-new_tiles_16_for web38.jpg"),
-//            Map.entry("Cargo", "/Images/tiles/GT-new_tiles_16_for web39.jpg"),
-//            Map.entry("CargoHolds", "/Images/tiles/GT-new_tiles_16_for web40.jpg"),
-//            Map.entry("CargoHoldsSize", "/Images/tiles/GT-new_tiles_16_for web41.jpg"),
-//            Map.entry("Component", "/Images/tiles/GT-new_tiles_16_for web42.jpg"),
-//            Map.entry("Connector", "/Images/tiles/GT-new_tiles_16_for web43.jpg"),
-//            Map.entry("ConnectorType", "/Images/tiles/GT-new_tiles_16_for web44.jpg"),
-//            Map.entry("DoubleCannon", "/Images/tiles/GT-new_tiles_16_for web45.jpg"),
-//            Map.entry("DoubleConnectorType", "/Images/tiles/GT-new_tiles_16_for web46.jpg"),
-//            Map.entry("DoubleEngine", "/Images/tiles/GT-new_tiles_16_for web47.jpg"),
-//            Map.entry("Engine", "/Images/tiles/GT-new_tiles_16_for web48.jpg"),
-//            Map.entry("GreenCargo", "/Images/tiles/GT-new_tiles_16_for web49.jpg"),
-//            Map.entry("LifeSupportSystem", "/Images/tiles/GT-new_tiles_16_for web50.jpg"),
-//            Map.entry("LifeSupportSystemType", "/Images/tiles/GT-new_tiles_16_for web51.jpg"),
-//            Map.entry("NormalCargoHolds", "/Images/tiles/GT-new_tiles_16_for web52.jpg"),
-//            Map.entry("NullConnectorType", "/Images/tiles/GT-new_tiles_16_for web53.jpg"),
-//            Map.entry("RedCargo", "/Images/tiles/GT-new_tiles_16_for web54.jpg"),
-//            Map.entry("ShieldGenerator", "/Images/tiles/GT-new_tiles_16_for web55.jpg"),
-//            Map.entry("SingleCannon", "/Images/tiles/GT-new_tiles_16_for web56.jpg"),
-//            Map.entry("SingleConnectorType", "/Images/tiles/GT-new_tiles_16_for web57.jpg"),
-//            Map.entry("SingleEngine", "/Images/tiles/GT-new_tiles_16_for web58.jpg"),
-//            Map.entry("SpecialCargoHolds", "/Images/tiles/GT-new_tiles_16_for web59.jpg"),
-//            Map.entry("StructuralModule", "/Images/tiles/GT-new_tiles_16_for web60.jpg"),
-//            Map.entry("UniversalConnectorType", "/Images/tiles/GT-new_tiles_16_for web61.jpg"),
-//            Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
     @FXML
@@ -296,11 +269,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private void setupGrid() {
+        double x;
+        double y;
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
                 if (VALID_SQUARES[row][col]) {
-                    double x = GRID_START_X + col * SQUARE_SIZE;
-                    double y = GRID_START_Y + row * SQUARE_SIZE;
+                    x = GRID_START_X + col * SQUARE_SIZE;
+                    y = GRID_START_Y + row * SQUARE_SIZE;
                     Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
                     rect.setFill(Color.TRANSPARENT);
                     rect.setStroke(Color.WHITE);
@@ -309,6 +284,19 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 }
             }
         }
+
+        for (int col = 0; col < STASH_CARDS; col++) {
+
+            x = GRIST_STASH_CARDS_START_X + col * SQUARE_SIZE;
+            y = GRIST_STASH_CARDS_START_Y;
+            Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
+            rect.setFill(Color.TRANSPARENT);
+            rect.setStroke(Color.WHITE);
+            rect.setStrokeWidth(2.0);
+            anchorPane.getChildren().add(rect);
+
+        }
+
     }
 
     private void setupDragAndDrop() {
@@ -555,13 +543,16 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentRemoved(Position position) {
-        ImageView removed = cellViews.remove(position);
+        ImageView removed = cellViews.get(position);
         if (removed != null) {
-            anchorPane.getChildren().remove(removed);
+            removed.setImage(null);
+            cellViews.remove(position);
+            //anchorPane.getChildren().remove(removed);
             shipComponents.remove(position);
             clearSelection();
             statusLabel.setText("Component removed!");
         }
+
     }
 
     @Override
