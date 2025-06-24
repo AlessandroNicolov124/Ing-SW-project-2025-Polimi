@@ -238,37 +238,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
             Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
 
-
-
-
-//            Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
-//            Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
-//            Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
-//            Map.entry("Cannon", "/Images/tiles/GT-new_tiles_16_for web38.jpg"),
-//            Map.entry("Cargo", "/Images/tiles/GT-new_tiles_16_for web39.jpg"),
-//            Map.entry("CargoHolds", "/Images/tiles/GT-new_tiles_16_for web40.jpg"),
-//            Map.entry("CargoHoldsSize", "/Images/tiles/GT-new_tiles_16_for web41.jpg"),
-//            Map.entry("Component", "/Images/tiles/GT-new_tiles_16_for web42.jpg"),
-//            Map.entry("Connector", "/Images/tiles/GT-new_tiles_16_for web43.jpg"),
-//            Map.entry("ConnectorType", "/Images/tiles/GT-new_tiles_16_for web44.jpg"),
-//            Map.entry("DoubleCannon", "/Images/tiles/GT-new_tiles_16_for web45.jpg"),
-//            Map.entry("DoubleConnectorType", "/Images/tiles/GT-new_tiles_16_for web46.jpg"),
-//            Map.entry("DoubleEngine", "/Images/tiles/GT-new_tiles_16_for web47.jpg"),
-//            Map.entry("Engine", "/Images/tiles/GT-new_tiles_16_for web48.jpg"),
-//            Map.entry("GreenCargo", "/Images/tiles/GT-new_tiles_16_for web49.jpg"),
-//            Map.entry("LifeSupportSystem", "/Images/tiles/GT-new_tiles_16_for web50.jpg"),
-//            Map.entry("LifeSupportSystemType", "/Images/tiles/GT-new_tiles_16_for web51.jpg"),
-//            Map.entry("NormalCargoHolds", "/Images/tiles/GT-new_tiles_16_for web52.jpg"),
-//            Map.entry("NullConnectorType", "/Images/tiles/GT-new_tiles_16_for web53.jpg"),
-//            Map.entry("RedCargo", "/Images/tiles/GT-new_tiles_16_for web54.jpg"),
-//            Map.entry("ShieldGenerator", "/Images/tiles/GT-new_tiles_16_for web55.jpg"),
-//            Map.entry("SingleCannon", "/Images/tiles/GT-new_tiles_16_for web56.jpg"),
-//            Map.entry("SingleConnectorType", "/Images/tiles/GT-new_tiles_16_for web57.jpg"),
-//            Map.entry("SingleEngine", "/Images/tiles/GT-new_tiles_16_for web58.jpg"),
-//            Map.entry("SpecialCargoHolds", "/Images/tiles/GT-new_tiles_16_for web59.jpg"),
-//            Map.entry("StructuralModule", "/Images/tiles/GT-new_tiles_16_for web60.jpg"),
-//            Map.entry("UniversalConnectorType", "/Images/tiles/GT-new_tiles_16_for web61.jpg"),
-//            Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
     @FXML
@@ -509,6 +478,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private void handleComponentClick(ImageView imageView, Position position) {
         if (isRemoveMode) {
             try {
+                imageView = null;
                 context.getClient().removeComponent(position, context.getPlayerId());
                 statusLabel.setText("Removing component...");
             } catch (Exception e) {
