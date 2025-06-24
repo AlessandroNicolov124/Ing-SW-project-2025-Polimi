@@ -200,10 +200,10 @@ public class ShipBuilder {
 //        }
 
         //Check if removing this component would disconnect the ship
-        if (wouldDisconnectShip(component)) {
-            //TODO fare scegliere al giocatore quale parte della navicella tenere
-            return false; // Don't allow removal if it would disconnect the ship
-        }
+//        if (wouldDisconnectShip(component)) {
+//            //TODO fare scegliere al giocatore quale parte della navicella tenere
+//            return false; // Don't allow removal if it would disconnect the ship
+//        }
 
         // Remove the component
         components.remove(component);
