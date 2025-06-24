@@ -39,8 +39,8 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         startConsumer(); // thread which prints incoming messages on the TUI
     }
 
-    public static RmiClient connectTo(String host, GameListener sbl) throws Exception {
-        VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":1099/GalaxyTruckerServer");
+    public static RmiClient connectTo(String host, int registryPort, GameListener sbl) throws Exception {
+        VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":" + registryPort + "/GalaxyTruckerServer");
         return new RmiClient(srv, sbl);
     }
 

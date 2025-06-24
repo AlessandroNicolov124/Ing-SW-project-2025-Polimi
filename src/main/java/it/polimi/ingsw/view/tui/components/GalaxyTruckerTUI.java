@@ -121,7 +121,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 client.createPlayer(username);
 
             } else if ("rmi".equalsIgnoreCase(connectionType)) {
-                client = RmiClient.connectTo(serverAddress, this);
+                client = RmiClient.connectTo(serverAddress, serverPort, this);
                 if (client == null) {
                     throw new IllegalStateException("Failed to connect to RMI server.");
                 }

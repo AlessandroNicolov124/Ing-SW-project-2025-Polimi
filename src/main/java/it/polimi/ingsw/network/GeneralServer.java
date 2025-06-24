@@ -39,20 +39,22 @@ public class GeneralServer implements LobbyManager {
     private final Set<String> usernames = ConcurrentHashMap.newKeySet();
 
 
-    public GeneralServer() throws RemoteException, MalformedURLException {
-        System.setProperty("java.rmi.server.hostname", "127.0.0.1");
-        Registry reg = LocateRegistry.createRegistry(1099);
+    public GeneralServer(String host, int rmiPort, int socketPort) throws RemoteException, MalformedURLException {
+        System.setProperty("java.rmi.server.hostname", host);
+        Registry reg = LocateRegistry.createRegistry(rmiPort);
 
         this.rmiServer = new RmiServer(this, reg);
-        Naming.rebind("GalaxyTruckerServer", rmiServer);
-        this.socketServer = new SocketServer(7777, this);
-        
+        Naming.rebind("//" + host + ":" + rmiPort + "/GalaxyTruckerServer", rmiServer);
+        System.out.println("RmiServer listening at port " + rmiPort);
+        this.socketServer = new SocketServer(socketPort, this);
+        serverRun();
+
+
         this.generalDispatcher = startGlobalDispatcher();
     }
 
     public void serverRun() {
         new Thread(this.socketServer).start();
-        new Thread(this.rmiServer).start();
     }
 
     @Override

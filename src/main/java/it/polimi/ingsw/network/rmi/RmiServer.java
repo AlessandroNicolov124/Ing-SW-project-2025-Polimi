@@ -18,9 +18,6 @@ import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -31,7 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class RmiServer extends UnicastRemoteObject
-        implements VirtualServer, Unreferenced, AutoCloseable, Runnable {
+        implements VirtualServer, Unreferenced, AutoCloseable {
 
     private final LobbyManager lobbyManager;
     private final List<RmiClientIf> clients = new CopyOnWriteArrayList<>();
@@ -41,10 +38,6 @@ public class RmiServer extends UnicastRemoteObject
         super();
         this.lobbyManager = lobbyManager;
         this.registry = registry;
-    }
-
-    public void run() {
-        System.out.println("GalaxyTruckerServer RMI ready (port 1099)");
     }
 
     @Override
