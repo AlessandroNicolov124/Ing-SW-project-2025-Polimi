@@ -57,6 +57,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private static final int SQUARE_SIZE = 123;
     private static final int GRID_ROWS = 5;
     private static final int GRID_COLS = 7;
+    private static final int STACK_CARDS = 2;
     private static final double GRID_START_X = 38;
     private static final double GRID_START_Y = 31;
 
@@ -264,11 +265,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private void setupGrid() {
+        double x;
+        double y;
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
                 if (VALID_SQUARES[row][col]) {
-                    double x = GRID_START_X + col * SQUARE_SIZE;
-                    double y = GRID_START_Y + row * SQUARE_SIZE;
+                    x = GRID_START_X + col * SQUARE_SIZE;
+                    y = GRID_START_Y + row * SQUARE_SIZE;
                     Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
                     rect.setFill(Color.TRANSPARENT);
                     rect.setStroke(Color.WHITE);
@@ -277,6 +280,19 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 }
             }
         }
+
+        for (int col = 0; col < STACK_CARDS; col++) {
+
+            x = GRID_START_X + (5+col)*SQUARE_SIZE + 20;
+            y = GRID_START_Y - 8;
+            Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
+            rect.setFill(Color.TRANSPARENT);
+            rect.setStroke(Color.WHITE);
+            rect.setStrokeWidth(2.0);
+            anchorPane.getChildren().add(rect);
+
+        }
+
     }
 
     private void setupDragAndDrop() {
