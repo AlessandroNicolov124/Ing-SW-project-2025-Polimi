@@ -40,12 +40,12 @@ public class AbandonedStation extends AdventureCard{
     }
 
     @Override
-    int additionalPls(){
+    protected int additionalPls(){
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Implementation depends on how player choice is handled in the game
     }
 
@@ -62,6 +62,7 @@ public class AbandonedStation extends AdventureCard{
      */
     public boolean dockAtStation(Player player, GameModel gameModel) {
         if (opportunityUsed) {
+            System.out.println("Opportunity already used by another player.");
             return false; // Opportunity already used by another player
         }
         
@@ -69,100 +70,15 @@ public class AbandonedStation extends AdventureCard{
         int crewCount = player.getShip().getTotalCrewCount();
         
         if (crewCount < minCrewRequired) {
+            System.out.println("Not enough crew to dock at the station.");
             return false; // Not enough crew
         }
         
         // Load goods on player's ship
         if(!loadGoods(player)){
+            System.out.println("No goods available to load.");
             return false;
         }
-//
-//        // Ordine di priorità: rosso, giallo, verde, blu
-//        Comparator<Cargo> cargoComparator = Comparator
-//                .comparing((Cargo cargo) -> {
-//                    switch(cargo) {
-//                        case RedCargo c: return 1;
-//                        case YellowCargo y: return 2;
-//                        case GreenCargo g: return 3;
-//                        case BlueCargo b: return 4;
-//                        default: return 5;
-//                    }
-//                })
-//                .thenComparing(Cargo::getValue, Comparator.reverseOrder());
-//        // Ordina le merci disponibili
-//        Collections.sort(goodsToLoad, cargoComparator);
-//
-//        // stive del giocatore
-//        List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
-//        // Calcola lo spazio totale disponibile
-//        int totalAvailableSpace = playerCargoHolds.stream()
-//                .mapToInt(CargoHolds::getAvailableSpace)
-//                .sum();
-//
-//        // Cerca di caricare le merci
-//        for (Cargo cargo : goodsToLoad) {
-//            // Se non c'è più spazio, interrompi
-//            if (totalAvailableSpace <= 0) {
-//                break;
-//            }
-//
-//            boolean loaded = false;
-//
-//            // Gestione speciale per i rossi
-//            if (cargo.isRed()) {
-//                // Prova prima nelle stive speciali rosse
-//                for (CargoHolds cargoHold : playerCargoHolds) {
-//                    switch(cargoHold){
-//                        case SpecialCargoHolds c:
-//                            if(!cargoHold.isFull() && cargoHold.canContainCargo(cargo)){
-//                                cargoHold.loadCargo(cargo);
-//                                loaded = true;
-//                                totalAvailableSpace--;
-//                            }
-//                            break;
-//                        default:
-//                            break;
-//                    }
-//                }
-//
-//                // Se non caricato nelle speciali, prova nelle normali
-//                if (!loaded) {
-//                    for (CargoHolds cargoHold : playerCargoHolds) {
-//                        if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
-//                            cargoHold.loadCargo(cargo);
-//                            loaded = true;
-//                            totalAvailableSpace--;
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//            // Per tutti gli altri colori
-//            else {
-//                // Prova a caricare nelle stive che possono contenere quel tipo di merce
-//                for (CargoHolds cargoHold : playerCargoHolds) {
-//                    if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
-//                        cargoHold.loadCargo(cargo);
-//                        loaded = true;
-//                        totalAvailableSpace--;
-//                        break;
-//                    }
-//                }
-//
-//                // Se non caricato nelle stive appropriate,
-//                // carica in qualsiasi stiva disponibile
-//                if (!loaded) {
-//                    for (CargoHolds cargoHold : playerCargoHolds) {
-//                        if (!cargoHold.isFull()) {
-//                            cargoHold.loadCargo(cargo);
-//                            loaded = true;
-//                            totalAvailableSpace--;
-//                            break;
-//                        }
-//                    }
-//                }
-//            }
-//        }
 
         // Applica il costo in giorni di volo
         gameModel.updatePosition(player, -flightDaysCost);
@@ -175,11 +91,10 @@ public class AbandonedStation extends AdventureCard{
      * Load goods from a planet onto a player's ship
      *
      * @param player The player loading goods
-     * @return
+     * @return true if goods were loaded successfully (almost one), false otherwise
      */
     private boolean loadGoods(Player player) {
         // Implementation of how goods are tracked
-        // Logic to add goods to player's inventory here
 
         // Ordine di priorità: rosso, giallo, verde, blu
         Comparator<Cargo> cargoComparator = Comparator
@@ -193,8 +108,9 @@ public class AbandonedStation extends AdventureCard{
                     }
                 })
                 .thenComparing(Cargo::getValue, Comparator.reverseOrder());
-        // Ordina le merci disponibili
-        Collections.sort(goodsToLoad, cargoComparator);
+        // Crea una lista mutabile per ordinare
+        List<Cargo> sortedGoods = new java.util.ArrayList<>(goodsToLoad);
+        sortedGoods.sort(cargoComparator);
 
         // stive del giocatore
         List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
@@ -206,7 +122,7 @@ public class AbandonedStation extends AdventureCard{
         boolean loaded = false;
 
         // Cerca di caricare le merci
-        for (Cargo cargo : goodsToLoad) {
+        for (Cargo cargo : sortedGoods) {
             // Se non c'è più spazio, interrompi
             if (totalAvailableSpace <= 0) {
                 break;

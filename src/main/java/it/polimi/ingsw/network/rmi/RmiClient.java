@@ -1,7 +1,6 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.client.RmiClientIf;
@@ -10,10 +9,12 @@ import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerResponse;
 import it.polimi.ingsw.network.messages.lobby.CreateMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.GetMatchesResponse;
-import it.polimi.ingsw.network.messages.lobby.JoinMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
@@ -29,8 +30,6 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     private final VirtualServer server;
     private final BlockingQueue<ResponseMessage> incoming = new LinkedBlockingQueue<>();
     private GameListener listener;
-    private Player localPlayer;
-
 
     private RmiClient(VirtualServer server, GameListener listener) throws RemoteException {
         super();
@@ -40,8 +39,8 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         startConsumer(); // thread which prints incoming messages on the TUI
     }
 
-    public static RmiClient connectTo(String host, GameListener sbl) throws Exception {
-        VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":1099/GalaxyTruckerServer");
+    public static RmiClient connectTo(String host, int registryPort, GameListener sbl) throws Exception {
+        VirtualServer srv = (VirtualServer) Naming.lookup("//" + host + ":" + registryPort + "/GalaxyTruckerServer");
         return new RmiClient(srv, sbl);
     }
 
@@ -166,35 +165,50 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         UnicastRemoteObject.unexportObject(this, true);
     }
 
+
     @Override
-    public void placeComponent(Component component, Position position) throws RemoteException {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot place component: local player not set");
+    public Component pickComponentCard(int playerId) throws RemoteException {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
         }
         
         try {
-            server.placeComponent(localPlayer.getId(), component, position);
+            Component component = server.pickComponent(playerId);
+            showUpdate(new PickComponentResponse(playerId, component, true, "Component picked successfully"));
+            return component;
         } catch (RemoteException e) {
-            throw new RemoteException("Error placing component", e);
+            showUpdate(new PickComponentResponse(playerId, null, false, e.getMessage()));
+            throw new RemoteException("Error picking component", e);
         }
     }
 
     @Override
-    public void validateShip() throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
-    }
-
-    @Override
-    public void removeComponent(Position position) throws RemoteException {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot remove component: local player not set");
+    public void placeComponent(Component component, Position position, int playerId) throws RemoteException {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
         }
         
         try {
-            server.removeComponent(localPlayer.getId(), position);
+            server.placeComponent(playerId, component, position);
+            showUpdate(new PlaceComponentResponse(playerId, component, position, true, "Component placed successfully"));
         } catch (RemoteException e) {
-            throw new RemoteException("Error removing component", e);
+            showUpdate(new PlaceComponentResponse(playerId, component, position, false, e.getMessage()));
+            throw new RemoteException("Error placing component: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void removeComponent(Position position, int playerId) throws RemoteException {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
+        }
+        
+        try {
+            server.removeComponent(playerId, position);
+            showUpdate(new RemoveComponentResponse(playerId, position, true, "Component removed successfully"));
+        } catch (RemoteException e) {
+            showUpdate(new RemoveComponentResponse(playerId, position, false, e.getMessage()));
+            throw new RemoteException("Error removing component: " + e.getMessage(), e);
         }
     }
 
@@ -204,23 +218,12 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
     }
 
-    @Override
-    public void setLocalPlayer(Player player) throws RemoteException {
-        this.localPlayer = player;
-    }
+
 
     @Override
-    public Component pickComponentCard() throws RemoteException {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot pick component: local player not set");
-        }
-        
-        try {
-            Component component = server.pickComponent(localPlayer.getId());
-            return component;
-        } catch (RemoteException e) {
-            throw new RemoteException("Error picking component", e);
-        }
+    public void validateShip() throws RemoteException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
     }
 
 }

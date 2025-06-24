@@ -1,8 +1,8 @@
 package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GUI.Controllers.LobbyController;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
+import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.client.GeneralClientIf;
@@ -19,9 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static it.polimi.ingsw.network.messages.RotationType.*;
-import static java.lang.System.in;
-
 public class AppContext implements GameListener {
     private String username;
     private String connectionType;
@@ -35,6 +32,7 @@ public class AppContext implements GameListener {
 
     private boolean needsRefresh = false;
     private List<GameStateUpdateListener> guiUpdateListeners = new ArrayList<>();
+    private List<LobbyListener> lobbyListeners = new ArrayList<>();
 
     public AppContext() {
         username = "";
@@ -44,6 +42,14 @@ public class AppContext implements GameListener {
         playerId = 0;
 
         client = null;
+    }
+
+    public void addLobbyListener(LobbyListener l) { 
+        lobbyListeners.add(l); 
+    }
+
+    public void removeLobbyListener(LobbyListener l){ 
+        lobbyListeners.remove(l); 
     }
 
     // Utility methods for showing messages, consider using Notifications instead 
@@ -166,9 +172,137 @@ public class AppContext implements GameListener {
 
     @Override
     public void playerCreated(int playerId, String playerName) {
+        this.playerId = playerId;
 
+        localPlayerReference = new Player(playerId, playerName, true);
+
+        System.out.println("GUI received playerId = " + playerId);
+
+        Platform.runLater(() -> {
+            try { 
+                GUIApp.showLobbyPage(); 
+            }
+            catch (Exception e) {
+                e.printStackTrace(); 
+            }
+        });
     }
 
+
+    @Override
+    public void usernameRejected(String errorMessage) {
+        Platform.runLater(() ->
+            showMessage(Alert.AlertType.ERROR, "Username rejected", errorMessage));
+    }
+
+    @Override
+    public void updateAvailableMatches(List<String> matches) {
+        Platform.runLater(() -> {
+            for (LobbyListener l : lobbyListeners) {
+                l.availableMatches(matches);
+            }
+        });
+    }
+
+    @Override
+    public void matchCreated(UUID matchId, String matchName,
+                            String playerName, int playerId) {
+        Platform.runLater(() -> {
+            if (playerId == this.playerId) {         
+                this.currentMatchId = matchId;
+            }
+            for (LobbyListener l : new ArrayList<>(lobbyListeners)) {
+                l.matchCreated(matchId, matchName, playerName, playerId);
+            }
+        });
+    }
+
+    @Override
+    public void playerJoinedMatch(UUID matchId, String playerName) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Player joined match: " + playerName + " in match " + matchId);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerJoinedMatch(matchId, playerName);
+            }
+        });
+    }
+
+    @Override
+    public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Player left match: " + playerName + " (ID: " + playerId + ") in match " + matchId);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerLeftMatch(matchId, playerId, playerName);
+            }
+        });
+    }
+
+    @Override
+    public void updateHost(UUID matchId, int playerId, String playerName) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Host updated for match " + matchId + ": Player " + playerName + " (ID: " + playerId + ")");
+            for (LobbyListener l : lobbyListeners) {
+                l.updateHost(matchId, playerId, playerName);
+            }
+        });
+    }
+
+    @Override
+    public void matchStarted(UUID matchId, String username) {
+        Platform.runLater(() -> {
+            try { 
+                client.loadingAck(matchId); 
+            }
+            catch (Exception e) { 
+                System.err.println("Err send loadingAck: " + e); 
+            }
+
+            for (LobbyListener l : new ArrayList<>(lobbyListeners)) {
+                l.matchStarted(matchId, username);
+            }
+        });
+    }
+
+    @Override
+    public void loadingStatus(UUID matchId, int playersReady, int totalPlayers) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Loading status for match " + matchId + ": " + playersReady + "/" + totalPlayers + " players ready");
+            for (LobbyListener l : lobbyListeners) {
+                l.loadingStatus(matchId, playersReady, totalPlayers);
+            }
+        });
+    }
+
+    @Override
+    public void playersInMatch(UUID matchId, List<String> players, int hostId) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Players in match " + matchId + ": " + players + " (Host ID: " + hostId + ")");
+            for (LobbyListener l : lobbyListeners) {
+                l.playersInMatch(matchId, players, hostId);
+            }
+        });
+    }
+
+    @Override
+    public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Player ready status for match " + matchId + ": " + readyPlayers + "/" + totalPlayers + " players ready");
+            for (LobbyListener l : lobbyListeners) {
+                l.playerReady(matchId, readyPlayers, totalPlayers);
+            }
+        });
+    }
+
+    @Override
+    public void shipBuildingStart(UUID matchId, int readyPlayers) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Ship building phase started for match " + matchId + " with " + readyPlayers + " players ready");
+            for (LobbyListener l : lobbyListeners) {
+                l.shipBuildingStart(matchId, readyPlayers);
+            }
+        });
+    }
+    
     @Override
     public void displayRefresh() {
         Platform.runLater(() -> {
@@ -191,10 +325,6 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component placed: " + component.getClass().getSimpleName() + " at position " + position);
             
-            showInfoMessage("Component Placed", 
-                "Successfully placed " + component.getClass().getSimpleName() + 
-                " at position (" + position.getX() + ", " + position.getY() + ")");
-            
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
                     listener.gameComponentPlaced(component, position);
@@ -210,12 +340,16 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             if (playerId == this.playerId) {
                 if (success && component != null) {
+                    for (GameStateUpdateListener listener : guiUpdateListeners) {
+                        listener.gameComponentPicked(component);
+                    }
                     showInfoMessage("Component Picked", 
                         "Successfully picked: " + component.getClass().getSimpleName());
                 } else {
                     showErrorMessage("Component Pick Failed", message);
                 }
             }
+            // Ignore responses for other players
         });
     }
 
@@ -223,9 +357,6 @@ public class AppContext implements GameListener {
     public void componentRemoved(Position position) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component removed from position: " + position);
-            
-            showInfoMessage("Component Removed", 
-                "Component removed from position (" + position.getX() + ", " + position.getY() + ")");
             
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
@@ -318,69 +449,4 @@ public class AppContext implements GameListener {
         });
     }
 
-    @Override
-    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
-        this.currentMatchId = matchId;
-
-        LobbyController.matchCreatedListener(matchId.toString());
-    }
-
-    @Override
-    public void playerJoinedMatch(UUID matchId, String playerName) {
-            LobbyController.playerJoinedMatchNotification(playerName);
-    }
-
-    @Override
-    public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
-        if (matchId == this.currentMatchId) {
-
-        }
-    }
-
-    @Override
-    public void updateAvailableMatches(List<String> matchNames) {
-        System.out.println("[GUI] Available matches updated: " + matchNames);
-        LobbyController.updateMatchListListener(matchNames);
-    }
-
-    @Override
-    public void updateHost(UUID matchId, int playerId, String playerName) {
-
-    }
-
-    @Override
-    public void matchStarted(UUID matchId, String username) {
-        Platform.runLater(new Runnable(){
-            @Override
-            public void run() {
-                showMessage(Alert.AlertType.CONFIRMATION, "Match has started!", "You will be redirected to ship building page as soon as you press on ready button");
-            }
-        });
-
-    }
-
-    @Override
-    public void loadingStatus(UUID matchId, int playersReady, int totalPlayers) {
-
-    }
-
-    @Override
-    public void playersInMatch(UUID matchId, List<String> players, int hostId) {
-        LobbyController.playersInCurrentMatch(players);
-    }
-
-    @Override
-    public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
-
-    }
-
-    @Override
-    public void shipBuildingStart(UUID matchId, int readyPlayers) {
-        LobbyController.moveToShipBuilding();
-    }
-
-    @Override
-    public void usernameRejected(String errorMessage) {
-
-    }
 }

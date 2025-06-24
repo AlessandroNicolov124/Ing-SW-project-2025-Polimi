@@ -1,17 +1,13 @@
 package it.polimi.ingsw.GUI.Controllers;
 
 import it.polimi.ingsw.GUI.AppContext;
-import it.polimi.ingsw.GUI.GUIApp;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 
-import javafx.scene.Scene;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
+
 
 public class LoginController extends GuiContoller{
     @FXML
@@ -26,21 +22,6 @@ public class LoginController extends GuiContoller{
     @FXML
     private TextField srvPortField;
 
-//    private void showErrorDialog(String title, String message) {
-//        try {
-//            final Stage dialog = new Stage();
-//            VBox dialogVbox = new VBox(20);
-//            dialogVbox.getChildren().add(new Text(title));
-//            dialogVbox.getChildren().add(new Text(message));
-//            Scene dialogScene = new Scene(dialogVbox, 400, 200);
-//            dialog.setScene(dialogScene);
-//            dialog.setTitle(title);
-//            dialog.show();
-//        } catch (Exception e) {
-//            System.err.println("Failed to show error dialog: " + e.getMessage());
-//        }
-//    }
-
     @FXML
     private void handleLogin(ActionEvent event) {
         // Dummy authentication: accept any non-empty username/password
@@ -50,6 +31,8 @@ public class LoginController extends GuiContoller{
                 String serverAddress = ipAddrField.getText();
                 int serverPort = Integer.parseInt(srvPortField.getText());
                 String connectionType = connTypeField.getText().toLowerCase();
+
+
 
                 if (!connectionType.equals("socket") && !connectionType.equals("rmi")) {
                     showErrorDialog("Invalid Connection Type", 
@@ -72,7 +55,7 @@ public class LoginController extends GuiContoller{
                     //methods to add a new player
                 }
                 else {
-                    RmiClient rmiClient = RmiClient.connectTo(serverAddress, context);
+                    RmiClient rmiClient = RmiClient.connectTo(serverAddress, serverPort, context);
                     if (rmiClient == null) {
                         throw new IllegalStateException("Failed to connect to RMI server.");
                     }
@@ -81,10 +64,11 @@ public class LoginController extends GuiContoller{
 
                 }
 
-                System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());
+                //System.out.println("Connected as player " + context.getPlayerId() + " with username: " + context.getUsername());
+
 
                 //GUIApp.showShipBuilder();
-                GUIApp.showLobbyPage();
+                //GUIApp.showLobbyPage();
 
             } catch (Exception e) {
                 showErrorDialog("Connection Failed", 

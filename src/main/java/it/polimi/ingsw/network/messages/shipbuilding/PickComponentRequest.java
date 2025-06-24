@@ -19,7 +19,7 @@ public class PickComponentRequest implements RequestMessage {
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {
-            handler.pickComponentCard();
+            handler.pickComponentCard(playerId);
         } catch (Exception e) {
             System.err.println("Error handling pickComponent request: " + e.getMessage());
             e.printStackTrace();

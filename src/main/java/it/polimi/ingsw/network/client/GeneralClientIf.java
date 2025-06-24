@@ -25,17 +25,15 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void leaveMatch(UUID matchId, int playerId, String username) throws Exception;
 
-    void placeComponent(Component component, Position position) throws Exception;
+    void placeComponent(Component component, Position position, int playerId) throws Exception;
 
-    void removeComponent(Position position) throws Exception;
+    void removeComponent(Position position, int playerId) throws Exception;
 
     void validateShip() throws Exception;
 
     void rotateComponent(Position position, RotationType rotationType) throws Exception;
 
-    void setLocalPlayer(Player player) throws Exception;
-
-    Component pickComponentCard() throws Exception;
+    Component pickComponentCard(int playerId) throws Exception;
 
     void loadingAck(UUID matchId) throws Exception;
 

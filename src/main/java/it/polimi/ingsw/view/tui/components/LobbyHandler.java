@@ -135,7 +135,7 @@ public class LobbyHandler {
     }
 
     private void listAvailableMatches() throws Exception {
-        console.printMessage("Requesting available matches...");
+        //console.printMessage("Requesting available matches...");
         simpleClient.getAvailableMatches();
     }
 
@@ -151,8 +151,18 @@ public class LobbyHandler {
 
     private void joinMatch() throws Exception {
         if (availableMatches == null || availableMatches.isEmpty()) {
-            console.printMessage("No available matches");
-            return;
+            simpleClient.getAvailableMatches();
+            
+            // console.printMessage("Waiting for server response...");
+            // try {
+            //     Thread.sleep(1000);
+            // } catch (InterruptedException e) {
+            //     Thread.currentThread().interrupt();
+            // }
+            
+            if (availableMatches == null || availableMatches.isEmpty()) {
+                return;
+            }
         }
 
         console.printMessage("Available matches:");
@@ -213,27 +223,27 @@ public class LobbyHandler {
         }
     }
 
-        public void matchCreatedCallback(String matchName, UUID matchId, boolean isHost, String playerName, int playerId) {
-            String matchNameParsed = matchId.toString() + ": " + matchName;  
-            if (this.playerId == playerId && !handledCreations.add(matchId)) {
-                return;
-            }
-            if (this.playerId != playerId) {
-                if (!this.availableMatches.contains(matchNameParsed)) {
-                    this.availableMatches.add(matchNameParsed);
-                }
-                return;
-            }
-
-            this.currentMatchId = matchId;
-            this.isHost = isHost;
-            this.playersInCurrentMatch.clear();
-            this.playersInCurrentMatch.add(playerName);
-
-            console.printMessage("Match created successfully: " + matchName);
-            console.printMessage("You are now in match: " + matchName + (isHost ? " (as Host)" : ""));
-            dirty.set(true);   
+    public void matchCreatedCallback(String matchName, UUID matchId, boolean isHost, String playerName, int playerId) {
+        String matchNameParsed = matchId.toString() + ": " + matchName;  
+        if (this.playerId == playerId && !handledCreations.add(matchId)) {
+            return;
         }
+        if (this.playerId != playerId) {
+            if (!this.availableMatches.contains(matchNameParsed)) {
+                this.availableMatches.add(matchNameParsed);
+            }
+            return;
+        }
+
+        this.currentMatchId = matchId;
+        this.isHost = isHost;
+        this.playersInCurrentMatch.clear();
+        this.playersInCurrentMatch.add(playerName);
+
+        console.printMessage("Match created successfully: " + matchName);
+        console.printMessage("You are now in match: " + matchName + (isHost ? " (as Host)" : ""));
+        dirty.set(true);   
+    }
 
 
     public void setAvailableMatches(List<String> matches) {

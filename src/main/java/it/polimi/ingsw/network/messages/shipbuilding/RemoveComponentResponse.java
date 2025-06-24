@@ -37,29 +37,10 @@ public class RemoveComponentResponse implements ResponseMessage {
 
     @Override
     public void handleClient(GameListener listener) {
-        // Call the componentRemoved method for all listeners
-        listener.componentRemoved(position);
-        
-        // Also provide feedback about the operation
-        if (listener instanceof it.polimi.ingsw.view.tui.components.GalaxyTruckerTUI) {
-            it.polimi.ingsw.view.tui.components.GalaxyTruckerTUI tui = 
-                (it.polimi.ingsw.view.tui.components.GalaxyTruckerTUI) listener;
-            
-            // Check if this response is for the current player
-            if (tui.getCurrentPlayer() != null && tui.getCurrentPlayer().getId() == playerId) {
-                if (success) {
-                    tui.showMessage("✓ Component removed from (" + position.getX() + "," + position.getY() + ")");
-                } else {
-                    tui.showMessage("✗ Failed to remove component: " + message);
-                }
-            }
+        if (success) {
+            listener.componentRemoved(position);
         } else {
-            // For non-TUI clients
-            if (success) {
-                System.out.println("Component removed from position: " + position);
-            } else {
-                System.err.println("Failed to remove component: " + message);
-            }
+            listener.printTextMsg("✗ Component removal failed: " + message);
         }
     }
 } 

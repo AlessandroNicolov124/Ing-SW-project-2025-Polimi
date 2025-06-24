@@ -2,32 +2,48 @@
 
 <?import java.lang.*?>
 <?import java.util.*?>
+<?import javafx.geometry.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="it.polimi.ingsw.GUI.Controllers.LobbyController">
     <top>
-        <HBox spacing="10" alignment="CENTER_LEFT" style="-fx-padding: 10;">
+        <HBox spacing="10"
+            alignment="CENTER_LEFT"
+            style="-fx-padding: 10;">
+            <Label fx:id="welcomeLabel"
+                text="Welcome,"
+                style="-fx-font-size: 14;" />
+
+            <Region HBox.hgrow="ALWAYS" />
+
+            <Label fx:id="statusLabel"
+                text=""
+                style="-fx-font-size: 13; -fx-text-fill: #2c7;"
+                wrapText="true"  />
         </HBox>
     </top>
+
     <center>
         <VBox spacing="8" alignment="TOP_CENTER" style="-fx-padding: 20;">
             <Label text="Available Matches:" style="-fx-font-size: 16;" />
             <ListView fx:id="matchesListView" prefHeight="300" />
+
             <Label text="Players in match:" style="-fx-font-size: 16;" />
             <ListView fx:id="playersListView" prefHeight="180" />
         </VBox>
     </center>
-    <bottom>
 
+    <bottom>
         <HBox spacing="12" alignment="CENTER" style="-fx-padding: 12;">
             <Button fx:id="createMatchButton" text="Create Match" />
-            <Button fx:id="joinMatchButton" text="Join Selected Match" />
-            <Button fx:id="startMatchButton" text="Start Match" />
-            <Button fx:id="refreshButton" text="LoadMatches" />
-            <Button fx:id="readyButton" text="set Ready" />
+            <Button fx:id="joinMatchButton"   text="Join Selected Match" />
+            <!-- nuovo bottone Leave -->
+            <Button fx:id="leaveMatchButton"  text="Leave Match" />
+            <Button fx:id="startMatchButton"  text="Start Match" />
+            <Button fx:id="refreshButton"     text="Load Matches" />
+            <Button fx:id="readyButton"       text="Ready" />
         </HBox>
     </bottom>
 </BorderPane>
-

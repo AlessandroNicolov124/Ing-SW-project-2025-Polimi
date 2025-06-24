@@ -13,7 +13,7 @@ public abstract class Crew {
     // Abstract method to be implemented by specific crew types
     public abstract boolean canLiveIn(Cabin cabin);
 
-    public abstract void applyAbility(ShipBuilder ship);
+    //public abstract void applyAbility(ShipBuilder ship);
 
     public CrewType getType() {
         return type;

@@ -33,7 +33,7 @@ public class PlaceComponentRequest implements RequestMessage {
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {
-            handler.placeComponent(component, position);
+            handler.placeComponent(component, position, playerId);
         } catch (Exception e) {
             System.err.println("Error handling placeComponent request: " + e.getMessage());
             e.printStackTrace();

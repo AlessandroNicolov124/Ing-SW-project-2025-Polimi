@@ -19,9 +19,9 @@ public abstract class AdventureCard implements Serializable{
         this.duration = 1;
     }
 
-    abstract int additionalPls();
+    protected abstract int additionalPls();
 
-    abstract void resolveEvent(Player p);
+    protected abstract void resolveEvent(Player p);
 
     public abstract void effect();
 

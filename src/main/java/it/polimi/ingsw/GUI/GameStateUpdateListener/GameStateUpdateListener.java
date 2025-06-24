@@ -9,6 +9,7 @@ import it.polimi.ingsw.network.messages.RotationType;
 
 public interface GameStateUpdateListener {
     void gameStateUpdate();
+    void gameComponentPicked(Component component);
     void gameComponentPlaced(Component component, Position position);
     void gameComponentRemoved(Position position);
     void gameComponentRotated(Position position, RotationType rotationType);

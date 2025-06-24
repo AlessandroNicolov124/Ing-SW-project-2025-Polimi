@@ -2,8 +2,6 @@ package it.polimi.ingsw.network.socket.client;
 
 import java.io.*;
 import java.net.Socket;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import it.polimi.ingsw.network.client.GeneralClientIf;
@@ -23,7 +21,6 @@ import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
-import it.polimi.ingsw.Player;
 
 
 public class SocketClient implements Runnable, GeneralClientIf {
@@ -32,7 +29,6 @@ public class SocketClient implements Runnable, GeneralClientIf {
     private final ObjectOutputStream out;
     private final ObjectInputStream  in;
     private GameListener listener;
-    private Player localPlayer;
 
     public SocketClient(String host, int port, GameListener gameListener) throws IOException {
         socket = new Socket(host,port);
@@ -275,14 +271,13 @@ public class SocketClient implements Runnable, GeneralClientIf {
     // }
 
     @Override
-    public void placeComponent(Component component, Position position) throws Exception {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot place component: local player not set");
+    public void placeComponent(Component component, Position position, int playerId) throws Exception {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
         }
         
         synchronized (out) {
-            out.writeObject(new PlaceComponentRequest(
-                localPlayer.getId(), component, position));
+            out.writeObject(new PlaceComponentRequest(playerId, component, position));
             out.flush();
         }
     }
@@ -294,14 +289,13 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     @Override
-    public Component pickComponentCard() throws Exception {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot pick component: local player not set");
+    public Component pickComponentCard(int playerId) throws Exception {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
         }
         
         synchronized (out) {
-            out.writeObject(new PickComponentRequest(
-                localPlayer.getId()));
+            out.writeObject(new PickComponentRequest(playerId));
             out.flush();
         }
         
@@ -310,14 +304,13 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     @Override
-    public void removeComponent(Position position) throws Exception {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot remove component: local player not set");
+    public void removeComponent(Position position, int playerId) throws Exception {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
         }
         
         synchronized (out) {
-            out.writeObject(new RemoveComponentRequest(
-                localPlayer.getId(), position));
+            out.writeObject(new RemoveComponentRequest(playerId, position));
             out.flush();
         }
     }
@@ -325,11 +318,6 @@ public class SocketClient implements Runnable, GeneralClientIf {
     public void rotateComponent(Position position, RotationType rotationType) throws Exception {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
-    }
-
-    @Override
-    public void setLocalPlayer(Player player) throws Exception {
-        this.localPlayer = player;
     }
 
 }

@@ -25,10 +25,6 @@ public final class BatteryCompartment extends Component {
         this.chargeLevel = chargeLevel;
     }
 
-    public void updateChargeLevel(int chargeLevel) {
-        this.chargeLevel = chargeLevel;
-    }
-
     public int getMaxCapacity() {
         return maxCapacity;
     }
@@ -39,10 +35,6 @@ public final class BatteryCompartment extends Component {
 
     public int getChargeLevel() {
         return chargeLevel;
-    }
-
-    public void setChargeLevel(int chargeLevel) {
-        this.chargeLevel = chargeLevel;
     }
 
     // Metodo per ricaricare la batteria

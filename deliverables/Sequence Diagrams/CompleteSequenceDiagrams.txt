@@ -1,0 +1,67 @@
+@startuml
+actor Utente
+participant "Client" as C
+participant "Server" as S
+
+== Avvio e Connessione ==
+Utente -> C : Avvia applicazione
+C -> Utente : Chiede username, tipo connessione, host, porta
+Utente -> C : Inserisce dati
+
+alt Scelta RMI
+    C -> S : Naming.lookup("//host:1099/GalaxyTruckerServer")
+    C -> S : connect(RmiClientIf)
+    S -> C : showUpdate(AddPlayerResponse) [callback]
+else Scelta Socket
+    C -> S : Connessione TCP/IP (apre socket)
+    C -> S : Invio CreatePlayerMessage serializzato
+    S -> C : AddPlayerResponse serializzato
+end
+
+C -> Utente : Mostra conferma login
+
+== Lobby ==
+alt Crea nuova partita
+    C -> S : createMatch(matchName, playerId, username)
+    S -> C : showUpdate(CreateMatchResponse)
+else Unisciti a partita esistente
+    C -> S : getAvailableMatches()
+    S -> C : showUpdate(GetMatchesResponse)
+    C -> S : joinMatch(matchId, playerId, username)
+    S -> C : showUpdate(JoinMatchResponse)
+end
+
+loop Attesa giocatori
+    S -> C : showUpdate(UpdatePlayersInLobby)
+end
+
+alt Inizio partita
+    C -> S : startMatch(matchId, playerId, username)
+    S -> C : showUpdate(StartMatchResponse)
+end
+
+== Gameplay ==
+loop Per ogni turno/azione
+    Utente -> C : Effettua azione (es: piazza componente)
+    alt RMI
+        C -> S : placeComponent(component, position) [metodo remoto]
+        S -> C : showUpdate(PlaceComponentResponse)
+    else Socket
+        C -> S : PlaceComponentMessage serializzato
+        S -> C : PlaceComponentResponse serializzato
+    end
+    S -> C : showUpdate(UpdateGameState) [sincrona/asincrona]
+    C -> Utente : Mostra aggiornamento stato
+end
+
+== Disconnessione/Errori ==
+alt Disconnessione volontaria
+    Utente -> C : Chiude applicazione
+    C -> S : leaveMatch() / chiude connessione
+    S -> C : showUpdate(LeaveMatchResponse)
+else Errore di rete
+    S -> C : showUpdate(UsernameRejectedResponse o messaggio di errore)
+    C -> Utente : Notifica errore/disconnessione
+end
+
+@enduml

@@ -27,8 +27,22 @@ public class ShipBuilder {
 
     //posizione allinterno della plancia
     public boolean isPositionValid(Position position) {
-        return position.getX() >= 0 && position.getX() < width &&
-                position.getY() >= 0 && position.getY() < height;
+
+        boolean[][] VALID_SQUARES = {
+                {false, false, true,  false, true,  false, false},
+                {false, true,  true,  true,  true,  true,  false},
+                {true,  true,  true,  true,  true,  true,  true },
+                {true,  true,  true,  true,  true,  true,  true },
+                {true, true,  true,  false, true,  true,  true },
+        };
+
+        if(position.getX() >= 0 && position.getX() < width &&
+                position.getY() >= 0 && position.getY() < height){
+            return VALID_SQUARES[position.getY()][position.getX()];
+        }else {
+            return false; // fuori dai limiti della plancia
+        }
+
     }
 
     public boolean isPositionOccupied(Position position) {
@@ -49,6 +63,36 @@ public class ShipBuilder {
 
         // Se non è il primo componente, deve essere collegato a un componente esistente
         if (!components.isEmpty()) {
+
+            Position adjPos = null;
+            switch(component){
+                case Engine e:
+                    Direction engineDir = e.getComponentDirection();
+                    Direction opposite = switch(engineDir) {
+                        case NORTH -> Direction.SOUTH;
+                        case SOUTH -> Direction.NORTH;
+                        case EAST  -> Direction.WEST;
+                        case WEST  -> Direction.EAST;
+                    };
+                    Position behind = position.getAdjacentPosition(opposite);
+                    if (isPositionValid(behind) && isPositionOccupied(behind)) {
+                        System.out.println("Cannot place Engine: cell immediately behind (" + behind + ") is occupied");
+                        return false;
+                    }
+                    break;
+                case Cannon c: {
+                    Direction cannonDir = c.getComponentDirection();
+                    Position ahead = position.getAdjacentPosition(cannonDir);
+                    if (isPositionValid(ahead) && isPositionOccupied(ahead)) {
+                        System.out.println("  Cannot place Cannon: cell immediately ahead (" + ahead + ") is occupied");
+                        return false;
+                    }
+                    break;
+                }
+                default:
+                    break;
+            }
+
             boolean isConnected = true;
 
             for (Direction direction : Direction.values()) {
@@ -124,24 +168,40 @@ public class ShipBuilder {
             return false;
         }
 
-        // Handle single component case
-        if (components.size() == 1) {
-            // Don't allow removing the only component if it's a starting cabin
-            if (component.isStartingCabin()) {
-                return false; // Cannot remove starting cabin
-            }
-            // Otherwise allow removal during ship building
-            components.remove(component);
-            return true;
-        }
+       switch(component) {
+           case Cabin cabin -> {
+               if(cabin.isOccuped()){
+                   removeCrewFromCabin(cabin.getCrew().getFirst(), cabin);
+               }
+               // TODO verificare che il giocatore abbia ancora umani altrimenti ha perso
+           }
+           case LifeSupportSystem lifeSupport -> {
+               disconnectLifeSupportConnections(lifeSupport);
+           }
+           default -> { /* Other components can be removed */ }
+       }
+
+
+//        // Handle single component case
+        //TODO se è ultimo componente il giocatore perde
+//        if (components.size() == 1) {
+//            // Don't allow removing the only component if it's a starting cabin
+//            if (component.isStartingCabin()) {
+//                return false; // Cannot remove starting cabin
+//            }
+//            // Otherwise allow removal during ship building
+//            components.remove(component);
+//            return true;
+//        }
 
         // For multiple components: check connectivity and cabin protection
-        if (component.isStartingCabin()) {
-            return false; // Never allow removing starting cabin
-        }
+//        if (component.isStartingCabin()) {
+//            return false; // Never allow removing starting cabin
+//        }
 
-        // Check if removing this component would disconnect the ship
+        //Check if removing this component would disconnect the ship
         if (wouldDisconnectShip(component)) {
+            //TODO fare scegliere al giocatore quale parte della navicella tenere
             return false; // Don't allow removal if it would disconnect the ship
         }
 
@@ -173,7 +233,7 @@ public class ShipBuilder {
                 Component adjacentComponent = getComponentAt(adjacentPos);
 
                 if (adjacentComponent != null && !visited.contains(adjacentComponent)) {
-                    if (current.canConnectTo(adjacentComponent, direction)){
+                    if (current.canConnectTo(adjacentComponent, direction)) {
                         visited.add(adjacentComponent);
                         queue.add(adjacentComponent);
                     }
@@ -207,7 +267,7 @@ public class ShipBuilder {
         //isAssembled = hasEngine && hasCabin && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
 
         long hasEngine = components.keySet().stream()
-                .flatMap(component -> switch(component){
+                .flatMap(component -> switch (component) {
                     case Engine e -> Stream.of(e);
                     default -> Stream.empty();
                 })
@@ -222,7 +282,7 @@ public class ShipBuilder {
         boolean validationEngineFire = checkEngineFire();
 
         // La nave è assemblata se ha almeno un motore e una cabina
-        boolean isValid = hasEngine>0 && hasCabin>0 && validationEngineFire && validationCannonFire;
+        boolean isValid = hasEngine > 0 && hasCabin > 0 && validationEngineFire && validationCannonFire;
 
         //System.out.println("Ship Validation: " + isValid);
         return isValid;
@@ -233,13 +293,13 @@ public class ShipBuilder {
         List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
         for (SingleCannon singleCannon : singleCannons) {
             Position inFiringDirection = getPositionOf(singleCannon).getAdjacentPosition(singleCannon.getComponentDirection());
-            if(getAllPositions().contains(inFiringDirection)) {
+            if (getAllPositions().contains(inFiringDirection)) {
                 return false;
             }
         }
         for (DoubleCannon dc : doubleCannons) {
             Position inFiringDirection = getPositionOf(dc).getAdjacentPosition(dc.getComponentDirection());
-            if(getAllPositions().contains(inFiringDirection)) {
+            if (getAllPositions().contains(inFiringDirection)) {
                 return false;
             }
         }
@@ -251,13 +311,13 @@ public class ShipBuilder {
         List<DoubleEngine> doubleEngines = getOperationalDoubleEngines();
         for (SingleEngine se : singleEngines) {
             Position inOppositeDirection = getPositionOf(se).getAdjacentPosition(se.getComponentDirection().getOpposite());
-            if(getAllPositions().contains(inOppositeDirection)) {
+            if (getAllPositions().contains(inOppositeDirection)) {
                 return false;
             }
         }
         for (DoubleEngine dc : doubleEngines) {
             Position inOppositeDirection = getPositionOf(dc).getAdjacentPosition(dc.getComponentDirection().getOpposite());
-            if(getAllPositions().contains(inOppositeDirection)) {
+            if (getAllPositions().contains(inOppositeDirection)) {
                 return false;
             }
         }
@@ -287,6 +347,7 @@ public class ShipBuilder {
     public List<Component> getAllComponents() {
         return new ArrayList<>(components.keySet());
     }
+
     public List<Position> getAllPositions() {
         return new ArrayList<>(components.values());
     }
@@ -310,7 +371,7 @@ public class ShipBuilder {
     }
 
     //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
-    private void updateLifeSupportConnections(LifeSupportSystem lifeSupport) {
+    public void updateLifeSupportConnections(LifeSupportSystem lifeSupport) {
         Position position = getPositionOf(lifeSupport);
         LifeSupportSystemType type = lifeSupport.getType();
 
@@ -325,10 +386,40 @@ public class ShipBuilder {
                         cabin.connectLifeSupport(type);
                     }
                 }
-                default -> {}
+                case null -> {
+                    // Non c'è un componente adiacente, non fare nulla
+                }
+                default -> {
+                }
             }
         }
     }
+
+    //se il component adiancente è una cabina, aggiorna il set di LifeSupportConnections
+    public void disconnectLifeSupportConnections(LifeSupportSystem lifeSupport) {
+        Position position = getPositionOf(lifeSupport);
+        LifeSupportSystemType type = lifeSupport.getType();
+
+        // Check adjacent positions for cabins
+        for (Direction dir : Direction.values()) {
+            Position adjacentPos = dir.getAdjacentPosition(position);
+            Component adjacentComponent = getComponentAt(adjacentPos);
+
+            switch (adjacentComponent) {
+                case Cabin cabin -> {
+                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
+                        cabin.disconnectLifeSupport(type);
+                    }
+                }
+                case null -> {
+                    // Non c'è un componente adiacente, non fare nulla
+                }
+                default -> {
+                }
+            }
+        }
+    }
+
 
     public boolean addCrewToCabin(Crew crew, Cabin cabin) {
         // Verifica limiti a livello di nave per gli alieni
@@ -340,9 +431,9 @@ public class ShipBuilder {
 
         // Prova ad aggiungere l'equipaggio
         if (cabin.addCrew(crew)) {
-            if (crew.getType() != CrewType.HUMAN) {
+            //if (crew.getType() != CrewType.HUMAN) {
                 crewCount.put(crew.getType(), crewCount.getOrDefault(crew.getType(), 0) + 1);
-            }
+            //}
             return true;
         }
 
@@ -384,29 +475,44 @@ public class ShipBuilder {
      * @return Il numero effettivo di membri dell'equipaggio rimossi
      */
     public int removeCrewMembers(int count) {
-        if (count <= 0) {
-            return 0;  // Nessun membro da rimuovere
+//        if (count <= 0) {
+//            return 0;  // Nessun membro da rimuovere
+//        }
+//
+//        int removedCount = 0;
+//        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
+//
+//        for (Cabin cabin : cabinsWithCrew) {
+//            if (removedCount >= count) {
+//                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
+//            }
+//
+//            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
+//            if (crewToRemove != null) {
+//                for (Crew crew : crewToRemove) {
+//                    if (removeCrewFromCabin(crew, cabin)) {
+//                        removedCount++;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return removedCount;
+
+        int remainingToRemove = count;
+
+        // First try to remove aliens
+        int aliensToRemove = Math.min(getAlienCount(), remainingToRemove);
+        if (aliensToRemove > 0) {
+            remainingToRemove -= removeAliens(aliensToRemove);
         }
 
-        int removedCount = 0;
-        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
-
-        for (Cabin cabin : cabinsWithCrew) {
-            if (removedCount >= count) {
-                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
-            }
-
-            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
-            if (crewToRemove != null) {
-                for (Crew crew : crewToRemove) {
-                    if (removeCrewFromCabin(crew, cabin)) {
-                        removedCount++;
-                    }
-                }
-            }
+        // Then remove humans if needed
+        if (remainingToRemove > 0) {
+            remainingToRemove -= removeHumans(Math.min(getHumanCount(), remainingToRemove));
         }
 
-        return removedCount;
+        return count - remainingToRemove; // Ritorna il numero di membri rimossi
     }
 
     /**
@@ -446,8 +552,9 @@ public class ShipBuilder {
 
     /**
      * Rimuove il numero specificato di membri dell'equipaggio di un certo tipo
+     *
      * @param crewType Il tipo di equipaggio da rimuovere
-     * @param count Il numero di membri da rimuovere
+     * @param count    Il numero di membri da rimuovere
      * @return Il numero effettivo di membri rimossi
      */
     public int removeCrewOfType(CrewType crewType, int count) {
@@ -456,30 +563,17 @@ public class ShipBuilder {
         }
 
         int removedCount = 0;
-        List<Cabin> cabinsWithCrewType = new ArrayList<>();
-
-        // Trova tutte le cabine con equipaggio del tipo specificato
         List<Cabin> allCabins = getAllCabins();
+
         for (Cabin cabin : allCabins) {
-            if (!cabin.getCrew().isEmpty() && cabin.getCrew().getFirst().getType() == crewType) {
-                cabinsWithCrewType.add(cabin);
-            }
-        }
-
-        // Rimuovi fino a 'count' membri dell'equipaggio del tipo specificato
-        for (Cabin cabin : cabinsWithCrewType) {
-            if (removedCount >= count) {
-                break;
-            }
-
-            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
-            if (crewToRemove != null) {
-                for (Crew crew : crewToRemove) {
+            if (removedCount >= count) break;
+            // Crea una copia della lista per evitare ConcurrentModificationException
+            List<Crew> crewList = new ArrayList<>(cabin.getCrew());
+            for (Crew crew : crewList) {
+                if (removedCount >= count) break;
+                if (crew.getType() == crewType) {
                     if (removeCrewFromCabin(crew, cabin)) {
                         removedCount++;
-                    }
-                    if(removedCount == count){
-                        break;
                     }
                 }
             }
@@ -488,19 +582,66 @@ public class ShipBuilder {
         return removedCount;
     }
 
-//    /**
-//     * Aggiunge membri dell'equipaggio del tipo specificato
-//     * Usato principalmente per ripristinare l'equipaggio rimosso erroneamente
-//     * @param crewType Il tipo di equipaggio da aggiungere
-//     * @param count Il numero di membri da aggiungere
-//     */
-//    public void addCrewOfType(CrewType crewType, int count) {
-//        // Implementazione che aggiunge nuovi membri dell'equipaggio in cabine vuote
-//
-//
-//    }
+
+    /**
+     * Aggiunge membri dell'equipaggio del tipo specificato
+     * Usato principalmente per ripristinare l'equipaggio rimosso erroneamente
+     * @param crewType Il tipo di equipaggio da aggiungere
+     * @param count Il numero di membri da aggiungere
+     */
+    public void addCrewOfType(CrewType crewType, int count) {
+        if (count <= 0) return;
+
+        List<Cabin> allCabins = getAllCabins();
+        int added = 0;
+
+        if (crewType != CrewType.HUMAN) {
+            // Solo un alieno per nave
+            if (crewCount.getOrDefault(crewType, 0) >= 1) return;
+            for (Cabin cabin : allCabins) {
+                Crew alien = switch (crewType) {
+                    case BROWN_ALIEN -> new BrownAlienCrew();
+                    case PURPLE_ALIEN -> new PurpleAlienCrew();
+                    default -> null;
+                };
+                if (alien != null && addCrewToCabin(alien, cabin)) {
+                    added++;
+                    //crewCount.put(crewType, crewCount.getOrDefault(crewType, 0) + 1);
+                    break; // Solo uno per nave
+                }
+
+            }
+            if (added < count) {
+                System.out.println("Attenzione: non è stato possibile aggiungere tutti gli alieni richiesti (" + count + "). Aggiunti: " + added);
+            }
+            return;
+        }
+
+        // Per gli umani, aggiungi fino al numero richiesto
+        while (added < count && !allCabins.isEmpty()) {
+            // Prova ad aggiungere umani in ogni cabina
+            for (Cabin cabin : allCabins) {
+                if(!(cabin.getCrew().size() >= 2)) {// Se la cabina ha già 2 umani la salto
+                    if (addCrewToCabin(new HumanCrew(), cabin)) {
+                        added++;
+                        //crewCount.put(crewType, crewCount.getOrDefault(crewType, 0) + 1);
+                    }
+                }
+                if (added >= count) break;
+            }
+        }
+        if (added < count) {
+            System.out.println("Attenzione: non è stato possibile aggiungere tutti gli umani richiesti (" + count + "). Aggiunti: " + added);
+        }
+    }
 
 
+//    Metti 2 umani nella tua cabina di partenza.
+//            • Metti in ogni altra cabina 2 umani o 1 alieno. Puoi scegliere
+//    un alieno solo se la cabina è interconnessa ad un modulo
+//    di supporto vitale del corrispondente colore.
+//            • La tua nave non può ospitare più di 1 alieno per ciascun
+//    colore.
     public void distributeCrewAutomatically() {
         for (Component component : components.keySet()) {
             switch (component) {
@@ -846,10 +987,10 @@ public class ShipBuilder {
                 .collect(Collectors.toList());
     }
 
-    public List<Cargo> getAllCargo() {
+    public List<Cargo> getCargoList() {
         return components.keySet().stream()
                 .flatMap(component -> switch (component) {
-                    case CargoHolds de -> de.getCargos().stream();
+                    case CargoHolds cargoHolds -> cargoHolds.getCargos().stream();
                     default -> Stream.empty();
                 })
                 .collect(Collectors.toList());
@@ -973,5 +1114,11 @@ public class ShipBuilder {
                 de.discharge();
             }
         }
+    }
+
+    public List<Component> getNonDamageComponents(){
+        return components.keySet().stream()
+                .filter(component -> !component.isDamaged())
+                .collect(Collectors.toList());
     }
 }

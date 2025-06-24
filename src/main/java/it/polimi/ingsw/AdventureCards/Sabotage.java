@@ -37,12 +37,12 @@ public class Sabotage extends AdventureCard {
     }
 
     @Override
-    int additionalPls() {
+    protected int additionalPls() {
         return 0;
     }
 
     @Override
-    void resolveEvent(Player p) {
+    protected void resolveEvent(Player p) {
         // Individual player resolution would depend on the game mechanics
     }
 
@@ -59,10 +59,11 @@ public class Sabotage extends AdventureCard {
     public boolean applySabotage(GameModel gameModel) {
         // Find player with the smallest crew
         Player targetPlayer = findPlayerWithFewestCrew(gameModel.getFlightBoard().getPlayersInFlightOrder());
-        
+
         if (targetPlayer == null) {
             return false; // No valid target
         }
+        //System.out.println("Sabotaging player: " + targetPlayer.getNickName() + " with crew count: " + targetPlayer.getShip().getTotalCrewCount());
         
         // Sabotage the target's ship
         return sabotageShip(targetPlayer);
@@ -92,7 +93,7 @@ public class Sabotage extends AdventureCard {
      * @param player The target player
      * @return true if sabotage was successful, false otherwise
      */
-    private boolean sabotageShip(Player player) {
+    protected boolean sabotageShip(Player player) {
         ShipBuilder ship = player.getShip();
         
         // Try to hit a component up to maxAttempts times
@@ -105,7 +106,10 @@ public class Sabotage extends AdventureCard {
             
             // Check if there's a component at these coordinates
             Component targetComponent = ship.getComponentAt(targetPosition);
-            
+
+            System.out.println("Attempt " + (attempt + 1) + ": Rolling for position (" + column + ", " + row + ")");
+            System.out.println("Target component: " + (targetComponent != null ? targetComponent.getClass().getSimpleName() : "None"));
+
             if (targetComponent != null) {
                 player.getShip().destroyComponentAt(targetPosition);
                 return player.removeComponent(targetComponent);
