@@ -1,16 +1,73 @@
-title User tries to access a match
+@startuml
+title JoinMatch
 
-rbox left of Client: Client is actually the player
+actor User as "User\n(L'utente umano)"
+participant "Lobby Handler\n[TUI: LobbyHandler\nGUI: LobbyController]" as LobbyHandler
+note right of LobbyHandler
+Gestisce l’interazione utente per la lobby.
+TUI: logica a riga di comando.
+GUI: logica grafica.
+end note
+participant "AppContext\n(solo GUI)" as AppContext
+note right of AppContext
+Contesto applicativo GUI:
+smista eventi e aggiorna stato centralizzato.
+end note
+participant "SimpleClient\n(Client di rete)" as Client
+note right of Client
+Effettua le richieste di rete verso il server,
+indipendentemente dall’interfaccia.
+end note
+participant "<rete>\n(Network)" as Network
+note right of Network
+Connessione di rete tra client e server (TCP).
+end note
+participant "SocketClientHandler\n(Server listener)" as ServerHandler
+note right of ServerHandler
+Riceve e gestisce le richieste in arrivo lato server.
+end note
+participant "GeneralServer/LobbyManager\n(Server, gestione lobby)" as GeneralServer
+note right of GeneralServer
+Gestisce lobby, partite e assegnazione giocatori lato server.
+end note
+participant "GameMatch\n(Server, partita)" as Match
+note right of Match
+Gestione dati e stato della singola partita.
+end note
 
-Client->Server:Request to join match
-alt case 1
-Server-->Client:Request nickname
-Client->Server:Send nickname
-Server-->Client:Match join confirm
-else case 2
-Server-->Client:Request nickname
-Client->Server:Send nickname
-Server-->Client:Reject request to join
-else case 3
-Server-->Client:Reject request to join
+User -> LobbyHandler : Seleziona partita e clicca "join"
+alt TUI
+    LobbyHandler -> Client : joinMatch(matchId, playerId, username)
+else GUI
+    LobbyHandler -> AppContext : getClient().joinMatch(matchId, playerId, username)
+    AppContext -> Client : joinMatch(matchId, playerId, username)
 end
+Client -> Network : JoinMatchRequest(matchId, playerId, username)
+Network -> ServerHandler : JoinMatchRequest(...)
+ServerHandler -> GeneralServer : joinMatch(matchId, playerId, username)
+GeneralServer -> Match : addPlayer(playerId, username)
+Match -> GeneralServer : conferma aggiunta
+alt Success    
+    GeneralServer -> ServerHandler : true
+    ServerHandler -> Network : JoinMatchResponse(matchId, username)
+    Network -> Client : JoinMatchResponse(...)
+    alt TUI
+        Client -> LobbyHandler : playerJoinedMatch(matchId, username)
+    else GUI
+        Client -> AppContext : playerJoinedMatch(matchId, username)
+        AppContext -> LobbyHandler : playerJoinedMatch(matchId, username)
+    end
+    LobbyHandler -> User : Mostra successo
+else Failure
+    GeneralServer -> ServerHandler : false
+    ServerHandler -> Network : JoinMatchResponse(fail)
+    Network -> Client : JoinMatchResponse(...)
+    alt TUI
+        Client -> LobbyHandler : playerJoinedMatch(fail)
+    else GUI
+        Client -> AppContext : playerJoinedMatch(fail)
+        AppContext -> LobbyHandler : playerJoinedMatch(fail)
+    end
+    LobbyHandler -> User : Mostra errore join
+end
+@enduml
