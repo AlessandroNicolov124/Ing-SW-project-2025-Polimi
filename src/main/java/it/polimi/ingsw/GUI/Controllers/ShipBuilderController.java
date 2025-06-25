@@ -536,7 +536,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentPlaced(Component component, Position position) {
-        System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
+        //System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
         String imagePath = getComponentImgPath(component);
         if (imagePath == null) {
             System.out.println("[DEBUG] imagePath nullo per componente: " + component);
@@ -572,7 +572,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         statusLabel.setText("Component placed successfully!");
         currentComponent = null;
         cardImage.setImage(null);
-        System.out.println("[DEBUG] Componente piazzato e GUI aggiornata");
+        System.out.println("[DEBUG] Componente piazzato: " + component.getComponentString() + " con direzione " + component.getComponentDirection());
+        //System.out.println("[DEBUG] Componente piazzato e GUI aggiornata");
     }
 
     @Override
