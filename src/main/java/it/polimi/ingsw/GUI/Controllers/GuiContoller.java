@@ -54,57 +54,25 @@ public abstract class GuiContoller {
             choiceDialog.setHeaderText("Choose the colour of your starting cabin");
             choiceDialog.setContentText("Available colours:");
 
-            // Label for error message
-            Label errorLabel = new Label();
-            errorLabel.setTextFill(javafx.scene.paint.Color.RED);
-            errorLabel.setVisible(false);
-            
-            VBox content = new VBox(10);
-            content.getChildren().addAll(new Label("Choose the colour of your starting cabin"), 
-                                                          choiceDialog.getDialogPane().getContent(),
-                                                          errorLabel);
-            
-            choiceDialog.getDialogPane().setContent(content);
-
-            // Set buttons and their actions
             choiceDialog.getDialogPane().getButtonTypes().clear();
             ButtonType selectButtonType = new ButtonType("Select", ButtonBar.ButtonData.OK_DONE);
             choiceDialog.getDialogPane().getButtonTypes().add(selectButtonType);
 
-            // Disable the default cancel button
+            VBox content = new VBox(10);
+            content.getChildren().addAll(
+                new Label("Choose the colour of your starting cabin"),
+                choiceDialog.getDialogPane().getContent()
+            );
+            choiceDialog.getDialogPane().setContent(content);
+
             Button selectButton = (Button) choiceDialog.getDialogPane().lookupButton(selectButtonType);
             selectButton.addEventFilter(ActionEvent.ACTION, event -> {
                 event.consume();
-                
+
                 String selectedColor = choiceDialog.getSelectedItem();
                 if (selectedColor != null) {
-                    try {
-                        context.getClient().selectCabinColor(selectedColor, context.getPlayerId());
-                        onColorSelected.accept(selectedColor);
-                        choiceDialog.close();
-                    } catch (Exception ex) {
-                        // Show the error message inside the dialog
-                        String errorMsg = ex.getMessage();
-                        if (errorMsg.contains("already taken")) {
-                            errorLabel.setText("Colour already taken – please pick another.");
-                        } else {
-                            errorLabel.setText("Error: " + errorMsg);
-                        }
-                        errorLabel.setVisible(true);
-                        }
-                }
-            });
-
-            choiceDialog.setOnCloseRequest(event -> {
-                // Don't let the dialog close if no color is selected
-                if (context.getSelectedCabinColor() == null) {
-                    event.consume(); 
-                    errorLabel.setText("You must select a cabin colour to continue.");
-                    errorLabel.setVisible(true);
-                    
-                    Platform.runLater(() -> {
-                        errorLabel.setVisible(false);
-                    });
+                    onColorSelected.accept(selectedColor);
+                    choiceDialog.close();
                 }
             });
 

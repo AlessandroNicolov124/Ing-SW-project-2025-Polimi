@@ -19,5 +19,5 @@ public interface LobbyListener {
     void playerReady(UUID matchId, int ready, int total);
     void shipBuildingStart(UUID matchId, int readyPlayers);
 
-    void shouldSelectCabinColor();
+    void cabinColorSelected(String color);
 }

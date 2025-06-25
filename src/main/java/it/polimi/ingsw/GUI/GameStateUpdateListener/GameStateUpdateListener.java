@@ -13,5 +13,4 @@ public interface GameStateUpdateListener {
     void gameComponentRotated(Position position, RotationType rotationType);
     void gameShipValidated(boolean isValid, String message);
 
-    void cabinColorSelected(String color);
 }

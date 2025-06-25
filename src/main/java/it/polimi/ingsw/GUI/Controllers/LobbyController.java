@@ -276,6 +276,7 @@ public class LobbyController extends GuiContoller implements LobbyListener {
                 playerList.clear();
                 phase = Phase.NONE;
                 context.setSelectedCabinColor(null);
+                statusLabel.setText("");
                 System.out.println("[LobbyController] Local player left match - full state reset");
             }
             
@@ -302,33 +303,34 @@ public class LobbyController extends GuiContoller implements LobbyListener {
             askServerForMatches();
 
             if (!isHost && context.getSelectedCabinColor() == null && !colorChosen) {
-
-                showColorSelectionDialog(color -> {
-                    colorChosen = true;
-                    context.setSelectedCabinColor(color);
-                });
+                requestColorSelection();
             }
         });
     }
 
-    @Override
-    public void shouldSelectCabinColor() {
-        Platform.runLater(() -> {
-            if (colorChosen || context.getSelectedCabinColor() != null)
-                return;
+    private void requestColorSelection() {
+        if (colorChosen || context.getSelectedCabinColor() != null) 
+            return;
 
+    showColorSelectionDialog(color -> {
+        try {
+            context.getClient().selectCabinColor(color, getPlayerId());
+        } catch (Exception e) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Colour selection failed");
+            alert.setHeaderText(null);
+            alert.setContentText(e.getMessage());
+            alert.showAndWait();
             requestColorSelection();
-        });
+        }
+    });
     }
 
-    private void requestColorSelection() {
-        if (colorChosen || context.getSelectedCabinColor() != null) {
-            return;
-        }
-        
-        showColorSelectionDialog(color -> {
-            colorChosen = true;
-            context.setSelectedCabinColor(color);
+    @Override
+    public void cabinColorSelected(String color) {
+        Platform.runLater(() -> {
+            this.colorChosen = true;
+            statusLabel.setText("Colore scelto: " + color);
         });
     }
 

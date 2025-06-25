@@ -443,9 +443,8 @@ public class AppContext implements GameListener {
     @Override
     public void cabinColorSelected(String color) {
         Platform.runLater(() -> {
-            setSelectedCabinColor(color);
-
-            for (GameStateUpdateListener listener : guiUpdateListeners) {
+            this.selectedCabinColor = color;
+            for (LobbyListener listener : lobbyListeners) {
                 listener.cabinColorSelected(color);
             }
         });

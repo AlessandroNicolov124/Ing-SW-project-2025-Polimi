@@ -52,7 +52,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
-    private boolean colorSelected = false;
 
     // Board configuration
     private static final int SQUARE_SIZE = 123;
@@ -651,20 +650,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         }
         this.context = ctx;
         ctx.addGameStateUpdateListener(this);
-        this.colorSelected = ctx.getSelectedCabinColor() != null;
     }
 
 
     public ShipBuilderController getController() {
         return this;
-    }
-
-    public void cabinColorSelected(String color) {
-        Platform.runLater(() -> {
-            context.setSelectedCabinColor(color);
-            colorSelected = true;
-            statusLabel.setText("Color selected: " + color + ". Start building your ship!");
-        });
     }
 
 }
