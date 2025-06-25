@@ -1,14 +1,55 @@
-title User pick a card from table
+@startuml
+title pickAdventureCard
 
+actor User as "User\n(L'utente umano)"
+participant "UI Handler\n[TUI: AdventureHandler\nGUI: AdventureController]" as Handler
+note right of Handler
+Gestisce l’interazione utente per il pescaggio carte avventura.
+TUI: logica a riga di comando.
+GUI: logica grafica.
+end note
+participant "AppContext\n(solo GUI)" as AppContext
+note right of AppContext
+Contesto applicativo GUI:
+smista eventi e aggiorna stato centralizzato.
+end note
+participant "SimpleClient\n(Client di rete)" as Client
+note right of Client
+Effettua le richieste di rete verso il server,
+indipendentemente dall’interfaccia.
+end note
+participant "<rete>\n(Network)" as Network
+note right of Network
+Connessione di rete tra client e server (TCP).
+end note
+participant "SocketClientHandler\n(Server listener)" as ServerHandler
+note right of ServerHandler
+Riceve e gestisce le richieste in arrivo lato server.
+end note
+participant "GameController\n(Server, logica di gioco)" as Controller
+note right of Controller
+Gestisce la logica della partita lato server.
+end note
 
-rbox left of Client: Client is actually the player
-
-Client->Client: Pick Card from table
-Client->Server: Send pick card notification
-Server->Server: Validate move(card)
-
-alt Success
-Server-->Client: Notify card picked
-else Failure
-Server-->Client: Notify card pick error
+User -> Handler : Richiede pesca carta avventura ("pick adventure")
+alt TUI
+    Handler -> Client : pickAdventureCard(playerId)
+else GUI
+    Handler -> AppContext : getClient().pickAdventureCard(playerId)
+    AppContext -> Client : pickAdventureCard(playerId)
 end
+Client -> Network : PickAdventureCardRequest(playerId)
+Network -> ServerHandler : PickAdventureCardRequest(playerId)
+ServerHandler -> Controller : getAdventureCardFromDeck(Player)
+Controller --> ServerHandler : AdventureCard
+ServerHandler -> Network : PickAdventureCardResponse(playerId, AdventureCard, success, message)
+Network -> Client : PickAdventureCardResponse(...)
+alt TUI
+    Client -> Handler : PickAdventureCardResponse.handleClient()
+    Handler -> Handler : adventureCardPicked(playerId, AdventureCard, success, message)
+else GUI
+    Client -> AppContext : PickAdventureCardResponse.handleClient()
+    AppContext -> Handler : adventureCardPicked(AdventureCard)
+end
+Handler -> User : Mostra carta avventura o errore
+@enduml

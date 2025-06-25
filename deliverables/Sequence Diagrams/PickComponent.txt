@@ -1,0 +1,55 @@
+@startuml
+title pickComponent
+
+actor User as "User\n(L'utente umano)"
+participant "UI Handler\n[TUI: ShipBuildingHandler\nGUI: ShipBuilderController]" as Handler
+note right of Handler
+Gestisce l’interazione utente lato interfaccia.
+TUI: logica a riga di comando.
+GUI: logica grafica.
+end note
+participant "AppContext\n(solo GUI)" as AppContext
+note right of AppContext
+Contesto applicativo GUI:
+smista eventi e aggiorna stato centralizzato.
+end note
+participant "SimpleClient\n(Client di rete)" as Client
+note right of Client
+Effettua le richieste di rete verso il server,
+indipendentemente dall’interfaccia.
+end note
+participant "<rete>\n(Network)" as Network
+note right of Network
+Connessione di rete tra client e server (TCP).
+end note
+participant "SocketClientHandler\n(Server listener)" as ServerHandler
+note right of ServerHandler
+Riceve e gestisce le richieste in arrivo lato server.
+end note
+participant "GameController\n(Server, logica di gioco)" as Controller
+note right of Controller
+Gestisce la logica della partita lato server.
+end note
+
+User -> Handler : Richiede nuovo componente ("pick")
+alt TUI
+    Handler -> Client : pickComponentCard(playerId)
+else GUI
+    Handler -> AppContext : getClient().pickComponentCard(playerId)
+    AppContext -> Client : pickComponentCard(playerId)
+end
+Client -> Network : PickComponentRequest(playerId)
+Network -> ServerHandler : PickComponentRequest(playerId)
+ServerHandler -> Controller : getCompFromDeck(Player)
+Controller --> ServerHandler : Component
+ServerHandler -> Network : PickComponentResponse(playerId, Component, success, message)
+Network -> Client : PickComponentResponse(...)
+alt TUI
+    Client -> Handler : PickComponentResponse.handleClient()
+    Handler -> Handler : componentPicked(playerId, Component, success, message)
+else GUI
+    Client -> AppContext : PickComponentResponse.handleClient()
+    AppContext -> Handler : gameComponentPicked(Component)
+end
+Handler -> User : Mostra nuovo componente o errore
+@enduml

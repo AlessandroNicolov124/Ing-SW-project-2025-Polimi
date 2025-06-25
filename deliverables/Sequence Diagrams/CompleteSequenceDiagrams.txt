@@ -1,67 +1,124 @@
 @startuml
-actor Utente
-participant "Client" as C
-participant "Server" as S
+title Application Startup, Lobby, and Gameplay (repo-compliant, ready set via GUI or TUI)
 
-== Avvio e Connessione ==
-Utente -> C : Avvia applicazione
-C -> Utente : Chiede username, tipo connessione, host, porta
-Utente -> C : Inserisce dati
+actor User
+participant "Client\n(UI & network logic)" as C
+note right of C
+Handles both GUI and TUI.
+Sends/receives to/from server.
+end note
+participant "Server\n(Game logic & state)" as S
+note right of S
+Handles authentication, lobby, match, build phase, adventure.
+end note
 
-alt Scelta RMI
+== Startup and Connection ==
+User -> C : Launches application
+C -> User : Requests username, connection type, host, port
+User -> C : Inputs credentials
+
+alt RMI selected
     C -> S : Naming.lookup("//host:1099/GalaxyTruckerServer")
     C -> S : connect(RmiClientIf)
-    S -> C : showUpdate(AddPlayerResponse) [callback]
-else Scelta Socket
-    C -> S : Connessione TCP/IP (apre socket)
-    C -> S : Invio CreatePlayerMessage serializzato
-    S -> C : AddPlayerResponse serializzato
+    S -> C : AddPlayerResponse (callback)
+else Socket selected
+    C -> S : Opens TCP/IP socket
+    C -> S : CreatePlayerMessage (serialized)
+    S -> C : AddPlayerResponse (serialized)
 end
 
-C -> Utente : Mostra conferma login
+C -> User : Show login confirmation
 
 == Lobby ==
-alt Crea nuova partita
+alt Create new match
     C -> S : createMatch(matchName, playerId, username)
-    S -> C : showUpdate(CreateMatchResponse)
-else Unisciti a partita esistente
+    S -> C : CreateMatchResponse
+else Join existing match
     C -> S : getAvailableMatches()
-    S -> C : showUpdate(GetMatchesResponse)
+    S -> C : GetMatchesResponse
     C -> S : joinMatch(matchId, playerId, username)
-    S -> C : showUpdate(JoinMatchResponse)
+    S -> C : JoinMatchResponse
 end
 
-loop Attesa giocatori
-    S -> C : showUpdate(UpdatePlayersInLobby)
+loop Waiting for players in lobby
+    S -> C : UpdatePlayersInLobby
+    C -> User : Show lobby state
 end
 
-alt Inizio partita
+alt Host starts the match
     C -> S : startMatch(matchId, playerId, username)
-    S -> C : showUpdate(StartMatchResponse)
+    S -> C : StartMatchResponse
 end
 
-== Gameplay ==
-loop Per ogni turno/azione
-    Utente -> C : Effettua azione (es: piazza componente)
-    alt RMI
-        C -> S : placeComponent(component, position) [metodo remoto]
-        S -> C : showUpdate(PlaceComponentResponse)
-    else Socket
-        C -> S : PlaceComponentMessage serializzato
-        S -> C : PlaceComponentResponse serializzato
+== Pre-Build Ready Phase ==
+loop Waiting for all players to confirm "ready to build"
+    S -> C : BuildPhaseStartNotification
+    alt GUI
+        C -> User : Show "Ready to build" button
+        User -> C : Clicks "Ready" button
+    else TUI
+        C -> User : Prompt "Type 'ready' to build your ship"
+        User -> C : Types 'ready' command
     end
-    S -> C : showUpdate(UpdateGameState) [sincrona/asincrona]
-    C -> Utente : Mostra aggiornamento stato
+    C -> S : notifyBuildReady(playerId, matchId, true)
+    S -> C : BuildReadyAck
 end
 
-== Disconnessione/Errori ==
-alt Disconnessione volontaria
-    Utente -> C : Chiude applicazione
-    C -> S : leaveMatch() / chiude connessione
-    S -> C : showUpdate(LeaveMatchResponse)
-else Errore di rete
-    S -> C : showUpdate(UsernameRejectedResponse o messaggio di errore)
-    C -> Utente : Notifica errore/disconnessione
+== Ship Building ==
+loop Ship building (all ready players)
+    User -> C : Places or picks component
+    alt RMI
+        C -> S : placeComponent(...)/pickComponentCard(...) [remote method]
+        S -> C : PlaceComponentResponse/PickComponentResponse
+    else Socket
+        C -> S : PlaceComponentMessage/PickComponentRequest (serialized)
+        S -> C : PlaceComponentResponse/PickComponentResponse (serialized)
+    end
+    C -> User : Update ship view / show result
+end
+
+== Ship Validation ==
+C -> S : requestShipValidation()
+S -> C : ShipValidationResponse
+
+alt Validation failed
+    C -> User : Shows errors, user corrects ship
+    loop Correction
+        User -> C : Fixes ship
+        C -> S : sendCorrection(...)
+        S -> C : CorrectionResponse
+    end
+    C -> S : requestShipValidation()
+    S -> C : ShipValidationResponse
+end
+
+alt Validation passed
+    C -> User : Ship construction complete
+end
+
+== Adventure Phase ==
+loop For each adventure card
+    C -> S : drawAdventureCard()
+    S -> C : AdventureCardDrawn
+    C -> User : Show card/event
+    User -> C : Makes event decisions
+    C -> S : resolveEventResponse(...)
+    S -> C : EventResolutionResponse
+    S -> C : UpdateGameState
+    C -> User : Show event result / updated state
+end
+
+S -> C : GameEndResults
+C -> User : Show final results
+
+== Disconnection/Errors ==
+alt Voluntary disconnect
+    User -> C : Closes application
+    C -> S : leaveMatch() / closes connection
+    S -> C : LeaveMatchResponse
+else Network error
+    S -> C : UsernameRejectedResponse or error
+    C -> User : Notify error/disconnection
 end
 
 @enduml
