@@ -3,9 +3,11 @@ package it.polimi.ingsw.GUI.GameStateUpdateListener;
 import java.util.List;
 import java.util.UUID;
 
+import it.polimi.ingsw.network.Difficulty;
+
 public interface LobbyListener {
     void availableMatches(List<String> matches);
-    void matchCreated(UUID matchId, String matchName, String playerName, int playerId);
+    void matchCreated(UUID id, String name, String playerName, int creatorId, Difficulty difficulty);
 
     void playerJoinedMatch(UUID matchId, String playerName);
     void playerLeftMatch(UUID matchId, int playerId, String playerName);
@@ -16,4 +18,6 @@ public interface LobbyListener {
     void loadingStatus(UUID matchId, int ready, int total);
     void playerReady(UUID matchId, int ready, int total);
     void shipBuildingStart(UUID matchId, int readyPlayers);
+
+    void shouldSelectCabinColor();
 }

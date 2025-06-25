@@ -79,13 +79,20 @@ public class  GameController {
         return false; // Player not found or other issue
     }
 
-    public boolean removeComponentForPlayer(Player player, Component component) {
-
+    public boolean removeComponentAt(Player player, Position position) {
         if (isPlayerThere(player)) {
-            return player.removeComponent(component);
+            return player.removeComponentAt(position);
         }
         return false;
     }
+
+    // public boolean removeComponentForPlayer(Player player, Component component) {
+
+    //     if (isPlayerThere(player)) {
+    //         return player.removeComponent(component);
+    //     }
+    //     return false;
+    // }
 
     public void pickCardForPlayer(Player player) {
         if (isPlayerThere(player)) {
@@ -262,10 +269,19 @@ public class  GameController {
     }
 
     public boolean validateShipForPlayer(Player player) {
-        return player.validateShip();
+        if (isPlayerThere(player)) {
+            String validationErrors = player.getShip().validateShip();
+            return validationErrors == null;
+        }
+        return false;
     }
 
-    //public void
+    public String getShipValidationErrors(Player player) {
+        if (isPlayerThere(player)) {
+            return player.getShip().validateShip();
+        }
+        return "Player not found";
+    }
 
     public void rotateComponentClockwiseForPlayer(Player player, Component componentToRotate) {
         if (isPlayerThere(player)) {

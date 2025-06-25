@@ -5,6 +5,7 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.network.messages.RotationType;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 
 import javafx.scene.control.Button;
@@ -16,7 +17,6 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
-
 import javafx.scene.paint.Color;
 
 import javafx.scene.shape.Rectangle;
@@ -53,6 +53,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
+    private boolean colorSelected = false;
 
     // Board configuration
     private static final int SQUARE_SIZE = 123;
@@ -70,10 +71,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     };
 
     private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
-            Map.entry("cabin_starting", "/Images/tiles/Cabin_Starting_1.jpg"),
-//            Map.entry("cabin_starting_2", "/Images/tiles/Cabin_Starting_2.jpg"),
-//            Map.entry("cabin_starting_3", "/Images/tiles/Cabin_Starting_3.jpg"),
-//            Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"),
+            Map.entry("cabin_starting_1", "/Images/tiles/Cabin_Starting_1.jpg"), // RED
+            Map.entry("cabin_starting_2", "/Images/tiles/Cabin_Starting_2.jpg"), // YELLOW
+            Map.entry("cabin_starting_3", "/Images/tiles/Cabin_Starting_3.jpg"), // GREEN
+            Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"), // BLUE
 
             Map.entry("lifesupportsystem_brown_DSNS", "/Images/tiles/lifesupportsystem_brown_DSNS.jpg"),
             Map.entry("lifesupportsystem_brown_NDNT", "/Images/tiles/lifesupportsystem_brown_NDNT.jpg"),
@@ -237,38 +238,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NSUD", "/Images/tiles/singlecannon_NSUD.jpg"),
             Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
             Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
-
-
-
-
-//            Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
-//            Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
-//            Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
-//            Map.entry("Cannon", "/Images/tiles/GT-new_tiles_16_for web38.jpg"),
-//            Map.entry("Cargo", "/Images/tiles/GT-new_tiles_16_for web39.jpg"),
-//            Map.entry("CargoHolds", "/Images/tiles/GT-new_tiles_16_for web40.jpg"),
-//            Map.entry("CargoHoldsSize", "/Images/tiles/GT-new_tiles_16_for web41.jpg"),
-//            Map.entry("Component", "/Images/tiles/GT-new_tiles_16_for web42.jpg"),
-//            Map.entry("Connector", "/Images/tiles/GT-new_tiles_16_for web43.jpg"),
-//            Map.entry("ConnectorType", "/Images/tiles/GT-new_tiles_16_for web44.jpg"),
-//            Map.entry("DoubleCannon", "/Images/tiles/GT-new_tiles_16_for web45.jpg"),
-//            Map.entry("DoubleConnectorType", "/Images/tiles/GT-new_tiles_16_for web46.jpg"),
-//            Map.entry("DoubleEngine", "/Images/tiles/GT-new_tiles_16_for web47.jpg"),
-//            Map.entry("Engine", "/Images/tiles/GT-new_tiles_16_for web48.jpg"),
-//            Map.entry("GreenCargo", "/Images/tiles/GT-new_tiles_16_for web49.jpg"),
-//            Map.entry("LifeSupportSystem", "/Images/tiles/GT-new_tiles_16_for web50.jpg"),
-//            Map.entry("LifeSupportSystemType", "/Images/tiles/GT-new_tiles_16_for web51.jpg"),
-//            Map.entry("NormalCargoHolds", "/Images/tiles/GT-new_tiles_16_for web52.jpg"),
-//            Map.entry("NullConnectorType", "/Images/tiles/GT-new_tiles_16_for web53.jpg"),
-//            Map.entry("RedCargo", "/Images/tiles/GT-new_tiles_16_for web54.jpg"),
-//            Map.entry("ShieldGenerator", "/Images/tiles/GT-new_tiles_16_for web55.jpg"),
-//            Map.entry("SingleCannon", "/Images/tiles/GT-new_tiles_16_for web56.jpg"),
-//            Map.entry("SingleConnectorType", "/Images/tiles/GT-new_tiles_16_for web57.jpg"),
-//            Map.entry("SingleEngine", "/Images/tiles/GT-new_tiles_16_for web58.jpg"),
-//            Map.entry("SpecialCargoHolds", "/Images/tiles/GT-new_tiles_16_for web59.jpg"),
-//            Map.entry("StructuralModule", "/Images/tiles/GT-new_tiles_16_for web60.jpg"),
-//            Map.entry("UniversalConnectorType", "/Images/tiles/GT-new_tiles_16_for web61.jpg"),
-//            Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
     @FXML
@@ -443,8 +412,22 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             return;
         }
 
-        selectedImageView.setRotate(selectedImageView.getRotate() + 90);
-        statusLabel.setText("Rotated clockwise (visual only)");
+        Position componentPosition = null;
+        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
+            if (entry.getValue() == selectedImageView) {
+                componentPosition = entry.getKey();
+                break;
+            }
+        }
+
+        if (componentPosition != null) {
+            try {
+                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.CLOCKWISE);
+                statusLabel.setText("Rotating component...");
+            } catch (Exception e) {
+                statusLabel.setText("Rotation failed: " + e.getMessage());
+            }
+        }
     }
 
     @FXML
@@ -454,14 +437,28 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             return;
         }
 
-        selectedImageView.setRotate(selectedImageView.getRotate() - 90);
-        statusLabel.setText("Rotated counter-clockwise (visual only)");
+        Position componentPosition = null;
+        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
+            if (entry.getValue() == selectedImageView) {
+                componentPosition = entry.getKey();
+                break;
+            }
+        }
+
+        if (componentPosition != null) {
+            try {
+                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.ANTI_CLOCKWISE);
+                statusLabel.setText("Rotating component...");
+            } catch (Exception e) {
+                statusLabel.setText("Rotation failed: " + e.getMessage());
+            }
+        }
     }
 
     @FXML
     public void validateShip() {
         try {
-            context.getClient().validateShip();
+            context.getClient().validateShip(context.getPlayerId());
             statusLabel.setText("Validating ship...");
         } catch (Exception e) {
             statusLabel.setText("Validation failed: " + e.getMessage());
@@ -521,7 +518,19 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private String getComponentImgPath(Component c) {
         if (c == null) return null;
-        return COMP_IMAGE_MAP.get(c.getComponentString());
+
+        String key = c.getComponentString();
+
+        if ("cabin_starting".equals(key)) {
+            String color = context.getSelectedCabinColor();
+            key = switch (color) {
+                case "BLUE" -> "cabin_starting_4";
+                case "GREEN" -> "cabin_starting_3";
+                case "YELLOW" -> "cabin_starting_2";
+                default -> "cabin_starting_1";
+            };
+        }
+        return COMP_IMAGE_MAP.get(key);
     }
 
     @Override
@@ -566,26 +575,44 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentRotated(Position position, RotationType rotationType) {
-        ImageView imageView = cellViews.get(position);
-        if (imageView != null) {
-            double delta = switch (rotationType) {
-                case CLOCKWISE -> 90;
-                case ANTI_CLOCKWISE -> -90;
-                case OPPOSITE -> 180;
-            };
-            imageView.setRotate(imageView.getRotate() + delta);
-            statusLabel.setText("Component rotated");
-        }
+        Platform.runLater(() -> {
+            ImageView imageView = cellViews.get(position);
+            if (imageView != null) {
+                double rotation = switch (rotationType) {
+                    case CLOCKWISE -> 90;
+                    case ANTI_CLOCKWISE -> -90;
+                    case OPPOSITE -> 180;
+                };
+                
+                double currentRotation = imageView.getRotate();
+                imageView.setRotate(currentRotation + rotation);
+                
+                statusLabel.setText("Component rotated successfully");
+                
+                if (selectedImageView == imageView && selectedHighlight != null) {
+                    selectedHighlight.setRotate(currentRotation + rotation);
+                }
+            } else {
+                System.err.println("[GUI] No ImageView found at position " + position);
+            }
+        });
     }
 
     @Override
     public void gameShipValidated(boolean isValid, String message) {
-        statusLabel.setText(isValid ? "Ship valid! " + message : "Invalid: " + message);
-    }
-
-    @Override
-    public void gameAvailablePositionsUpdate(List<Integer> positions) {
-
+        if (isValid) {
+            statusLabel.setText("Ship valid! " + message);
+            statusLabel.setTextFill(javafx.scene.paint.Color.GREEN);
+            
+            // Implement something to proceed next phase
+            validateShipButton.setText("Ready for Flight!");
+            validateShipButton.setStyle("-fx-background-color: #4CAF50;");
+        } else {
+            statusLabel.setText("Validation failed: Check errors");
+            statusLabel.setTextFill(javafx.scene.paint.Color.RED);
+            
+            showValidationErrorDialog(message);
+        }
     }
 
     private void updateButtonStates() {
@@ -595,19 +622,27 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         rotateCounterClockwiseButton.setDisable(selectedImageView == null);
     }
 
-    public void setContext(AppContext context) {
+    @Override
+    public void setContext(AppContext ctx) {
         if (this.context != null) {
             this.context.removeGameStateUpdateListener(this);
         }
-
-        this.context = context;
-
-        if (context != null) {
-            context.addGameStateUpdateListener(this);
-        }
+        this.context = ctx;
+        ctx.addGameStateUpdateListener(this);
+        this.colorSelected = ctx.getSelectedCabinColor() != null;
     }
+
 
     public ShipBuilderController getController() {
         return this;
     }
+
+    public void cabinColorSelected(String color) {
+        Platform.runLater(() -> {
+            context.setSelectedCabinColor(color);
+            colorSelected = true;
+            statusLabel.setText("Color selected: " + color + ". Start building your ship!");
+        });
+    }
+
 }

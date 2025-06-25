@@ -11,6 +11,8 @@ import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +27,7 @@ public class GeneralServer implements LobbyManager {
 
     private RmiServer rmiServer;
     private SocketServer socketServer;
-    private List<GameMatch> matches = new CopyOnWriteArrayList<>();
+    private Map<UUID, GameMatch> matches = new HashMap<>();
     private final AtomicInteger playerIdGenerator = new AtomicInteger(1);
     
     private final Map<UUID, List<GeneralClientIf>> clientsInMatch = new ConcurrentHashMap<>();
@@ -92,12 +94,14 @@ public class GeneralServer implements LobbyManager {
     }
 
     // Create and manage matches
-    @Override
-    public GameMatch createMatch(String matchName, int hostId, String hostName) {
-        GameMatch newMatch = new GameMatch(matchName, hostId, hostName);
-        matches.add(newMatch);
-        System.out.println("[GeneralServer] Match created: " + matchName + " with host " + hostName);
-        return newMatch;
+    public GameMatch createMatch(String matchName, int playerId, String playerName, Difficulty difficulty) {
+        UUID matchId = UUID.randomUUID();
+        GameMatch match = new GameMatch(matchId, matchName, playerId, playerName, difficulty);
+        matches.put(matchId, match);
+        
+        System.out.println("[GeneralServer] Match created: " + matchName + " by " + playerName + " (ID: " + playerId + ")");
+        
+        return match;
     }
 
     @Override
@@ -120,17 +124,30 @@ public class GeneralServer implements LobbyManager {
             System.out.println("[GeneralServer] Match " + matchId + " not found for player ID " + playerId);
             return false;
         }
+        
         Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[GeneralServer] Player " + playerId + " not found in match " + matchId);
+            return false;
+        }
+        
+        String playerName = player.getNickName();
         boolean removed = match.removePlayer(playerId);
+        
         if (removed) {
-            System.out.println("[GeneralServer] Player " + player.getNickName() + " left match " + match.getMatchName());
+            System.out.println("[GeneralServer] Player " + playerName + " left match " + match.getMatchName());
+            
             if (match.isEmpty()) {
-                matches.remove(match);
+                matches.remove(matchId);
+                cleanupMatchResources(matchId);
                 System.out.println("[GeneralServer] Match " + match.getMatchName() + " removed due to no players");
+            } else {
+
             }
         } else {
-            System.out.println("[GeneralServer] Player " + player.getNickName() + " could not leave match " + match.getMatchName());
+            System.out.println("[GeneralServer] Player " + playerName + " could not leave match " + match.getMatchName());
         }
+        
         return removed;
     }
 
@@ -166,43 +183,44 @@ public class GeneralServer implements LobbyManager {
     }
 
     // Search and retrieve matches
-    @Override
     public GameMatch findMatchById(UUID matchId) {
-        return matches.stream()
-                .filter(match -> match.getMatchId().equals(matchId))
-                .findFirst()
-                .orElse(null);
+        return matches.get(matchId);
     }
 
     @Override
     public GameMatch findMatchByPlayerId(int playerId) {
-        return matches.stream()
-                .filter(match -> match.isPlayerInMatchById(playerId))
-                .findFirst()
-                .orElse(null);
+        for (GameMatch match : matches.values()) {
+            if (match.getPlayerById(playerId) != null) {
+                return match;
+            }
+        }
+        return null;
     }
 
-    @Override
     public List<String> getAvailableMatches() {
-        if (matches.isEmpty()) {
-            System.out.println("[GeneralServer] No available matches found");
-            return List.of();
+        List<String> matchList = new ArrayList<>();
+        for (GameMatch match : matches.values()) {
+            if (match.getMatchState() == MatchStates.WAITING_FOR_PLAYERS) {
+                String matchInfo = match.getMatchId() + ": " + match.getMatchName() + 
+                                 " (Host: " + match.getHostPlayer().getNickName() + 
+                                 ", Difficulty: " + match.getDifficulty() + 
+                                 ", Players: " + match.getPlayers().size() + "/4)";
+                matchList.add(matchInfo);
+            }
         }
-        return matches.stream()
-                .filter(match -> match.getMatchState() == MatchStates.WAITING_FOR_PLAYERS)
-                .map(match -> match.getMatchId() + ": " + match.getMatchName())
-                .toList();
+        return matchList;
     }
 
     // Remove matches based on conditions
     @Override
     public void removeEmptyMatches() {
-        matches.removeIf(match -> match.isEmpty() || match.getMatchState() == MatchStates.FINISHED);
+        matches.values().removeIf(match -> match.getPlayers().isEmpty() || match.getMatchState() == MatchStates.FINISHED);
+        System.out.println("[GeneralServer] Removed all empty matches");
     }
 
     @Override
     public void removeInProgressMatch() {
-        matches.removeIf(match -> match.getNumberOfPlayers() == 1 || match.getMatchState() == MatchStates.IN_PROGRESS);
+        matches.values().removeIf(match -> match.getMatchState() == MatchStates.IN_PROGRESS);
         System.out.println("[GeneralServer] Removed all in-progress matches");
     }
 
@@ -222,16 +240,14 @@ public class GeneralServer implements LobbyManager {
     public void removeClientFromMatch(UUID matchId, GeneralClientIf client) {
         List<GeneralClientIf> matchClients = clientsInMatch.get(matchId);
         if (matchClients != null) {
-            matchClients.remove(client);
-            allClients.remove(client);
+            boolean wasInMatch = matchClients.remove(client);
             
-            if (matchClients.isEmpty()) {
-                Thread dispatcher = matchDispatchers.remove(matchId);
-                if (dispatcher != null) {
-                    dispatcher.interrupt();
+            if (wasInMatch) {
+                System.out.println("[GeneralServer] Client removed from match " + matchId);
+
+                if (matchClients.isEmpty()) {
+                    cleanupMatchResources(matchId);
                 }
-                matchQueues.remove(matchId);
-                clientsInMatch.remove(matchId);
             }
         }
     }
@@ -247,6 +263,25 @@ public class GeneralServer implements LobbyManager {
     }
 
     @Override
+    public void broadcastToAllExceptOne(ResponseMessage responseMessage, GeneralClientIf excludeClient) {
+        List<GeneralClientIf> clientsCopy = new ArrayList<>(allClients);
+        
+        for (GeneralClientIf client : clientsCopy) {
+            if (client != excludeClient) {
+                try {
+                    sendMessageToClient(client, responseMessage);
+                } catch (Exception e) {
+                    System.err.println("[GeneralServer] Error in broadcast, removing client: " + e.getMessage());
+                    allClients.remove(client);
+                    for (List<GeneralClientIf> matchClients : clientsInMatch.values()) {
+                        matchClients.remove(client);
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
     public void multicastToMatch(UUID matchId, ResponseMessage responseMessage) {
         BlockingQueue<ResponseMessage> matchQueue = matchQueues.get(matchId);
         if (matchQueue != null) {
@@ -258,12 +293,15 @@ public class GeneralServer implements LobbyManager {
     public void multicastToMatchExceptOne(UUID matchId, ResponseMessage responseMessage, GeneralClientIf client) {
         List<GeneralClientIf> clients = clientsInMatch.get(matchId);
         if (clients != null) {
-            for (GeneralClientIf c : clients) {
+            List<GeneralClientIf> clientsCopy = new ArrayList<>(clients);
+            for (GeneralClientIf c : clientsCopy) {
                 if (c != client) {
                     try {
                         sendMessageToClient(c, responseMessage);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        System.err.println("[GeneralServer] Error sending message to client, removing: " + e.getMessage());
+                        clients.remove(c);
+                        allClients.remove(c);
                     }
                 }
             }
@@ -275,11 +313,18 @@ public class GeneralServer implements LobbyManager {
             try {
                 while (true) {
                     ResponseMessage msg = generalBroadcastQueue.take();
-                    for (GeneralClientIf client : allClients) {
+                    
+                    List<GeneralClientIf> clientsCopy = new ArrayList<>(allClients);
+                    
+                    for (GeneralClientIf client : clientsCopy) {
                         try {
                             sendMessageToClient(client, msg);
                         } catch (Exception e) {
+                            System.err.println("[GeneralServer] Error in global broadcast, removing client: " + e.getMessage());
                             allClients.remove(client);
+                            for (List<GeneralClientIf> matchClients : clientsInMatch.values()) {
+                                matchClients.remove(client);
+                            }
                         }
                     }
                 }
@@ -317,9 +362,37 @@ public class GeneralServer implements LobbyManager {
         t.start();
         return t;
     }
+    
+    private void cleanupMatchResources(UUID matchId) {
+        Thread dispatcher = matchDispatchers.remove(matchId);
+        if (dispatcher != null && dispatcher.isAlive()) {
+            dispatcher.interrupt();
+            System.out.println("[GeneralServer] Dispatcher thread stopped for match " + matchId);
+        }
+        
+        BlockingQueue<ResponseMessage> queue = matchQueues.remove(matchId);
+        if (queue != null) {
+            queue.clear();
+            System.out.println("[GeneralServer] Message queue cleared for match " + matchId);
+        }
+        
+        clientsInMatch.remove(matchId);
+        System.out.println("[GeneralServer] Client list cleared for match " + matchId);
+    }
 
     private void sendMessageToClient(GeneralClientIf client, ResponseMessage message) throws Exception {
-        client.showUpdate(message);
+        try {
+            client.showUpdate(message);
+        } catch (Exception e) {
+            System.err.println("[GeneralServer] Failed to send message to client: " + e.getMessage());
+            allClients.remove(client);
+            
+            for (List<GeneralClientIf> matchClients : clientsInMatch.values()) {
+                matchClients.remove(client);
+            }
+            
+            throw e;
+        }
     }
 
 }

@@ -1,8 +1,12 @@
 package it.polimi.ingsw.network;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import it.polimi.ingsw.GameController;
@@ -20,12 +24,20 @@ public class GameMatch {
     private Player hostPlayer;
     private Map<Integer, Boolean> readyPlayersMap;
 
-    public GameMatch(String matchName, int hostId, String hostName) {
-        this.matchId = UUID.randomUUID();
+    private Map<Integer, String> playerCabinColors = new HashMap<>();
+    private Set<String> availableColors = new HashSet<>(Arrays.asList("BLUE", "GREEN", "YELLOW", "RED"));
+    private Map<Integer, Boolean> playersValidated = new HashMap<>();
+    private Map<Integer, Boolean> playersReadyForFlight = new HashMap<>();
+
+    private Difficulty difficulty;
+
+    public GameMatch(UUID matchId, String matchName, int hostId, String hostName, Difficulty difficulty) {
+        this.matchId = matchId;
         this.matchName = matchName;
         this.controller = new GameController();
         this.players = new ArrayList<>();
         this.matchState = MatchStates.WAITING_FOR_PLAYERS;
+        this.difficulty = difficulty;
 
         Player host = new Player(hostId, hostName, true);
         this.players.add(host);
@@ -73,12 +85,16 @@ public class GameMatch {
         return readyPlayersMap;
     }
 
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
     // General match state checks
     public boolean isFull() {
         return this.players.size() >= MAX_PLAYERS;
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return this.players.isEmpty();
     }
 
@@ -96,6 +112,48 @@ public class GameMatch {
 
     public boolean isPlayerHostById(int playerId) {
         return this.hostPlayer != null && this.hostPlayer.getId() == playerId;
+    }
+
+    public void setPlayerCabinColor(int playerId, String color) {
+        String previousColor = playerCabinColors.get(playerId);
+        if (previousColor != null) {
+            availableColors.add(previousColor);
+        }
+        
+        playerCabinColors.put(playerId, color);
+        availableColors.remove(color);
+    }
+
+    public String getPlayerCabinColor(int playerId) {
+        return playerCabinColors.get(playerId);
+    }
+    
+    public boolean isColorTaken(String color) {
+        return !availableColors.contains(color);
+    }
+
+    public boolean allPlayersValidated() {
+        return playersValidated.size() == players.size() && 
+            playersValidated.values().stream().allMatch(Boolean::booleanValue);
+    }
+
+    public void setPlayerReadyForFlight(int playerId, boolean ready) {
+        playersReadyForFlight.put(playerId, ready);
+    }
+
+    public boolean allPlayersReadyForFlight() {
+        return playersReadyForFlight.size() == players.size() && 
+            playersReadyForFlight.values().stream().allMatch(Boolean::booleanValue);
+    }
+
+    public synchronized void setMatchState(MatchStates state) {
+        MatchStates oldState = this.matchState;
+        this.matchState = state;
+        System.out.println("[GameMatch " + matchId + "] State changed from " + oldState + " to " + state);
+    }
+
+    public Map<Integer, Boolean> getPlayersValidated() {
+        return playersValidated;
     }
 
     // Handling players in the match
@@ -132,6 +190,20 @@ public class GameMatch {
             return false;
         }
 
+        // IMPORTANTE: Rimuovi e ripristina il colore della cabina del giocatore
+        String color = playerCabinColors.remove(playerId);
+        if (color != null) {
+            availableColors.add(color);
+            System.out.println("[GameMatch " + matchId + "] Released cabin color " + color + " for player " + player.getNickName());
+        }
+
+        // Rimuovi dalle mappe di stato
+        playersValidated.remove(playerId);
+        playersReadyForFlight.remove(playerId);
+        if (readyPlayersMap != null) {
+            readyPlayersMap.remove(playerId);
+        }
+
         boolean wasHost = isPlayerHostById(playerId);
         boolean removed = this.players.remove(player);
 
@@ -142,10 +214,12 @@ public class GameMatch {
 
         System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " removed from match " + matchName);
 
+        // Gestisci la riassegnazione dell'host
         if (players.isEmpty()) {
             this.hostPlayer = null;
             System.out.println("[GameMatch " + matchId + "] Match is now empty, no host assigned");
         } else if (wasHost) {
+            // Assegna il primo giocatore rimanente come nuovo host
             this.hostPlayer = players.get(0);
             System.out.println("[GameMatch " + matchId + "] New host assigned: " + hostPlayer.getNickName() + " (ID: " + hostPlayer.getId() + ")");
         }

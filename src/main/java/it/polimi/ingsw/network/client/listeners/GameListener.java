@@ -2,6 +2,7 @@ package it.polimi.ingsw.network.client.listeners;
 
 
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
 
@@ -15,14 +16,13 @@ public interface GameListener {
     void displayRefresh();
     void componentPlaced(Component component, Position position);
     void componentRemoved(Position position);
-    void componentRotated(Position position, RotationType rotationType);
+    void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid);
     void shipValidated(boolean isValid, String message);
-    void showAvailablePositions(List<Integer> positions);
     boolean notifyNewPlayerPosition(int playerId, int position);
 
     void printTextMsg(String message);
 
-    void matchCreated(UUID matchId, String matchName, String playerName, int playerId);
+    void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty);
     void playerJoinedMatch(UUID matchId, String playerName);
     void playerLeftMatch(UUID matchId, int playerId, String playerName);
     void updateAvailableMatches(List<String> matchNames);
@@ -34,5 +34,11 @@ public interface GameListener {
     void shipBuildingStart(UUID matchId, int readyPlayers);
     void usernameRejected(String errorMessage);
     void componentPicked(int playerId, Component component, boolean success, String message);
+
+
+    void cabinColorSelected(String color);
+    void flightPreparationStart(UUID matchId);
+    void allPlayersReadyForFlight(UUID matchId);
+    void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid);
 
 }

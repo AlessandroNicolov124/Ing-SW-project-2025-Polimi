@@ -1,7 +1,20 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
+
 import it.polimi.ingsw.GUI.AppContext;
+import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
@@ -31,4 +44,92 @@ public abstract class GuiContoller {
             System.err.println("Failed to show error dialog: " + e.getMessage());
         }
     }
+
+
+    protected void showColorSelectionDialog(Consumer<String> onColorSelected) {
+        Platform.runLater(() -> {
+            List<String> colors = Arrays.asList("BLUE", "GREEN", "YELLOW", "RED");
+            ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(colors.get(0), colors);
+            choiceDialog.setTitle("Select cabin colour");
+            choiceDialog.setHeaderText("Choose the colour of your starting cabin");
+            choiceDialog.setContentText("Available colours:");
+
+            // Label for error message
+            Label errorLabel = new Label();
+            errorLabel.setTextFill(javafx.scene.paint.Color.RED);
+            errorLabel.setVisible(false);
+            
+            VBox content = new VBox(10);
+            content.getChildren().addAll(new Label("Choose the colour of your starting cabin"), 
+                                                          choiceDialog.getDialogPane().getContent(),
+                                                          errorLabel);
+            
+            choiceDialog.getDialogPane().setContent(content);
+
+            // Set buttons and their actions
+            choiceDialog.getDialogPane().getButtonTypes().clear();
+            ButtonType selectButtonType = new ButtonType("Select", ButtonBar.ButtonData.OK_DONE);
+            choiceDialog.getDialogPane().getButtonTypes().add(selectButtonType);
+
+            // Disable the default cancel button
+            Button selectButton = (Button) choiceDialog.getDialogPane().lookupButton(selectButtonType);
+            selectButton.addEventFilter(ActionEvent.ACTION, event -> {
+                event.consume();
+                
+                String selectedColor = choiceDialog.getSelectedItem();
+                if (selectedColor != null) {
+                    try {
+                        context.getClient().selectCabinColor(selectedColor, context.getPlayerId());
+                        onColorSelected.accept(selectedColor);
+                        choiceDialog.close();
+                    } catch (Exception ex) {
+                        // Show the error message inside the dialog
+                        String errorMsg = ex.getMessage();
+                        if (errorMsg.contains("already taken")) {
+                            errorLabel.setText("Colour already taken – please pick another.");
+                        } else {
+                            errorLabel.setText("Error: " + errorMsg);
+                        }
+                        errorLabel.setVisible(true);
+                        }
+                }
+            });
+
+            choiceDialog.setOnCloseRequest(event -> {
+                // Don't let the dialog close if no color is selected
+                if (context.getSelectedCabinColor() == null) {
+                    event.consume(); 
+                    errorLabel.setText("You must select a cabin colour to continue.");
+                    errorLabel.setVisible(true);
+                    
+                    Platform.runLater(() -> {
+                        errorLabel.setVisible(false);
+                    });
+                }
+            });
+
+            choiceDialog.initOwner(null);
+            choiceDialog.setResizable(false);
+            
+            choiceDialog.showAndWait();
+        });
+    }
+
+    protected void showValidationErrorDialog(String errors) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ship Validation Failed");
+            alert.setHeaderText("Your ship has the following issues:");
+            
+            TextArea textArea = new TextArea(errors);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+            
+            alert.getDialogPane().setContent(textArea);
+            alert.showAndWait();
+        });
+    }
+    
 }
