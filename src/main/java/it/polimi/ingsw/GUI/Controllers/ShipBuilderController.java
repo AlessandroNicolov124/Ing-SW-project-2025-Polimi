@@ -438,7 +438,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     public void rotateCardClockwise() {
         if (currentComponent == null) {
-            statusLabel.setText("Seleziona prima un componente da piazzare");
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
         // Rotazione logica
@@ -452,7 +452,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     public void rotateCardAntiClockwise() {
         if (currentComponent == null) {
-            statusLabel.setText("Seleziona prima un componente da piazzare");
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
         // Rotazione logica
