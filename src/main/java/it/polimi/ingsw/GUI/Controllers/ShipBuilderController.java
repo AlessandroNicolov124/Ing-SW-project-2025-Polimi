@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
@@ -34,8 +35,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Button pickComponentButton;
     @FXML
-    private Button pickFistComponentButton;
-    @FXML
     private Button rotateClockwiseButton;
     @FXML
     private Button rotateCounterClockwiseButton;
@@ -47,9 +46,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     // Component management
     private Component currentComponent = null;
     private boolean isRemoveMode = false;
-    
+
     // Visual elements tracking
     private ImageView selectedImageView = null;
+    //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
@@ -60,6 +60,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private static final int GRID_COLS = 7;
     private static final double GRID_START_X = 38;
     private static final double GRID_START_Y = 31;
+
+    private static final int STASH_CARDS = 2;
+    private static final double GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
+    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+
 
     private static final boolean[][] VALID_SQUARES = {
             {false, false, true,  false, true,  false, false},
@@ -141,15 +146,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("normalcargoholds_triple_SNDS", "/Images/tiles/normalcargoholds_triple_SNDS.jpg"),
             Map.entry("normalcargoholds_triple_DNSD", "/Images/tiles/normalcargoholds_triple_DNSD.jpg"),
 
-            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargohold_single_DDDU.jpg"),
-            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargohold_single_DSNU.jpg"),
-            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargohold_single_NDSU.jpg"),
-            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargohold_single_NUNU.jpg"),
-            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargohold_single_UNNU.jpg"),
-            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargohold_single_SSSU.jpg"),
-            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargohold_double_NDNS.jpg"),
-            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargohold_double_NNND.jpg"),
-            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargohold_double_NNNS.jpg"),
+            Map.entry("specialcargoholds_single_DDDU", "/Images/tiles/specialcargoholds_single_DDDU.jpg"),
+            Map.entry("specialcargoholds_single_DSNU", "/Images/tiles/specialcargoholds_single_DSNU.jpg"),
+            Map.entry("specialcargoholds_single_NDSU", "/Images/tiles/specialcargoholds_single_NDSU.jpg"),
+            Map.entry("specialcargoholds_single_NUNU", "/Images/tiles/specialcargoholds_single_NUNU.jpg"),
+            Map.entry("specialcargoholds_single_UNNU", "/Images/tiles/specialcargoholds_single_UNNU.jpg"),
+            Map.entry("specialcargoholds_single_SSSU", "/Images/tiles/specialcargoholds_single_SSSU.jpg"),
+            Map.entry("specialcargoholds_double_NDNS", "/Images/tiles/specialcargoholds_double_NDNS.jpg"),
+            Map.entry("specialcargoholds_double_NNND", "/Images/tiles/specialcargoholds_double_NNND.jpg"),
+            Map.entry("specialcargoholds_double_NNNS", "/Images/tiles/specialcargoholds_double_NNNS.jpg"),
 
             Map.entry("structuralmodule_SUDU", "/Images/tiles/structuralmodule_SUDU.jpg"),
             Map.entry("structuralmodule_SUNU", "/Images/tiles/structuralmodule_SUNU.jpg"),
@@ -238,37 +243,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
             Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
 
-
-
-
-//            Map.entry("BatteryType", "/Images/tiles/GT-new_tiles_16_for web35.jpg"),
-//            Map.entry("BlueCargo", "/Images/tiles/GT-new_tiles_16_for web36.jpg"),
-//            Map.entry("Cabin", "/Images/tiles/GT-new_tiles_16_for web37.jpg"),
-//            Map.entry("Cannon", "/Images/tiles/GT-new_tiles_16_for web38.jpg"),
-//            Map.entry("Cargo", "/Images/tiles/GT-new_tiles_16_for web39.jpg"),
-//            Map.entry("CargoHolds", "/Images/tiles/GT-new_tiles_16_for web40.jpg"),
-//            Map.entry("CargoHoldsSize", "/Images/tiles/GT-new_tiles_16_for web41.jpg"),
-//            Map.entry("Component", "/Images/tiles/GT-new_tiles_16_for web42.jpg"),
-//            Map.entry("Connector", "/Images/tiles/GT-new_tiles_16_for web43.jpg"),
-//            Map.entry("ConnectorType", "/Images/tiles/GT-new_tiles_16_for web44.jpg"),
-//            Map.entry("DoubleCannon", "/Images/tiles/GT-new_tiles_16_for web45.jpg"),
-//            Map.entry("DoubleConnectorType", "/Images/tiles/GT-new_tiles_16_for web46.jpg"),
-//            Map.entry("DoubleEngine", "/Images/tiles/GT-new_tiles_16_for web47.jpg"),
-//            Map.entry("Engine", "/Images/tiles/GT-new_tiles_16_for web48.jpg"),
-//            Map.entry("GreenCargo", "/Images/tiles/GT-new_tiles_16_for web49.jpg"),
-//            Map.entry("LifeSupportSystem", "/Images/tiles/GT-new_tiles_16_for web50.jpg"),
-//            Map.entry("LifeSupportSystemType", "/Images/tiles/GT-new_tiles_16_for web51.jpg"),
-//            Map.entry("NormalCargoHolds", "/Images/tiles/GT-new_tiles_16_for web52.jpg"),
-//            Map.entry("NullConnectorType", "/Images/tiles/GT-new_tiles_16_for web53.jpg"),
-//            Map.entry("RedCargo", "/Images/tiles/GT-new_tiles_16_for web54.jpg"),
-//            Map.entry("ShieldGenerator", "/Images/tiles/GT-new_tiles_16_for web55.jpg"),
-//            Map.entry("SingleCannon", "/Images/tiles/GT-new_tiles_16_for web56.jpg"),
-//            Map.entry("SingleConnectorType", "/Images/tiles/GT-new_tiles_16_for web57.jpg"),
-//            Map.entry("SingleEngine", "/Images/tiles/GT-new_tiles_16_for web58.jpg"),
-//            Map.entry("SpecialCargoHolds", "/Images/tiles/GT-new_tiles_16_for web59.jpg"),
-//            Map.entry("StructuralModule", "/Images/tiles/GT-new_tiles_16_for web60.jpg"),
-//            Map.entry("UniversalConnectorType", "/Images/tiles/GT-new_tiles_16_for web61.jpg"),
-//            Map.entry("YellowCargo", "/Images/tiles/GT-new_tiles_16_for web62.jpg")
     );
 
     @FXML
@@ -296,11 +270,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private void setupGrid() {
+        double x;
+        double y;
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
                 if (VALID_SQUARES[row][col]) {
-                    double x = GRID_START_X + col * SQUARE_SIZE;
-                    double y = GRID_START_Y + row * SQUARE_SIZE;
+                    x = GRID_START_X + col * SQUARE_SIZE;
+                    y = GRID_START_Y + row * SQUARE_SIZE;
                     Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
                     rect.setFill(Color.TRANSPARENT);
                     rect.setStroke(Color.WHITE);
@@ -309,6 +285,19 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 }
             }
         }
+
+        for (int col = 0; col < STASH_CARDS; col++) {
+
+            x = GRIST_STASH_CARDS_START_X + col * SQUARE_SIZE;
+            y = GRIST_STASH_CARDS_START_Y;
+            Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
+            rect.setFill(Color.TRANSPARENT);
+            rect.setStroke(Color.WHITE);
+            rect.setStrokeWidth(2.0);
+            anchorPane.getChildren().add(rect);
+
+        }
+
     }
 
     private void setupDragAndDrop() {
@@ -316,7 +305,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             if (cardImage.getImage() != null && currentComponent != null && !isRemoveMode) {
                 Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
-                content.putImage(cardImage.getImage());
+                javafx.scene.image.WritableImage snapshot = cardImage.snapshot(null, null);
+                content.putImage(snapshot);
                 db.setContent(content);
                 event.consume();
             }
@@ -398,8 +388,17 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         if (context == null || context.getClient() == null) {
             statusLabel.setText("Error: No connection available");
             return;
-        }        
+        }
+        // Reset rotazione logica e grafica ogni volta che si pesca un nuovo componente
+        cardImage.setRotate(0);
+        if (currentComponent != null) {
+            if(currentComponent.getComponentDirection()!=Direction.NORTH){
+                //currentComponent.setComponentDirection(Direction.NORTH);
+                // Riporta anche i connettori alla posizione originale
+                System.out.println("ERRORE COMPONENT RUOTATO IMPLICITAMENTE");
+            }
 
+        }
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
@@ -438,24 +437,30 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @FXML
     public void rotateCardClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
-
-        selectedImageView.setRotate(selectedImageView.getRotate() + 90);
-        statusLabel.setText("Rotated clockwise (visual only)");
+        // Rotazione logica
+        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
+        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() + 90);
+        statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
     }
 
     @FXML
     public void rotateCardAntiClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
-
-        selectedImageView.setRotate(selectedImageView.getRotate() - 90);
-        statusLabel.setText("Rotated counter-clockwise (visual only)");
+        // Rotazione logica
+        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
+        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() - 90);
+        statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");
     }
 
     @FXML
@@ -531,11 +536,18 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentPlaced(Component component, Position position) {
+        //System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
         String imagePath = getComponentImgPath(component);
-        if (imagePath == null) return;
+        if (imagePath == null) {
+            System.out.println("[DEBUG] imagePath nullo per componente: " + component);
+            return;
+        }
 
         InputStream imageStream = getClass().getResourceAsStream(imagePath);
-        if (imageStream == null) return;
+        if (imageStream == null) {
+            System.out.println("[DEBUG] imageStream nullo per path: " + imagePath);
+            return;
+        }
 
         ImageView placed = new ImageView(new Image(imageStream));
         placed.setFitWidth(SQUARE_SIZE);
@@ -543,6 +555,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         placed.setLayoutX(GRID_START_X + position.getX() * SQUARE_SIZE);
         placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
         placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
+        // Rotazione coerente con la logica del componente
+        double rotation = 0;
+        switch (component.getComponentDirection()) {
+            case NORTH -> rotation = 0;
+            case EAST -> rotation = 90;
+            case SOUTH -> rotation = 180;
+            case WEST -> rotation = 270;
+        }
+        placed.setRotate(rotation);
 
         anchorPane.getChildren().add(placed);
         cellViews.put(position, placed);
@@ -551,17 +572,22 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         statusLabel.setText("Component placed successfully!");
         currentComponent = null;
         cardImage.setImage(null);
+        System.out.println("[DEBUG] Componente piazzato: " + component.getComponentString() + " con direzione " + component.getComponentDirection());
+        //System.out.println("[DEBUG] Componente piazzato e GUI aggiornata");
     }
 
     @Override
     public void gameComponentRemoved(Position position) {
-        ImageView removed = cellViews.remove(position);
+        ImageView removed = cellViews.get(position);
         if (removed != null) {
-            anchorPane.getChildren().remove(removed);
+            removed.setImage(null);
+            cellViews.remove(position);
+            //anchorPane.getChildren().remove(removed);
             shipComponents.remove(position);
             clearSelection();
             statusLabel.setText("Component removed!");
         }
+
     }
 
     @Override
