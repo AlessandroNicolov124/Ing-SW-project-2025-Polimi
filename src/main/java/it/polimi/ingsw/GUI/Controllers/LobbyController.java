@@ -217,7 +217,7 @@ public class LobbyController extends GuiContoller implements LobbyListener {
                         ", Difficulty: " + difficulty +
                         ", Players: 1/4)";
 
-            boolean isHost = (creatorId == getPlayerId());
+            this.isHost = (creatorId == getPlayerId());
             
             if (!isHost) {
                 if (!availableMatches.contains(row)) {
