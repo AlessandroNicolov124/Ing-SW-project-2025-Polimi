@@ -34,25 +34,25 @@ public final class ShieldGenerator extends Component {
     /**
      * Add a direction to the list of protected directions.
      * If the direction is already protected, it will not be added again.
-     * if the direction is not adjacent to the already protected directions, an exception will be thrown.
+     * if the direction is not adjacent to the already protected directions, returns an error message.
      * @param direction the direction to be added
      */
     public void add(Direction direction) {
         if( !protectedDirections.contains(direction)){
             if (protectedDirections.size() >= 2) {
-                throw new IllegalStateException("Cannot protect more than 2 directions");
+                System.out.println("Cannot protect more than 2 directions");
+                return;
             }
             if (direction == null) {
-                throw new IllegalArgumentException("Direction cannot be null");
+                System.out.println("Direction cannot be null");
+                return;
             }
             // Consente di aggiungere la direzione solo se è adiacente a quelle già presenti (se ce ne sono)
             if (!protectedDirections.isEmpty()) {
-                boolean isAdjacent = false;
-                if (direction.isAdjacentTo(protectedDirections.getFirst())) {
-                    isAdjacent = true;
-                }
+                boolean isAdjacent = direction.isAdjacentTo(protectedDirections.getFirst());
                 if (!isAdjacent) {
-                    throw new IllegalArgumentException("Direction " + direction + " is not adjacent to the already protected direction");
+                    System.out.println("Direction " + direction + " is not adjacent to the already protected directions: " + protectedDirections);
+                    return;
                 }
             }
             protectedDirections.add(direction);
