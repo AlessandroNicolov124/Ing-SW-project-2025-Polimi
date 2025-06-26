@@ -142,8 +142,19 @@ public class GameMatch {
     }
 
     public boolean allPlayersReadyForFlight() {
-        return playersReadyForFlight.size() == players.size() && 
-            playersReadyForFlight.values().stream().allMatch(Boolean::booleanValue);
+        if (playersReadyForFlight.isEmpty()) {
+            return false;
+        }
+        
+        for (Player player : players) {
+            if (player.isActive()) {
+                Boolean isReady = playersReadyForFlight.get(player.getId());
+                if (isReady == null || !isReady) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     public synchronized void setMatchState(MatchStates state) {

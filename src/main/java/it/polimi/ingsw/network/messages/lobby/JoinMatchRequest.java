@@ -18,18 +18,6 @@ public class JoinMatchRequest implements RequestMessage {
         this.username = username;
     }
 
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {

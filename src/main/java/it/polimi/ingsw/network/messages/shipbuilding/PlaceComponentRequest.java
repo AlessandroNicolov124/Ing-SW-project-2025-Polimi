@@ -18,18 +18,6 @@ public class PlaceComponentRequest implements RequestMessage {
         this.position = position;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public Component getComponent() {
-        return component;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {

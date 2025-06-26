@@ -12,10 +12,6 @@ public class PickComponentRequest implements RequestMessage {
         this.playerId = playerId;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {

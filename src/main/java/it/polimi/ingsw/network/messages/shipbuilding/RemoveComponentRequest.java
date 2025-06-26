@@ -15,14 +15,6 @@ public class RemoveComponentRequest implements RequestMessage {
         this.position = position;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {

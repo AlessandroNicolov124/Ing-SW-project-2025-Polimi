@@ -10,34 +10,18 @@ public class PickComponentResponse implements ResponseMessage {
     private final int playerId;
     private final Component component;
     private final boolean success;
-    private final String message;
+    private final String errorMessage;
 
-    public PickComponentResponse(int playerId, Component component, boolean success, String message) {
+
+    public PickComponentResponse(int playerId, Component component, boolean success, String errorMessage) {
         this.playerId = playerId;
         this.component = component;
         this.success = success;
-        this.message = message;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public Component getComponent() {
-        return component;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        // Call the new componentPicked method for all listeners
-        listener.componentPicked(playerId, component, success, message);
+        listener.componentPicked(playerId, component, success, errorMessage);
     }
 } 

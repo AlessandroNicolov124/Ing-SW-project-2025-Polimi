@@ -6,18 +6,20 @@ import it.polimi.ingsw.network.messages.ResponseMessage;
 
 public class CabinColorSelectionResponse implements ResponseMessage {
     private static final long serialVersionUID = 1L;
-    private final String color;
+    private final boolean success;
+    private final String payload;
 
-    public CabinColorSelectionResponse(String color) {
-        this.color = color;
-    }
-
-    public String getColor() {
-        return color;
+    public CabinColorSelectionResponse(boolean success, String payload) {
+        this.success = success;
+        this.payload = payload;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.cabinColorSelected(color);
+        if (success) {
+            listener.cabinColorSelected(payload);
+        } else {
+            listener.cabinColorSelectionFailed(payload);
+        }
     }
 }

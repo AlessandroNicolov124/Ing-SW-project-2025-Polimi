@@ -12,28 +12,24 @@ public class LoadingStatusResponse implements ResponseMessage {
     private final UUID matchId;
     private final int playersReady;
     private final int totalPlayers;
+    private final boolean success;
+    private final String errorMessage;
     
-    public LoadingStatusResponse(UUID matchId, int playersReady, int totalPlayers) {
+    public LoadingStatusResponse(UUID matchId, int playersReady, int totalPlayers, boolean success, String errorMessage) {
         this.matchId = matchId;
         this.playersReady = playersReady;
         this.totalPlayers = totalPlayers;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public int getPlayersReady() {
-        return playersReady;
-    }
-
-    public int getTotalPlayers() {
-        return totalPlayers;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.loadingStatus(matchId, playersReady, totalPlayers);
+        if (success) {
+            listener.loadingStatus(matchId, playersReady, totalPlayers);
+        } else {
+            listener.loadingStatusFailed(errorMessage);
+        }
     }
     
 }

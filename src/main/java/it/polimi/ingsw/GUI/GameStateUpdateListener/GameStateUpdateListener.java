@@ -13,4 +13,13 @@ public interface GameStateUpdateListener {
     void gameComponentRotated(Position position, RotationType rotationType);
     void gameShipValidated(boolean isValid, String message);
 
+
+    void gameComponentPickedFailed(String message);
+    void gameComponentPlacedFailed(String message);
+    void gameComponentRemovedFailed(String message);
+    void gameComponentRotatedFailed(String message);
+    void gameShipValidationFailed(String message);
+
+    void gamePlayerReadyForFlightSuccess(String message);
+    void gamePlayerReadyForFlightFailed(String message);
 }

@@ -7,17 +7,21 @@ import java.util.UUID;
 public class FlightStartResponse implements ResponseMessage {
     private static final long serialVersionUID = 1L;
     private final UUID matchId;
+    private final boolean success;
+    private final String message;
 
-    public FlightStartResponse(UUID matchId) {
+    public FlightStartResponse(UUID matchId, boolean success, String message) {
         this.matchId = matchId;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
+        this.success = success;
+        this.message = message;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.allPlayersReadyForFlight(matchId);
+        if (success) {
+            listener.allPlayersReadyForFlight(matchId);
+        } else {
+            listener.allPlayersReadyForFlightFailed(message);
+        }
     }
 }

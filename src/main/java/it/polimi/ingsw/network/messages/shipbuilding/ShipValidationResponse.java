@@ -1,6 +1,5 @@
 package it.polimi.ingsw.network.messages.shipbuilding;
 
-
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 
@@ -9,27 +8,24 @@ public class ShipValidationResponse implements ResponseMessage {
     private final int playerId;
     private final boolean isValid;
     private final String validationMessage;
+    private final boolean success;
+    private final String errorMessage;
 
-    public ShipValidationResponse(int playerId, boolean isValid, String validationMessage) {
+    public ShipValidationResponse(int playerId, boolean isValid, String validationMessage, boolean success, String errorMessage) {
         this.playerId = playerId;
         this.isValid = isValid;
         this.validationMessage = validationMessage;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public boolean isValid() {
-        return isValid;
-    }
-
-    public String getValidationMessage() {
-        return validationMessage;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.shipValidated(isValid, validationMessage);
+        if (success) {
+            String messageToShow = isValid ? validationMessage : validationMessage;
+            listener.shipValidated(isValid, messageToShow);
+        } else {
+            listener.shipValidationFailed(errorMessage);
+        }
     }
 }

@@ -311,28 +311,32 @@ public class LobbyController extends GuiContoller implements LobbyListener {
     private void requestColorSelection() {
         if (colorChosen || context.getSelectedCabinColor() != null) 
             return;
-
-    showColorSelectionDialog(color -> {
-        try {
-            context.getClient().selectCabinColor(color, getPlayerId());
-        } catch (Exception e) {
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Colour selection failed");
-            alert.setHeaderText(null);
-            alert.setContentText(e.getMessage());
-            alert.showAndWait();
-            requestColorSelection();
-        }
-    });
+        showColorSelectionDialog(color -> {
+            try {
+                context.getClient().selectCabinColor(color, getPlayerId());
+            } catch (Exception e) {
+                showErrorDialog("Selec­tion failed", e.getMessage());
+                requestColorSelection();
+            }
+        });
     }
 
     @Override
     public void cabinColorSelected(String color) {
         Platform.runLater(() -> {
             this.colorChosen = true;
-            statusLabel.setText("Colore scelto: " + color);
+            statusLabel.setText("Chosen color: " + color);
         });
     }
+
+    @Override
+    public void cabinColorSelectionFailed(String errorMsg) {
+        Platform.runLater(() -> {
+            showErrorDialog("Failed to select color", errorMsg);
+            requestColorSelection();
+        });
+    }
+
 
     @Override
     public void updateHost(UUID id, int hostId, String hostName) {
@@ -406,6 +410,90 @@ public class LobbyController extends GuiContoller implements LobbyListener {
             catch (Exception ex) { 
                 showErrorDialog("Navigation", "Cannot open builder"); 
             }
+        });
+    }
+
+    @Override
+    public void matchCreatedFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to create match");
+            updateUiButtons();
+        });
+    }
+
+    @Override
+    public void playerJoinedMatchFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to join match");
+            updateUiButtons();
+        });
+    }
+
+    @Override
+    public void playerLeftMatchFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to leave match");
+        });
+    }
+
+    @Override
+    public void updateAvailableMatchesFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to refresh matches");
+        });
+    }
+
+    @Override
+    public void updateHostFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to update host");
+        });
+    }
+
+    @Override
+    public void matchStartedFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to start match");
+            updateUiButtons();
+        });
+    }
+
+    @Override
+    public void loadingAckResponseFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Loading acknowledgment failed");
+        });
+    }
+
+    @Override
+    public void loadingStatusFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Loading status update failed");
+        });
+    }
+
+    @Override
+    public void playersInMatchFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to get players in match");
+        });
+    }
+
+    @Override
+    public void playerReadyFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to set ready status");
+            readyButton.setDisable(false);
+            updateUiButtons();
+        });
+    }
+
+    @Override
+    public void shipBuildingStartFailed(String message) {
+        Platform.runLater(() -> {
+            statusLabel.setText("Failed to start ship building");
+            phase = Phase.NONE;
+            updateUiButtons();
         });
     }
 

@@ -12,33 +12,25 @@ public class RotateComponentResponse implements ResponseMessage {
     private final Position position;
     private final RotationType rotationType;
     private boolean isValid = false;
+    private final boolean success;
+    private final String errorMessage;
 
-    public RotateComponentResponse(int playerId, Position position, RotationType rotationType, boolean isValid) {
+    public RotateComponentResponse(int playerId, Position position, RotationType rotationType, boolean isValid, boolean success, String errorMessage) {
         this.playerId = playerId;
         this.position = position;
         this.rotationType = rotationType;
         this.isValid = isValid;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
-    public RotationType isRotationType() {
-        return rotationType;
-    }
-
-    public boolean isValid() {
-        return isValid;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.componentRotated(playerId, position, rotationType, isValid);
+        if (success) {
+            listener.componentRotated(playerId, position, rotationType, isValid);
+        } else {
+            listener.componentRotatedFailed(errorMessage);
+        }
     }
     
 }

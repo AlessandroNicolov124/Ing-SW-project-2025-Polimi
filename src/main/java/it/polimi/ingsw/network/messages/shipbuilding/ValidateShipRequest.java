@@ -11,13 +11,14 @@ public class ValidateShipRequest implements RequestMessage {
         this.playerId = playerId;
     }
 
-    public int getPlayerId() {
-        return playerId;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
-
+        try {
+            handler.validateShip(playerId);
+        } catch (Exception e) {
+            System.err.println("Error handling validateShip request: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
     
 }

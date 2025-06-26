@@ -18,6 +18,18 @@ public interface LobbyListener {
     void loadingStatus(UUID matchId, int ready, int total);
     void playerReady(UUID matchId, int ready, int total);
     void shipBuildingStart(UUID matchId, int readyPlayers);
-
     void cabinColorSelected(String color);
+
+    void cabinColorSelectionFailed(String errorMsg);
+    void matchCreatedFailed(String message);
+    void playerJoinedMatchFailed(String message);
+    void playerLeftMatchFailed(String message);
+    void updateAvailableMatchesFailed(String message);
+    void updateHostFailed(String message);
+    void matchStartedFailed(String message);
+    void loadingAckResponseFailed(String message);
+    void loadingStatusFailed(String message);
+    void playersInMatchFailed(String message);
+    void playerReadyFailed(String message);
+    void shipBuildingStartFailed(String message);
 }

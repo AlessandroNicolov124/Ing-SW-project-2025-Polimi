@@ -11,28 +11,24 @@ public class PlayerReadyResponse implements ResponseMessage {
     private final UUID matchId;
     private final int readyPlayers;
     private final int totalPlayers;
+    private final boolean success;
+    private final String errorMessage;
 
     
-    public PlayerReadyResponse(UUID matchId, int readyPlayers, int totalPlayers) {
+    public PlayerReadyResponse(UUID matchId, int readyPlayers, int totalPlayers, boolean success, String errorMessage) {
         this.matchId = matchId;
         this.readyPlayers = readyPlayers;
         this.totalPlayers = totalPlayers;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public int getReadyPlayers() {
-        return readyPlayers;
-    }
-
-    public int getTotalPlayers() {
-        return totalPlayers;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     public void handleClient(GameListener listener) {
-        listener.playerReady(matchId, readyPlayers, totalPlayers);
+        if (success) {
+            listener.playerReady(matchId, readyPlayers, totalPlayers);
+        } else {
+            listener.playerReadyFailed(errorMessage);
+        }
     }
 
 }

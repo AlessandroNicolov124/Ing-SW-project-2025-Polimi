@@ -96,6 +96,20 @@ public class AppContext implements GameListener {
         }
     }
 
+    protected static void showErrorDialog(String title, String message) {
+        try {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle(title);
+                alert.setHeaderText(null);
+                alert.setContentText(message);
+                alert.showAndWait();
+            });
+        } catch (Exception e) {
+            System.err.println("Failed to show error dialog: " + e.getMessage());
+        }
+    }
+
     public Player getLocalPlayerReference() {
         return localPlayerReference;
     }
@@ -106,6 +120,10 @@ public class AppContext implements GameListener {
 
     public String getUsername() {
         return username;
+    }
+
+    public UUID getCurrentMatchId() {
+        return currentMatchId;
     }
 
     public void setUsername(String username) {
@@ -361,9 +379,14 @@ public class AppContext implements GameListener {
                     for (GameStateUpdateListener listener : guiUpdateListeners) {
                         listener.gameComponentPicked(component);
                     }
-
                 } else {
-                    showErrorMessage("Component Pick Failed", message);
+                    for (GameStateUpdateListener listener : guiUpdateListeners) {
+                        try {
+                            listener.gameComponentPickedFailed(message);
+                        } catch (Exception e) {
+                            System.err.println("Error notifying component pick failed: " + e.getMessage());
+                        }
+                    }
                 }
             }
         });
@@ -449,6 +472,15 @@ public class AppContext implements GameListener {
             }
         });
     }
+
+    @Override
+    public void cabinColorSelectionFailed(String errorMsg) {
+        Platform.runLater(() -> {
+            for (LobbyListener listener : lobbyListeners) {
+                listener.cabinColorSelectionFailed(errorMsg);
+            }
+        });
+    }
     
     @Override
     public void flightPreparationStart(UUID matchId) {
@@ -465,8 +497,10 @@ public class AppContext implements GameListener {
     @Override
     public void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid) {
         Platform.runLater(() -> {
-            String message = playerName + (shipValid ? " is ready for flight!" : " has an invalid ship");
-            showInfoMessage("Player Update", message);
+            if (playerId != this.playerId) {
+                String message = playerName + (shipValid ? " is ready for flight!" : " has an invalid ship");
+                showInfoMessage("Player Update", message);
+            }
         });
     }
     
@@ -474,8 +508,226 @@ public class AppContext implements GameListener {
     public void allPlayersReadyForFlight(UUID matchId) {
         Platform.runLater(() -> {
             showSuccessMessage("Flight Started", "All players are ready! The flight begins now!");
-            // Qui inizierà la fase di volo vera e propria
         });
+    }
+
+    @Override
+    public void matchCreatedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Create Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.matchCreatedFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerJoinedMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Join Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerJoinedMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerLeftMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Leave Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerLeftMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void updateAvailableMatchesFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Update Matches Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.updateAvailableMatchesFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void updateHostFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Update Host Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.updateHostFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void matchStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Start Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.matchStartedFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void loadingAckResponseFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Loading Acknowledgment Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.loadingAckResponseFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void loadingStatusFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Loading Status Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.loadingStatusFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playersInMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Get Players Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playersInMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerReadyFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Player Ready Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerReadyFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void shipBuildingStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Ship Building Start Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.shipBuildingStartFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void componentPickFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Pick Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentPickedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component pick failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentPlacedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Placement Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentPlacedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component placed failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentRemovedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Removal Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentRemovedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component removed failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentRotatedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Rotation Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentRotatedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component rotated failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void shipValidationFailed(String message) {
+        Platform.runLater(() -> {
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameShipValidationFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying ship validation failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void notifyNewPlayerPositionFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Player Position Update Failed", message);
+        });
+    }
+
+    @Override
+    public void flightPreparationStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Flight Preparation Failed", message);
+        });
+    }
+
+    @Override
+    public void allPlayersReadyForFlightFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Flight Start Failed", message);
+        });
+    }
+
+    @Override
+    public void playerReadyForFlightFailed(String message) {
+        Platform.runLater(() -> {
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gamePlayerReadyForFlightFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying ready for flight failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void allPlayersReadyForFlight(boolean allPlayersReady) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'allPlayersReadyForFlight'");
     }
     
 }

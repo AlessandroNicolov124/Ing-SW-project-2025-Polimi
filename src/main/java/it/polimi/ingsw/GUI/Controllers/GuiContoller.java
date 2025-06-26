@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 import it.polimi.ingsw.GUI.AppContext;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -16,8 +15,7 @@ import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.stage.Stage;
+
 
 public abstract class GuiContoller {
     protected AppContext context;
@@ -31,18 +29,11 @@ public abstract class GuiContoller {
     }
 
     protected static void showErrorDialog(String title, String message) {
-        try {
-            final Stage dialog = new Stage();
-            VBox dialogVbox = new VBox(20);
-            dialogVbox.getChildren().add(new Text(title));
-            dialogVbox.getChildren().add(new Text(message));
-            Scene dialogScene = new Scene(dialogVbox, 300, 150);
-            dialog.setScene(dialogScene);
-            dialog.setTitle(title);
-            dialog.show();
-        } catch (Exception e) {
-            System.err.println("Failed to show error dialog: " + e.getMessage());
-        }
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
 

@@ -10,22 +10,24 @@ public class PlayerReadyForFlightResponse implements ResponseMessage {
     private final int playerId;
     private final String playerName;
     private final boolean shipValid;
+    private final boolean success;
+    private final String message;
 
-    public PlayerReadyForFlightResponse(UUID matchId, int playerId, String playerName, boolean shipValid) {
+    public PlayerReadyForFlightResponse(UUID matchId, int playerId, String playerName, boolean shipValid, boolean success, String message) {
         this.matchId = matchId;
         this.playerId = playerId;
         this.playerName = playerName;
         this.shipValid = shipValid;
+        this.success = success;
+        this.message = message;
     }
-
-    // Getters
-    public UUID getMatchId() { return matchId; }
-    public int getPlayerId() { return playerId; }
-    public String getPlayerName() { return playerName; }
-    public boolean isShipValid() { return shipValid; }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.playerReadyForFlight(matchId, playerId, playerName, shipValid);
+        if (success) {
+            listener.playerReadyForFlight(matchId, playerId, playerName, shipValid);
+        } else {
+            listener.playerReadyForFlightFailed(message);
+        }
     }
 }

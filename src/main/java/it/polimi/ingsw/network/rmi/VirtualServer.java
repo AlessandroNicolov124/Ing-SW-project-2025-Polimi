@@ -40,10 +40,6 @@ public interface VirtualServer extends Remote {
 
     boolean startMatch(UUID matchId, int playerId, String username, RmiClientIf client) throws RemoteException;
 
-    int getHostPlayerId(UUID matchId, int playerId) throws RemoteException;
-
-    List<String> getPlayersInMatch(UUID matchId) throws RemoteException;
-
     boolean loadingAck(UUID matchId, RmiClientIf client) throws RemoteException;
 
     boolean playerReady(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
