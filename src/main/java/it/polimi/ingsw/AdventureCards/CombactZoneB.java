@@ -155,7 +155,7 @@ public class CombactZoneB extends CombactZoneBase {
      * Remove cargo from a player's ship
      * @param player The player losing crew
      */
-    private void removeCargo(Player player) {
+    protected void removeCargo(Player player) {
         List<Cargo> allCargo = player.getShip().getCargoList();
         // Ordina le merci per valore decrescente
         allCargo.sort(Comparator.comparing(Cargo::getValue).reversed());
@@ -179,6 +179,14 @@ public class CombactZoneB extends CombactZoneBase {
                 }
             }
         }
+    }
+
+    public int getFlightDayPenalty() {
+        return flightDayPenalty;
+    }
+
+    public int getGoodsLostPenalty() {
+        return goodsLostPenalty;
     }
 
     @Override
