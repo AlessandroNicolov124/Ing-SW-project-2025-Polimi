@@ -85,12 +85,12 @@ public class FlightBoard {
     }
 
     /**
-     * Verifica se una posizione è già occupata da un altro giocatore
-     *
-     * @param position La posizione da verificare
-     * @param currentPlayer Il giocatore attuale (da escludere dal controllo)
-     * @return true se la posizione è occupata, false altrimenti
-     */
+      * Checks if a position is already occupied by another player.
+      *
+      * @param position The position to check.
+      * @param currentPlayer The current player (to be excluded from the check).
+      * @return true if the position is occupied, false otherwise.
+      */
     public boolean isPositionOccupied(int position, Player currentPlayer) {
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
             Player player = entry.getKey();
@@ -106,12 +106,12 @@ public class FlightBoard {
     }
 
     /**
-     * Trova la prima posizione disponibile a partire da una posizione iniziale
-     *
-     * @param startPosition La posizione iniziale
-     * @param currentPlayer Il giocatore attuale
-     * @return La prima posizione disponibile
-     */
+      * Finds the first available position starting from a given initial position.
+      *
+      * @param startPosition The initial position to start searching from
+      * @param currentPlayer The current player
+      * @return The first available position
+      */
     private int findFirstAvailablePosition(int startPosition, Player currentPlayer) {
         int position = startPosition;
 
@@ -127,12 +127,12 @@ public class FlightBoard {
     }
 
     /**
-     * Aggiorna la posizione di un giocatore sul tabellone di volo
-     * considerando le posizioni già occupate
-     *
-     * @param player Il giocatore la cui posizione deve essere aggiornata
-     * @param spaces Il numero di spazi da muovere (può essere positivo o negativo)
-     */
+      * Updates the position of a player on the flight board,
+      * taking into account already occupied positions.
+      *
+      * @param player The player whose position needs to be updated
+      * @param spaces The number of spaces to move (can be positive or negative)
+      */
     public void updatePosition(Player player, int spaces) {
         if (!positions.containsKey(player)) {
             throw new IllegalArgumentException("Il giocatore non è presente sul tabellone di volo");
@@ -156,29 +156,11 @@ public class FlightBoard {
     }
 
     /**
-     * Aggiorna le posizioni di tutti i giocatori in ordine di posizione attuale
-     * (dal più avanzato al meno avanzato)
-     *
-     * @param playerMoves Mappa che contiene i giocatori e i loro movimenti
-     */
-    public void updatePositionsInOrder(Map<Player, Integer> playerMoves) {
-        // Ottiene i giocatori in ordine di posizione decrescente
-        List<Player> orderedPlayers = getPlayersInFlightOrder();
-
-        // Aggiorna le posizioni nell'ordine corretto
-        for (Player player : orderedPlayers) {
-            if (playerMoves.containsKey(player) && player.isActive()) {
-                updatePosition(player, playerMoves.get(player));
-            }
-        }
-    }
-
-    /**
-     * Ottiene la posizione attuale di un giocatore on the board
-     *
-     * @param player Il giocatore di cui recuperare la posizione
-     * @return La posizione attuale del giocatore
-     */
+      * Gets the current position of a player on the board.
+      *
+      * @param player The player whose position to retrieve
+      * @return The current position of the player
+      */
     public int getPosition(Player player) {
         if (!positions.containsKey(player)) {
             throw new IllegalArgumentException("Il giocatore non è presente sul tabellone di volo");
@@ -188,9 +170,9 @@ public class FlightBoard {
     }
 
     /**
-     * Ottiene i giocatori in ordine della loro posizione (il più lontano per primo)
+     * Returns the players in order of their position (the farthest first)
      *
-     * @return Lista di giocatori ordinati per posizione
+     * @return List of players sorted by position
      */
     public List<Player> getPlayersInFlightOrder() {
         List<Player> sortedPlayers = new ArrayList<>(positions.keySet());
@@ -272,9 +254,9 @@ public class FlightBoard {
     }
 
     /**
-     * Ottiene il giocatore in ultima posizione
+     * Gets the last player who is still on the board (not at position 0)
      *
-     * @return Il giocatore con la posizione più bassa
+     * @return The last player, or null if no players are active
      */
     public Player getLastPlayer() {
         if (positions.isEmpty()) {
@@ -296,10 +278,10 @@ public class FlightBoard {
     }
 
     /**
-     * Ottiene i giocatori in una posizione specifica sul tabellone
+     * Gets the player at a specific position on the board
      *
-     * @param position La posizione da controllare
-     * @return Lista di giocatori in quella posizione
+     * @param position The position to check
+     * @return The player at that position
      */
     public Player getPlayerAtPosition(int position) {
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
@@ -312,10 +294,11 @@ public class FlightBoard {
     }
 
     /**
-     * Calcola i bonus di posizione di volo per il punteggio in base al round
+     * Calculates flight bonuses for players based on their positions at the end of a round.
+     * The bonuses are determined by the round number and the order of players.
      *
-     * @param roundNumber Il numero del round attuale (1-3)
-     * @return Mappa dei giocatori con i loro punti bonus per la posizione di volo
+     * @param roundNumber The current round number (1, 2, or 3)
+     * @return A map with players as keys and their flight bonuses as values
      */
     public Map<Player, Integer> calculateFlightBonuses(int roundNumber) {
         Map<Player, Integer> bonuses = new HashMap<>();

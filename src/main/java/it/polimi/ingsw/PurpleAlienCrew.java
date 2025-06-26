@@ -3,6 +3,10 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.LifeSupportSystemType;
 
+/**
+ * This class represents a crew of purple aliens in the game.
+ * It extends the Crew class and provides specific functionality for purple alien crews.
+ */
 public class PurpleAlienCrew extends Crew {
 
     public PurpleAlienCrew() {

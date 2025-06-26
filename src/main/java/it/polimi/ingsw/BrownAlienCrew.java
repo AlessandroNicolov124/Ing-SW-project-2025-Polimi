@@ -3,6 +3,10 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.LifeSupportSystemType;
 
+/**
+ * Represents a Brown Alien Crew in the game.
+ * This crew can only live in cabins with a brown life support system connected.
+ */
 public class BrownAlienCrew extends Crew {
 
     public BrownAlienCrew() {

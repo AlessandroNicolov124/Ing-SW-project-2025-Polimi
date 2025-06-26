@@ -6,6 +6,10 @@ import it.polimi.ingsw.Components.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * GameController class that manages the game logic and interactions between the model and view.
+ * It handles player management, game state transitions, and component placements.
+ */
 public class  GameController {
     private GameModel gameModel;
     private GameView gameView;
@@ -14,6 +18,7 @@ public class  GameController {
         gameModel = new GameModel();
     }
 
+    /** checks if a player is already in the game */
     private boolean isPlayerThere(Player player) {
         return gameModel.getPlayers().contains(player);
     }
@@ -35,11 +40,17 @@ public class  GameController {
     }
 
     //TODO Consider instatiating a new player and returning it..
+    /**
+     * Adds a player to the game model and logs the action.
+     *
+     * @param player The player to be added.
+     */
     public void addPlayer(Player player){
         gameModel.addPlayer(player);
         System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + player.getId() + ") added to game");
     }
 
+    /** set the player credits */
     public void setCredits(Player player, int credits){
         gameModel.setCredits(player, credits);
     }
@@ -69,10 +80,24 @@ public class  GameController {
         return null;
     }
 
+    /**
+     * Picks a component card from the deck for the specified player.
+     *
+     * @param p The player who will receive the component card.
+     * @return The picked component card.
+     */
     public Component getCompFromDeck(Player p){
         return gameModel.pickOneComponentCardFromDeck(p);
     }
 
+    /**
+     * Adds a component to the player's ship at the specified position.
+     *
+     * @param player The player placing the component.
+     * @param component The component to be placed.
+     * @param pos The position where the component will be placed.
+     * @return true if the component was successfully added, false otherwise.
+     */
     public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
             return player.placeComponent(component, pos);
@@ -389,6 +414,7 @@ public class  GameController {
         return componentToRotate;
     }
 
+
     public void rotateComponentOppositeForPlayer(Player player, Component componentToRotate) {
         if (isPlayerThere(player)) {
             ShipBuilder ship = player.getShip();
@@ -406,6 +432,9 @@ public class  GameController {
 
 
 
+    /**
+     * Prints the current status of the flight board, showing each player's position.
+     */
     void printBoardStatus() {
         List<Player> players = gameModel.getFlightBoard().getPlayersInFlightOrder();
         for (Player player : players) {
@@ -415,7 +444,8 @@ public class  GameController {
     }
 
     /**
-     * Stampa lo stato delle navicelle
+     * Prints the current status of each player's ship, showing components and their positions.
+     * This method iterates through all players and their ship components.
      */
     void printShipStatus() {
         List<Player> players = gameModel.getFlightBoard().getPlayersInFlightOrder();
