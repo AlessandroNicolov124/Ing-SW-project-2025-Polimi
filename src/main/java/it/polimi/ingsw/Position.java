@@ -2,6 +2,10 @@ package it.polimi.ingsw;
 
 import java.io.Serializable;
 
+/**
+ * This class represents a position on a grid or board in the game.
+ * It contains x and y coordinates and provides methods to manipulate and compare positions.
+ */
 public class Position implements Serializable {
 
     public int x;
