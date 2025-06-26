@@ -38,6 +38,8 @@ public interface GeneralClientIf extends AutoCloseable {
     void loadingAck(UUID matchId) throws Exception;
 
     void playerReady(UUID matchId, int playerId) throws Exception;
+    
+    void pickAdventureCard() throws Exception;
 
     void selectCabinColor(String color, int playerId) throws Exception;
 

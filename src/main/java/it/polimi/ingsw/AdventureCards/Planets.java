@@ -96,6 +96,12 @@ public class Planets extends AdventureCard{
     public void effect(){
         // This would be called when the card is drawn
     }
+
+    @Override
+    public String getDescription() {
+        return "Choose planets to land on and collect goods. Landing costs " + flightDaysCost + " flight days. " +
+               "The leader chooses first, followed by others in order. Only one ship per planet allowed.";
+    }
     
     /**
      * Allow players to land on planets in order

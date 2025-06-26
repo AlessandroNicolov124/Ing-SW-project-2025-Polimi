@@ -30,6 +30,10 @@ import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -143,6 +147,7 @@ public class RmiServer extends UnicastRemoteObject
         }
 
         return match.getMatchId();
+
     }
 
     @Override
@@ -195,7 +200,17 @@ public class RmiServer extends UnicastRemoteObject
         if (success) {
             client.showUpdate(new LeaveMatchResponse(matchId, playerId, playerName, true, "Player left match successfully"));
 
+            Player newHost = match.getHostPlayer();
+            if (newHost != null) {
+                lobbyManager.multicastToMatchExceptOne(matchId, new UpdateHostResponse(matchId, newHost.getId(), newHost.getNickName()), client);
+            }
+            else {
+                System.out.println("[ServerRMI] No new host found for match: " + matchId);
+            }
             lobbyManager.removeClientFromMatch(matchId, client);
+            }
+        return success;
+    }
 
             GameMatch updatedMatch = lobbyManager.findMatchById(matchId);
             if (updatedMatch != null && !updatedMatch.isEmpty()) {
@@ -213,6 +228,8 @@ public class RmiServer extends UnicastRemoteObject
                 System.out.println("[ServerRMI] Match " + matchId + " was removed or is empty after player left");
                 client.showUpdate(new LeaveMatchResponse(matchId, playerId, playerName, true, "Match was removed or is empty after player left"));
             }
+        } else {
+            throw new RemoteException("Match not found: " + matchId);
         }
         
         return success;
@@ -222,6 +239,10 @@ public class RmiServer extends UnicastRemoteObject
     public boolean startMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException {
 
         GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            System.out.println("[ServerRMI] Match not found: " + matchId);
+            return false;
+        }
 
         if (match == null || !match.isPlayerInMatchById(playerId)){
             client.showUpdate(new StartMatchResponse(matchId, playerName, false, "Match not found or player not in match"));
@@ -241,7 +262,10 @@ public class RmiServer extends UnicastRemoteObject
     @Override
     public boolean loadingAck(UUID matchId, RmiClientIf client) throws RemoteException {
 
+    @Override
+    public boolean loadingAck(UUID matchId) throws RemoteException {
         GameMatch match = lobbyManager.findMatchById(matchId);
+
         if (match == null) {
             client.showUpdate(new LoadingAckResponse(false, "Match not found"));
         } 
@@ -272,6 +296,11 @@ public class RmiServer extends UnicastRemoteObject
             return false;
         }
 
+        boolean isReady = match.setPlayerReady(playerId);
+        if (!isReady) {
+            System.out.println("[ServerRMI] Duplicate ready state for player ID " + playerId + " in match: " + matchId);
+            return false;
+        }
         int playersReady = (int) match.getReadyPlayersMap().values().stream().filter(Boolean::booleanValue).count();
         int totalPlayers = match.getPlayers().size();
 
@@ -295,7 +324,6 @@ public class RmiServer extends UnicastRemoteObject
 
         GameController controller = match.getController();
         Player player = controller.getPlayerById(playerId);
-
         if (player == null) {
             client.showUpdate(new PickComponentResponse(playerId, null, false, "Player not found"));
             return null;
@@ -314,6 +342,8 @@ public class RmiServer extends UnicastRemoteObject
     @Override
     public void placeComponent(int playerId, Component component, Position position, RmiClientIf client) throws RemoteException {
 
+    @Override
+    public void removeComponent(int playerId, Position position) throws RemoteException {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
             client.showUpdate(new PlaceComponentResponse(playerId, component, position, false, "Match not found"));
@@ -337,6 +367,10 @@ public class RmiServer extends UnicastRemoteObject
 
         client.showUpdate(new PlaceComponentResponse(playerId, component, position, ok, ok ? "Component placed" : "Invalid position"));
 
+    @Override
+    public void rotateComponent(int playerId, Position position, RotationType rotationType) throws RemoteException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
     }
 
     @Override
@@ -369,6 +403,18 @@ public class RmiServer extends UnicastRemoteObject
 
         client.showUpdate(new RemoveComponentResponse(playerId, position, ok, ok ? "Component removed" : "Cannot remove component"));
 
+    @Override
+    public void placeComponent(int playerId, Component component, Position position) {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
+            GameController controller = match.getController();
+            Player player = controller.getPlayerById(playerId);
+            if (player != null) {
+                boolean isValidPosition = controller.addComponentForPlayer(player, component, position);
+                System.out.println("[ServerRMI] Placed component: " + component.getClass().getSimpleName() + " at " + position);
+                updates.offer(new ComponentPlacedMessage(playerId, component, position, isValidPosition));
+            }
+        }
     }
 
     @Override

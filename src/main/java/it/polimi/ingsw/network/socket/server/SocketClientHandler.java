@@ -19,6 +19,7 @@ import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
+import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
@@ -152,6 +153,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         boolean success = lobbyManager.joinMatch(matchId, playerId, username);
         if (success) {
             lobbyManager.addClientToMatch(matchId, this);
+            
+
             GameMatch match = lobbyManager.findMatchById(matchId);
 
             System.out.println("[ServerSocket] Player " + username + " joined match: " + matchId);
@@ -240,6 +243,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     @Override
     public void loadingAck(UUID matchId) throws Exception {
         GameMatch match = lobbyManager.findMatchById(matchId);
+
         if (match == null) {
             showUpdate(new LoadingAckResponse(false, "Match not found"));
         } 

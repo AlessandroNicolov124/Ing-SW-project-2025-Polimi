@@ -78,6 +78,10 @@ public class Player implements Serializable {
         }
     }
 
+    public AdventureCard getPickedCard() {
+        return pickedCard;
+    }
+
     public boolean placeComponent(Component component, Position pos) {
         return ship.placeComponent(component, pos);
     }
