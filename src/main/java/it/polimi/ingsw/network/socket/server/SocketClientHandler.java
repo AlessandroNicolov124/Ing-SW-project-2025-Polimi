@@ -21,7 +21,6 @@ import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
-import it.polimi.ingsw.network.messages.flight.FlightStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
@@ -329,10 +328,6 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             detailedMessage = "Ship is valid and ready for flight!";
             match.getPlayersValidated().put(playerId, true);
             
-            if (match.allPlayersValidated()) {
-                match.setMatchState(MatchStates.FLIGHT_PREPARATION);
-                lobbyManager.multicastToMatch(match.getMatchId(), new FlightPreparationStartResponse(match.getMatchId(), true, "All players validated, starting flight preparation phase"));
-            }
         } else {
             String validationErrors = controller.getShipValidationErrors(player);
             detailedMessage = "Ship validation failed with the following issues:\n\n" + validationErrors;
@@ -478,8 +473,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         lobbyManager.multicastToMatch(matchId, new PlayerReadyForFlightResponse(matchId, playerId, player.getNickName(), true, true, "Player " + player.getNickName() + " is ready for flight"));
         
         if (match.allPlayersReadyForFlight()) {
-            lobbyManager.multicastToMatch(matchId, new FlightStartResponse(matchId, true, "All players ready for flight, starting flight phase"));
-            match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
+            match.setMatchState(MatchStates.FLIGHT_PREPARATION);
+            lobbyManager.multicastToMatch(matchId, new FlightPreparationStartResponse(matchId, true, "All players ready – flight preparation begins"));
         }
     }
 

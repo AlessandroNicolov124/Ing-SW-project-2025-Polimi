@@ -74,12 +74,7 @@ public interface GameListener {
     void flightPreparationStart(UUID matchId);
     void flightPreparationStartFailed(String errorMessage);
 
-    void allPlayersReadyForFlight(UUID matchId);
-    void allPlayersReadyForFlightFailed(String errorMessage);
-
     void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid);
     void playerReadyForFlightFailed(String errorMessage);
-
-    void allPlayersReadyForFlight(boolean allPlayersReady);
 
 }

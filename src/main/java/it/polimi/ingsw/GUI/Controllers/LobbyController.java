@@ -228,6 +228,7 @@ public class LobbyController extends GuiContoller implements LobbyListener {
             }
 
             currentMatchId = id;
+            context.setCurrentMatchId(id);
             isHost = true;
             playersInCurrentMatch.clear();
             playersInCurrentMatch.add(playerName);
@@ -250,25 +251,35 @@ public class LobbyController extends GuiContoller implements LobbyListener {
     @Override
     public void playerJoinedMatch(UUID id, String playerName) {
         Platform.runLater(() -> {
-            if (Objects.equals(currentMatchId, id) && !playersInCurrentMatch.contains(playerName)) {
+            boolean isMe = playerName.equals(context.getUsername());
 
-                playersInCurrentMatch.add(playerName);
-                playerList.setAll(playersInCurrentMatch);
+            if (isMe) {
+                this.currentMatchId = id;
+                context.setCurrentMatchId(id);
+                this.isHost = false;
             }
+
+            if (Objects.equals(currentMatchId, id)) {
+                if (!playersInCurrentMatch.contains(playerName)) {
+                    playersInCurrentMatch.add(playerName);
+                    playerList.setAll(playersInCurrentMatch);
+                }
+            }
+            updateUiButtons();
         });
     }
 
 
     @Override
-    public void playerLeftMatch(UUID id, int pId, String pName) {
+    public void playerLeftMatch(UUID id, int playerId, String playerName) {
         if (!Objects.equals(currentMatchId, id)) 
             return;
 
         Platform.runLater(() -> {
-            playersInCurrentMatch.remove(pName);
+            playersInCurrentMatch.remove(playerName);
             playerList.setAll(playersInCurrentMatch);
             
-            if (pId == getPlayerId()) {
+            if (playerId == getPlayerId()) {
                 currentMatchId = null;
                 isHost = false;
                 colorChosen = false;
@@ -276,6 +287,7 @@ public class LobbyController extends GuiContoller implements LobbyListener {
                 playerList.clear();
                 phase = Phase.NONE;
                 context.setSelectedCabinColor(null);
+                context.setCurrentMatchId(null);
                 statusLabel.setText("");
                 System.out.println("[LobbyController] Local player left match - full state reset");
             }
@@ -288,23 +300,25 @@ public class LobbyController extends GuiContoller implements LobbyListener {
     @Override
     public void playersInMatch(UUID id, List<String> names, int hostId) {
         Platform.runLater(() -> {
+            boolean meInMatch = names.contains(context.getUsername());
+            
+            if (!meInMatch) {
+                return;
+            }
+            
+            currentMatchId = id;
+            context.setCurrentMatchId(id);
             playersInCurrentMatch.clear();
             playersInCurrentMatch.addAll(names);
             playerList.setAll(playersInCurrentMatch);
-
-            if (!names.contains(context.getUsername())) {
-                return;
-            }
-
-            currentMatchId = id;
+            
             isHost = (hostId == getPlayerId());
-            updateUiButtons();
-
-            askServerForMatches();
-
-            if (!isHost && context.getSelectedCabinColor() == null && !colorChosen) {
+            
+            if (!colorChosen) {
                 requestColorSelection();
             }
+    
+            updateUiButtons();
         });
     }
 

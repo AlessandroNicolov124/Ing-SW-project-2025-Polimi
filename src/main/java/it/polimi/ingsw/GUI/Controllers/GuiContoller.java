@@ -2,6 +2,7 @@ package it.polimi.ingsw.GUI.Controllers;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import it.polimi.ingsw.GUI.AppContext;
@@ -36,41 +37,47 @@ public abstract class GuiContoller {
         alert.showAndWait();
     }
 
-
     protected void showColorSelectionDialog(Consumer<String> onColorSelected) {
         Platform.runLater(() -> {
             List<String> colors = Arrays.asList("BLUE", "GREEN", "YELLOW", "RED");
-            ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(colors.get(0), colors);
-            choiceDialog.setTitle("Select cabin colour");
-            choiceDialog.setHeaderText("Choose the colour of your starting cabin");
-            choiceDialog.setContentText("Available colours:");
+            AtomicBoolean accepted = new AtomicBoolean(false);
 
-            choiceDialog.getDialogPane().getButtonTypes().clear();
-            ButtonType selectButtonType = new ButtonType("Select", ButtonBar.ButtonData.OK_DONE);
-            choiceDialog.getDialogPane().getButtonTypes().add(selectButtonType);
+            do {
 
-            VBox content = new VBox(10);
-            content.getChildren().addAll(
-                new Label("Choose the colour of your starting cabin"),
-                choiceDialog.getDialogPane().getContent()
-            );
-            choiceDialog.getDialogPane().setContent(content);
+                ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(colors.get(0), colors);
+                choiceDialog.setTitle("Select cabin colour");
+                choiceDialog.setHeaderText("Choose the colour of your starting cabin");
+                choiceDialog.setContentText("Available colours:");
 
-            Button selectButton = (Button) choiceDialog.getDialogPane().lookupButton(selectButtonType);
-            selectButton.addEventFilter(ActionEvent.ACTION, event -> {
-                event.consume();
+                choiceDialog.getDialogPane().getButtonTypes().clear();
+                ButtonType selectButtonType = new ButtonType("Select", ButtonBar.ButtonData.OK_DONE);
+                choiceDialog.getDialogPane().getButtonTypes().add(selectButtonType);
 
-                String selectedColor = choiceDialog.getSelectedItem();
-                if (selectedColor != null) {
-                    onColorSelected.accept(selectedColor);
-                    choiceDialog.close();
-                }
-            });
+                VBox content = new VBox(10);
+                content.getChildren().addAll(
+                    new Label("Choose the colour of your starting cabin"),
+                    choiceDialog.getDialogPane().getContent()
+                );
+                choiceDialog.getDialogPane().setContent(content);
 
-            choiceDialog.initOwner(null);
-            choiceDialog.setResizable(false);
-            
-            choiceDialog.showAndWait();
+                Button selectButton = (Button) choiceDialog.getDialogPane().lookupButton(selectButtonType);
+                selectButton.addEventFilter(ActionEvent.ACTION, event -> {
+                    event.consume();
+
+                    String selectedColor = choiceDialog.getSelectedItem();
+                    if (selectedColor != null) {
+                        accepted.set(true);
+                        onColorSelected.accept(selectedColor);
+                        choiceDialog.close();
+                    }
+                });
+
+                choiceDialog.initOwner(null);
+                choiceDialog.setResizable(false);
+                
+                choiceDialog.showAndWait();
+
+            } while (!accepted.get());
         });
     }
 

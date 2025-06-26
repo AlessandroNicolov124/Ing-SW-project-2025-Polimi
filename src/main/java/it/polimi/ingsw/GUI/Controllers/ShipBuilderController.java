@@ -629,14 +629,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             
             if (isValid) {
                 statusLabel.setText("Ship validated! Ready for flight");
-                statusLabel.setTextFill(javafx.scene.paint.Color.GREEN);
                 
                 validateShipButton.setText("Ready for Flight");
-                validateShipButton.setStyle("-fx-background-color: #4CAF50;");
                 validateShipButton.setOnAction(e -> readyForFlight());
             } else {
                 statusLabel.setText("Validation failed");
-                statusLabel.setTextFill(javafx.scene.paint.Color.RED);
                 
                 showValidationErrorDialog(message);
                 
@@ -660,17 +657,22 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             UUID matchId = context.getCurrentMatchId();
             if (matchId == null) {
                 statusLabel.setText("No active match found");
+                isReadyingForFlight = false;
+                validateShipButton.setDisable(false);
                 return;
             }
             
-            context.getClient().readyForFlight(matchId, context.getPlayerId());
             validateShipButton.setText("Waiting for others...");
-            validateShipButton.setStyle("-fx-background-color: #FFA500;");
+            validateShipButton.setDisable(true);
             statusLabel.setText("Ready for flight - waiting for other players");
+            
+            context.getClient().readyForFlight(matchId, context.getPlayerId());
+            
         } catch (Exception e) {
             statusLabel.setText("Ready for flight failed: " + e.getMessage());
             validateShipButton.setDisable(false);
             isReadyingForFlight = false;
+            validateShipButton.setText("Ready for Flight");
         }
     }
 
@@ -745,15 +747,12 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     @Override
-    public void gamePlayerReadyForFlightSuccess(String message) {
+    public void gamePlayerReadyForFlightSuccess(String msg) {
         Platform.runLater(() -> {
-            isReadyingForFlight = false; 
+            isReadyingForFlight = false;
             validateShipButton.setText("Ready! Waiting for others...");
-            validateShipButton.setStyle("-fx-background-color: #008000;");
-            statusLabel.setText("Ready for flight: " + message);
-            statusLabel.setTextFill(javafx.scene.paint.Color.GREEN);
-            validateShipButton.setDisable(true); 
-            
+            validateShipButton.setDisable(true);
+            statusLabel.setText(msg);
         });
     }
 
@@ -763,9 +762,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             isReadyingForFlight = false; 
             validateShipButton.setDisable(false);
             validateShipButton.setText("Ready for Flight");
-            validateShipButton.setStyle("-fx-background-color: #4CAF50;");
             statusLabel.setText("Ready for flight failed: " + message);
-            statusLabel.setTextFill(javafx.scene.paint.Color.RED);
             
             showErrorDialog("Ready for Flight Failed", message);
         });

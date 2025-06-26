@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -249,12 +250,13 @@ public class AppContext implements GameListener {
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
         Platform.runLater(() -> {
-            System.out.println("[GUI] Player joined match: " + playerName + " in match " + matchId);
-            for (LobbyListener l : lobbyListeners) {
-                l.playerJoinedMatch(matchId, playerName);
+            if (playerName.equals(username)) {          
+                this.currentMatchId = matchId;
             }
+            lobbyListeners.forEach(l -> l.playerJoinedMatch(matchId, playerName));
         });
     }
+
 
     @Override
     public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
@@ -485,11 +487,11 @@ public class AppContext implements GameListener {
     @Override
     public void flightPreparationStart(UUID matchId) {
         Platform.runLater(() -> {
-            System.out.println("[GUI] Flight preparation started for match " + matchId);
+            System.out.println("[GUI] Flight preparation started for match: " + matchId);
             try {
-                //GUIApp.showFlightPreparation();
-            } catch (Exception e) {
-                showErrorMessage("Navigation Error", "Cannot open flight preparation: " + e.getMessage());
+                GUIApp.showFlightPreparation();
+            } catch (IOException e) {
+                showErrorDialog("Flight preparation failed", "Cannot open flight preparation: ");
             }
         });
     }
@@ -497,20 +499,18 @@ public class AppContext implements GameListener {
     @Override
     public void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid) {
         Platform.runLater(() -> {
-            if (playerId != this.playerId) {
-                String message = playerName + (shipValid ? " is ready for flight!" : " has an invalid ship");
-                showInfoMessage("Player Update", message);
+            System.out.println("[GUI] Player " + playerName + " (ID: " + playerId + ") ready for flight - Ship valid: " + shipValid);
+            
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                if (playerId == this.playerId) {
+                    listener.gamePlayerReadyForFlightSuccess("You are ready for flight! Waiting for others...");
+                } else {
+                    showInfoMessage("Player Update", playerName + " is ready for flight");
+                }
             }
         });
     }
     
-    @Override
-    public void allPlayersReadyForFlight(UUID matchId) {
-        Platform.runLater(() -> {
-            showSuccessMessage("Flight Started", "All players are ready! The flight begins now!");
-        });
-    }
-
     @Override
     public void matchCreatedFailed(String message) {
         Platform.runLater(() -> {
@@ -705,29 +705,13 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void allPlayersReadyForFlightFailed(String message) {
-        Platform.runLater(() -> {
-            showErrorDialog("Flight Start Failed", message);
-        });
-    }
-
-    @Override
     public void playerReadyForFlightFailed(String message) {
         Platform.runLater(() -> {
+            showErrorDialog("Ready for Flight Failed", message);
             for (GameStateUpdateListener listener : guiUpdateListeners) {
-                try {
-                    listener.gamePlayerReadyForFlightFailed(message);
-                } catch (Exception e) {
-                    System.err.println("Error notifying ready for flight failed: " + e.getMessage());
-                }
+                listener.gamePlayerReadyForFlightFailed(message);
             }
         });
-    }
-
-    @Override
-    public void allPlayersReadyForFlight(boolean allPlayersReady) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'allPlayersReadyForFlight'");
     }
     
 }

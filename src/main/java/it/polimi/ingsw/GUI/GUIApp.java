@@ -2,6 +2,9 @@ package it.polimi.ingsw.GUI;
 
 
 
+import java.io.IOException;
+
+import it.polimi.ingsw.GUI.Controllers.FlightPreparationController;
 import it.polimi.ingsw.GUI.Controllers.LobbyController;
 import it.polimi.ingsw.GUI.Controllers.LoginController;
 import it.polimi.ingsw.GUI.Controllers.ShipBuilderController;
@@ -59,6 +62,19 @@ public class GUIApp extends Application {
         // Switch scene
         primaryStage.setScene(new Scene(root, 1000, 1000));
         primaryStage.setTitle("Lobby");
+        primaryStage.show();
+    }
+
+    public static void showFlightPreparation() throws IOException {
+        FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/FlightPreparation.fxml"));
+        Parent root = loader.load();
+        
+        FlightPreparationController controller = loader.getController();
+        controller.setContext(context);
+        
+        Scene scene = new Scene(root, 800, 600);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Flight Preparation");
         primaryStage.show();
     }
 
