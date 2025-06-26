@@ -81,16 +81,17 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 //            Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"),
 
             Map.entry("lifesupportsystem_brown_DSNS", "/Images/tiles/lifesupportsystem_brown_DSNS.jpg"),
-            Map.entry("lifesupportsystem_brown_NDNT", "/Images/tiles/lifesupportsystem_brown_NDNT.jpg"),
+            Map.entry("lifesupportsystem_brown_NDNU", "/Images/tiles/lifesupportsystem_brown_NDNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNNU", "/Images/tiles/lifesupportsystem_brown_NNNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNSD", "/Images/tiles/lifesupportsystem_brown_NNSD.jpg"),
             Map.entry("lifesupportsystem_brown_SNNU", "/Images/tiles/lifesupportsystem_brown_SNNU.jpg"),
             Map.entry("lifesupportsystem_brown_SSNS", "/Images/tiles/lifesupportsystem_brown_SSNS.jpg"),
+
             Map.entry("lifesupportsystem_purple_DDND", "/Images/tiles/lifesupportsystem_purple_DDND.jpg"),
             Map.entry("lifesupportsystem_purple_DNNU", "/Images/tiles/lifesupportsystem_purple_DNNU.jpg"),
             Map.entry("lifesupportsystem_purple_NNDU", "/Images/tiles/lifesupportsystem_purple_NNDU.jpg"),
             Map.entry("lifesupportsystem_purple_NNNU", "/Images/tiles/lifesupportsystem_purple_NNNU.jpg"),
-            Map.entry("lifesupportsystem_purple_NSNT", "/Images/tiles/lifesupportsystem_purple_NSNT.jpg"),
+            Map.entry("lifesupportsystem_purple_NSNU", "/Images/tiles/lifesupportsystem_purple_NSNU.jpg"),
             Map.entry("lifesupportsystem_purple_SDND", "/Images/tiles/lifesupportsystem_purple_SDND.jpg"),
 
 
