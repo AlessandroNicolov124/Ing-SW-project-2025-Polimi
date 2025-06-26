@@ -442,8 +442,9 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             return;
         }
         // Rotazione logica
-        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
-        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+        currentComponent.rotate(RotationType.CLOCKWISE);
+//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
+//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
         // Rotazione grafica
         cardImage.setRotate(cardImage.getRotate() + 90);
         statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
@@ -456,8 +457,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             return;
         }
         // Rotazione logica
-        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
-        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+
+        currentComponent.rotate(RotationType.ANTI_CLOCKWISE);
+//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
+//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
         // Rotazione grafica
         cardImage.setRotate(cardImage.getRotate() - 90);
         statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");

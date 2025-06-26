@@ -1,10 +1,14 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
+import it.polimi.ingsw.network.messages.RotationType;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/** this class represents a shield generator component in the game.
+ * It can protect max 2 (near) directions from damage when charged.
+ * The shield generator consumes energy from a battery compartment to charge.
+ */
 public final class ShieldGenerator extends Component {
 
     private boolean isCharged; // Stato di carica
@@ -16,6 +20,8 @@ public final class ShieldGenerator extends Component {
         this.isCharged = false;
         this.energyConsumption = 1;
         protectedDirections = new ArrayList<Direction>();
+        protectedDirections.add(this.componentDirection); // Default protected direction
+        protectedDirections.add(this.componentDirection.getClockwise()); // Default protected direction
     }
 
     @Override
@@ -25,9 +31,43 @@ public final class ShieldGenerator extends Component {
         return s;
     }
 
+    /**
+     * Add a direction to the list of protected directions.
+     * If the direction is already protected, it will not be added again.
+     * if the direction is not adjacent to the already protected directions, an exception will be thrown.
+     * @param direction the direction to be added
+     */
     public void add(Direction direction) {
         if( !protectedDirections.contains(direction)){
+            if (protectedDirections.size() >= 2) {
+                throw new IllegalStateException("Cannot protect more than 2 directions");
+            }
+            if (direction == null) {
+                throw new IllegalArgumentException("Direction cannot be null");
+            }
+            // Consente di aggiungere la direzione solo se è adiacente a quelle già presenti (se ce ne sono)
+            if (!protectedDirections.isEmpty()) {
+                boolean isAdjacent = false;
+                if (direction.isAdjacentTo(protectedDirections.getFirst())) {
+                    isAdjacent = true;
+                }
+                if (!isAdjacent) {
+                    throw new IllegalArgumentException("Direction " + direction + " is not adjacent to the already protected direction");
+                }
+            }
             protectedDirections.add(direction);
+        }
+    }
+
+    public void rotateProtectedDirections(RotationType rotationType) {
+        // If the component is a ShieldGenerator, we need to update the protected directions
+        for (int i = 0; i < protectedDirections.size(); i++) {
+            Direction dir = protectedDirections.get(i);
+            switch (rotationType) {
+                case CLOCKWISE -> protectedDirections.set(i, dir.getClockwise());
+                case ANTI_CLOCKWISE -> protectedDirections.set(i, dir.getCounterClockwise());
+                case OPPOSITE -> protectedDirections.set(i, dir.getOpposite());
+            }
         }
     }
 
@@ -55,6 +95,14 @@ public final class ShieldGenerator extends Component {
     }
 
 
+    /**
+     * Charges the shield generator using the provided battery compartment.
+     * The shield generator can only be charged if it is not damaged, is not already charged,
+     * and the battery compartment has enough charge to cover the energy consumption.
+     *
+     * @param battery the battery compartment to charge from
+     * @return true if the shield generator was successfully charged, false otherwise
+     */
     public boolean charge(BatteryCompartment battery) {
         if (battery == null || damaged || isCharged || battery.getChargeLevel() < energyConsumption) {
             return false;

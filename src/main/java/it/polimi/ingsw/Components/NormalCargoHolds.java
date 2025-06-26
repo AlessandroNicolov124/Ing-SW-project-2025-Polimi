@@ -1,5 +1,9 @@
 package it.polimi.ingsw.Components;
 
+/**
+ * NormalCargoHolds represents a type of cargo hold that can contain various types of cargo,
+ * except for RedCargo. It is initialized with a size that is not SINGLE.
+ */
 public final class NormalCargoHolds extends CargoHolds {
 
     public NormalCargoHolds(CargoHoldsSize size) {
@@ -10,6 +14,11 @@ public final class NormalCargoHolds extends CargoHolds {
         this.setCapacity(size.getCapacity());
     }
 
+    /**
+     * checks if the cargo hold can contain a specific type of cargo.
+     * @param cargo The cargo to check for compatibility.
+     * @return true if the cargo can be contained, false otherwise.
+     */
     @Override
     public boolean canContainCargo(Cargo cargo) {
         // Normal CargoHolds can contain all types of cargo except RedCargo

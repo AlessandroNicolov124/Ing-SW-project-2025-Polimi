@@ -1,5 +1,6 @@
 package it.polimi.ingsw.Components;
 
+/** NullConnectorType is a type of ConnectorType that represents a connector that does not connect to anything. */
 public final class NullConnectorType extends ConnectorType {
 
     @Override

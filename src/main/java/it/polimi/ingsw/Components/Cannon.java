@@ -2,6 +2,10 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
+/**
+ * Cannon is an abstract class representing a cannon component in the game.
+ *
+ */
 public sealed abstract class Cannon extends Component permits SingleCannon, DoubleCannon {
 
     //la direzione di fuoco del cannone corrisponde alla direzione del componente
@@ -15,13 +19,11 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
     }
 
     /**
-     * Verifica se un cannone può sparare nella direzione specificata.
-     * Un cannone può sparare solo in una direzione dove non ha connettori
-     * o dove ha un connettore di tipo nullo (NullConnectorType).
-     *
-     * @param firingDirection La direzione in cui si vuole sparare
-     * @return true se il cannone può sparare nella direzione specificata, false altrimenti
-     */
+     * Check if the cannon can fire in the specified direction.
+     * it is possible to fire if there is no connector in the specified direction or if the connector is a NullConnectorType.
+     * @param firingDirection the direction in which the cannon is trying to fire
+     * @return true if the cannon can fire, false otherwise
+     **/
     public boolean validateFiringDirection(Direction firingDirection) {
         // Ottieni il connettore nella direzione specificata
         Connector connector = getConnectorByDirection(firingDirection);

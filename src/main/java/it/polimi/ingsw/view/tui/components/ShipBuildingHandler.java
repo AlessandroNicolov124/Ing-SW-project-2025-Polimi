@@ -482,19 +482,22 @@ public class ShipBuildingHandler {
         RotationType rotationType = null;
         switch (rotationTypeStr) {
             case "c":
-                component.setComponentDirection(component.getComponentDirection().getClockwise());
-                // Also rotate connectors
-                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+//                component.setComponentDirection(component.getComponentDirection().getClockwise());
+//                // Also rotate connectors
+//                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+                component.rotate(RotationType.CLOCKWISE);
                 rotationType = RotationType.CLOCKWISE;
                 break;
             case "a":
-                component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
-                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+//                component.setComponentDirection(component.getComponentDirection().getCounterClockwise());
+//                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                component.rotate(RotationType.ANTI_CLOCKWISE);
                 rotationType = RotationType.ANTI_CLOCKWISE;
                 break;
             case "o":
-                component.setComponentDirection(component.getComponentDirection().getOpposite());
-                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                component.rotate(RotationType.ANTI_CLOCKWISE);
+//                component.setComponentDirection(component.getComponentDirection().getOpposite());
+//                component.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
                 rotationType = RotationType.OPPOSITE;
                 break;
             default:

@@ -1,10 +1,17 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
+import it.polimi.ingsw.network.messages.RotationType;
 
 import java.io.Serializable;
 import java.util.*;
 
+/**
+ * This class represents a generic component of a spaceship.
+ * It contains methods to manage connections, check compatibility with other components,
+ * and handle the component's state (damaged or not).
+ * It is an abstract class that can be extended by specific component types.
+ */
 public sealed abstract class Component implements Serializable permits BatteryCompartment, Cabin, Cannon, CargoHolds, Engine, LifeSupportSystem, ShieldGenerator, StructuralModule {
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
@@ -21,11 +28,9 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     /**
-     * Rimuove il connettore nella direzione specificata, se presente.
-     *
-     * @param direction La direzione del connettore da rimuovere
-     * @return true se un connettore è stato trovato e rimosso, false se nessun connettore
-     *         è stato trovato nella direzione specificata
+     * Remove a connection based on its direction.
+     * @param direction The direction of the connection to remove
+     * @return true if the connection was successfully removed, false otherwise
      */
     public boolean removeConnectionByDirection(Direction direction){
         Connector c = connections.stream()
@@ -40,12 +45,11 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     /**
-     * Aggiunge un connettore nella direzione specificata.
-     * Se esiste già un connettore in quella direzione, verrà sostituito con quello nuovo.
-     *
-     * @param direction La direzione in cui aggiungere il connettore
-     * @param connectorType Il tipo di connettore da aggiungere (Singolo, Doppio, Universale, Nullo)
-     * @return true se l'operazione è riuscita, false altrimenti
+     * Add a connection in the specified direction with the given connector type.
+     * If a connection already exists in that direction, it will be replaced.
+     * @param direction The direction in which to add the connection
+     * @param connectorType The type of connector to add
+     * @return true if the operation was successful, false otherwise
      */
     public boolean addConnectionInDirection(Direction direction, ConnectorType connectorType) {
         // Prima rimuoviamo eventuali connettori esistenti in quella direzione
@@ -59,12 +63,12 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     /**
-     * Aggiunge un connettore specifico nella direzione indicata.
-     * Se esiste già un connettore in quella direzione, verrà sostituito.
-     *
-     * @param connector Il connettore da aggiungere
-     * @return true se l'operazione è riuscita, false altrimenti
-     */
+    * Adds a specific connector in the indicated direction.
+    * If a connector already exists in that direction, it will be replaced.
+    *
+    * @param connector The connector to add
+    * @return true if the operation was successful, false otherwise
+    */
     public boolean addConnection(Connector connector) {
         if (connector == null) {
             return false;
@@ -78,12 +82,12 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     /**
-     * Cambia il tipo di un connettore esistente in una data direzione.
-     * Se non esiste un connettore in quella direzione, ne viene creato uno nuovo.
+     * Changes the type of an existing connector in a given direction.
+     * If there is no connector in that direction, a new one is created.
      *
-     * @param direction La direzione del connettore da modificare
-     * @param newType Il nuovo tipo di connettore
-     * @return true se l'operazione è riuscita, false altrimenti
+     * @param direction The direction of the connector to modify
+     * @param newType The new type of connector
+     * @return true if the operation was successful, false otherwise
      */
     public boolean changeConnectorType(Direction direction, ConnectorType newType) {
         // Cerchiamo il connettore nella direzione specificata
@@ -107,15 +111,15 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     }
 
     /**
-     * Assicura che ci sia un connettore di tipo specificato in una data direzione.
-     * Se già esiste un connettore dello stesso tipo, non fa nulla.
-     * Se esiste un connettore di tipo diverso, lo sostituisce.
-     * Se non esiste alcun connettore, ne crea uno nuovo.
-     *
-     * @param direction La direzione in cui assicurare il connettore
-     * @param requiredType Il tipo di connettore richiesto
-     * @return true se è stata fatta una modifica, false se il connettore richiesto era già presente
-     */
+    * Ensures that there is a connector of the specified type in a given direction.
+    * If a connector of the same type already exists, does nothing.
+    * If a connector of a different type exists, it is replaced.
+    * If no connector exists, a new one is created.
+    *
+    * @param direction The direction in which to ensure the connector
+    * @param requiredType The required type of connector
+    * @return true if a modification was made, false if the required connector was already present
+    */
     public boolean ensureConnector(Direction direction, ConnectorType requiredType) {
         // Cerchiamo il connettore esistente
         Connector existingConnector = getConnectorByDirection(direction);
@@ -168,11 +172,24 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         return new ArrayList<>(connections);
     }
 
+    /** Get a connector by its direction.
+     * Returns null if no connector exists in that direction.
+     *
+     * @param direction The direction of the connector to retrieve
+     * @return The connector in the specified direction, or null if not found
+     */
     public Connector getConnectorByDirection(Direction direction) {
         return connections.stream().filter(c -> c.getDirection() == direction).findFirst().orElse(null);
     }
 
-    // Verifica se questo componente può connettersi a un altro componente in una data direzione
+    /**
+     * Checks if this component can connect to another component in a specified direction.
+     * It verifies that both components have compatible connectors in the specified direction.
+     *
+     * @param other The other component to check connection compatibility with
+     * @param direction The direction in which to check the connection
+     * @return true if the components can connect, false otherwise
+     */
     public boolean canConnectTo(Component other, Direction direction) {
         // Trova il connettore in questa direzione
         Optional<Connector> myConnector = connections.stream()
@@ -194,13 +211,9 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         }
 
         // Verifica se i connettori sono compatibili
-        boolean comp = areConnectorsCompatible(myConnector.get(), otherConnector.get());
+        boolean comp = myConnector.get().isCompatibleWith(otherConnector.get());
         System.out.println(" Connector are compatible: " + comp);
         return comp;
-    }
-
-    private boolean areConnectorsCompatible(Connector c1, Connector c2) {
-        return c1.isCompatibleWith(c2);
     }
 
     public void initializeConnectors(ConnectorType n, ConnectorType e, ConnectorType s, ConnectorType w) {
@@ -237,5 +250,38 @@ public sealed abstract class Component implements Serializable permits BatteryCo
             dir = dir.getClockwise();
         }
         return sb.toString();
+    }
+
+    /**
+     * Rotates the component and its connections based on the specified rotation type.
+     * The component's direction and each connection's direction are updated accordingly.
+     *
+     * @param rotationType The type of rotation to apply (CLOCKWISE, ANTI_CLOCKWISE, OPPOSITE)
+     */
+    public void rotate(RotationType rotationType) {
+        switch (rotationType) {
+            case CLOCKWISE:
+                componentDirection = componentDirection.getClockwise();
+                connections.forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+                break;
+            case ANTI_CLOCKWISE:
+                componentDirection = componentDirection.getCounterClockwise();
+                connections.forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+                break;
+            case OPPOSITE:
+                componentDirection = componentDirection.getOpposite();
+                connections.forEach(conn -> conn.setDirection(conn.getDirection().getOpposite()));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid rotation type: " + rotationType);
+        }
+        switch(this){
+            case ShieldGenerator shieldGenerator -> {
+                shieldGenerator.rotateProtectedDirections(rotationType);
+            }
+            default -> {
+                // No additional actions needed for other component types
+            }
+        }
     }
 }
