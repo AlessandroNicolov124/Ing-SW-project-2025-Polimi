@@ -112,7 +112,7 @@ public class Sabotage extends AdventureCard {
 
             if (targetComponent != null) {
                 player.getShip().destroyComponentAt(targetPosition);
-                return player.removeComponent(targetComponent);
+                return player.removeComponentAt(targetPosition); // Remove the component from the ship and return success
             }
             
             // If missed, retry

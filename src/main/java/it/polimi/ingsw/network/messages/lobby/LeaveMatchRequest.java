@@ -18,18 +18,6 @@ public class LeaveMatchRequest implements RequestMessage {
         this.playerId = playerId;
     }
 
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {

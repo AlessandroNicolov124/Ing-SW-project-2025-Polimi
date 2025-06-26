@@ -1,11 +1,12 @@
 package it.polimi.ingsw;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class Position implements Serializable {
 
-    public int x;
-    public int y;
+    private final int x;
+    private final int y;
 
     public Position(int x, int y) {
         this.x = x;
@@ -18,14 +19,6 @@ public class Position implements Serializable {
 
     public int getY() {
         return y;
-    }
-
-    public void setX(int x) {
-        this.x = x;
-    }
-
-    public void setY(int y) {
-        this.y = y;
     }
 
     @Override
@@ -50,4 +43,14 @@ public class Position implements Serializable {
     public String toString() {
         return "Position [x=" + x + ", y=" + y + "]";
     }
+
+
+    // Necessary because Position is used as a key in HashMap and 
+    // so this will avoid collisions with different Position objects
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
+    }
+
 }

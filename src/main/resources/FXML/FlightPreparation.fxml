@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.GUI.Controllers.FlightPreparationController">
+   <top>
+      <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
+         <Label fx:id="titleLabel" style="-fx-font-size: 24px; -fx-font-weight: bold;" text="Flight Preparation" />
+         <Label fx:id="statusLabel" style="-fx-font-size: 14px;" text="Preparing for flight..." />
+      </VBox>
+   </top>
+   <center>
+      <VBox alignment="CENTER" spacing="20.0" style="-fx-padding: 40;">
+         <Label style="-fx-font-size: 16px;" text="All players are ready!" />
+         <Label style="-fx-font-size: 14px;" text="Flight preparation phase will begin shortly..." />
+         
+         <VBox alignment="CENTER" spacing="10.0" style="-fx-padding: 20;">
+            <Label style="-fx-font-size: 14px; -fx-font-weight: bold;" text="Players Ready:" />
+            <ListView fx:id="playersListView" maxHeight="150.0" prefWidth="300.0" />
+         </VBox>
+         
+         <Button fx:id="continueButton" disable="true" style="-fx-font-size: 14px;" text="Continue" />
+      </VBox>
+   </center>
+   <bottom>
+      <HBox alignment="CENTER" style="-fx-padding: 10;">
+         <Label fx:id="infoLabel" style="-fx-font-size: 12px; -fx-text-fill: gray;" text="Waiting for flight initialization..." />
+      </HBox>
+   </bottom>
+</BorderPane>

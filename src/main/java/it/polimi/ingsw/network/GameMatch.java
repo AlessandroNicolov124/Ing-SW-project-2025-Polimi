@@ -1,8 +1,12 @@
 package it.polimi.ingsw.network;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 import it.polimi.ingsw.GameController;
@@ -20,12 +24,23 @@ public class GameMatch {
     private Player hostPlayer;
     private Map<Integer, Boolean> readyPlayersMap;
 
-    public GameMatch(String matchName, int hostId, String hostName) {
-        this.matchId = UUID.randomUUID();
+    private Map<Integer, String> playerCabinColors = new HashMap<>();
+    private Set<String> availableColors = new HashSet<>(Arrays.asList("BLUE", "GREEN", "YELLOW", "RED"));
+    private Map<Integer, Boolean> playersValidated = new HashMap<>();
+    private Map<Integer, Boolean> playersReadyForFlight = new HashMap<>();
+
+    private List<Integer> shipValidationOrder = new ArrayList<>();
+    private Map<Integer, Long> validationTimestamps = new HashMap<>();
+
+    private Difficulty difficulty;
+
+    public GameMatch(UUID matchId, String matchName, int hostId, String hostName, Difficulty difficulty) {
+        this.matchId = matchId;
         this.matchName = matchName;
         this.controller = new GameController();
         this.players = new ArrayList<>();
         this.matchState = MatchStates.WAITING_FOR_PLAYERS;
+        this.difficulty = difficulty;
 
         Player host = new Player(hostId, hostName, true);
         this.players.add(host);
@@ -73,12 +88,74 @@ public class GameMatch {
         return readyPlayersMap;
     }
 
+    public Difficulty getDifficulty() {
+        return difficulty;
+    }
+
+    public synchronized void recordPlayerValidation(int playerId) {
+        if (!playersValidated.containsKey(playerId) || !playersValidated.get(playerId)) {
+            playersValidated.put(playerId, true);
+            validationTimestamps.put(playerId, System.currentTimeMillis());
+            
+            if (!shipValidationOrder.contains(playerId)) {
+                shipValidationOrder.add(playerId);
+            }
+            
+            System.out.println("[GameMatch " + matchId + "] Player " + playerId + 
+                " validated ship. Validation order position: " + shipValidationOrder.indexOf(playerId));
+        }
+    }
+
+    public List<Integer> getShipValidationOrder() {
+        return new ArrayList<>(shipValidationOrder);
+    }
+
+    public List<Integer> getCurrentFlightOrder() {    
+        List<Player> flightOrderedPlayers = controller.getPlayersInFlightOrder();
+        List<Integer> playerIds = new ArrayList<>();
+        
+        for (Player player : flightOrderedPlayers) {
+            playerIds.add(player.getId());
+        }
+        
+        return playerIds;
+    }
+
+    public int getPlayerFlightPosition(int playerId) {    
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            return -1;
+        }
+        
+        try {
+            return controller.getPlayerFlightPosition(player);
+        } catch (IllegalArgumentException e) {
+            return -1;
+        }
+    }
+
+    public Player getLeadingPlayer() {      
+        return controller.getLeadinPlayer();
+    }
+
+    public List<Player> getPlayersInFlightOrder() {        
+        return controller.getPlayersInFlightOrder();
+    }
+
+    public Integer getFirstValidatedPlayer() {
+        return shipValidationOrder.isEmpty() ? null : shipValidationOrder.get(0);
+    }
+
+    public Map<Integer, Long> getValidationTimestamps() {
+        return new HashMap<>(validationTimestamps);
+    }
+
     // General match state checks
     public boolean isFull() {
         return this.players.size() >= MAX_PLAYERS;
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return this.players.isEmpty();
     }
 
@@ -96,6 +173,59 @@ public class GameMatch {
 
     public boolean isPlayerHostById(int playerId) {
         return this.hostPlayer != null && this.hostPlayer.getId() == playerId;
+    }
+
+    public void setPlayerCabinColor(int playerId, String color) {
+        String previousColor = playerCabinColors.get(playerId);
+        if (previousColor != null) {
+            availableColors.add(previousColor);
+        }
+        
+        playerCabinColors.put(playerId, color);
+        availableColors.remove(color);
+    }
+
+    public String getPlayerCabinColor(int playerId) {
+        return playerCabinColors.get(playerId);
+    }
+    
+    public boolean isColorTaken(String color) {
+        return !availableColors.contains(color);
+    }
+
+    public boolean allPlayersValidated() {
+        return playersValidated.size() == players.size() && 
+            playersValidated.values().stream().allMatch(Boolean::booleanValue);
+    }
+
+    public void setPlayerReadyForFlight(int playerId, boolean ready) {
+        playersReadyForFlight.put(playerId, ready);
+    }
+
+    public boolean allPlayersReadyForFlight() {
+        if (playersReadyForFlight.isEmpty()) {
+            return false;
+        }
+        
+        for (Player player : players) {
+            if (player.isActive()) {
+                Boolean isReady = playersReadyForFlight.get(player.getId());
+                if (isReady == null || !isReady) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public synchronized void setMatchState(MatchStates state) {
+        MatchStates oldState = this.matchState;
+        this.matchState = state;
+        System.out.println("[GameMatch " + matchId + "] State changed from " + oldState + " to " + state);
+    }
+
+    public Map<Integer, Boolean> getPlayersValidated() {
+        return playersValidated;
     }
 
     // Handling players in the match
@@ -130,6 +260,18 @@ public class GameMatch {
             System.out.println("[GameMatch " + matchId + "] Player ID "
                 + playerId + " not found in match " + matchName);
             return false;
+        }
+
+        String color = playerCabinColors.remove(playerId);
+        if (color != null) {
+            availableColors.add(color);
+            System.out.println("[GameMatch " + matchId + "] Released cabin color " + color + " for player " + player.getNickName());
+        }
+
+        playersValidated.remove(playerId);
+        playersReadyForFlight.remove(playerId);
+        if (readyPlayersMap != null) {
+            readyPlayersMap.remove(playerId);
         }
 
         boolean wasHost = isPlayerHostById(playerId);

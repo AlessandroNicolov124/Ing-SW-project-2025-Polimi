@@ -10,23 +10,23 @@ public class JoinMatchResponse implements ResponseMessage {
     private static final long serialVersionUID = 1L;
     private final UUID matchId;
     private final String username;
+    private final boolean success;
+    private final String errorMessage;
     
-    public JoinMatchResponse(UUID matchId, String username) {
+    public JoinMatchResponse(UUID matchId, String username, boolean success, String errorMessage) {
         this.matchId = matchId;
         this.username = username;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public String getUsername() {
-        return username;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.playerJoinedMatch(matchId, username);
+        if (success) {
+            listener.playerJoinedMatch(matchId, username);
+        } else {
+            listener.playerJoinedMatchFailed(errorMessage);
+        }
     }
     
 }

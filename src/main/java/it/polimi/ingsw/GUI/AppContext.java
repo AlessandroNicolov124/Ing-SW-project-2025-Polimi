@@ -5,6 +5,7 @@ import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.RotationType;
@@ -15,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +29,7 @@ public class AppContext implements GameListener {
     private int serverPort;
     private int playerId;
     private UUID currentMatchId;
+    private String selectedCabinColor;
 
     private GeneralClientIf client;
 
@@ -94,6 +97,20 @@ public class AppContext implements GameListener {
         }
     }
 
+    protected static void showErrorDialog(String title, String message) {
+        try {
+            Platform.runLater(() -> {
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle(title);
+                alert.setHeaderText(null);
+                alert.setContentText(message);
+                alert.showAndWait();
+            });
+        } catch (Exception e) {
+            System.err.println("Failed to show error dialog: " + e.getMessage());
+        }
+    }
+
     public Player getLocalPlayerReference() {
         return localPlayerReference;
     }
@@ -104,6 +121,10 @@ public class AppContext implements GameListener {
 
     public String getUsername() {
         return username;
+    }
+
+    public UUID getCurrentMatchId() {
+        return currentMatchId;
     }
 
     public void setUsername(String username) {
@@ -170,6 +191,14 @@ public class AppContext implements GameListener {
         this.currentMatchId = currentMatchId;
     }
 
+    public String getSelectedCabinColor() {
+        return selectedCabinColor;
+    }
+    
+    public void setSelectedCabinColor(String selectedCabinColor) {
+        this.selectedCabinColor = selectedCabinColor;
+    }
+
     @Override
     public void playerCreated(int playerId, String playerName) {
         this.playerId = playerId;
@@ -204,15 +233,16 @@ public class AppContext implements GameListener {
         });
     }
 
+
     @Override
-    public void matchCreated(UUID matchId, String matchName,
-                            String playerName, int playerId) {
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
         Platform.runLater(() -> {
             if (playerId == this.playerId) {         
                 this.currentMatchId = matchId;
             }
+
             for (LobbyListener l : new ArrayList<>(lobbyListeners)) {
-                l.matchCreated(matchId, matchName, playerName, playerId);
+                l.matchCreated(matchId, matchName, playerName, playerId, difficulty);
             }
         });
     }
@@ -220,17 +250,25 @@ public class AppContext implements GameListener {
     @Override
     public void playerJoinedMatch(UUID matchId, String playerName) {
         Platform.runLater(() -> {
-            System.out.println("[GUI] Player joined match: " + playerName + " in match " + matchId);
-            for (LobbyListener l : lobbyListeners) {
-                l.playerJoinedMatch(matchId, playerName);
+            if (playerName.equals(username)) {          
+                this.currentMatchId = matchId;
             }
+            lobbyListeners.forEach(l -> l.playerJoinedMatch(matchId, playerName));
         });
     }
+
 
     @Override
     public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Player left match: " + playerName + " (ID: " + playerId + ") in match " + matchId);
+            
+            if (playerId == this.playerId) {
+                this.currentMatchId = null;
+                this.selectedCabinColor = null;
+                System.out.println("[GUI] Local player left match - reset cabin color and match ID");
+            }
+            
             for (LobbyListener l : lobbyListeners) {
                 l.playerLeftMatch(matchId, playerId, playerName);
             }
@@ -343,13 +381,16 @@ public class AppContext implements GameListener {
                     for (GameStateUpdateListener listener : guiUpdateListeners) {
                         listener.gameComponentPicked(component);
                     }
-                    showInfoMessage("Component Picked", 
-                        "Successfully picked: " + component.getClass().getSimpleName());
                 } else {
-                    showErrorMessage("Component Pick Failed", message);
+                    for (GameStateUpdateListener listener : guiUpdateListeners) {
+                        try {
+                            listener.gameComponentPickedFailed(message);
+                        } catch (Exception e) {
+                            System.err.println("Error notifying component pick failed: " + e.getMessage());
+                        }
+                    }
                 }
             }
-            // Ignore responses for other players
         });
     }
 
@@ -369,25 +410,21 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void componentRotated(Position position, RotationType rotationType) {
+    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
         Platform.runLater(() -> {
-            System.out.println("[GUI] Component at position (" + position.getX() + ", " + position.getY() + ") rotated ");
+            System.out.println("[GUI] Component rotated - Player: " + playerId + ", Position: " + position + ", Valid: " + isValid);
             
-            String rotationMsg = switch (rotationType) {
-                case CLOCKWISE -> "clockwise";
-                case ANTI_CLOCKWISE -> "counter-clockwise";
-                case OPPOSITE -> "180 degrees";
-            };
-            
-            showInfoMessage("Component Rotated", 
-                "Component at position (" + position.getX() + ", " + position.getY() + ") rotated " + rotationMsg);
-            
-            for (GameStateUpdateListener listener : guiUpdateListeners) {
+            for (GameStateUpdateListener l : guiUpdateListeners) {
                 try {
-                    listener.gameComponentRotated(position, rotationType);
+                    l.gameComponentRotated(position, rotationType);
                 } catch (Exception e) {
-                    System.err.println("Error notifying component rotated: " + e.getMessage());
+                    System.err.println("Error notifying rotation: " + e.getMessage());
                 }
+            }
+            
+            if (!isValid) {
+                showErrorMessage("Invalid rotation", "The rotation at position (" + 
+                                position.getX() + ", " + position.getY() + ") was rejected by the server.");
             }
         });
     }
@@ -397,32 +434,11 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             System.out.println("[GUI] Ship validation result: " + isValid + " - " + message);
             
-            if (isValid) {
-                showSuccessMessage("Ship Validation", message);
-            } else {
-                showErrorMessage("Ship Validation Failed", message);
-            }
-            
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
                     listener.gameShipValidated(isValid, message);
                 } catch (Exception e) {
                     System.err.println("Error notifying ship validated: " + e.getMessage());
-                }
-            }
-        });
-    }
-
-    @Override
-    public void showAvailablePositions(List<Integer> positions) {
-        Platform.runLater(() -> {
-            System.out.println("[GUI] Available positions updated: " + positions);
-            
-            for (GameStateUpdateListener listener : guiUpdateListeners) {
-                try {
-                    listener.gameAvailablePositionsUpdate(positions);
-                } catch (Exception e) {
-                    System.err.println("Error notifying available positions: " + e.getMessage());
                 }
             }
         });
@@ -449,4 +465,253 @@ public class AppContext implements GameListener {
         });
     }
 
+    @Override
+    public void cabinColorSelected(String color) {
+        Platform.runLater(() -> {
+            this.selectedCabinColor = color;
+            for (LobbyListener listener : lobbyListeners) {
+                listener.cabinColorSelected(color);
+            }
+        });
+    }
+
+    @Override
+    public void cabinColorSelectionFailed(String errorMsg) {
+        Platform.runLater(() -> {
+            for (LobbyListener listener : lobbyListeners) {
+                listener.cabinColorSelectionFailed(errorMsg);
+            }
+        });
+    }
+    
+    @Override
+    public void flightPreparationStart(UUID matchId) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Flight preparation started for match: " + matchId);
+            try {
+                GUIApp.showFlightPreparation();
+            } catch (IOException e) {
+                showErrorDialog("Flight preparation failed", "Cannot open flight preparation: ");
+            }
+        });
+    }
+    
+    @Override
+    public void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid) {
+        Platform.runLater(() -> {
+            System.out.println("[GUI] Player " + playerName + " (ID: " + playerId + ") ready for flight - Ship valid: " + shipValid);
+            
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                if (playerId == this.playerId) {
+                    listener.gamePlayerReadyForFlightSuccess("You are ready for flight! Waiting for others...");
+                } else {
+                    showInfoMessage("Player Update", playerName + " is ready for flight");
+                }
+            }
+        });
+    }
+    
+    @Override
+    public void matchCreatedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Create Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.matchCreatedFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerJoinedMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Join Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerJoinedMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerLeftMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Leave Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerLeftMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void updateAvailableMatchesFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Update Matches Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.updateAvailableMatchesFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void updateHostFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Update Host Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.updateHostFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void matchStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Start Match Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.matchStartedFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void loadingAckResponseFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Loading Acknowledgment Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.loadingAckResponseFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void loadingStatusFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Loading Status Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.loadingStatusFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playersInMatchFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Get Players Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playersInMatchFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void playerReadyFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Player Ready Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.playerReadyFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void shipBuildingStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Ship Building Start Failed", message);
+            for (LobbyListener l : lobbyListeners) {
+                l.shipBuildingStartFailed(message);
+            }
+        });
+    }
+
+    @Override
+    public void componentPickFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Pick Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentPickedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component pick failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentPlacedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Placement Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentPlacedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component placed failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentRemovedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Removal Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentRemovedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component removed failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void componentRotatedFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Component Rotation Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameComponentRotatedFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying component rotated failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void shipValidationFailed(String message) {
+        Platform.runLater(() -> {
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                try {
+                    listener.gameShipValidationFailed(message);
+                } catch (Exception e) {
+                    System.err.println("Error notifying ship validation failed: " + e.getMessage());
+                }
+            }
+        });
+    }
+
+    @Override
+    public void notifyNewPlayerPositionFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Player Position Update Failed", message);
+        });
+    }
+
+    @Override
+    public void flightPreparationStartFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Flight Preparation Failed", message);
+        });
+    }
+
+    @Override
+    public void playerReadyForFlightFailed(String message) {
+        Platform.runLater(() -> {
+            showErrorDialog("Ready for Flight Failed", message);
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
+                listener.gamePlayerReadyForFlightFailed(message);
+            }
+        });
+    }
+    
 }

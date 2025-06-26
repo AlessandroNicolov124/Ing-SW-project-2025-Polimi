@@ -3,11 +3,9 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.AdventureCards.*;
 import it.polimi.ingsw.Components.*;
 
-import java.io.Serializable;
 import java.util.*;
 import java.io.*;
 import java.nio.file.*;
-import java.util.stream.Collectors;
 
 public class GameModel {
     private FlightBoard flightBoard;

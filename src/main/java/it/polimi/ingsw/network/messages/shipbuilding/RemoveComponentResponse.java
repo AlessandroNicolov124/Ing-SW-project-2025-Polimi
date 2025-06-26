@@ -10,29 +10,13 @@ public class RemoveComponentResponse implements ResponseMessage {
     private final int playerId;
     private final Position position;
     private final boolean success;
-    private final String message;
+    private final String errorMessage;
 
     public RemoveComponentResponse(int playerId, Position position, boolean success, String message) {
         this.playerId = playerId;
         this.position = position;
         this.success = success;
-        this.message = message;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public Position getPosition() {
-        return position;
-    }
-
-    public boolean isSuccess() {
-        return success;
-    }
-
-    public String getMessage() {
-        return message;
+        this.errorMessage = message;
     }
 
     @Override
@@ -40,7 +24,7 @@ public class RemoveComponentResponse implements ResponseMessage {
         if (success) {
             listener.componentRemoved(position);
         } else {
-            listener.printTextMsg("✗ Component removal failed: " + message);
+            listener.componentRemovedFailed(errorMessage);
         }
     }
 } 

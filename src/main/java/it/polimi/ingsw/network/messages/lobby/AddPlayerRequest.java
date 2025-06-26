@@ -13,10 +13,6 @@ public class AddPlayerRequest implements RequestMessage {
         this.playerName = playerName;
     }
 
-    public String getPlayerName() {
-        return this.playerName;
-    }
-
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {
