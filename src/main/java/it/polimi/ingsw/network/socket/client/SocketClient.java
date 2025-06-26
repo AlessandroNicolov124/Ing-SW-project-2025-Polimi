@@ -132,6 +132,11 @@ public class SocketClient implements Runnable, GeneralClientIf {
     }
 
     @Override
+    public void pickAdventureCard(int currentPlayer) throws Exception {
+
+    }
+
+    @Override
     public void placeComponent(Component component, Position position, int playerId) throws Exception {
         if (playerId <= 0) {
             throw new IllegalArgumentException("Invalid player ID: " + playerId);
@@ -211,19 +216,6 @@ public class SocketClient implements Runnable, GeneralClientIf {
         
         synchronized (out) {
             out.writeObject(new ReadyForFlightRequest(matchId, playerId));
-            out.flush();
-        }
-    }
-
-    @Override
-    public void pickAdventureCard() throws Exception {
-        if (localPlayer == null) {
-            throw new IllegalStateException("Cannot pick adventure card: local player not set");
-        }
-        
-        synchronized (out) {
-            out.writeObject(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest(
-                localPlayer.getId()));
             out.flush();
         }
     }

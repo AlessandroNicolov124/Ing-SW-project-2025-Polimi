@@ -19,7 +19,6 @@ import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
-import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
@@ -282,6 +281,57 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             lobbyManager.multicastToMatch(matchId, new ShipBuildingStartResponse(matchId, playersReady, true, "All players ready, starting ship building phase"));
         }
         return;
+    }
+
+    @Override
+    public void pickAdventureCard(int currentPlayer) throws Exception {
+        if (currentPlayer == -1) {
+            System.out.println("[ServerSocket] No player ID set for client handler");
+            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                    -1, null, false, "No player ID set", -1));
+            return;
+        }
+
+        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayer);
+        if (match == null) {
+            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayer);
+            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                    currentPlayer, null, false, "Match not found", -1));
+            return;
+        }
+
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
+            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                    currentPlayer, null, false, "Match not in progress", -1));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(currentPlayer);
+        if (player == null) {
+            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayer);
+            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                    currentPlayer, null, false, "Player not found", -1));
+            return;
+        }
+
+        // Pick adventure card using the controller
+        controller.pickCardForPlayer(player);
+        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
+        boolean success = adventureCard != null;
+
+        // Determine next player's turn (this is simplified - you may want more complex logic)
+        int nextPlayerTurn = match.getNextPlayerTurnForAdventure(currentPlayer);
+
+        System.out.println("[ServerSocket] Adventure card pick for player " + currentPlayer + ": " +
+                (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+
+        // Send response to all clients in the match
+        lobbyManager.multicastToMatch(match.getMatchId(),
+                new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                        currentPlayer, adventureCard, success, message, nextPlayerTurn));
     }
 
     @Override

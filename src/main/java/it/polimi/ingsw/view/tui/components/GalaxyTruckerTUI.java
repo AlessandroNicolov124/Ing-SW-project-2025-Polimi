@@ -2,6 +2,7 @@ package it.polimi.ingsw.view.tui.components;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -77,7 +78,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case LOADING              -> handleLoadingMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
-                case CHOOSE_START_POSITION -> handleChooseStartPositionState();
+                //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
@@ -456,7 +457,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     case "pick":
                         // Try to pick an adventure card
                         try {
-                            client.pickAdventureCard();
+                            client.pickAdventureCard(currentPlayer.getId());
                             console.printMessage("Adventure card pick request sent. Waiting for response...");
                         } catch (Exception e) {
                             console.printError("Error picking adventure card: " + e.getMessage());
@@ -510,12 +511,27 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         //TODO implement actual method
     }
 
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
+
+    }
+
+    @Override
+    public void matchCreatedFailed(String errorMessage) {
+
+    }
+
     public boolean notifyNewPlayerPosition(int playerId, int position) {
         //TODO implement actual method
         return true;
     }
 
-    
+    @Override
+    public void notifyNewPlayerPositionFailed(String errorMessage) {
+
+    }
+
+
     /**
      * Called by PositionResponseMessage to handle position selection response
      */
@@ -548,7 +564,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     /**
      * Called by network messages to update available positions display
      */
-    @Override
+
     public void showAvailablePositions(List<Integer> positions) {
         this.availablePositions = positions;
         if (positions == null || positions.isEmpty()) {
@@ -615,6 +631,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void componentPlacedFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void componentRemoved(Position position) {
         synchronized (displayMutex) {
             if (currentPlayer != null && currentPlayer.getShip() != null) {
@@ -633,6 +654,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void componentRemovedFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
+
+    }
+
+    @Override
+    public void componentRotatedFailed(String errorMessage) {
+
+    }
+
     public void componentRotated(Position position, RotationType rotationType) {
         synchronized (displayMutex) {
             console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
@@ -671,14 +706,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void playerCreated(int playerId, String username) {
         this.currentPlayer = new Player(playerId, username, true);
-        
-        // Set the local player in the client so it can track the player ID for requests
-        try {
-            client.setLocalPlayer(currentPlayer);
-        } catch (Exception e) {
-            console.printError("Failed to set local player in client: " + e.getMessage());
-        }
-        
+
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());
         playerCreationFuture.complete(currentPlayer);
@@ -816,10 +844,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
 
 
-    public void showAvailablePositions(List<Integer> positions) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
-    }
+//    public void showAvailablePositions(List<Integer> positions) {
+//        // TODO Auto-generated method stub
+//        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
+//    }
 
     @Override
     public void componentPicked(int playerId, Component component, boolean success, String message) {
@@ -844,6 +872,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
             // Ignore responses for other players
         }
+    }
+
+    @Override
+    public void componentPickFailed(String errorMessage) {
+
     }
 
     @Override
@@ -884,6 +917,74 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+    /**
+     * Displays detailed information about an adventure card
+     */
+    private void displayAdventureCard(it.polimi.ingsw.AdventureCards.AdventureCard adventureCard) {
+        console.printMessage("\n╔══════════════════════════════════════════════════════════════════════╗");
+        console.printMessage("║                        ADVENTURE CARD DRAWN                         ║");
+        console.printMessage("╠══════════════════════════════════════════════════════════════════════╣");
+        console.printMessage("║ Card Name: " + String.format("%-55s", adventureCard.getName()) + " ║");
+        console.printMessage("║                                                                      ║");
+
+        // Split description into multiple lines if it's too long
+        String description = adventureCard.getDescription();
+        String[] descriptionLines = wrapText(description, 68);
+        console.printMessage("║ Description:                                                         ║");
+        for (String line : descriptionLines) {
+            console.printMessage("║ " + String.format("%-68s", line) + " ║");
+        }
+
+        console.printMessage("║                                                                      ║");
+
+        // Show additional properties if available
+        if (adventureCard.getDuration() > 1) {
+            console.printMessage("║ Duration: " + String.format("%-59s", adventureCard.getDuration() + " rounds") + " ║");
+        }
+        if (adventureCard.getCost() > 0) {
+            console.printMessage("║ Cost: " + String.format("%-63s", adventureCard.getCost() + " credits") + " ║");
+        }
+
+        console.printMessage("╚══════════════════════════════════════════════════════════════════════╝");
+        console.printMessage("");
+    }
+
+    /**
+     * Wraps text to fit within specified width
+     */
+    private String[] wrapText(String text, int maxWidth) {
+        if (text.length() <= maxWidth) {
+            return new String[]{text};
+        }
+
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        StringBuilder currentLine = new StringBuilder();
+
+        for (String word : words) {
+            if (currentLine.length() + word.length() + 1 <= maxWidth) {
+                if (currentLine.length() > 0) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
+            } else {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(word);
+                } else {
+                    // Word is longer than maxWidth, just add it anyway
+                    lines.add(word);
+                }
+            }
+        }
+
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+
+        return lines.toArray(new String[0]);
+    }
+
     @Override
     public void cabinColorSelected(String color) {
 
@@ -911,6 +1012,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void playerReadyForFlightFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
 
     }
 

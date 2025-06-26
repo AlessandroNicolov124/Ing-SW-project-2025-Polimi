@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
@@ -19,6 +20,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class AppContext implements GameListener {
@@ -713,5 +715,15 @@ public class AppContext implements GameListener {
             }
         });
     }
-    
+
+    @Override
+    public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
+
+    }
+
+    @Override
+    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+
+    }
+
 }

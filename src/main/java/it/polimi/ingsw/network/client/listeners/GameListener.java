@@ -77,4 +77,6 @@ public interface GameListener {
     void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid);
     void playerReadyForFlightFailed(String errorMessage);
 
+    void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
+    void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
 }

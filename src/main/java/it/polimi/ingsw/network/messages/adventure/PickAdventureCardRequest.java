@@ -19,7 +19,7 @@ public class PickAdventureCardRequest implements RequestMessage {
     @Override
     public void handleServer(SocketClientHandler handler) {
         try {
-            handler.pickAdventureCard();
+            handler.pickAdventureCard(playerId);
         } catch (Exception e) {
             System.err.println("Error handling pickAdventureCard request: " + e.getMessage());
             e.printStackTrace();
