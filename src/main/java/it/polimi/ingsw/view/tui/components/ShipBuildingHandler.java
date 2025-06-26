@@ -68,14 +68,14 @@ public class ShipBuildingHandler {
         while (!buildingDone) {
             if (currentComponent == null) {
                 try {
-                    Component pickedComponent = simpleClient.pickComponentCard(currentPlayer.getId());
-                    if (pickedComponent != null) {
-                        currentComponent = pickedComponent;
-                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-                        displayComponent(currentComponent);
-                    } else {
-                        console.printMessage("\nRequesting component from server...");
-                    }
+                    simpleClient.pickComponentCard(currentPlayer.getId());
+//                    if (pickedComponent != null) {
+//                        currentComponent = pickedComponent;
+//                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
+//                        displayComponent(currentComponent);
+                    //} else {
+                        //console.printMessage("\nRequesting component from server...");
+                    //}
                 } catch (Exception e) {
                     console.printError("Error picking component: " + e.getMessage());
                     continue;
@@ -135,14 +135,14 @@ public class ShipBuildingHandler {
                 case "pick": // Manually pick a component
                     if (currentComponent == null) {
                         try {
-                            Component pickedComponent = simpleClient.pickComponentCard(currentPlayer.getId());
-                            if (pickedComponent != null) {
-                                currentComponent = pickedComponent;
-                                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-                                displayComponent(currentComponent);
-                            } else {
-                                console.printMessage("\nComponent request sent to server...");
-                            }
+                            simpleClient.pickComponentCard(currentPlayer.getId());
+//                            if (pickedComponent != null) {
+//                                currentComponent = pickedComponent;
+//                                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
+//                                displayComponent(currentComponent);
+//                            } else {
+//                                console.printMessage("\nComponent request sent to server...");
+//                            }
                         } catch (Exception e) {
                             console.printError("Error picking component: " + e.getMessage());
                         }
@@ -459,7 +459,7 @@ public class ShipBuildingHandler {
         }
 
         try {
-            simpleClient.rotateComponent(posToRotate, rotationType);
+            simpleClient.rotateComponent(1,posToRotate, rotationType);
             console.printMessage("Rotation request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
         } catch (IOException | IllegalStateException e) {
             console.printError("Error sending rotation request: " + e.getMessage());
@@ -509,7 +509,7 @@ public class ShipBuildingHandler {
     private boolean handleValidateAndFinish() {
         console.printMessage("Sending validation request to server...");
         try {
-            simpleClient.validateShip();
+            simpleClient.validateShip(1);
             // We sent the request. Now we need to wait for the ShipValidationResultMessage.
             // The TUI loop cannot simply proceed here.
             // For now, we just return false and let the message handler update the state later.

@@ -10,6 +10,7 @@ import java.util.concurrent.TimeoutException;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
@@ -416,12 +417,27 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         //TODO implement actual method
     }
 
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
+
+    }
+
+    @Override
+    public void matchCreatedFailed(String errorMessage) {
+
+    }
+
     public boolean notifyNewPlayerPosition(int playerId, int position) {
         //TODO implement actual method
         return true;
     }
 
-    
+    @Override
+    public void notifyNewPlayerPositionFailed(String errorMessage) {
+
+    }
+
+
     /**
      * Called by PositionResponseMessage to handle position selection response
      */
@@ -520,6 +536,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void componentPlacedFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void componentRemoved(Position position) {
         synchronized (displayMutex) {
             if (currentPlayer != null && currentPlayer.getShip() != null) {
@@ -538,6 +559,21 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void componentRemovedFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
+
+    }
+
+    @Override
+    public void componentRotatedFailed(String errorMessage) {
+
+    }
+
+
     public void componentRotated(Position position, RotationType rotationType) {
         synchronized (displayMutex) {
             console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
@@ -557,6 +593,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 console.printError("✗ " + message);
             }
         }
+    }
+
+    @Override
+    public void shipValidationFailed(String errorMessage) {
+
     }
 
     @Override
@@ -585,15 +626,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     }
 
-    @Override
+
     public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
         lobbyHandler.matchCreatedCallback(matchName, matchId, true, playerName, playerId);
         this.state = TuiState.WAIT_IN_MATCH;
     }
 
-    @Override
+
     public void updateAvailableMatches(List<String> matches) {
         lobbyHandler.setAvailableMatches(matches);
+    }
+
+    @Override
+    public void updateAvailableMatchesFailed(String errorMessage) {
+
     }
 
     @Override
@@ -606,13 +652,28 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void playerJoinedMatchFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
         lobbyHandler.playerLeftMatchCallback(matchId, playerId, playerName);
     }
 
     @Override
+    public void playerLeftMatchFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void updateHost(UUID matchId, int playerId, String playerName) {
         lobbyHandler.updateHostCallback(matchId, playerId, playerName);
+    }
+
+    @Override
+    public void updateHostFailed(String errorMessage) {
+
     }
 
     @Override
@@ -623,8 +684,23 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void matchStartFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void loadingAckResponseFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playersInMatch(UUID matchId, List<String> playerNames, int hostId) {
         lobbyHandler.playersInMatchCallback(matchId, playerNames, hostId);
+    }
+
+    @Override
+    public void playersInMatchFailed(String errorMessage) {
+
     }
 
 
@@ -635,8 +711,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void loadingStatusFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
         lobbyHandler.playerReadyCallback(matchId, readyPlayers, totalPlayers);
+    }
+
+    @Override
+    public void playerReadyFailed(String errorMessage) {
+
     }
 
     @Override
@@ -655,8 +741,13 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
-
     @Override
+    public void shipBuildingStartFailed(String errorMessage) {
+
+    }
+
+
+
     public void showAvailablePositions(List<Integer> positions) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
@@ -684,6 +775,41 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
             // Ignore responses for other players
         }
+    }
+
+    @Override
+    public void componentPickFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void cabinColorSelected(String color) {
+
+    }
+
+    @Override
+    public void cabinColorSelectionFailed(String errorMsg) {
+
+    }
+
+    @Override
+    public void flightPreparationStart(UUID matchId) {
+
+    }
+
+    @Override
+    public void flightPreparationStartFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid) {
+
+    }
+
+    @Override
+    public void playerReadyForFlightFailed(String errorMessage) {
+
     }
 
 

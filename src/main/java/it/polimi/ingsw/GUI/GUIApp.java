@@ -4,15 +4,13 @@ package it.polimi.ingsw.GUI;
 
 import java.io.IOException;
 
-import it.polimi.ingsw.GUI.Controllers.FlightPreparationController;
-import it.polimi.ingsw.GUI.Controllers.LobbyController;
-import it.polimi.ingsw.GUI.Controllers.LoginController;
-import it.polimi.ingsw.GUI.Controllers.ShipBuilderController;
+import it.polimi.ingsw.GUI.Controllers.*;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+
 
 public class GUIApp extends Application {
 
@@ -23,7 +21,8 @@ public class GUIApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
-        showLoginPage();
+        //showLoginPage();
+        showFlightBoard();
     }
 
     public static void showLoginPage() throws Exception {
@@ -75,6 +74,18 @@ public class GUIApp extends Application {
         Scene scene = new Scene(root, 800, 600);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Flight Preparation");
+        primaryStage.show();
+    }
+
+    public static void showFlightBoard() throws Exception {
+        FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/FlightboardView.fxml"));
+        Parent root = loader.load();
+
+        FlightBoardController flightBoardController = loader.getController();
+        flightBoardController.setContext(context);
+        // Switch scene
+        primaryStage.setScene(new Scene(root, 1400, 950));
+        primaryStage.setTitle("FlightBoard");
         primaryStage.show();
     }
 
