@@ -59,6 +59,12 @@ public final class ShieldGenerator extends Component {
         }
     }
 
+    /**
+     * Rotates the protected directions based on the specified rotation type.
+     * This method updates the protected directions according to the rotation type.
+     *
+     * @param rotationType the type of rotation to apply (CLOCKWISE, ANTI_CLOCKWISE, OPPOSITE)
+     */
     public void rotateProtectedDirections(RotationType rotationType) {
         // If the component is a ShieldGenerator, we need to update the protected directions
         for (int i = 0; i < protectedDirections.size(); i++) {
