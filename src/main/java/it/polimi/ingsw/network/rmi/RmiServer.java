@@ -448,6 +448,7 @@ public class RmiServer extends UnicastRemoteObject
         if (isValid) {
             detailedMessage = "Ship is valid and ready for flight!";
             match.getPlayersValidated().put(playerId, true);
+            match.recordPlayerValidation(playerId);
             
         } else {
             String validationErrors = controller.getShipValidationErrors(player);

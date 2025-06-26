@@ -114,6 +114,25 @@ public class  GameController {
         player.setReady(true);
     }
 
+    public List<Player> getFlightOrder() {
+        return gameModel.getFlightBoard().getPlayersInFlightOrder();
+    }
+
+    public int getPlayerFlightPosition(Player player) {
+        if (isPlayerThere(player)) {
+            return gameModel.getFlightBoard().getPosition(player);
+        }
+        return -1;
+    }
+
+    public Player getLeadinPlayer() {
+        return gameModel.getFlightBoard().getLeadingPlayer();
+    }
+
+    public List<Player> getPlayersInFlightOrder() {
+        return gameModel.getFlightBoard().getPlayersInFlightOrder();
+    }
+
     /**
      * Sets the initial starting position for the given player.
      *

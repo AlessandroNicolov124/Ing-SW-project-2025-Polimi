@@ -29,6 +29,9 @@ public class GameMatch {
     private Map<Integer, Boolean> playersValidated = new HashMap<>();
     private Map<Integer, Boolean> playersReadyForFlight = new HashMap<>();
 
+    private List<Integer> shipValidationOrder = new ArrayList<>();
+    private Map<Integer, Long> validationTimestamps = new HashMap<>();
+
     private Difficulty difficulty;
 
     public GameMatch(UUID matchId, String matchName, int hostId, String hostName, Difficulty difficulty) {
@@ -87,6 +90,64 @@ public class GameMatch {
 
     public Difficulty getDifficulty() {
         return difficulty;
+    }
+
+    public synchronized void recordPlayerValidation(int playerId) {
+        if (!playersValidated.containsKey(playerId) || !playersValidated.get(playerId)) {
+            playersValidated.put(playerId, true);
+            validationTimestamps.put(playerId, System.currentTimeMillis());
+            
+            if (!shipValidationOrder.contains(playerId)) {
+                shipValidationOrder.add(playerId);
+            }
+            
+            System.out.println("[GameMatch " + matchId + "] Player " + playerId + 
+                " validated ship. Validation order position: " + shipValidationOrder.indexOf(playerId));
+        }
+    }
+
+    public List<Integer> getShipValidationOrder() {
+        return new ArrayList<>(shipValidationOrder);
+    }
+
+    public List<Integer> getCurrentFlightOrder() {    
+        List<Player> flightOrderedPlayers = controller.getPlayersInFlightOrder();
+        List<Integer> playerIds = new ArrayList<>();
+        
+        for (Player player : flightOrderedPlayers) {
+            playerIds.add(player.getId());
+        }
+        
+        return playerIds;
+    }
+
+    public int getPlayerFlightPosition(int playerId) {    
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            return -1;
+        }
+        
+        try {
+            return controller.getPlayerFlightPosition(player);
+        } catch (IllegalArgumentException e) {
+            return -1;
+        }
+    }
+
+    public Player getLeadingPlayer() {      
+        return controller.getLeadinPlayer();
+    }
+
+    public List<Player> getPlayersInFlightOrder() {        
+        return controller.getPlayersInFlightOrder();
+    }
+
+    public Integer getFirstValidatedPlayer() {
+        return shipValidationOrder.isEmpty() ? null : shipValidationOrder.get(0);
+    }
+
+    public Map<Integer, Long> getValidationTimestamps() {
+        return new HashMap<>(validationTimestamps);
     }
 
     // General match state checks
@@ -201,14 +262,12 @@ public class GameMatch {
             return false;
         }
 
-        // IMPORTANTE: Rimuovi e ripristina il colore della cabina del giocatore
         String color = playerCabinColors.remove(playerId);
         if (color != null) {
             availableColors.add(color);
             System.out.println("[GameMatch " + matchId + "] Released cabin color " + color + " for player " + player.getNickName());
         }
 
-        // Rimuovi dalle mappe di stato
         playersValidated.remove(playerId);
         playersReadyForFlight.remove(playerId);
         if (readyPlayersMap != null) {
@@ -225,12 +284,10 @@ public class GameMatch {
 
         System.out.println("[GameMatch " + matchId + "] Player " + player.getNickName() + " removed from match " + matchName);
 
-        // Gestisci la riassegnazione dell'host
         if (players.isEmpty()) {
             this.hostPlayer = null;
             System.out.println("[GameMatch " + matchId + "] Match is now empty, no host assigned");
         } else if (wasHost) {
-            // Assegna il primo giocatore rimanente come nuovo host
             this.hostPlayer = players.get(0);
             System.out.println("[GameMatch " + matchId + "] New host assigned: " + hostPlayer.getNickName() + " (ID: " + hostPlayer.getId() + ")");
         }
