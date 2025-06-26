@@ -80,6 +80,7 @@ public class Slavers extends AdventureCard {
     /**
      * Attempt to fight slavers
      * @param player The player trying to fight
+     * @param gameModel The current game state
      * @return true if slavers were defeated, false if player was defeated
      */
     public boolean fightSlaversFor(Player player) {

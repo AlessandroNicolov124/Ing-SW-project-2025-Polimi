@@ -3,23 +3,14 @@ package it.polimi.ingsw.network.rmi;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
-import it.polimi.ingsw.network.messages.lobby.AddPlayerResponse;
-import it.polimi.ingsw.network.messages.lobby.CreateMatchResponse;
-import it.polimi.ingsw.network.messages.lobby.GetMatchesResponse;
-import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
-import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
-import it.polimi.ingsw.network.messages.lobby.UsernameRejectedResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
-import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -65,99 +56,47 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
   
     @Override
     public void createPlayer(String username) throws RemoteException {
-        try{
-            int playerId = server.createPlayer(username, this);
-            if (playerId != -1) {
-                showUpdate(new AddPlayerResponse(playerId, username));
-            }
-        } catch (RemoteException e) {
-            showUpdate(new UsernameRejectedResponse("Connection error: " + e.getMessage()));
-        }
+        server.createPlayer(username, this);
     }
 
     @Override
-    public void createMatch(String matchName, int playerId, String username) throws RemoteException {
-        try {
-            UUID matchId = server.createMatch(matchName, playerId, username, this);
-            showUpdate(new CreateMatchResponse(matchName, matchId, username, playerId));
-        } catch (RemoteException e) {
-            throw new RemoteException("Error creating match", e);
-        }
+    public void createMatch(String matchName, int playerId, String username, Difficulty difficulty) throws RemoteException {
+        server.createMatch(matchName, playerId, username, difficulty, this);
     }
 
     @Override
     public void getAvailableMatches() throws RemoteException {
-        try {
-            List<String> matches = server.getAvailableMatches();
-            showUpdate(new GetMatchesResponse(matches));
-        } catch (RemoteException e) {
-            throw new RemoteException("Error retrieving available matches", e);
-        }
+        server.getAvailableMatches(this);
     }
 
     @Override
     public void joinMatch(UUID matchId, int playerId, String username) throws RemoteException {
-        try {
-            boolean isJoined = server.joinMatch(matchId, playerId, username, this);
-            List<String> playerNames = server.getPlayersInMatch(matchId);
-            int hostId = server.getHostPlayerId(matchId, playerId);
-            if (!isJoined) {
-                throw new RemoteException("Failed to join match: " + matchId);
-            }
-            showUpdate(new PlayersInMatchResponse(matchId, playerNames, hostId));
+        server.joinMatch(matchId, playerId, username, this); 
+    }
 
-        } catch (RemoteException e) {
-            throw new RemoteException("Error joining match", e);
-        }
+    @Override
+    public void selectCabinColor(String color, int playerId) throws RemoteException {
+        server.selectCabinColor(color, playerId, this);
     }
 
     @Override
     public void leaveMatch(UUID matchId, int playerId, String username) throws RemoteException {
-        try {
-            boolean isLeft = server.leaveMatch(matchId, playerId, username, this);
-            if (!isLeft) {
-                throw new RemoteException("Failed to leave match: " + matchId);
-            }
-            showUpdate(new LeaveMatchResponse(matchId, playerId, username));
-        } catch (RemoteException e) {
-            throw new RemoteException("Error leaving match", e);
-        }
+        server.leaveMatch(matchId, playerId, username, this);
     }
 
     @Override
     public void startMatch(UUID matchId, int playerId, String username) throws RemoteException {
-        try {
-            boolean isStarted = server.startMatch(matchId, playerId, username);
-            if (!isStarted) {
-                throw new RemoteException("Failed to start match: " + matchId);
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("Error starting match", e);
-        }
+        server.startMatch(matchId, playerId, username, this);
     }
 
     @Override
     public void loadingAck(UUID matchId) throws RemoteException {
-        try {
-            boolean isAcknowledged = server.loadingAck(matchId);
-            if (!isAcknowledged) {
-                throw new RemoteException("Failed to acknowledge loading for match: " + matchId);
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("Error acknowledging loading", e);
-        }
+        server.loadingAck(matchId, this);
     }
 
     @Override
     public void playerReady(UUID matchId, int playerId) throws RemoteException {
-        try {
-            boolean isReady = server.playerReady(matchId, playerId);
-            if (!isReady) {
-                throw new RemoteException("Failed to set player ready for match: " + matchId);
-            }
-        } catch (RemoteException e) {
-            throw new RemoteException("Error setting player ready", e);
-        }
+        server.playerReady(matchId, playerId, this);
     }
 
     @Override
@@ -167,63 +106,47 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
 
     @Override
-    public Component pickComponentCard(int playerId) throws RemoteException {
-        if (playerId <= 0) {
-            throw new IllegalArgumentException("Invalid player ID: " + playerId);
-        }
-        
-        try {
-            Component component = server.pickComponent(playerId);
-            showUpdate(new PickComponentResponse(playerId, component, true, "Component picked successfully"));
-            return component;
-        } catch (RemoteException e) {
-            showUpdate(new PickComponentResponse(playerId, null, false, e.getMessage()));
-            throw new RemoteException("Error picking component", e);
-        }
+    public void pickComponentCard(int playerId) throws RemoteException {
+        server.pickComponent(playerId, this);
     }
 
     @Override
     public void placeComponent(Component component, Position position, int playerId) throws RemoteException {
-        if (playerId <= 0) {
-            throw new IllegalArgumentException("Invalid player ID: " + playerId);
-        }
-        
-        try {
-            server.placeComponent(playerId, component, position);
-            showUpdate(new PlaceComponentResponse(playerId, component, position, true, "Component placed successfully"));
-        } catch (RemoteException e) {
-            showUpdate(new PlaceComponentResponse(playerId, component, position, false, e.getMessage()));
-            throw new RemoteException("Error placing component: " + e.getMessage());
-        }
+        server.placeComponent(playerId, component, position, this);
     }
 
     @Override
     public void removeComponent(Position position, int playerId) throws RemoteException {
-        if (playerId <= 0) {
-            throw new IllegalArgumentException("Invalid player ID: " + playerId);
-        }
+        server.removeComponent(playerId, position, this);
+    }
+
+    @Override
+    public void rotateComponent(int playerId, Position position, RotationType rotationType) throws RemoteException {
+        server.rotateComponent(playerId, position, rotationType, this);
+    }
+
+
+    @Override
+    public void validateShip(int playerId) throws RemoteException {
+        server.validateShip(playerId, this);
+    }
+
+    @Override
+    public void readyForFlight(UUID matchId, int playerId) throws RemoteException {
+        server.readyForFlight(matchId, playerId, this);
+    }
+
+    @Override
+    public void pickAdventureCard(int currentPlayer) throws RemoteException {
+//        if (localPlayer == null) {
+//            throw new IllegalStateException("Cannot pick adventure card: local player not set");
+//        }
         
         try {
-            server.removeComponent(playerId, position);
-            showUpdate(new RemoveComponentResponse(playerId, position, true, "Component removed successfully"));
+            server.pickAdventureCard(currentPlayer);
         } catch (RemoteException e) {
-            showUpdate(new RemoveComponentResponse(playerId, position, false, e.getMessage()));
-            throw new RemoteException("Error removing component: " + e.getMessage(), e);
+            throw new RemoteException("Error picking adventure card", e);
         }
-    }
-
-    @Override
-    public void rotateComponent(Position position, RotationType rotationType) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'rotateComponent'");
-    }
-
-
-
-    @Override
-    public void validateShip() throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'validateShip'");
     }
 
 }

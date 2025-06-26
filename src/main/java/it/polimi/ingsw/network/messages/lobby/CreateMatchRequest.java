@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.messages.lobby;
 
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RequestMessage;
 import it.polimi.ingsw.network.socket.server.SocketClientHandler;
 
@@ -9,28 +10,18 @@ public class CreateMatchRequest implements RequestMessage {
     private final String matchName;
     private final int playerId;
     private final String playerName;
+    private Difficulty difficulty;
 
-    public CreateMatchRequest(String matchName, int playerId, String playerName) {
+    public CreateMatchRequest(String matchName, int playerId, String playerName, Difficulty difficulty) {
         this.matchName = matchName;
         this.playerId = playerId;
         this.playerName = playerName;
-    }
-
-    public String getMatchName() {
-        return matchName;
-    }
-
-    public int getPlayerId() {
-        return playerId;
-    }
-
-    public String getPlayerName() {
-        return playerName;
+        this.difficulty = difficulty;
     }
 
     @Override
     public void handleServer(SocketClientHandler handler) {
-        handler.createMatch(matchName, playerId, playerName);
+        handler.createMatch(matchName, playerId, playerName, difficulty);
     }
     
 }

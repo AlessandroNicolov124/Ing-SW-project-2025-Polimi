@@ -1,7 +1,5 @@
 package it.polimi.ingsw.GUI.GameStateUpdateListener;
 
-import java.util.List;
-
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 
@@ -14,5 +12,14 @@ public interface GameStateUpdateListener {
     void gameComponentRemoved(Position position);
     void gameComponentRotated(Position position, RotationType rotationType);
     void gameShipValidated(boolean isValid, String message);
-    void gameAvailablePositionsUpdate(List<Integer> positions);
+
+
+    void gameComponentPickedFailed(String message);
+    void gameComponentPlacedFailed(String message);
+    void gameComponentRemovedFailed(String message);
+    void gameComponentRotatedFailed(String message);
+    void gameShipValidationFailed(String message);
+
+    void gamePlayerReadyForFlightSuccess(String message);
+    void gamePlayerReadyForFlightFailed(String message);
 }

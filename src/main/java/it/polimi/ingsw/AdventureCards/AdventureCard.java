@@ -49,6 +49,26 @@ public abstract class AdventureCard implements Serializable{
         return cost;
     }
 
+    /**
+     * Returns a description of what this adventure card does.
+     * To be overridden by specific card implementations.
+     * 
+     * @return A string describing the card's effects
+     */
+    public String getDescription() {
+        return "Adventure card with unknown effects.";
+    }
+
+    /**
+     * Returns the name of this adventure card.
+     * By default returns the simple class name.
+     * 
+     * @return The card's name
+     */
+    public String getName() {
+        return this.getClass().getSimpleName();
+    }
+
 }
 
 

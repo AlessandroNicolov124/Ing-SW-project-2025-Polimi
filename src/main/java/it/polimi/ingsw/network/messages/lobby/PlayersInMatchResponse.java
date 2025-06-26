@@ -12,24 +12,24 @@ public class PlayersInMatchResponse implements ResponseMessage {
     private final UUID matchId;
     private final List<String> playerNames;
     private final int hostId;
+    private final boolean success;
+    private final String errorMessage;
 
-    public PlayersInMatchResponse(UUID matchId, List<String> playerNames, int hostId) {
+    public PlayersInMatchResponse(UUID matchId, List<String> playerNames, int hostId, boolean success, String errorMessage) {
         this.matchId = matchId;
         this.playerNames = playerNames;
         this.hostId = hostId;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public List<String> getPlayerNames() {
-        return playerNames;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.playersInMatch(matchId, playerNames, hostId);
+        if (success) {
+            listener.playersInMatch(matchId, playerNames, hostId);
+        } else {
+            listener.playersInMatchFailed(errorMessage);
+        }
     }
     
 }

@@ -16,7 +16,7 @@ public interface LobbyManager {
 
     void unregisterUsername(int playerId);
     
-    GameMatch createMatch(String matchName, int hostId, String hostName);
+    GameMatch createMatch(String matchName, int playerId, String playerName, Difficulty difficulty);
     
     boolean joinMatch(UUID matchId, int playerId, String playerName);
     
@@ -45,6 +45,8 @@ public interface LobbyManager {
     List<GeneralClientIf> getClientsInMatch(UUID matchId);
     
     void broadcastToAll(ResponseMessage responseMessage);
+
+    void broadcastToAllExceptOne(ResponseMessage responseMessage, GeneralClientIf excludeClient);
     
     void multicastToMatch(UUID matchId, ResponseMessage responseMessage);
 

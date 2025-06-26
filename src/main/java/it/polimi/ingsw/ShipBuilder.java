@@ -52,12 +52,12 @@ public class ShipBuilder {
     public boolean placeComponent(Component component, Position position) {
         // Verifica se la posizione è già occupata
         if (isPositionOccupied(position)) {
-            System.out.println("  position occupied");
+            System.out.println("Position occupied");
             return false;
         }
 
-        // Se è il primo componente, deve essere posizionato nella posizione iniziale
-        if (components.isEmpty() && !position.equals(this.startingPosition)) {
+        if (!isPositionValid(position)) {
+            System.out.println("Position not valid on board");
             return false;
         }
         //TODO ALE: Cancellare
@@ -112,6 +112,7 @@ public class ShipBuilder {
 //        }
 
         // Posiziona il componente
+
         components.put(component, position);
         return true;
     }
@@ -162,6 +163,33 @@ public class ShipBuilder {
         return visited.size() != tempComponents.size();
     }
 
+
+    public boolean removeComponentAt(Position position) {
+        Component componentToRemove = null;
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            if (entry.getValue().equals(position)) {
+                componentToRemove = entry.getKey();
+                break;
+            }
+        }
+        
+        if (componentToRemove == null) {
+            System.out.println("[ShipBuilder] No component found at position " + position);
+            return false;
+        }
+        
+        // Se è la cabina iniziale, non può essere rimossa
+        if (componentToRemove instanceof Cabin && ((Cabin) componentToRemove).isStartingCabin()) {
+            System.out.println("[ShipBuilder] Cannot remove starting cabin at position " + position);
+            return false;
+        }
+        
+        // Rimuovi il componente
+        components.remove(componentToRemove);
+        System.out.println("[ShipBuilder] Component removed from position " + position);
+        return true;
+    }
+
     // Metodo per rimuovere un componente dalla nave
     public boolean removeComponent(Component component) {
         if (!components.containsKey(component)) {
@@ -181,87 +209,269 @@ public class ShipBuilder {
            default -> { /* Other components can be removed */ }
        }
 
+
+//        // Handle single component case
+        //TODO se è ultimo componente il giocatore perde
+//        if (components.size() == 1) {
+//            // Don't allow removing the only component if it's a starting cabin
+//            if (component.isStartingCabin()) {
+//                return false; // Cannot remove starting cabin
+//            }
+//            // Otherwise allow removal during ship building
+//            components.remove(component);
+//            return true;
+//        }
+
+        // For multiple components: check connectivity and cabin protection
+//        if (component.isStartingCabin()) {
+//            return false; // Never allow removing starting cabin
+//        }
+
+        //Check if removing this component would disconnect the ship
+        if (wouldDisconnectShip(component)) {
+            //TODO fare scegliere al giocatore quale parte della navicella tenere
+            return false; // Don't allow removal if it would disconnect the ship
+        }
+
         // Remove the component
         components.remove(component);
         return true;
     }
 
-    private boolean areAllComponentsConnected() {
+    // private boolean areAllComponentsConnected() {
+    //     if (components.isEmpty()) {
+    //         return true;
+    //     }
+
+    //     Set<Component> visited = new HashSet<>();
+    //     Queue<Component> queue = new LinkedList<>();
+
+    //     // Start BFS from the first component (should be starting cabin)
+    //     Component firstComponent = null;
+    //     for (Map.Entry<Component, Position> entry : components.entrySet()) {
+    //         if (entry.getKey() instanceof Cabin && ((Cabin) entry.getKey()).isStartingCabin()) {
+    //             firstComponent = entry.getKey();
+    //             break;
+    //         }
+    //     }
+        
+    //     // If no starting cabin, take the first component
+    //     if (firstComponent == null) {
+    //         firstComponent = components.keySet().iterator().next();
+    //     }
+        
+    //     queue.add(firstComponent);
+    //     visited.add(firstComponent);
+
+    //     while (!queue.isEmpty()) {
+    //         Component current = queue.poll();
+    //         Position currentPos = components.get(current);
+
+    //         // Check all adjacent positions
+    //         for (Direction direction : Direction.values()) {
+    //             Position adjacentPos = direction.getAdjacentPosition(currentPos);
+    //             Component adjacentComponent = getComponentAt(adjacentPos);
+
+    //             if (adjacentComponent != null && !visited.contains(adjacentComponent)) {
+    //                 // Verifica che i componenti siano effettivamente connessi
+    //                 if (current.canConnectTo(adjacentComponent, direction)) {
+    //                     visited.add(adjacentComponent);
+    //                     queue.add(adjacentComponent);
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     // If visited components count equals all components, all are connected
+    //     return visited.size() == components.size();
+    // }
+
+    // private List<String> getIllegalConnectorContacts() {
+    //     List<String> errors = new ArrayList<>();
+    //     Set<String>  alreadyReportedKeys = new HashSet<>();
+
+    //     for (var entry : components.entrySet()) {
+    //         Component c1 = entry.getKey();
+    //         Position  p1 = entry.getValue();
+
+    //         for (Direction dir : Direction.values()) {
+    //             Position  p2 = dir.getAdjacentPosition(p1);
+    //             Component c2 = getComponentAt(p2);
+    //             if (c2 == null)     
+    //                 continue;
+
+    //             Connector k1 = c1.getConnectorByDirection(dir);
+    //             Connector k2 = c2.getConnectorByDirection(dir.getOpposite());
+
+    //             /* ---- UNICA riga di test ---- */
+    //             boolean compatible = k1.isCompatibleWith(k2) && k2.isCompatibleWith(k1);
+
+    //             if (!compatible) {
+    //                 // chiave simmetrica per evitare doppioni
+    //                 String key = Stream.of(p1, p2)
+    //                                 .sorted(Comparator.comparing(Position::toString))
+    //                                 .map(Position::toString)
+    //                                 .collect(Collectors.joining("-"));
+
+    //                 if (alreadyReportedKeys.add(key)) {
+    //                     errors.add("Incompatible connectors between "
+    //                             + c1.getClass().getSimpleName() + " at " + p1
+    //                             + " and " + c2.getClass().getSimpleName() + " at " + p2);
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     return errors;
+    // }
+
+
+    private Position getNeighborPosition(Position pos, Direction direction) {
+        switch (direction) {
+            case NORTH:
+                return new Position(pos.getX(), pos.getY() - 1);
+            case SOUTH:
+                return new Position(pos.getX(), pos.getY() + 1);
+            case EAST:
+                return new Position(pos.getX() + 1, pos.getY());
+            case WEST:
+                return new Position(pos.getX() - 1, pos.getY());
+            default:
+                return pos;
+        }
+    }
+
+    private boolean areComponentsConnected(Component component1, Component component2, Direction directionFromComponent1) {
+        Connector connector1 = component1.getConnectorByDirection(directionFromComponent1);
+        Connector connector2 = component2.getConnectorByDirection(directionFromComponent1.getOpposite());
+        
+        if (connector1 == null || connector2 == null) {
+            return false;
+        }
+        
+        if (connector1.getConnectorType() instanceof NullConnectorType || 
+            connector2.getConnectorType() instanceof NullConnectorType) {
+            return false;
+        }
+        
+        return connector1.isCompatibleWith(connector2);
+    }
+
+    public String validateShip() {
         if (components.isEmpty()) {
-            return true;
+            return "The ship has no components!";
+        }
+
+        Component startingCabin = null;
+        Position startingPosition = null;
+        
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            if (entry.getKey().isStartingCabin()) {
+                startingCabin = entry.getKey();
+                startingPosition = entry.getValue();
+                break;
+            }
+        }
+
+        if (startingCabin == null) {
+            return "The ship must have a starting cabin!";
         }
 
         Set<Component> visited = new HashSet<>();
-        Queue<Component> queue = new LinkedList<>();
+        Set<Component> toVisit = new HashSet<>();
+        toVisit.add(startingCabin);
 
-        // Start BFS from the first component
-        Component firstComponent = components.keySet().iterator().next();
-        queue.add(firstComponent);
-        visited.add(firstComponent);
-
-        while (!queue.isEmpty()) {
-            Component current = queue.poll();
+        // BFS per trovare tutti i componenti connessi
+        while (!toVisit.isEmpty()) {
+            Component current = toVisit.iterator().next();
+            toVisit.remove(current);
+            
+            if (visited.contains(current)) {
+                continue;
+            }
+            
+            visited.add(current);
             Position currentPos = components.get(current);
-
-            // Check all adjacent positions
-            for (Direction direction : Direction.values()) {
-                Position adjacentPos = direction.getAdjacentPosition(currentPos);
-                Component adjacentComponent = getComponentAt(adjacentPos);
-
-                if (adjacentComponent != null && !visited.contains(adjacentComponent)) {
-                    if (current.canConnectTo(adjacentComponent, direction)) {
-                        visited.add(adjacentComponent);
-                        queue.add(adjacentComponent);
+            
+            // Controlla tutti i vicini
+            for (Direction dir : Direction.values()) {
+                Position neighborPos = getNeighborPosition(currentPos, dir);
+                Component neighbor = getComponentAt(neighborPos);
+                
+                if (neighbor != null && !visited.contains(neighbor)) {
+                    // Verifica che i componenti siano effettivamente connessi
+                    if (areComponentsConnected(current, neighbor, dir)) {
+                        toVisit.add(neighbor);
                     }
                 }
             }
         }
 
-        // If visited components count equals all components, all are connected
-        return visited.size() == components.size();
-    }
-
-    // Convalida la nave per assicurarsi che tutti i componenti necessari siano presenti
-    public boolean validateShip() {
-        if (components.isEmpty()) {
-            System.out.println("No components");
-            return false;
+        // Controlla se tutti i componenti sono stati visitati
+        if (visited.size() != components.size()) {
+            StringBuilder disconnected = new StringBuilder();
+            disconnected.append("The following components are not connected to the ship:\n");
+            
+            for (Map.Entry<Component, Position> entry : components.entrySet()) {
+                if (!visited.contains(entry.getKey())) {
+                    disconnected.append("- ")
+                            .append(entry.getKey().getClass().getSimpleName())
+                            .append(" at position ")
+                            .append(entry.getValue())
+                            .append("\n");
+                }
+            }
+            
+            return disconnected.toString();
         }
 
-        // 1. Check if all components are connected
-        if (!areAllComponentsConnected()) {
-            System.out.println("Components not connected");
-            return false;
+        // Verifica connessioni valide per ogni componente
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            Component comp = entry.getKey();
+            Position pos = entry.getValue();
+            
+            // Verifica che ogni connettore non-null abbia una connessione valida
+            for (Direction dir : Direction.values()) {
+                Connector connector = comp.getConnectorByDirection(dir);
+                
+                if (connector != null && !(connector.getConnectorType() instanceof NullConnectorType)) {
+                    Position neighborPos = getNeighborPosition(pos, dir);
+                    Component neighbor = getComponentAt(neighborPos);
+                    
+                    if (neighbor == null) {
+                        // C'è un connettore che punta verso il vuoto
+                        continue;
+                    } else {
+                        // Verifica che la connessione sia valida
+                        if (!areComponentsConnected(comp, neighbor, dir)) {
+                            return "Invalid connection between " + comp.getClass().getSimpleName() + 
+                                " at " + pos + " and " + neighbor.getClass().getSimpleName() + 
+                                " at " + neighborPos;
+                        }
+                    }
+                }
+            }
         }
 
-        // 2. Check for Cannon
-        boolean validationCannonFire = checkCannonFire();
+        // Verifica requisiti specifici dei componenti
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            Component comp = entry.getKey();
+            
+            if (comp instanceof Engine) {
+                Connector southConnector = comp.getConnectorByDirection(Direction.SOUTH);
+                if (southConnector == null || !(southConnector.getConnectorType() instanceof NullConnectorType)) {
+                    return "Engines must have their exhaust (south connector) pointing outward!";
+                }
+            }
+            
+            if (comp instanceof Cannon) {
+                Connector northConnector = comp.getConnectorByDirection(Direction.NORTH);
+                if (northConnector == null || !(northConnector.getConnectorType() instanceof NullConnectorType)) {
+                    return "Cannons must have their firing direction (north connector) pointing outward!";
+                }
+            }
+        }
 
-        // 3. Check for required components
-        //boolean hasEngine = components.keySet().stream().anyMatch(c -> c instanceof Engine);
-        //boolean hasCabin = components.keySet().stream().anyMatch(c -> c instanceof Cabin);
-        //isAssembled = hasEngine && hasCabin && validationCannonFire; // La nave è assemblata se ha almeno un motore e una cabina
-
-        long hasEngine = components.keySet().stream()
-                .flatMap(component -> switch (component) {
-                    case Engine e -> Stream.of(e);
-                    default -> Stream.empty();
-                })
-                .count();
-        long hasCabin = components.keySet().stream()
-                .flatMap(component -> switch (component) {
-                    case Cabin c -> Stream.of(c);
-                    default -> Stream.empty();
-                })
-                .count();
-
-        boolean validationEngineFire = checkEngineFire();
-
-        // La nave è assemblata se ha almeno un motore e una cabina
-        boolean isValid = hasEngine > 0 && hasCabin > 0 && validationEngineFire && validationCannonFire;
-
-        //System.out.println("Ship Validation: " + isValid);
-        return isValid;
+        return null;
     }
 
     public boolean checkCannonFire() {
@@ -834,12 +1044,15 @@ public class ShipBuilder {
     }
 
     public void rotateComponentOfShipClockwise(Component component) {
-        component = getComponentAt(components.get(component));
-        if (component != null) {
-            Direction newDirection = component.getComponentDirection().getClockwise();
-            component.setComponentDirection(newDirection);
+        Position componentPosition = components.get(component);
+        if (componentPosition == null) return;
+        
+        Component shipComponent = getComponentAt(componentPosition);
+        if (shipComponent != null) {
+            Direction newDirection = shipComponent.getComponentDirection().getClockwise();
+            shipComponent.setComponentDirection(newDirection);
 
-            List<Connector> connectors = component.getConnections();
+            List<Connector> connectors = shipComponent.getConnections();
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getClockwise();
                 connector.setDirection(newConnectorDirection);
@@ -862,12 +1075,15 @@ public class ShipBuilder {
     }
 
     public void rotateComponentOfShipCounterClockwise(Component component) {
-        component = getComponentAt(components.get(component));
-        if (component != null) {
-            Direction newDirection = component.getComponentDirection().getCounterClockwise();
-            component.setComponentDirection(newDirection);
+        Position componentPosition = components.get(component);
+        if (componentPosition == null) return;
+        
+        Component shipComponent = getComponentAt(componentPosition);
+        if (shipComponent != null) {
+            Direction newDirection = shipComponent.getComponentDirection().getCounterClockwise();
+            shipComponent.setComponentDirection(newDirection);
 
-            List<Connector> connectors = component.getConnections();
+            List<Connector> connectors = shipComponent.getConnections();
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
                 connector.setDirection(newConnectorDirection);
@@ -890,12 +1106,15 @@ public class ShipBuilder {
     }
 
     public void rotateComponentOfShipOpposite(Component component) {
-        component = getComponentAt(components.get(component));
-        if (component != null) {
-            Direction newDirection = component.getComponentDirection().getOpposite();
-            component.setComponentDirection(newDirection);
+        Position componentPosition = components.get(component);
+        if (componentPosition == null) return;
+        
+        Component shipComponent = getComponentAt(componentPosition);
+        if (shipComponent != null) {
+            Direction newDirection = shipComponent.getComponentDirection().getOpposite();
+            shipComponent.setComponentDirection(newDirection);
 
-            List<Connector> connectors = component.getConnections();
+            List<Connector> connectors = shipComponent.getConnections();
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getOpposite();
                 connector.setDirection(newConnectorDirection);

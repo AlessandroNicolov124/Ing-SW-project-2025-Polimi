@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="it.polimi.ingsw.GUI.Controllers.FlightBoardController">
+    <center>
+        <AnchorPane fx:id="anchorPane" prefWidth="1055" prefHeight="639" minWidth="1055" minHeight="639" maxWidth="1055" maxHeight="639">
+        </AnchorPane>
+    </center>
+
+    <bottom>
+        <VBox spacing="10" alignment="CENTER">
+            <HBox alignment="CENTER" spacing="20">
+
+                <Button fx:id="PickCard" text="Pick Card" onAction="#PickAdventureCardFromSrv"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

@@ -6,9 +6,9 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.UUID;
 
-import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.RotationType;
 
@@ -27,16 +27,16 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     void showUpdate(ResponseMessage message) throws RemoteException;
 
     @Override
-    void validateShip() throws RemoteException;
+    void validateShip(int playerId) throws RemoteException;
 
     @Override
-    void rotateComponent(Position position, RotationType rotationType) throws RemoteException;
+    void rotateComponent(int playerId, Position position, RotationType rotationType) throws RemoteException;
 
     @Override
-    Component pickComponentCard(int playerId) throws RemoteException;
+    void pickComponentCard(int playerId) throws RemoteException;
 
     @Override
-    void createMatch(String matchName, int playerId, String username) throws RemoteException;
+    void createMatch(String matchName, int playerId, String username, Difficulty difficulty) throws RemoteException;
 
     @Override
     void getAvailableMatches() throws RemoteException;
@@ -55,5 +55,12 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
 
     @Override
     void playerReady(UUID matchId, int playerId) throws RemoteException;
+    
+    @Override
+    void pickAdventureCard(int currentPlayer) throws RemoteException;
+
+    void selectCabinColor(String color, int playerId) throws RemoteException;
+
+    void readyForFlight(UUID matchId, int playerId) throws RemoteException;
 
 }

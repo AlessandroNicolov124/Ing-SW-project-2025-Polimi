@@ -9,6 +9,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static it.polimi.ingsw.network.Difficulty.LEVEL_2;
+
 public class LobbyHandler {
     private final GeneralClientIf simpleClient;
     private final ConsoleManager console;
@@ -146,7 +148,7 @@ public class LobbyHandler {
             return;
         }
         console.printMessage("Creating match: " + matchName);
-        simpleClient.createMatch(matchName, playerId, username);
+        simpleClient.createMatch(matchName, playerId, username, LEVEL_2);
     }
 
     private void joinMatch() throws Exception {

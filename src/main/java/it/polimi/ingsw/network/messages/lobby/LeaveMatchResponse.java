@@ -11,23 +11,15 @@ public class LeaveMatchResponse implements ResponseMessage {
     private final UUID matchId;
     private final String playerName;
     private final int playerId;
+    private final boolean success;
+    private final String errorMessage;
 
-    public LeaveMatchResponse(UUID matchId, int playerId, String playerName) {
+    public LeaveMatchResponse(UUID matchId, int playerId, String playerName, Boolean success, String errorMessage) {
         this.matchId = matchId;
         this.playerName = playerName;
         this.playerId = playerId;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public String getPlayerName() {
-        return playerName;
-    }
-
-    public int getPlayerId() {
-        return playerId;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override

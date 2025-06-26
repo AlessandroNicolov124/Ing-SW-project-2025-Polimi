@@ -1,6 +1,8 @@
 package it.polimi.ingsw.view.tui.components;
 
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -10,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
@@ -77,6 +80,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case SHIP_BUILDING        -> handleShipBuildingState();
                 //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
+                case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
                 case TERMINATED           -> { return; }
             }
@@ -274,8 +278,19 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         activeShipBuildingHandler.manageShipBuilding();
         activeShipBuildingHandler = null;
 
-        console.printMessage("Ship building complete. Proceeding to choose starting position...");
-        state = TuiState.CHOOSE_START_POSITION;
+        console.printMessage("Ship building phase completed.");
+        
+        // If we're still in SHIP_BUILDING state (e.g., due to DEBUGSKIP or quit),
+        // transition to the next appropriate state
+        if (state == TuiState.SHIP_BUILDING) {
+            console.printMessage("Transitioning to position assignment...");
+            // Don't assign position locally - let the server handle it based on completion order
+            console.printMessage("Waiting for position assignment based on completion order...");
+            state = TuiState.CHOOSE_START_POSITION;
+        }
+        
+        // Note: For normal validation, state transition to CHOOSE_START_POSITION 
+        // happens in shipValidated() callback when the server confirms the ship is valid
     }
 
 //     private void handleChooseStartPositionState() {
@@ -358,12 +373,48 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 //     }
 
     private void handleWaitForAllPlayersPositionedState() {
-        console.printMessage("Waiting for all players to choose their positions...");
-        try {
-            Thread.sleep(2000); // Small sleep to prevent tight loop
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
+        console.printMessage("Your ship has been validated and you have been assigned a position.");
+        console.printMessage("Waiting for other players to complete ship building...");
+        console.printMessage("Adventure cards will be picked once all players are ready.");
+        console.printMessage("Type 'status' to check current state or 'help' for available commands.");
+        
+        while (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+            String input = console.pollCommand(2000); // 2 second timeout
+            
+            if (input != null) {
+                input = input.trim().toLowerCase();
+                switch (input) {
+                    case "status":
+                        console.printMessage("Current state: Waiting for all players to complete ship building");
+                        if (currentPlayer != null) {
+                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                        }
+                        console.printMessage("Once all players are positioned, the adventure card phase will begin.");
+                        break;
+                    case "help":
+                        console.printMessage("Available commands:");
+                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  skip   - Skip waiting (debug only)");
+                        console.printMessage("  quit   - Exit the game");
+                        break;
+                    case "skip":
+                        console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to adventure phase...");
+                        state = TuiState.ADVENTURE_PHASE;
+                        break;
+                    case "quit":
+                        console.printMessage("Exiting game...");
+                        state = TuiState.TERMINATED;
+                        return;
+                    default:
+                        console.printMessage("Unknown command: " + input + ". Type 'help' for available commands.");
+                        break;
+                }
+            }
         }
+        
+        // Add a fallback timeout to prevent infinite waiting
+        // In a real implementation, this would be removed and proper server communication would handle state transitions
     }
 
     /**
@@ -389,6 +440,50 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
         } else {
             console.printMessage("Waiting for more players to choose their positions...");
+                }
+    }
+
+    private void handleAdventurePhaseState() {
+        console.printMessage("\n=== ADVENTURE CARD PHASE ===");
+        console.printMessage("Players pick adventure cards in position order (1st, 2nd, 3rd, 4th)");
+        console.printMessage("Wait for your turn or type 'status' to check current state");
+        
+        while (state == TuiState.ADVENTURE_PHASE) {
+            String cmd = console.pollCommand(1000); // Poll with timeout
+            
+            if (cmd != null) {
+                cmd = cmd.trim().toLowerCase();
+                switch (cmd) {
+                    case "pick":
+                        // Try to pick an adventure card
+                        try {
+                            client.pickAdventureCard(currentPlayer.getId());
+                            console.printMessage("Adventure card pick request sent. Waiting for response...");
+                        } catch (Exception e) {
+                            console.printError("Error picking adventure card: " + e.getMessage());
+                        }
+                        break;
+                    case "status":
+                        if (currentPlayer != null) {
+                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                            console.printMessage("Game state: Adventure Phase - picking cards in position order");
+                        }
+                        break;
+                    case "help":
+                        console.printMessage("Available commands:");
+                        console.printMessage("  pick   - Pick an adventure card (only when it's your turn)");
+                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  quit   - Exit the game");
+                        break;
+                    case "quit":
+                        console.printMessage("Exiting game...");
+                        state = TuiState.TERMINATED;
+                        return;
+                    default:
+                        console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
+                        break;
+                }
+            }
         }
     }
 
@@ -416,12 +511,27 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         //TODO implement actual method
     }
 
+    @Override
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
+
+    }
+
+    @Override
+    public void matchCreatedFailed(String errorMessage) {
+
+    }
+
     public boolean notifyNewPlayerPosition(int playerId, int position) {
         //TODO implement actual method
         return true;
     }
 
-    
+    @Override
+    public void notifyNewPlayerPositionFailed(String errorMessage) {
+
+    }
+
+
     /**
      * Called by PositionResponseMessage to handle position selection response
      */
@@ -454,14 +564,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     /**
      * Called by network messages to update available positions display
      */
-    // public void showAvailablePositions(List<Integer> positions) {
-    //     this.availablePositions = positions;
-    //     if (positions.isEmpty()) {
-    //         console.printMessage("No positions available currently. Please wait...");
-    //     } else {
-    //         console.printMessage("Available positions: " + positions);
-    //     }
-    // }
+
+    public void showAvailablePositions(List<Integer> positions) {
+        this.availablePositions = positions;
+        if (positions == null || positions.isEmpty()) {
+            console.printMessage("No positions available currently.");
+        } else {
+            console.printMessage("Available positions: " + positions);
+        }
+    }
     
     /**
      * Called by PositionUpdateMessage to update a player's position
@@ -502,21 +613,26 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (currentPlayer != null && currentPlayer.getShip() != null) {
                 boolean placed = currentPlayer.getShip().placeComponent(component, position);
-                if (placed) {
-                    console.printMessage("✓ Component " + component.getClass().getSimpleName() + 
-                                    " placed at (" + position.getX() + "," + position.getY() + ")");
-                    displayRefresh();
-                    
-                    // Clear current component in handler
-                    if (activeShipBuildingHandler != null) {
-                        activeShipBuildingHandler.componentPlacedSuccessfully();
-                        // Don't show menu here - it will be shown in the main loop
-                    }
-                } else {
-                    console.printError("✗ Failed to update local ship model");
+                // Note: Success message is handled by PlaceComponentResponse
+                // Only update the ship model here, display refresh will be called separately
+                if (!placed) {
+                    console.printError("✗ Failed to place component " + component.getClass().getSimpleName() + 
+                                     " at (" + position.getX() + "," + position.getY() + ") locally");
                 }
+            } else {
+                console.printError("✗ Cannot place component: player or ship not available");
+            }
+            
+            // Show menu again after component placement if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
+    }
+
+    @Override
+    public void componentPlacedFailed(String errorMessage) {
+
     }
 
     @Override
@@ -526,18 +642,32 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 Component removed = currentPlayer.getShip().getComponentAt(position);
                 if (removed != null) {
                     currentPlayer.getShip().removeComponent(removed);
-                    console.printMessage("✓ Component removed from (" + position.getX() + "," + position.getY() + ")");
-                    displayRefresh();
+                    console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
                 }
             }
             
-            if (activeShipBuildingHandler != null) {
+            // Show menu again after component removal if we're in ship building mode
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
                 activeShipBuildingHandler.refreshMenuDisplay();
             }
         }
     }
 
     @Override
+    public void componentRemovedFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
+
+    }
+
+    @Override
+    public void componentRotatedFailed(String errorMessage) {
+
+    }
+
     public void componentRotated(Position position, RotationType rotationType) {
         synchronized (displayMutex) {
             console.printMessage("Component at (" + position.getX() + "," + position.getY() + 
@@ -551,25 +681,32 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             if (isValid) {
                 console.printMessage("✓ " + message);
                 if (state == TuiState.SHIP_BUILDING) {
-                    //state = TuiState.NEXT_STATE; // to be defined
+                    console.printMessage("Ship building complete. Position assigned. Waiting for all players to finish...");
+                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED; // Wait for all players
+                } else if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+                    console.printMessage("Position assigned. Waiting for all players to finish...");
+                    // Stay in the same state - wait for adventure phase start message
                 }
             } else {
                 console.printError("✗ " + message);
+                // If validation failed, go back to ship building
+                if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
+                    console.printMessage("Returning to ship building...");
+                    state = TuiState.SHIP_BUILDING;
+                }
             }
         }
     }
 
     @Override
+    public void shipValidationFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playerCreated(int playerId, String username) {
         this.currentPlayer = new Player(playerId, username, true);
-        
-        // // Set the local player in the client so it can track the player ID for requests
-        // try {
-        //     client.setLocalPlayer(currentPlayer);
-        // } catch (Exception e) {
-        //     console.printError("Failed to set local player in client: " + e.getMessage());
-        // }
-        
+
         //console.printMessage("Player created successfully: " + username + " (ID: " + playerId + ")");
         lobbyHandler = new LobbyHandler(console, client, playerId, currentPlayer.getNickName());
         playerCreationFuture.complete(currentPlayer);
@@ -585,15 +722,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     }
 
-    @Override
+
     public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
         lobbyHandler.matchCreatedCallback(matchName, matchId, true, playerName, playerId);
         this.state = TuiState.WAIT_IN_MATCH;
     }
 
-    @Override
+
     public void updateAvailableMatches(List<String> matches) {
         lobbyHandler.setAvailableMatches(matches);
+    }
+
+    @Override
+    public void updateAvailableMatchesFailed(String errorMessage) {
+
     }
 
     @Override
@@ -606,13 +748,28 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void playerJoinedMatchFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playerLeftMatch(UUID matchId, int playerId, String playerName) {
         lobbyHandler.playerLeftMatchCallback(matchId, playerId, playerName);
     }
 
     @Override
+    public void playerLeftMatchFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void updateHost(UUID matchId, int playerId, String playerName) {
         lobbyHandler.updateHostCallback(matchId, playerId, playerName);
+    }
+
+    @Override
+    public void updateHostFailed(String errorMessage) {
+
     }
 
     @Override
@@ -623,8 +780,23 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void matchStartFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void loadingAckResponseFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playersInMatch(UUID matchId, List<String> playerNames, int hostId) {
         lobbyHandler.playersInMatchCallback(matchId, playerNames, hostId);
+    }
+
+    @Override
+    public void playersInMatchFailed(String errorMessage) {
+
     }
 
 
@@ -635,8 +807,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
+    public void loadingStatusFailed(String errorMessage) {
+
+    }
+
+    @Override
     public void playerReady(UUID matchId, int readyPlayers, int totalPlayers) {
         lobbyHandler.playerReadyCallback(matchId, readyPlayers, totalPlayers);
+    }
+
+    @Override
+    public void playerReadyFailed(String errorMessage) {
+
     }
 
     @Override
@@ -655,12 +837,17 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
-
     @Override
-    public void showAvailablePositions(List<Integer> positions) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
+    public void shipBuildingStartFailed(String errorMessage) {
+
     }
+
+
+
+//    public void showAvailablePositions(List<Integer> positions) {
+//        // TODO Auto-generated method stub
+//        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
+//    }
 
     @Override
     public void componentPicked(int playerId, Component component, boolean success, String message) {
@@ -669,6 +856,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             if (currentPlayer != null && currentPlayer.getId() == playerId) {
                 if (success && component != null) {
                     console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
+                    // Pass the component to the ship building handler if it's active
                     if (activeShipBuildingHandler != null) {
                         if (activeShipBuildingHandler.getCurrentComponent() == null) {
                             activeShipBuildingHandler.setCurrentComponent(component);
@@ -684,6 +872,152 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
             // Ignore responses for other players
         }
+    }
+
+    @Override
+    public void componentPickFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+        synchronized (displayMutex) {
+            console.printMessage("[DEBUG] Adventure card response received: playerId=" + playerId + ", success=" + success + ", message=" + message + ", adventureCard=" + (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+            
+            if (success && adventureCard != null) {
+                // Find player name for display
+                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                    "You" : "Player " + playerId;
+                
+                console.printMessage("✓ " + playerName + " picked adventure card: " + adventureCard.getName());
+                
+                // Show detailed card information if it's the current player's card
+                if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                    displayAdventureCard(adventureCard);
+                    adventureCard.effect();
+                } else {
+                    // For other players, just show basic info
+                    console.printMessage("Description: " + adventureCard.getDescription());
+                }
+                
+                // Check if there's a next player or if phase is complete
+                if (nextPlayerTurn == -1) {
+                    console.printMessage("All players have picked their adventure cards. Proceeding to main game...");
+                    state = TuiState.RUNNING;
+                } else {
+                    if (currentPlayer != null && currentPlayer.getId() == nextPlayerTurn) {
+                        console.printMessage("It's your turn to pick an adventure card! Type 'pick' to draw a card.");
+                    } else {
+                        console.printMessage("Waiting for Player " + nextPlayerTurn + " to pick their adventure card...");
+                    }
+                }
+            } else {
+                console.printError("✗ Failed to pick adventure card: " + message);
+            }
+        }
+    }
+
+    /**
+     * Displays detailed information about an adventure card
+     */
+    private void displayAdventureCard(it.polimi.ingsw.AdventureCards.AdventureCard adventureCard) {
+        console.printMessage("\n╔══════════════════════════════════════════════════════════════════════╗");
+        console.printMessage("║                        ADVENTURE CARD DRAWN                         ║");
+        console.printMessage("╠══════════════════════════════════════════════════════════════════════╣");
+        console.printMessage("║ Card Name: " + String.format("%-55s", adventureCard.getName()) + " ║");
+        console.printMessage("║                                                                      ║");
+
+        // Split description into multiple lines if it's too long
+        String description = adventureCard.getDescription();
+        String[] descriptionLines = wrapText(description, 68);
+        console.printMessage("║ Description:                                                         ║");
+        for (String line : descriptionLines) {
+            console.printMessage("║ " + String.format("%-68s", line) + " ║");
+        }
+
+        console.printMessage("║                                                                      ║");
+
+        // Show additional properties if available
+        if (adventureCard.getDuration() > 1) {
+            console.printMessage("║ Duration: " + String.format("%-59s", adventureCard.getDuration() + " rounds") + " ║");
+        }
+        if (adventureCard.getCost() > 0) {
+            console.printMessage("║ Cost: " + String.format("%-63s", adventureCard.getCost() + " credits") + " ║");
+        }
+
+        console.printMessage("╚══════════════════════════════════════════════════════════════════════╝");
+        console.printMessage("");
+    }
+
+    /**
+     * Wraps text to fit within specified width
+     */
+    private String[] wrapText(String text, int maxWidth) {
+        if (text.length() <= maxWidth) {
+            return new String[]{text};
+        }
+
+        java.util.List<String> lines = new java.util.ArrayList<>();
+        String[] words = text.split(" ");
+        StringBuilder currentLine = new StringBuilder();
+
+        for (String word : words) {
+            if (currentLine.length() + word.length() + 1 <= maxWidth) {
+                if (currentLine.length() > 0) {
+                    currentLine.append(" ");
+                }
+                currentLine.append(word);
+            } else {
+                if (currentLine.length() > 0) {
+                    lines.add(currentLine.toString());
+                    currentLine = new StringBuilder(word);
+                } else {
+                    // Word is longer than maxWidth, just add it anyway
+                    lines.add(word);
+                }
+            }
+        }
+
+        if (currentLine.length() > 0) {
+            lines.add(currentLine.toString());
+        }
+
+        return lines.toArray(new String[0]);
+    }
+
+    @Override
+    public void cabinColorSelected(String color) {
+
+    }
+
+    @Override
+    public void cabinColorSelectionFailed(String errorMsg) {
+
+    }
+
+    @Override
+    public void flightPreparationStart(UUID matchId) {
+
+    }
+
+    @Override
+    public void flightPreparationStartFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid) {
+
+    }
+
+    @Override
+    public void playerReadyForFlightFailed(String errorMessage) {
+
+    }
+
+    @Override
+    public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
+
     }
 
 

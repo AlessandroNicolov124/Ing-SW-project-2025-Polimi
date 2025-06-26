@@ -11,23 +11,23 @@ public class ShipBuildingStartResponse implements ResponseMessage {
 
     private final UUID matchId;
     private final int readyPlayers;
+    private final boolean success;
+    private final String errorMessage;
     
-    public ShipBuildingStartResponse(UUID matchId, int readyPlayers) {
+    public ShipBuildingStartResponse(UUID matchId, int readyPlayers, boolean success, String errorMessage) {
         this.matchId = matchId;
         this.readyPlayers = readyPlayers;
-    }
-
-    public UUID getMatchId() {
-        return matchId;
-    }
-
-    public int getReadyPlayers() {
-        return readyPlayers;
+        this.success = success;
+        this.errorMessage = errorMessage;
     }
 
     @Override
     public void handleClient(GameListener listener) {
-        listener.shipBuildingStart(matchId, readyPlayers);
+        if (success) {
+            listener.shipBuildingStart(matchId, readyPlayers);
+        } else {
+            listener.shipBuildingStartFailed(errorMessage);
+        }
     }
     
 }
