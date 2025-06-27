@@ -310,6 +310,15 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
+        // Only the leading player (position 1) can pick adventure cards
+        int leadingPlayerId = match.getFirstPlayerToAct();
+        if (currentPlayer != leadingPlayerId) {
+            System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + currentPlayer + " is not the leader (ID: " + leadingPlayerId + ")");
+            showUpdate(new PickAdventureCardResponse(
+                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1));
+            return;
+        }
+
         GameController controller = match.getController();
         Player player = controller.getPlayerById(currentPlayer);
         if (player == null) {
@@ -319,17 +328,17 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
-        // Pick adventure card using the controller
+        // Pick adventure card using the controller - only for the leading player
         controller.pickCardForPlayer(player);
         it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
-        // Determine next player's turn (this is simplified - you may want more complex logic)
-        int nextPlayerTurn = match.getNextPlayerTurnForAdventure(currentPlayer);
-
-        System.out.println("[ServerSocket] Adventure card pick for player " + currentPlayer + ": " +
+        System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+
+        // Adventure phase is complete after the leading player picks
+        int nextPlayerTurn = -1; // No next player since only leader picks
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),

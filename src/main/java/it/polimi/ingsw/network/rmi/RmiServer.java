@@ -445,6 +445,16 @@ public class RmiServer extends UnicastRemoteObject
                     playerId, null, false, "Match not in progress", -1));
             return;
         }
+
+        // Only the leading player (position 1) can pick adventure cards
+        int leadingPlayerId = match.getFirstPlayerToAct();
+        if (playerId != leadingPlayerId) {
+            System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
+            client.showUpdate(new PickAdventureCardResponse(
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1));
+            return;
+        }
+
         GameController controller = match.getController();
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
@@ -453,17 +463,17 @@ public class RmiServer extends UnicastRemoteObject
                     playerId, null, false, "Player not found", -1));
             return;
         }
-        // Pick adventure card using the controller
+        // Pick adventure card using the controller - only for the leading player
         controller.pickCardForPlayer(player);
         it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
-        // Determine next player's turn
-        int nextPlayerTurn = match.getNextPlayerTurnForAdventure(playerId);
-
-        System.out.println("[ServerRMI] Adventure card pick for player " + playerId + ": " +
+        System.out.println("[ServerRMI] Adventure card pick by leading player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+
+        // Adventure phase is complete after the leading player picks
+        int nextPlayerTurn = -1; // No next player since only leader picks
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),

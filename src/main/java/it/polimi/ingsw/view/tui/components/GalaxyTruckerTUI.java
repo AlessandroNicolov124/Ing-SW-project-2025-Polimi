@@ -374,11 +374,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
         console.printMessage("Your ship has been validated and you have been assigned a position!");
         console.printMessage("Positions are assigned based on completion order:");
-        console.printMessage("  • 1st to finish → Position 1 (picks adventure card first)");
-        console.printMessage("  • 2nd to finish → Position 2 (picks adventure card second)");
-        console.printMessage("  • 3rd to finish → Position 3 (picks adventure card third)");
-        console.printMessage("  • 4th to finish → Position 4 (picks adventure card last)");
+        console.printMessage("  • 1st to finish → Position 1 (LEADING PLAYER - picks adventure card for everyone)");
+        console.printMessage("  • 2nd to finish → Position 2");
+        console.printMessage("  • 3rd to finish → Position 3");
+        console.printMessage("  • 4th to finish → Position 4");
         console.printMessage("");
+        console.printMessage("IMPORTANT: Only the leading player (position 1) will pick adventure cards!");
         console.printMessage("Waiting for other players to complete ship building...");
         console.printMessage("Adventure phase will start once all players are positioned.");
         console.printMessage("Type 'status' to check current state or 'help' for available commands.");
@@ -448,8 +449,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private void handleAdventurePhaseState() {
         console.printMessage("\n=== ADVENTURE CARD PHASE ===");
-        console.printMessage("Players pick adventure cards in position order (1st, 2nd, 3rd, 4th)");
-        console.printMessage("Wait for your turn or type 'status' to check current state");
+        console.printMessage("Only the leading player (position 1) can pick adventure cards for everyone");
+        console.printMessage("Wait for the leader to pick or type 'status' to check current state");
         
         while (state == TuiState.ADVENTURE_PHASE) {
             String cmd = console.pollCommand(1000); // Poll with timeout
@@ -458,7 +459,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 cmd = cmd.trim().toLowerCase();
                 switch (cmd) {
                     case "pick":
-                        // Try to pick an adventure card
+                        // Try to pick an adventure card (only leader can)
                         try {
                             client.pickAdventureCard(currentPlayer.getId());
                             console.printMessage("Adventure card pick request sent. Waiting for response...");
@@ -469,12 +470,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     case "status":
                         if (currentPlayer != null) {
                             console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
-                            console.printMessage("Game state: Adventure Phase - picking cards in position order");
+                            console.printMessage("Game state: Adventure Phase - only leader can pick cards");
                         }
                         break;
                     case "help":
                         console.printMessage("Available commands:");
-                        console.printMessage("  pick   - Pick an adventure card (only when it's your turn)");
+                        console.printMessage("  pick   - Pick an adventure card (only if you are the leader)");
                         console.printMessage("  status - Show current game status");
                         console.printMessage("  quit   - Exit the game");
                         break;
@@ -908,28 +909,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
                     "You" : "Player " + playerId;
                 
-                console.printMessage("✓ " + playerName + " picked adventure card: " + adventureCard.getName());
+                console.printMessage("✓ The leading player " + playerName + " picked adventure card: " + adventureCard.getName());
                 
-                // Show detailed card information if it's the current player's card
-                if (currentPlayer != null && currentPlayer.getId() == playerId) {
-                    displayAdventureCard(adventureCard);
-                    adventureCard.effect();
-                } else {
-                    // For other players, just show basic info
-                    console.printMessage("Description: " + adventureCard.getDescription());
-                }
+                // Show detailed card information for everyone
+                displayAdventureCard(adventureCard);
+                adventureCard.effect();
                 
-                // Check if there's a next player or if phase is complete
-                if (nextPlayerTurn == -1) {
-                    console.printMessage("All players have picked their adventure cards. Proceeding to main game...");
-                    state = TuiState.RUNNING;
-                } else {
-                    if (currentPlayer != null && currentPlayer.getId() == nextPlayerTurn) {
-                        console.printMessage("It's your turn to pick an adventure card! Type 'pick' to draw a card.");
-                    } else {
-                        console.printMessage("Waiting for Player " + nextPlayerTurn + " to pick their adventure card...");
-                    }
-                }
+                // Adventure phase is complete after the leading player picks
+                console.printMessage("Adventure card phase complete. Proceeding to main game...");
+                state = TuiState.RUNNING;
             } else {
                 console.printError("✗ Failed to pick adventure card: " + message);
             }
@@ -1054,12 +1042,13 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
             
             console.printMessage("======================\n");
+            console.printMessage("ADVENTURE CARD RULE: Only the leading player (position 1) picks adventure cards for everyone!");
             
-            // Check if it's our turn to pick first
+            // Check if we are the leader
             if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
-                console.printMessage("It's your turn to pick an adventure card! Type 'pick' to draw a card.");
+                console.printMessage("You are the leading player! Type 'pick' to draw an adventure card for all players.");
             } else {
-                console.printMessage("Waiting for Player " + firstPlayerToAct + " (position 1) to pick the first adventure card...");
+                console.printMessage("Waiting for the leading player (position 1) to pick an adventure card...");
             }
             
             // Transition to adventure phase
