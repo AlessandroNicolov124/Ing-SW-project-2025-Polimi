@@ -731,4 +731,16 @@ public class AppContext implements GameListener {
 
     }
 
+    @Override
+    public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
+        Platform.runLater(() -> {
+            System.out.println("Adventure phase complete - Game: " + gameComplete + ", Reason: " + completionReason);
+            showInfoMessage("Adventure Phase Complete", completionReason);
+            
+            if (gameComplete) {
+                showInfoMessage("Game Over", "The game has ended! " + completionReason);
+            }
+        });
+    }
+
 }

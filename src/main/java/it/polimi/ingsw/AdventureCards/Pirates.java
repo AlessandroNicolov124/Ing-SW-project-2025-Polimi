@@ -62,8 +62,8 @@ public class Pirates extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel) {
+        fightPirates(gameModel);
     }
 
     @Override
