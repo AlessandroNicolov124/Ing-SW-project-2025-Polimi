@@ -5,8 +5,11 @@ package it.polimi.ingsw.Components;
  * Cargo can be of different types, such as BlueCargo, RedCargo, GreenCargo, and YellowCargo.
  * Each type of cargo has a specific value associated with it.
  */
-public sealed abstract class Cargo
+public sealed abstract class Cargo implements java.io.Serializable
+
     permits BlueCargo, RedCargo, GreenCargo, YellowCargo {
+
+    private static final long serialVersionUID = 1L;
 
     private final int value;
 

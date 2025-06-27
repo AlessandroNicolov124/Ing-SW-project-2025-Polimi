@@ -31,6 +31,8 @@ public interface GameListener {
     boolean notifyNewPlayerPosition(int playerId, int position);
     void notifyNewPlayerPositionFailed(String errorMessage);
 
+    void positionAssigned(int playerId, String playerName, int assignedPosition, boolean success, String message);
+
     void printTextMsg(String message);
 
     void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty);

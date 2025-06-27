@@ -292,9 +292,10 @@ public class Pirates extends AdventureCard {
     }
 
     /**
-     * Inner class to represent a meteor
+     * Inner class to represent a pirate cannon
      */
-    public static class PiratesCannon {
+    public static class PiratesCannon implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private CannonSize size;
         private Direction direction;
 
