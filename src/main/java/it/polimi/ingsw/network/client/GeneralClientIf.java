@@ -45,5 +45,7 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void readyForFlight(UUID matchId, int playerId) throws Exception;
 
+    void getPlayersOrderForFlightboard(UUID matchId, int playerId);
+
 
 }

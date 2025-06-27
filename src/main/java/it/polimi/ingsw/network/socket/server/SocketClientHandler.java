@@ -600,7 +600,10 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         }
     }
 
+    @Override
+    public void getPlayersOrderForFlightboard(UUID matchId, int playerId) {
 
+    }
 
 
 }

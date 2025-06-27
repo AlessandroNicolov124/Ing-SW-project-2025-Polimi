@@ -137,6 +137,10 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     }
 
     @Override
+    public void getPlayersOrderForFlightboard(UUID matchId, int playerId) {
+    }
+
+    @Override
     public void pickAdventureCard(int currentPlayer) throws RemoteException {
 //        if (localPlayer == null) {
 //            throw new IllegalStateException("Cannot pick adventure card: local player not set");
