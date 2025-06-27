@@ -488,6 +488,24 @@ public class RmiServer extends UnicastRemoteObject
             match.getPlayersValidated().put(playerId, true);
             match.recordPlayerValidation(playerId);
             
+            // Assign position based on completion order
+            int assignedPosition = match.assignPlayerPosition(playerId);
+            if (assignedPosition > 0) {
+                // Notify all players about the position assignment
+                String positionMessage = player.getNickName() + " finished building and got position " + assignedPosition;
+                lobbyManager.multicastToMatch(match.getMatchId(), 
+                    new it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse(
+                        playerId, player.getNickName(), assignedPosition, true, positionMessage));
+                
+                // Check if all players have been positioned and start adventure phase
+                if (match.allPlayersPositioned()) {
+                    int firstPlayerToAct = match.getFirstPlayerToAct();
+                    lobbyManager.multicastToMatch(match.getMatchId(),
+                        new it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse(
+                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+                }
+            }
+            
         } else {
             String validationErrors = controller.getShipValidationErrors(player);
             detailedMessage = "Ship validation failed with the following issues:\n\n" + validationErrors;

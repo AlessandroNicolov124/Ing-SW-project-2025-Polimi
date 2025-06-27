@@ -133,7 +133,10 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void pickAdventureCard(int currentPlayer) throws Exception {
-
+        synchronized (out) {
+            out.writeObject(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest(currentPlayer));
+            out.flush();
+        }
     }
 
     @Override

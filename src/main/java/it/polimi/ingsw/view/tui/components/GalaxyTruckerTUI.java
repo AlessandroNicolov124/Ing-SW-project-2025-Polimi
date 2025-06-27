@@ -78,7 +78,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case LOADING              -> handleLoadingMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
-                //case CHOOSE_START_POSITION -> handleChooseStartPositionState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
@@ -280,17 +279,16 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
         console.printMessage("Ship building phase completed.");
         
-        // If we're still in SHIP_BUILDING state (e.g., due to DEBUGSKIP or quit),
-        // transition to the next appropriate state
+        // If we're still in SHIP_BUILDING state after handler completes (e.g., due to DEBUGSKIP),
+        // provide a fallback transition to waiting state for debugging
         if (state == TuiState.SHIP_BUILDING) {
-            console.printMessage("Transitioning to position assignment...");
-            // Don't assign position locally - let the server handle it based on completion order
-            console.printMessage("Waiting for position assignment based on completion order...");
-            state = TuiState.CHOOSE_START_POSITION;
+            console.printMessage("[DEBUG] Ship building ended without validation. Transitioning to waiting state...");
+            console.printMessage("[DEBUG] Note: Position assignment may happen when validation response arrives.");
+            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
         }
         
-        // Note: For normal validation, state transition to CHOOSE_START_POSITION 
-        // happens in shipValidated() callback when the server confirms the ship is valid
+        // Normal state transitions are handled by the server's position assignment system
+        // via shipValidated() and positionAssigned() callbacks
     }
 
 //     private void handleChooseStartPositionState() {
@@ -374,9 +372,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private void handleWaitForAllPlayersPositionedState() {
         console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
-        console.printMessage("Your ship has been validated and you have been assigned a position.");
+        console.printMessage("Your ship has been validated and you have been assigned a position!");
+        console.printMessage("Positions are assigned based on completion order:");
+        console.printMessage("  • 1st to finish → Position 1 (picks adventure card first)");
+        console.printMessage("  • 2nd to finish → Position 2 (picks adventure card second)");
+        console.printMessage("  • 3rd to finish → Position 3 (picks adventure card third)");
+        console.printMessage("  • 4th to finish → Position 4 (picks adventure card last)");
+        console.printMessage("");
         console.printMessage("Waiting for other players to complete ship building...");
-        console.printMessage("Adventure cards will be picked once all players are ready.");
+        console.printMessage("Adventure phase will start once all players are positioned.");
         console.printMessage("Type 'status' to check current state or 'help' for available commands.");
         
         while (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
@@ -389,17 +393,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                         console.printMessage("Current state: Waiting for all players to complete ship building");
                         if (currentPlayer != null) {
                             console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                            console.printMessage("You have completed ship building and been assigned a position!");
                         }
+                        console.printMessage("Waiting for other players to finish building and get positioned...");
                         console.printMessage("Once all players are positioned, the adventure card phase will begin.");
                         break;
                     case "help":
                         console.printMessage("Available commands:");
-                        console.printMessage("  status - Show current game status");
-                        console.printMessage("  skip   - Skip waiting (debug only)");
-                        console.printMessage("  quit   - Exit the game");
+                        console.printMessage("  status    - Show current game status");
+                        console.printMessage("  debugskip - [DEBUG] Skip waiting and proceed to adventure phase");
+                        console.printMessage("  quit      - Exit the game");
                         break;
-                    case "skip":
+                    case "debugskip":
                         console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to adventure phase...");
+                        console.printMessage("[DEBUG] Note: This may cause issues if not all players are actually positioned.");
                         state = TuiState.ADVENTURE_PHASE;
                         break;
                     case "quit":
@@ -428,19 +435,15 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         
         if (true) {
             if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                console.printMessage("\nAll players have chosen their positions! Starting the game...");
+                console.printMessage("\nAll players have been positioned! Starting the game...");
                 this.state = TuiState.RUNNING;
-            } else if (this.state == TuiState.CHOOSE_START_POSITION) {
-                // If we're still in position selection, transition to waiting state first
-                console.printMessage("\nPosition selected. Waiting for other players...");
-                this.state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
             } else {
                 // Log or handle unexpected state transition attempt
                 console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
             }
         } else {
-            console.printMessage("Waiting for more players to choose their positions...");
-                }
+            console.printMessage("Waiting for more players to be positioned...");
+        }
     }
 
     private void handleAdventurePhaseState() {
@@ -529,6 +532,28 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void notifyNewPlayerPositionFailed(String errorMessage) {
 
+    }
+
+    @Override
+    public void positionAssigned(int playerId, String playerName, int assignedPosition, boolean success, String message) {
+        synchronized (displayMutex) {
+            if (success) {
+                console.printMessage(message);
+                
+                // If this is our player, update our state
+                if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                    console.printMessage("You have been assigned position " + assignedPosition + "!");
+                    // Transition to waiting for all players positioned state
+                    if (state == TuiState.SHIP_BUILDING) {
+                        state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+                    }
+                } else {
+                    console.printMessage(playerName + " was assigned position " + assignedPosition);
+                }
+            } else {
+                console.printError("Position assignment failed: " + message);
+            }
+        }
     }
 
 
@@ -680,16 +705,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (isValid) {
                 console.printMessage("✓ " + message);
-                if (state == TuiState.SHIP_BUILDING) {
-                    console.printMessage("Ship building complete. Position assigned. Waiting for all players to finish...");
-                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED; // Wait for all players
-                } else if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                    console.printMessage("Position assigned. Waiting for all players to finish...");
-                    // Stay in the same state - wait for adventure phase start message
-                }
+                console.printMessage("Ship building complete! Waiting for position assignment...");
+                // Position assignment will be handled by positionAssigned() callback
+                // State transition will happen there
             } else {
                 console.printError("✗ " + message);
-                // If validation failed, go back to ship building
+                // If validation failed, stay in ship building mode
                 if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
                     console.printMessage("Returning to ship building...");
                     state = TuiState.SHIP_BUILDING;
@@ -1017,7 +1038,35 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
-
+        synchronized (displayMutex) {
+            console.printMessage("\nALL PLAYERS POSITIONED! Starting Adventure Phase!");
+            console.printMessage("=== FINAL POSITIONS ===");
+            
+            // Display final position standings
+            for (int position = 1; position <= playerPositions.size(); position++) {
+                for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
+                    if (entry.getValue() == position) {
+                        int playerId = entry.getKey();
+                        String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                            "You" : "Player " + playerId;
+                        console.printMessage("Position " + position + ": " + playerName);
+                        break;
+                    }
+                }
+            }
+            
+            console.printMessage("======================\n");
+            
+            // Check if it's our turn to pick first
+            if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
+                console.printMessage("It's your turn to pick an adventure card! Type 'pick' to draw a card.");
+            } else {
+                console.printMessage("Waiting for Player " + firstPlayerToAct + " (position 1) to pick the first adventure card...");
+            }
+            
+            // Transition to adventure phase
+            state = TuiState.ADVENTURE_PHASE;
+        }
     }
 
 
