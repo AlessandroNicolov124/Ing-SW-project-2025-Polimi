@@ -1,5 +1,6 @@
 package it.polimi.ingsw;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.*;
 
 import java.util.List;
@@ -98,6 +99,23 @@ public class  GameController {
         if (isPlayerThere(player)) {
            gameModel.pickAdventureCardForPlayer(player);
         }
+    }
+
+    /**
+     * Applies the effect of an adventure card to the game state.
+     * Uses polymorphism to call the specific card's effect implementation.
+     * 
+     * @param adventureCard The adventure card whose effect should be applied
+     */
+    public void applyAdventureCardEffect(AdventureCard adventureCard) {
+        if (adventureCard == null) {
+            return;
+        }
+
+        System.out.println("[GameController] Applying effect for adventure card: " + adventureCard.getClass().getSimpleName());
+        
+        // Use polymorphism - each card implements its own effect method
+        adventureCard.effect(gameModel);
     }
 
     public boolean startMatchIfPossible()

@@ -49,8 +49,10 @@ public class AbandonedShip extends AdventureCard {
     }
 
     @Override
-    public void effect(){
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel){
+        // For abandoned ship, players can choose to salvage in flight order  
+        // This implementation would need UI interaction, so for now just log
+        System.out.println("Abandoned Ship encountered - players can choose to salvage for credits");
     }
 
     /**

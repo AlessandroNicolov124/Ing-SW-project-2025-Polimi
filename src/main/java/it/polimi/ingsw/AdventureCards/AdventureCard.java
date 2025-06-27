@@ -2,6 +2,7 @@ package it.polimi.ingsw.AdventureCards;
 
 import java.io.Serializable;
 
+import it.polimi.ingsw.GameModel;
 import it.polimi.ingsw.Player;
 
 public abstract class AdventureCard implements Serializable{
@@ -23,7 +24,7 @@ public abstract class AdventureCard implements Serializable{
 
     protected abstract void resolveEvent(Player p);
 
-    public abstract void effect();
+    public abstract void effect(GameModel gameModel);
 
     public void setCopies(int copies) {
         this.copies = copies;

@@ -70,9 +70,7 @@ public class Player implements Serializable {
         if (card != null) {
             this.pickedCard = card; // Assegna la carta pescata al giocatore
             System.out.println(nickName + " ha pescato una carta: " + card.getClass().getSimpleName());
-
-            //  metodo per applicare l'effetto della carta, se necessario
-            card.effect(); // Esempio di applicazione dell'effetto della carta
+            // Note: Card effects are applied on the server side through GameController.applyAdventureCardEffect()
         } else {
             System.out.println("Nessuna carta disponibile da pescare.");
         }

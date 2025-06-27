@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -465,9 +466,15 @@ public class RmiServer extends UnicastRemoteObject
         }
         // Pick adventure card using the controller - only for the leading player
         controller.pickCardForPlayer(player);
-        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
+
+        // Apply the adventure card effect to the game state
+        if (success && adventureCard != null) {
+            System.out.println("[ServerRMI] Applying adventure card effect: " + adventureCard.getClass().getSimpleName());
+            controller.applyAdventureCardEffect(adventureCard);
+        }
 
         System.out.println("[ServerRMI] Adventure card pick by leading player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));

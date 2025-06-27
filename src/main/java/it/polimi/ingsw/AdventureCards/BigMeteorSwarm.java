@@ -1,5 +1,6 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.GameModel;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Direction;
 import java.util.Random;
@@ -35,9 +36,11 @@ public class BigMeteorSwarm extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
-        // For all players, process meteor impacts
+    public void effect(GameModel gameModel) {
+        // Apply big meteor swarm to all players
+        for (Player player : gameModel.getPlayers()) {
+            processMeteorImpacts(player);
+        }
     }
     
     /**

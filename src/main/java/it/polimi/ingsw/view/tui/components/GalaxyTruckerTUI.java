@@ -913,7 +913,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 
                 // Show detailed card information for everyone
                 displayAdventureCard(adventureCard);
-                adventureCard.effect();
+                // Note: The actual card effect is applied on the server side
+                console.printMessage("Adventure card effects have been applied to the game state.");
                 
                 // Adventure phase is complete after the leading player picks
                 console.printMessage("Adventure card phase complete. Proceeding to main game...");
