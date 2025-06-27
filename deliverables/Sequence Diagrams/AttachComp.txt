@@ -1,9 +1,61 @@
-title Attach Componet to ship
+@startuml
+title placeComponent
 
+actor User as "User\n(L'utente umano)"
+participant "UI Handler\n[TUI: ShipBuildingHandler\nGUI: ShipBuilderController]" as Handler
+note right of Handler
+Gestisce l’interazione utente lato interfaccia.
+TUI: logica a riga di comando.
+GUI: logica grafica.
+end note
+participant "AppContext\n(solo GUI)" as AppContext
+note right of AppContext
+Contesto applicativo GUI:
+smista eventi e aggiorna stato centralizzato.
+end note
+participant "SimpleClient\n(Client di rete)" as Client
+note right of Client
+Effettua le richieste di rete verso il server,
+indipendentemente dall’interfaccia.
+end note
+participant "<rete>\n(Network)" as Network
+note right of Network
+Connessione di rete tra client e server (TCP).
+end note
+participant "SocketClientHandler\n(Server listener)" as ServerHandler
+note right of ServerHandler
+Riceve e gestisce le richieste in arrivo lato server.
+end note
+participant "GameController\n(Server, logica di gioco)" as Controller
+note right of Controller
+Gestisce la logica della partita lato server.
+end note
+participant "ShipBuilder\n(Modello nave)" as ShipBuilder
+note right of ShipBuilder
+Gestisce la struttura e le regole della nave.
+end note
 
-rbox left of Client: Client is actually the player
-
-Client->Client: Attach a new component
-Client->Server: Send component attached to board
-Server-->Client: Notify component attached
-Server-->Client: Send serialized object
+User -> Handler : Sceglie componente e posizione
+alt TUI
+    Handler -> Client : placeComponent(component, pos, playerId)
+else GUI
+    Handler -> AppContext : getClient().placeComponent(component, pos, playerId)
+    AppContext -> Client : placeComponent(component, pos, playerId)
+end
+Client -> Network : PlaceComponentRequest(playerId, component, pos)
+Network -> ServerHandler : PlaceComponentRequest(...)
+ServerHandler -> Controller : placeComponent(component, pos, playerId)
+Controller -> ShipBuilder : placeComponent(component, pos)
+ShipBuilder --> Controller : esito (boolean)
+Controller --> ServerHandler : esito (boolean)
+ServerHandler -> Network : PlaceComponentResponse(playerId, component, pos, success, message)
+Network -> Client : PlaceComponentResponse(...)
+alt TUI
+    Client -> Handler : PlaceComponentResponse.handleClient()
+    Handler -> Handler : componentPlacedSuccessfully()
+else GUI
+    Client -> AppContext : PlaceComponentResponse.handleClient()
+    AppContext -> Handler : gameComponentPlaced(component, pos)
+end
+Handler -> User : Aggiorna UI/nave, mostra esito
+@enduml

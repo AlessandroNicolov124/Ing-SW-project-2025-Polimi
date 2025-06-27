@@ -1,5 +1,6 @@
 package it.polimi.ingsw.Components;
 
+/** life support system is a component that can be connected to a ship. */
 public final class LifeSupportSystem extends Component {
 
     private LifeSupportSystemType type;

@@ -2,6 +2,10 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.*;
 
+/**
+ * Represents a battery compartment that can hold batteries of a specific type and charge level.
+ * It allows for recharging and discharging of the batteries.
+ */
 public final class BatteryCompartment extends Component {
     private int maxCapacity; // numero di batterie
     private BatteryType type;
@@ -37,24 +41,17 @@ public final class BatteryCompartment extends Component {
         return chargeLevel;
     }
 
-    // Metodo per ricaricare la batteria
+    /**
+     * Recharge the battery to its maximum capacity.
+     */
     public void recharge() {
         chargeLevel = maxCapacity;
     }
 
-//    public boolean useCharge(int requiredCharge) {
-//        if (chargeLevel >= requiredCharge) {
-//            chargeLevel -= requiredCharge;
-//            return true;
-//        }
-//        return false;
-//    }
-
     /**
-     * Ricarica la batteria della quantità specificata.
+     * Recharge the battery by a specified amount.
      *
-     * @param amount La quantità di energia da ricaricare
-     * @return La quantità effettivamente ricaricata
+     * @param amount The amount of energy to recharge
      */
     public int recharge(int amount) {
         if (amount <= 0) {
@@ -68,10 +65,10 @@ public final class BatteryCompartment extends Component {
     }
 
     /**
-     * Scarica la batteria della quantità specificata.
+     * Discharge the battery by a specified amount.
      *
-     * @param amount La quantità di energia da scaricare
-     * @return La quantità effettivamente scaricata
+     * @param amount The amount of energy to discharge
+     * @return The actual amount discharged
      */
     public int discharge(int amount) {
         if (amount <= 0) {

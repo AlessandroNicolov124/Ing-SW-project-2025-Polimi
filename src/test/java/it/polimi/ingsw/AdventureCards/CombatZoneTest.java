@@ -9,14 +9,16 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 
 public class CombatZoneTest {
-    private CombatZone combatZone;
+    private CombactZoneA combactZoneA;
+    private CombactZoneB combactZoneB;
     private GameModel gameModel;
     private Player player1;
     private Player player2;
 
     @BeforeEach
     void setUp() {
-        combatZone = new CombatZone(1, 1, 3, 2);
+        combactZoneA = new CombactZoneA();
+        combactZoneB = new CombactZoneB();
         gameModel = new GameModel();
 
         // Player 1: meno crew, meno engine, meno cannoni
@@ -32,9 +34,15 @@ public class CombatZoneTest {
         batteryCompartment.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
         ship1.placeComponent(batteryCompartment, new Position(3, 1));
         ship1.addCrewOfType(CrewType.HUMAN, 2);
+        SpecialCargoHolds specialCargoHolds = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
+        specialCargoHolds.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
+        ship1.placeComponent(specialCargoHolds, new Position(4, 3));
+        specialCargoHolds.loadCargo(new BlueCargo());
+        specialCargoHolds.loadCargo(new RedCargo());
         player1 = new Player(1, "P1", true, ship1);
 
         System.out.println("Player 1 Ship Components: " + player1.getShip().getComponents().size());
+
         // Player 2: più crew, più engine, più cannoni
         ShipBuilder ship2 = new ShipBuilder(7, 5);
         ship2.placeComponent(new Cabin(true), new Position(3, 2));
@@ -70,35 +78,62 @@ public class CombatZoneTest {
     }
 
     @Test
-    void testCrewPhasePenalty() {
+    void testCrewPhasePenaltyCombactZoneA() {
         int posBefore = gameModel.getFlightBoard().getPosition(player1);
-        combatZone.applyCombatZone(gameModel);
+        combactZoneA.applyCombatZone(gameModel);
         int posAfter = gameModel.getFlightBoard().getPosition(player1);
         assertTrue(posAfter < posBefore, "Il giocatore con meno crew perde giorni di volo");
     }
 
     @Test
-    void testEnginePhasePenalty() {
+    void testFirepowerPhasePenaltyCombactZoneB() {
+        int posBefore = gameModel.getFlightBoard().getPosition(player1);
+        combactZoneB.applyCombatZone(gameModel);
+        int posAfter = gameModel.getFlightBoard().getPosition(player1);
+        assertTrue(posAfter < posBefore, "Il giocatore con minor potenza di fuoco perde giorni di volo");
+    }
+
+    @Test
+    void testEnginePhasePenaltyCombactZoneA() {
         int crewBefore = player1.getShip().getTotalCrewCount();
-        combatZone.applyCombatZone(gameModel);
+        combactZoneA.applyCombatZone(gameModel);
         int crewAfter = player1.getShip().getTotalCrewCount();
         assertTrue(crewAfter < crewBefore, "Il giocatore con meno motori perde membri equipaggio");
     }
 
     @Test
-    void testFirepowerPhasePenalty() {
+    void testEnginePhasePenaltyCombactZoneB() {
+        // Simula che il giocatore abbia < o 3 merci
+        int initialGoods = player1.getShip().getCargoList().size();
+
+        assertEquals(combactZoneB.findPlayerWithWeakestEngines(gameModel.getPlayers()), player1);
+        combactZoneB.removeCargo(player1); // il giocatore perde le merci più preziose
+        assertTrue(initialGoods > player1.getShip().getCargoList().size(), "Il giocatore deve perdere le merci");
+    }
+
+    @Test
+    void testFirepowerPhasePenaltyCombactZoneA() {
         int compBefore = player1.getShip().getNonDamageComponents().size();
-        combatZone.applyCombatZone(gameModel);
+        combactZoneA.applyCombatZone(gameModel);
         int compAfter = player1.getShip().getNonDamageComponents().size();
         assertTrue(compAfter <= compBefore, "Il giocatore con meno potenza di fuoco subisce danni da cannonate, solo se le cannonate colpiscono la navicella");
     }
+
+    @Test
+    void testCrewPhasePenaltyCombactZoneB() {
+        int compBefore = player1.getShip().getNonDamageComponents().size();
+        combactZoneB.applyCombatZone(gameModel);
+        int compAfter = player1.getShip().getNonDamageComponents().size();
+        assertTrue(compAfter <= compBefore, "Il giocatore con meno potenza di fuoco subisce danni da cannonate, solo se le cannonate colpiscono la navicella");
+    }
+
 
     @Test
     void testNoPenaltyForStrongerPlayer() {
         int posBefore = gameModel.getFlightBoard().getPosition(player2);
         int crewBefore = player2.getShip().getTotalCrewCount();
         int compBefore = player2.getShip().getComponents().size();
-        combatZone.applyCombatZone(gameModel);
+        combactZoneA.applyCombatZone(gameModel);
         int posAfter = gameModel.getFlightBoard().getPosition(player2);
         int crewAfter = player2.getShip().getTotalCrewCount();
         int compAfter = player2.getShip().getComponents().size();
@@ -128,9 +163,9 @@ public class CombatZoneTest {
         int batteryBefore = ship.calculateTotalBatteryCharge();
         int compBefore = ship.getNonDamageComponents().size();
 
-        assertEquals(p, combatZone.findPlayerWithWeakestCannons(gameModel.getPlayers()), "Il giocatore con il cannone più debole deve essere trovato correttamente");
-        assertEquals(ship.getPositionOf(battery), combatZone.checkCannonHit(p, Direction.EAST, 4), "Il cannone deve colpire la posizione corretta");
-        assertEquals(shield, combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore deve essere difeso dallo scudo");
+        assertEquals(p, combactZoneA.findPlayerWithWeakestCannons(gameModel.getPlayers()), "Il giocatore con il cannone più debole deve essere trovato correttamente");
+        assertEquals(ship.getPositionOf(battery), combactZoneA.checkCannonHit(p, Direction.EAST, 4), "Il cannone deve colpire la posizione corretta");
+        assertEquals(shield, combactZoneA.canDefendWithShield(p, Direction.EAST), "Il giocatore deve essere difeso dallo scudo");
         shield.discharge();
         assertEquals(compBefore, ship.getNonDamageComponents().size(), "Il componente non deve essere distrutto se protetto da shield");
         // La batteria deve essere scaricata di 1, e pure lo shield
@@ -138,7 +173,7 @@ public class CombatZoneTest {
         assertFalse(shield.isCharged(), "Lo scudo deve essere scaricato");
 
         //in caso di ulteriore attacco, lo scudo non deve difendere perché è scarico e non ci sono batterie cariche
-        assertNull(combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore non deve essere difeso dallo scudo");
+        assertNull(combactZoneA.canDefendWithShield(p, Direction.EAST), "Il giocatore non deve essere difeso dallo scudo");
         p.getShip().destroyComponentAt(new Position(3,4));
         assertEquals(compBefore-1, ship.getNonDamageComponents().size(), "Il componente deve essere distrutto se non protetto da shield");
 
