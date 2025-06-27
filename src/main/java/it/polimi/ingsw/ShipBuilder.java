@@ -82,8 +82,12 @@ public class ShipBuilder {
             return false;
         }
 
-        if (!isPositionValid(position)) {
-            System.out.println("Position not valid on board");
+        if(!isPositionValid(position)) {
+            System.out.println("  position not valid");
+            return false; // La posizione non è valida
+        }
+        // Se è il primo componente, deve essere posizionato nella posizione iniziale
+        if (components.isEmpty() && !position.equals(this.startingPosition)) {
             return false;
         }
         //TODO ALE: Cancellare
@@ -138,7 +142,6 @@ public class ShipBuilder {
 //        }
 
         // Posiziona il componente
-
         components.put(component, position);
         return true;
     }

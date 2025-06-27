@@ -62,7 +62,7 @@ public abstract class AdventureCard implements Serializable{
     /**
      * Returns the name of this adventure card.
      * By default returns the simple class name.
-     * 
+     *
      * @return The card's name
      */
     public String getName() {
