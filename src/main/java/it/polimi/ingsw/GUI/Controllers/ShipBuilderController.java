@@ -223,9 +223,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("doublecannon_NUNN", "/Images/tiles/doublecannon_NUNN.jpg"),
 
             Map.entry("singlecannon_NDSN", "/Images/tiles/singlecannon_NDSN.jpg"),
+            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg"),
+            Map.entry("singlecannon_NUNS", "/Images/tiles/singlecannon_NUNS.jpg"),
             Map.entry("singlecannon_NDSN_2", "/Images/tiles/singlecannon_NDSN.jpg"),
             Map.entry("singlecannon_NNDN", "/Images/tiles/singlecannon_NNDN.jpg"),
-            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNSN_2", "/Images/tiles/singlecannon_NNSN.jpg"),
             Map.entry("singlecannon_NDDD", "/Images/tiles/singlecannon_NDDD.jpg"),
             Map.entry("singlecannon_NDNN", "/Images/tiles/singlecannon_NDNN.jpg"),
             Map.entry("singlecannon_NDNU", "/Images/tiles/singlecannon_NDNU.jpg"),
@@ -237,16 +239,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NNND", "/Images/tiles/singlecannon_NNND.jpg"),
             Map.entry("singlecannon_NNNS", "/Images/tiles/singlecannon_NNNS.jpg"),
             Map.entry("singlecannon_NNSD", "/Images/tiles/singlecannon_NNSD.jpg"),
-            Map.entry("singleengine_NNSN", "/Images/tiles/singleengine_NNSN.jpg"),
-            Map.entry("singleengine_NNUD", "/Images/tiles/singleengine_NNUD.jpg"),
+            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNUD", "/Images/tiles/singlecannon_NNUD.jpg"),
             Map.entry("singlecannon_NNUS", "/Images/tiles/singlecannon_NNUS.jpg"),
             Map.entry("singlecannon_NSDN", "/Images/tiles/singlecannon_NSDN.jpg"),
+            Map.entry("singlecannon_NSND", "/Images/tiles/singlecannon_NSND.jpg"),
             Map.entry("singlecannon_NSNN", "/Images/tiles/singlecannon_NSNN.jpg"),
             Map.entry("singlecannon_NSSS", "/Images/tiles/singlecannon_NSSS.jpg"),
             Map.entry("singlecannon_NSUD", "/Images/tiles/singlecannon_NSUD.jpg"),
-            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
-            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
-
+            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg")
     );
 
     @FXML
@@ -443,78 +444,78 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @FXML
     public void rotateCardClockwise() {
-        //if (currentComponent == null) {
-        //    statusLabel.setText("Devi prima pescare un componente");
-        //    return;
-        //}
-        // Rotazione logica
-        //currentComponent.rotate(RotationType.CLOCKWISE);
-//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
-//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
-        // Rotazione grafica
-        //cardImage.setRotate(cardImage.getRotate() + 90);
-        //statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
-
-
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
+         //Rotazione logica
+        currentComponent.rotate(RotationType.CLOCKWISE);
+        //currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
+        //currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+        //Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() + 90);
+        statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
 
-        Position componentPosition = null;
-        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
-            if (entry.getValue() == selectedImageView) {
-                componentPosition = entry.getKey();
-                break;
-            }
-        }
 
-        if (componentPosition != null) {
-            try {
-                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.CLOCKWISE);
-                statusLabel.setText("Rotating component...");
-            } catch (Exception e) {
-                statusLabel.setText("Rotation failed: " + e.getMessage());
-            }
-        }
+//        if (selectedImageView == null) {
+//            statusLabel.setText("Select a component on the ship first");
+//            return;
+//        }
+//
+//        Position componentPosition = null;
+//        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
+//            if (entry.getValue() == selectedImageView) {
+//                componentPosition = entry.getKey();
+//                break;
+//            }
+//        }
+//
+//        if (componentPosition != null) {
+//            try {
+//                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.CLOCKWISE);
+//                statusLabel.setText("Rotating component...");
+//            } catch (Exception e) {
+//                statusLabel.setText("Rotation failed: " + e.getMessage());
+//            }
+//        }
     }
 
     @FXML
     public void rotateCardAntiClockwise() {
-        //if (currentComponent == null) {
-        //    statusLabel.setText("Devi prima pescare un componente");
-        //    return;
-        //}
-        // Rotazione logica
-        //currentComponent.rotate(RotationType.ANTI_CLOCKWISE);
-//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
-//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
-        // Rotazione grafica
-        //cardImage.setRotate(cardImage.getRotate() - 90);
-        //statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");
-
-
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
+        // Rotazione logica
+        currentComponent.rotate(RotationType.ANTI_CLOCKWISE);
+        //currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
+        //currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() - 90);
+        statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");
 
-        Position componentPosition = null;
-        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
-            if (entry.getValue() == selectedImageView) {
-                componentPosition = entry.getKey();
-                break;
-            }
-        }
 
-        if (componentPosition != null) {
-            try {
-                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.ANTI_CLOCKWISE);
-                statusLabel.setText("Rotating component...");
-            } catch (Exception e) {
-                statusLabel.setText("Rotation failed: " + e.getMessage());
-            }
-        }
+//        if (selectedImageView == null) {
+//            statusLabel.setText("Select a component on the ship first");
+//            return;
+//        }
+//
+//        Position componentPosition = null;
+//        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
+//            if (entry.getValue() == selectedImageView) {
+//                componentPosition = entry.getKey();
+//                break;
+//            }
+//        }
+//
+//        if (componentPosition != null) {
+//            try {
+//                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.ANTI_CLOCKWISE);
+//                statusLabel.setText("Rotating component...");
+//            } catch (Exception e) {
+//                statusLabel.setText("Rotation failed: " + e.getMessage());
+//            }
+//        }
     }
 
     @FXML
@@ -603,7 +604,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentPlaced(Component component, Position position) {
-        //System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
+        System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
         String imagePath = getComponentImgPath(component);
         if (imagePath == null) {
             System.out.println("[DEBUG] imagePath nullo per componente: " + component);
@@ -622,15 +623,16 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         placed.setLayoutX(GRID_START_X + position.getX() * SQUARE_SIZE);
         placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
         placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
+
         // Rotazione coerente con la logica del componente
-        //double rotation = 0;
-        //switch (component.getComponentDirection()) {
-        //    case NORTH -> rotation = 0;
-        //    case EAST -> rotation = 90;
-        //    case SOUTH -> rotation = 180;
-        //    case WEST -> rotation = 270;
-        //}
-        //placed.setRotate(rotation);
+        double rotation = 0;
+        switch (component.getComponentDirection()) {
+            case NORTH -> rotation = 0;
+            case EAST -> rotation = 90;
+            case SOUTH -> rotation = 180;
+            case WEST -> rotation = 270;
+        }
+        placed.setRotate(rotation);
 
         anchorPane.getChildren().add(placed);
         cellViews.put(position, placed);
@@ -659,27 +661,38 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentRotated(Position position, RotationType rotationType) {
-        Platform.runLater(() -> {
-            ImageView imageView = cellViews.get(position);
-            if (imageView != null) {
-                double rotation = switch (rotationType) {
-                    case CLOCKWISE -> 90;
-                    case ANTI_CLOCKWISE -> -90;
-                    case OPPOSITE -> 180;
-                };
+        ImageView imageView = cellViews.get(position);
+        if (imageView != null) {
+            double delta = switch (rotationType) {
+                case CLOCKWISE -> 90;
+                case ANTI_CLOCKWISE -> -90;
+                case OPPOSITE -> 180;
+            };
+            imageView.setRotate(imageView.getRotate() + delta);
+            statusLabel.setText("Component rotated");
+        }
 
-                double currentRotation = imageView.getRotate();
-                imageView.setRotate(currentRotation + rotation);
-
-                statusLabel.setText("Component rotated successfully");
-
-                if (selectedImageView == imageView && selectedHighlight != null) {
-                    selectedHighlight.setRotate(currentRotation + rotation);
-                }
-            } else {
-                System.err.println("[GUI] No ImageView found at position " + position);
-            }
-        });
+//        Platform.runLater(() -> {
+//            ImageView imageView = cellViews.get(position);
+//            if (imageView != null) {
+//                double rotation = switch (rotationType) {
+//                    case CLOCKWISE -> 90;
+//                    case ANTI_CLOCKWISE -> -90;
+//                    case OPPOSITE -> 180;
+//                };
+//
+//                double currentRotation = imageView.getRotate();
+//                imageView.setRotate(currentRotation + rotation);
+//
+//                statusLabel.setText("Component rotated successfully");
+//
+//                if (selectedImageView == imageView && selectedHighlight != null) {
+//                    selectedHighlight.setRotate(currentRotation + rotation);
+//                }
+//            } else {
+//                System.err.println("[GUI] No ImageView found at position " + position);
+//            }
+//        });
     }
 
     @Override

@@ -108,10 +108,11 @@ public class  GameController {
      * Removes a component from the player's ship.
      *
      * @param player The player from whose ship the component will be removed.
-     * @param component The component to be removed.
+     * @param position The position of the component to be removed.
      * @return true if the component was successfully removed, false otherwise.
      */
-    public boolean removeComponentForPlayer(Player player, Component component) {
+    public boolean removeComponentAt(Player player, Position position) {
+
         if (isPlayerThere(player)) {
             return player.removeComponentAt(position);
         }
