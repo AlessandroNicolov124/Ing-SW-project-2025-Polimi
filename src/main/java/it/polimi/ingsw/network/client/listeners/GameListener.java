@@ -81,4 +81,5 @@ public interface GameListener {
 
     void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
     void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
+    void adventurePhaseComplete(java.util.UUID matchId, boolean gameComplete, String completionReason);
 }

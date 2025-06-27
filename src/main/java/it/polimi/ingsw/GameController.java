@@ -118,6 +118,22 @@ public class  GameController {
         adventureCard.effect(gameModel);
     }
 
+    /**
+     * Checks if there are more adventure cards to pick
+     * @return true if there are cards remaining, false if deck is empty
+     */
+    public boolean hasMoreAdventureCards() {
+        return !gameModel.getAdventureDeck().isEmpty();
+    }
+
+    /**
+     * Checks if the flight/game is complete
+     * @return true if flight is complete (deck empty or only one active player), false otherwise
+     */
+    public boolean isFlightComplete() {
+        return gameModel.isFlightComplete();
+    }
+
     public boolean startMatchIfPossible()
     {
         boolean eval = gameModel.isGameStartable();

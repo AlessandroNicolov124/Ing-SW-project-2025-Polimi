@@ -33,6 +33,7 @@ import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 
 import java.rmi.RemoteException;
@@ -479,8 +480,37 @@ public class RmiServer extends UnicastRemoteObject
         System.out.println("[ServerRMI] Adventure card pick by leading player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
-        // Adventure phase is complete after the leading player picks
-        int nextPlayerTurn = -1; // No next player since only leader picks
+        // Check if there are more adventure cards or if the game is complete
+        int nextPlayerTurn = -1; // Default: adventure phase continues
+        
+        if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
+            // Adventure deck is empty or game is complete
+            nextPlayerTurn = -2; // Special value indicating deck is empty
+            
+            // Send the pick response first
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new PickAdventureCardResponse(
+                            playerId, adventureCard, success, message, nextPlayerTurn));
+            
+            // Then send completion notification
+            String completionReason;
+            boolean gameComplete = controller.isFlightComplete();
+            
+            if (!controller.hasMoreAdventureCards()) {
+                completionReason = "Adventure deck is empty - all cards have been resolved";
+            } else {
+                completionReason = "Only one active player remains";
+            }
+            
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new AdventurePhaseCompleteResponse(
+                            match.getMatchId(), gameComplete, completionReason));
+            return;
+        } else {
+            // More cards available - find new leader after effects have been applied
+            int newLeaderId = match.getFirstPlayerToAct();
+            System.out.println("[ServerRMI] New leading player for next adventure card: " + newLeaderId);
+        }
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
