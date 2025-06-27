@@ -700,6 +700,11 @@ public class AppContext implements GameListener {
     }
 
     @Override
+    public void positionAssigned(int playerId, String playerName, int assignedPosition, boolean success, String message) {
+
+    }
+
+    @Override
     public void flightPreparationStartFailed(String message) {
         Platform.runLater(() -> {
             showErrorDialog("Flight Preparation Failed", message);

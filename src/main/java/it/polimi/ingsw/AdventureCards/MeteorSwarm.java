@@ -314,7 +314,8 @@ public class MeteorSwarm extends AdventureCard {
     /**
      * Inner class to represent a meteor
      */
-    public static class Meteor {
+    public static class Meteor implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private MeteorSize size;
         private Direction direction;
         

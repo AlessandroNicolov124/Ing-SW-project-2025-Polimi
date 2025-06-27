@@ -1,7 +1,9 @@
 package it.polimi.ingsw.Components;
 
-public sealed abstract class Cargo
+public sealed abstract class Cargo implements java.io.Serializable
     permits BlueCargo, RedCargo, GreenCargo, YellowCargo {
+    
+    private static final long serialVersionUID = 1L;
 
     private final int value;
 

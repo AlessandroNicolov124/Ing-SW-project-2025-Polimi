@@ -46,7 +46,7 @@ public interface VirtualServer extends Remote {
 
     void selectCabinColor(String color, int playerId, RmiClientIf client) throws RemoteException;
     
-    void pickAdventureCard(int playerId) throws RemoteException;
+    void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException;
     void readyForFlight(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
 
 }

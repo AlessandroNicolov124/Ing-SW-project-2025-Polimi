@@ -268,7 +268,8 @@ public class Planets extends AdventureCard{
         }
     }
 
-    public static class Planet {
+    public static class Planet implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private String name;
         private List<Cargo> goodsToLoad;
         
