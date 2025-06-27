@@ -32,6 +32,9 @@ import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
+import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 
 import java.io.*;
 import java.net.Socket;
@@ -287,7 +290,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void pickAdventureCard(int currentPlayer) throws Exception {
         if (currentPlayer == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+            showUpdate(new PickAdventureCardResponse(
                     -1, null, false, "No player ID set", -1));
             return;
         }
@@ -295,14 +298,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayer);
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayer);
-            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+            showUpdate(new PickAdventureCardResponse(
                     currentPlayer, null, false, "Match not found", -1));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
-            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+            showUpdate(new PickAdventureCardResponse(
                     currentPlayer, null, false, "Match not in progress", -1));
             return;
         }
@@ -311,7 +314,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         Player player = controller.getPlayerById(currentPlayer);
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayer);
-            showUpdate(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+            showUpdate(new PickAdventureCardResponse(
                     currentPlayer, null, false, "Player not found", -1));
             return;
         }
@@ -330,7 +333,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
-                new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                new PickAdventureCardResponse(
                         currentPlayer, adventureCard, success, message, nextPlayerTurn));
     }
 
@@ -389,14 +392,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
                 // Notify all players about the position assignment
                 String positionMessage = player.getNickName() + " finished building and got position " + assignedPosition;
                 lobbyManager.multicastToMatch(match.getMatchId(), 
-                    new it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse(
+                    new PositionAssignmentResponse(
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
                 if (match.allPlayersPositioned()) {
                     int firstPlayerToAct = match.getFirstPlayerToAct();
                     lobbyManager.multicastToMatch(match.getMatchId(),
-                        new it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse(
+                        new AdventurePhaseStartResponse(
                             match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
                 }
             }

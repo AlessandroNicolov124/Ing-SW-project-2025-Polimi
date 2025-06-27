@@ -903,8 +903,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
         synchronized (displayMutex) {
-            console.printMessage("[DEBUG] Adventure card response received: playerId=" + playerId + ", success=" + success + ", message=" + message + ", adventureCard=" + (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
-            
             if (success && adventureCard != null) {
                 // Find player name for display
                 String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 

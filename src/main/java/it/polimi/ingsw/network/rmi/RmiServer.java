@@ -30,6 +30,9 @@ import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
+import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -428,23 +431,26 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public void pickAdventureCard(int playerId) throws RemoteException {
+    public void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
             System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
-            //broadcastAdventureCardErrorToAllClients(playerId, "Match not found");
+            client.showUpdate(new PickAdventureCardResponse(
+                    playerId, null, false, "Match not found", -1));
             return;
         }
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
-            //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
+            client.showUpdate(new PickAdventureCardResponse(
+                    playerId, null, false, "Match not in progress", -1));
             return;
         }
         GameController controller = match.getController();
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
             System.out.println("[ServerRMI] Player not found with ID: " + playerId);
-            //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Player not found");
+            client.showUpdate(new PickAdventureCardResponse(
+                    playerId, null, false, "Player not found", -1));
             return;
         }
         // Pick adventure card using the controller
@@ -461,7 +467,7 @@ public class RmiServer extends UnicastRemoteObject
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
-                new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
+                new PickAdventureCardResponse(
                         playerId, adventureCard, success, message, nextPlayerTurn));
     }
 
@@ -494,14 +500,14 @@ public class RmiServer extends UnicastRemoteObject
                 // Notify all players about the position assignment
                 String positionMessage = player.getNickName() + " finished building and got position " + assignedPosition;
                 lobbyManager.multicastToMatch(match.getMatchId(), 
-                    new it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse(
+                    new PositionAssignmentResponse(
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
                 if (match.allPlayersPositioned()) {
                     int firstPlayerToAct = match.getFirstPlayerToAct();
                     lobbyManager.multicastToMatch(match.getMatchId(),
-                        new it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse(
+                        new AdventurePhaseStartResponse(
                             match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
                 }
             }

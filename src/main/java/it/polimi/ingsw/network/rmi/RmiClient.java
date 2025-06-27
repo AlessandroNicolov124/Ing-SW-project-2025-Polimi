@@ -143,7 +143,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 //        }
         
         try {
-            server.pickAdventureCard(currentPlayer);
+            server.pickAdventureCard(currentPlayer, this);
         } catch (RemoteException e) {
             throw new RemoteException("Error picking adventure card", e);
         }

@@ -24,6 +24,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipRequest;
+import it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 
@@ -134,7 +135,7 @@ public class SocketClient implements Runnable, GeneralClientIf {
     @Override
     public void pickAdventureCard(int currentPlayer) throws Exception {
         synchronized (out) {
-            out.writeObject(new it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest(currentPlayer));
+            out.writeObject(new PickAdventureCardRequest(currentPlayer));
             out.flush();
         }
     }
