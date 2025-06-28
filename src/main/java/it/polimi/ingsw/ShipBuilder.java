@@ -19,6 +19,8 @@ public class ShipBuilder {
     private boolean isAssembled;
     private Map<CrewType, Integer> crewCount = new HashMap<>(); // tiene conto del numero di umani e alieni sulla navicella
 
+    private final Map<Position, List<TokenType>> tokens = new HashMap<>();
+
     public ShipBuilder(int width, int height) {
         this.components = new HashMap<>();
         this.isAssembled = false;
@@ -569,14 +571,17 @@ public class ShipBuilder {
         for (Direction dir : Direction.values()) {
             Position adjacentPos = dir.getAdjacentPosition(position);
             Component adjacentComponent = getComponentAt(adjacentPos);
-            
-            if (adjacentComponent instanceof LifeSupportSystem) {
-                LifeSupportSystem lifeSupport = (LifeSupportSystem) adjacentComponent;
-                
-                if (lifeSupport.canConnectTo(cabin, dir.getOpposite())) {
-                    cabin.connectLifeSupport(lifeSupport.getType());
-                    System.out.println("[ShipBuilder] Connected " + lifeSupport.getType() + 
-                                    " life support to cabin at " + cabinPosition);
+
+            switch (adjacentComponent) {
+                case Cabin cabin -> {
+                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
+                        cabin.disconnectLifeSupport(type);
+                    }
+                }
+                case null -> {
+                    // Non c'è un componente adiacente, non fare nulla
+                }
+                default -> {
                 }
             }
         }
