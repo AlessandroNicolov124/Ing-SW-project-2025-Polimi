@@ -3,7 +3,6 @@ package it.polimi.ingsw.GUI.Controllers;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
-import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
@@ -140,7 +139,13 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
 
     @FXML
     public void PickAdventureCardFromSrv() {
+
         positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
+        try {
+            context.getClient().pickAdventureCard(context.getPlayerId());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
