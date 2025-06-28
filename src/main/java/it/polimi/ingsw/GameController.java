@@ -474,7 +474,6 @@ public class  GameController {
                 }
             }
 
-            /* ---------- BATTERIE ---------- */
             case BATTERY -> {
                 switch (comp) {
                     case BatteryCompartment batteryCompartment -> {
@@ -487,7 +486,6 @@ public class  GameController {
                 }
             }
 
-            /* ---------- ALIENI ---------- */
             case PURPLE_ALIEN, BROWN_ALIEN -> {
                 switch (comp) {
                     case Cabin cabin -> {
@@ -504,7 +502,6 @@ public class  GameController {
                 }
             }
 
-            /* ---------- GOOD BLOCKS (cargo) ---------- */
             case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK,  YELLOW_GOOD_BLOCK -> {
 
                 switch (comp) {
@@ -575,7 +572,5 @@ public class  GameController {
         }
 
     }
-
-    
 
 }
