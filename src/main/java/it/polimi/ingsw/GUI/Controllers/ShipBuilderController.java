@@ -357,7 +357,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                             placed.setFitHeight(SQUARE_SIZE);
                             placed.setLayoutX(GRIST_STASH_CARDS_START_X + (dropPosition.getX() - 5) * SQUARE_SIZE);
                             placed.setLayoutY(GRIST_STASH_CARDS_START_Y);
-                            placed.setImage(new Image(imageStream));
+                            placed.setOnMouseClicked(_ -> handleComponentClick(placed, dropPosition));
 
 
                             anchorPane.getChildren().add(placed);
