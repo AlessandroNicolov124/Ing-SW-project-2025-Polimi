@@ -294,7 +294,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (currentPlayer == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
             showUpdate(new PickAdventureCardResponse(
-                    -1, null, false, "No player ID set", -1));
+                    -1, null, false, "No player ID set", -1, null));
             return;
         }
 
@@ -302,14 +302,14 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not found", -1));
+                    currentPlayer, null, false, "Match not found", -1, null));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not in progress", -1));
+                    currentPlayer, null, false, "Match not in progress", -1, null));
             return;
         }
 
@@ -318,7 +318,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (currentPlayer != leadingPlayerId) {
             System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + currentPlayer + " is not the leader (ID: " + leadingPlayerId + ")");
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1));
+                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1, null));
             return;
         }
 
@@ -327,7 +327,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Player not found", -1));
+                    currentPlayer, null, false, "Player not found", -1, null));
             return;
         }
 

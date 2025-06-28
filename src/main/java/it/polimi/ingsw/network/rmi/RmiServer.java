@@ -439,13 +439,13 @@ public class RmiServer extends UnicastRemoteObject
         if (match == null) {
             System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Match not found", -1));
+                    playerId, null, false, "Match not found", -1, null));
             return;
         }
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Match not in progress", -1));
+                    playerId, null, false, "Match not in progress", -1, null));
             return;
         }
 
@@ -454,7 +454,7 @@ public class RmiServer extends UnicastRemoteObject
         if (playerId != leadingPlayerId) {
             System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Only the leading player can pick adventure cards", -1));
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1, null));
             return;
         }
 
@@ -463,7 +463,7 @@ public class RmiServer extends UnicastRemoteObject
         if (player == null) {
             System.out.println("[ServerRMI] Player not found with ID: " + playerId);
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Player not found", -1));
+                    playerId, null, false, "Player not found", -1, null));
             return;
         }
         // Pick adventure card using the controller - only for the leading player
