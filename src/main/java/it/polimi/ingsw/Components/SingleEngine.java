@@ -2,6 +2,9 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
+/**
+ * represents a single engine in the game.
+ */
 public final class SingleEngine extends Engine {
 
     public SingleEngine() {
@@ -15,6 +18,12 @@ public final class SingleEngine extends Engine {
         return s;
     }
 
+    /**
+     * return the effective power of the engine.
+     * If the engine is damaged, it returns 0.
+     * If the engine is not damaged, it returns the power of the engine.
+     * @return the effective power of the engine
+     */
     @Override
     public int getEffectivePower() {
         if (damaged) {

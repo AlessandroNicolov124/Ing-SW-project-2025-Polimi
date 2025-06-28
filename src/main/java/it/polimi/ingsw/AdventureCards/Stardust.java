@@ -43,7 +43,7 @@ public class Stardust extends AdventureCard {
         return "Stardust event! Every player loses 1 flight day for each exposed connector on their ship. " +
                "Players move backward in reverse order (last player moves first).";
     }
-    
+
     /**
      * Apply stardust effects to all players
      * @param gameModel The current game state

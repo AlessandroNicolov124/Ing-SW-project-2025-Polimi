@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
@@ -17,12 +18,14 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
+
 import javafx.scene.paint.Color;
 
 import javafx.scene.shape.Rectangle;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,16 +85,17 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"), // BLUE
 
             Map.entry("lifesupportsystem_brown_DSNS", "/Images/tiles/lifesupportsystem_brown_DSNS.jpg"),
-            Map.entry("lifesupportsystem_brown_NDNT", "/Images/tiles/lifesupportsystem_brown_NDNT.jpg"),
+            Map.entry("lifesupportsystem_brown_NDNU", "/Images/tiles/lifesupportsystem_brown_NDNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNNU", "/Images/tiles/lifesupportsystem_brown_NNNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNSD", "/Images/tiles/lifesupportsystem_brown_NNSD.jpg"),
             Map.entry("lifesupportsystem_brown_SNNU", "/Images/tiles/lifesupportsystem_brown_SNNU.jpg"),
             Map.entry("lifesupportsystem_brown_SSNS", "/Images/tiles/lifesupportsystem_brown_SSNS.jpg"),
+
             Map.entry("lifesupportsystem_purple_DDND", "/Images/tiles/lifesupportsystem_purple_DDND.jpg"),
             Map.entry("lifesupportsystem_purple_DNNU", "/Images/tiles/lifesupportsystem_purple_DNNU.jpg"),
             Map.entry("lifesupportsystem_purple_NNDU", "/Images/tiles/lifesupportsystem_purple_NNDU.jpg"),
             Map.entry("lifesupportsystem_purple_NNNU", "/Images/tiles/lifesupportsystem_purple_NNNU.jpg"),
-            Map.entry("lifesupportsystem_purple_NSNT", "/Images/tiles/lifesupportsystem_purple_NSNT.jpg"),
+            Map.entry("lifesupportsystem_purple_NSNU", "/Images/tiles/lifesupportsystem_purple_NSNU.jpg"),
             Map.entry("lifesupportsystem_purple_SDND", "/Images/tiles/lifesupportsystem_purple_SDND.jpg"),
 
 
@@ -220,9 +224,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("doublecannon_NUNN", "/Images/tiles/doublecannon_NUNN.jpg"),
 
             Map.entry("singlecannon_NDSN", "/Images/tiles/singlecannon_NDSN.jpg"),
+            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg"),
+            Map.entry("singlecannon_NUNS", "/Images/tiles/singlecannon_NUNS.jpg"),
             Map.entry("singlecannon_NDSN_2", "/Images/tiles/singlecannon_NDSN.jpg"),
             Map.entry("singlecannon_NNDN", "/Images/tiles/singlecannon_NNDN.jpg"),
-            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNSN_2", "/Images/tiles/singlecannon_NNSN.jpg"),
             Map.entry("singlecannon_NDDD", "/Images/tiles/singlecannon_NDDD.jpg"),
             Map.entry("singlecannon_NDNN", "/Images/tiles/singlecannon_NDNN.jpg"),
             Map.entry("singlecannon_NDNU", "/Images/tiles/singlecannon_NDNU.jpg"),
@@ -234,15 +240,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NNND", "/Images/tiles/singlecannon_NNND.jpg"),
             Map.entry("singlecannon_NNNS", "/Images/tiles/singlecannon_NNNS.jpg"),
             Map.entry("singlecannon_NNSD", "/Images/tiles/singlecannon_NNSD.jpg"),
-            Map.entry("singleengine_NNSN", "/Images/tiles/singleengine_NNSN.jpg"),
-            Map.entry("singleengine_NNUD", "/Images/tiles/singleengine_NNUD.jpg"),
+            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNUD", "/Images/tiles/singlecannon_NNUD.jpg"),
             Map.entry("singlecannon_NNUS", "/Images/tiles/singlecannon_NNUS.jpg"),
             Map.entry("singlecannon_NSDN", "/Images/tiles/singlecannon_NSDN.jpg"),
+            Map.entry("singlecannon_NSND", "/Images/tiles/singlecannon_NSND.jpg"),
             Map.entry("singlecannon_NSNN", "/Images/tiles/singlecannon_NSNN.jpg"),
             Map.entry("singlecannon_NSSS", "/Images/tiles/singlecannon_NSSS.jpg"),
             Map.entry("singlecannon_NSUD", "/Images/tiles/singlecannon_NSUD.jpg"),
-            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
-            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
+            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg")
     );
 
     @FXML
@@ -305,7 +311,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             if (cardImage.getImage() != null && currentComponent != null && !isRemoveMode) {
                 Dragboard db = cardImage.startDragAndDrop(TransferMode.COPY);
                 ClipboardContent content = new ClipboardContent();
-                content.putImage(cardImage.getImage());
+                javafx.scene.image.WritableImage snapshot = cardImage.snapshot(null, null);
+                content.putImage(snapshot);
                 db.setContent(content);
                 event.consume();
             }
@@ -329,10 +336,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         anchorPane.setOnDragDropped(event -> {
             Dragboard db = event.getDragboard();
             boolean success = false;
-
+            
             if (db.hasImage() && currentComponent != null) {
                 Position dropPosition = calculateGridPosition(event.getX(), event.getY());
-
+                
                 if (isValidDropPosition(dropPosition)) {
                     try {
                         context.getClient().placeComponent(currentComponent, dropPosition, context.getPlayerId());
@@ -345,7 +352,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     statusLabel.setText("Invalid position or position occupied!");
                 }
             }
-
+            
             event.setDropCompleted(success);
             event.consume();
         });
@@ -364,7 +371,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         removeButton.setLayoutX(10);
         removeButton.setLayoutY(10);
         removeButton.setPrefWidth(120);
-
+        
         removeButton.setOnAction(event -> {
             isRemoveMode = !isRemoveMode;
             if (isRemoveMode) {
@@ -378,7 +385,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 statusLabel.setText("Ready");
             }
         });
-
+        
         anchorPane.getChildren().add(removeButton);
     }
 
@@ -388,12 +395,21 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             statusLabel.setText("Error: No connection available");
             return;
         }
+        // Reset rotazione logica e grafica ogni volta che si pesca un nuovo componente
+        cardImage.setRotate(0);
+        if (currentComponent != null) {
+            if(currentComponent.getComponentDirection()!=Direction.NORTH){
+                //currentComponent.setComponentDirection(Direction.NORTH);
+                // Riporta anche i connettori alla posizione originale
+                System.out.println("ERRORE COMPONENT RUOTATO IMPLICITAMENTE");
+            }
 
+        }
         try {
             statusLabel.setText("Requesting component...");
             pickComponentButton.setDisable(true);
             context.getClient().pickComponentCard(context.getPlayerId());
-
+            
         } catch (Exception e) {
             pickComponentButton.setDisable(false);
             statusLabel.setText("Pick failed: " + e.getMessage());
@@ -403,7 +419,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameComponentPicked(Component component) {
         pickComponentButton.setDisable(false);
-
+        
         if (component == null) {
             statusLabel.setText("No components available");
             return;
@@ -411,7 +427,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
         currentComponent = component;
         String imagePath = getComponentImgPath(component);
-
+        
         if (imagePath != null) {
             InputStream imageStream = getClass().getResourceAsStream(imagePath);
             if (imageStream != null) {
@@ -427,52 +443,33 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @FXML
     public void rotateCardClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
-
-        Position componentPosition = null;
-        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
-            if (entry.getValue() == selectedImageView) {
-                componentPosition = entry.getKey();
-                break;
-            }
-        }
-
-        if (componentPosition != null) {
-            try {
-                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.CLOCKWISE);
-                statusLabel.setText("Rotating component...");
-            } catch (Exception e) {
-                statusLabel.setText("Rotation failed: " + e.getMessage());
-            }
-        }
+        // Rotazione logica
+        currentComponent.rotate(RotationType.CLOCKWISE);
+//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getClockwise());
+//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() + 90);
+        statusLabel.setText("Ruotato in senso orario (solo prima del piazzamento)");
     }
 
     @FXML
     public void rotateCardAntiClockwise() {
-        if (selectedImageView == null) {
-            statusLabel.setText("Select a component on the ship first");
+        if (currentComponent == null) {
+            statusLabel.setText("Devi prima pescare un componente");
             return;
         }
+        // Rotazione logica
 
-        Position componentPosition = null;
-        for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
-            if (entry.getValue() == selectedImageView) {
-                componentPosition = entry.getKey();
-                break;
-            }
-        }
-
-        if (componentPosition != null) {
-            try {
-                context.getClient().rotateComponent(context.getPlayerId(), componentPosition, RotationType.ANTI_CLOCKWISE);
-                statusLabel.setText("Rotating component...");
-            } catch (Exception e) {
-                statusLabel.setText("Rotation failed: " + e.getMessage());
-            }
-        }
+        currentComponent.rotate(RotationType.ANTI_CLOCKWISE);
+//        currentComponent.setComponentDirection(currentComponent.getComponentDirection().getCounterClockwise());
+//        currentComponent.getConnections().forEach(conn -> conn.setDirection(conn.getDirection().getCounterClockwise()));
+        // Rotazione grafica
+        cardImage.setRotate(cardImage.getRotate() - 90);
+        statusLabel.setText("Ruotato in senso antiorario (solo prima del piazzamento)");
     }
 
     @FXML
@@ -480,7 +477,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         try {
             context.getClient().validateShip(context.getPlayerId());
             statusLabel.setText("Validating ship...");
-            validateShipButton.setDisable(true); 
         } catch (Exception e) {
             statusLabel.setText("Validation failed: " + e.getMessage());
         }
@@ -501,7 +497,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private void selectImageView(ImageView imageView) {
         clearSelection();
-
+        
         selectedImageView = imageView;
         selectedHighlight = new Rectangle(
                 imageView.getLayoutX(), imageView.getLayoutY(),
@@ -511,7 +507,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         selectedHighlight.setStroke(Color.YELLOWGREEN);
         selectedHighlight.setStrokeWidth(7);
         selectedHighlight.setMouseTransparent(true);
-
+        
         anchorPane.getChildren().add(selectedHighlight);
         imageView.toFront();
     }
@@ -561,11 +557,18 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentPlaced(Component component, Position position) {
+        //System.out.println("[DEBUG] gameComponentPlaced chiamato: " + component + " in posizione " + position);
         String imagePath = getComponentImgPath(component);
-        if (imagePath == null) return;
+        if (imagePath == null) {
+            System.out.println("[DEBUG] imagePath nullo per componente: " + component);
+            return;
+        }
 
         InputStream imageStream = getClass().getResourceAsStream(imagePath);
-        if (imageStream == null) return;
+        if (imageStream == null) {
+            System.out.println("[DEBUG] imageStream nullo per path: " + imagePath);
+            return;
+        }
 
         ImageView placed = new ImageView(new Image(imageStream));
         placed.setFitWidth(SQUARE_SIZE);
@@ -574,6 +577,16 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         placed.setLayoutY(GRID_START_Y + position.getY() * SQUARE_SIZE);
         placed.setOnMouseClicked(event -> handleComponentClick(placed, position));
 
+        // Rotazione coerente con la logica del componente
+        double rotation = 0;
+        switch (component.getComponentDirection()) {
+            case NORTH -> rotation = 0;
+            case EAST -> rotation = 90;
+            case SOUTH -> rotation = 180;
+            case WEST -> rotation = 270;
+        }
+        placed.setRotate(rotation);
+
         anchorPane.getChildren().add(placed);
         cellViews.put(position, placed);
         shipComponents.put(position, component);
@@ -581,6 +594,8 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         statusLabel.setText("Component placed successfully!");
         currentComponent = null;
         cardImage.setImage(null);
+        System.out.println("[DEBUG] Componente piazzato: " + component.getComponentString() + " con direzione " + component.getComponentDirection());
+        //System.out.println("[DEBUG] Componente piazzato e GUI aggiornata");
     }
 
     @Override
@@ -599,44 +614,55 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     @Override
     public void gameComponentRotated(Position position, RotationType rotationType) {
-        Platform.runLater(() -> {
-            ImageView imageView = cellViews.get(position);
-            if (imageView != null) {
-                double rotation = switch (rotationType) {
-                    case CLOCKWISE -> 90;
-                    case ANTI_CLOCKWISE -> -90;
-                    case OPPOSITE -> 180;
-                };
-                
-                double currentRotation = imageView.getRotate();
-                imageView.setRotate(currentRotation + rotation);
-                
-                statusLabel.setText("Component rotated successfully");
-                
-                if (selectedImageView == imageView && selectedHighlight != null) {
-                    selectedHighlight.setRotate(currentRotation + rotation);
-                }
-            } else {
-                System.err.println("[GUI] No ImageView found at position " + position);
-            }
-        });
+        ImageView imageView = cellViews.get(position);
+        if (imageView != null) {
+            double delta = switch (rotationType) {
+                case CLOCKWISE -> 90;
+                case ANTI_CLOCKWISE -> -90;
+                case OPPOSITE -> 180;
+            };
+            imageView.setRotate(imageView.getRotate() + delta);
+            statusLabel.setText("Component rotated");
+        }
+
+//        Platform.runLater(() -> {
+//            ImageView imageView = cellViews.get(position);
+//            if (imageView != null) {
+//                double rotation = switch (rotationType) {
+//                    case CLOCKWISE -> 90;
+//                    case ANTI_CLOCKWISE -> -90;
+//                    case OPPOSITE -> 180;
+//                };
+//
+//                double currentRotation = imageView.getRotate();
+//                imageView.setRotate(currentRotation + rotation);
+//
+//                statusLabel.setText("Component rotated successfully");
+//
+//                if (selectedImageView == imageView && selectedHighlight != null) {
+//                    selectedHighlight.setRotate(currentRotation + rotation);
+//                }
+//            } else {
+//                System.err.println("[GUI] No ImageView found at position " + position);
+//            }
+//        });
     }
 
     @Override
     public void gameShipValidated(boolean isValid, String message) {
         Platform.runLater(() -> {
-            validateShipButton.setDisable(false); 
-            
+            validateShipButton.setDisable(false);
+
             if (isValid) {
                 statusLabel.setText("Ship validated! Ready for flight");
-                
+
                 validateShipButton.setText("Ready for Flight");
                 validateShipButton.setOnAction(e -> readyForFlight());
             } else {
                 statusLabel.setText("Validation failed");
-                
+
                 showValidationErrorDialog(message);
-                
+
                 validateShipButton.setText("Validate Ship");
                 validateShipButton.setStyle("");
                 validateShipButton.setOnAction(e -> validateShip());
@@ -649,10 +675,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             statusLabel.setText("Already processing ready for flight...");
             return;
         }
-        
+
         isReadyingForFlight = true;
         validateShipButton.setDisable(true);
-        
+
         try {
             UUID matchId = context.getCurrentMatchId();
             if (matchId == null) {
@@ -661,13 +687,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 validateShipButton.setDisable(false);
                 return;
             }
-            
+
             validateShipButton.setText("Waiting for others...");
             validateShipButton.setDisable(true);
             statusLabel.setText("Ready for flight - waiting for other players");
-            
+
             context.getClient().readyForFlight(matchId, context.getPlayerId());
-            
+
         } catch (Exception e) {
             statusLabel.setText("Ready for flight failed: " + e.getMessage());
             validateShipButton.setDisable(false);
@@ -734,12 +760,12 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameShipValidationFailed(String message) {
         Platform.runLater(() -> {
-            validateShipButton.setDisable(false); 
+            validateShipButton.setDisable(false);
             statusLabel.setText("Validation failed");
             statusLabel.setTextFill(javafx.scene.paint.Color.RED);
-            
+
             showValidationErrorDialog(message);
-            
+
             validateShipButton.setText("Validate Ship");
             validateShipButton.setStyle("");
             validateShipButton.setOnAction(e -> validateShip());
@@ -759,11 +785,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gamePlayerReadyForFlightFailed(String message) {
         Platform.runLater(() -> {
-            isReadyingForFlight = false; 
+            isReadyingForFlight = false;
             validateShipButton.setDisable(false);
             validateShipButton.setText("Ready for Flight");
             statusLabel.setText("Ready for flight failed: " + message);
-            
+
             showErrorDialog("Ready for Flight Failed", message);
         });
     }

@@ -2,6 +2,9 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
+/** represents a single cannon component
+ *
+ */
 public final class SingleCannon extends Cannon {
     public SingleCannon() {
         super(1,0);
@@ -23,6 +26,14 @@ public final class SingleCannon extends Cannon {
         return true;
     }
 
+    /**
+     * Returns the effective power of the cannon.
+     * If the cannon is damaged, it returns 0.0.
+     * If the cannon is facing forward, it returns the fire power.
+     * If the cannon is not facing forward, it returns half the fire power.
+     *
+     * @return the effective power of the cannon
+     */
     @Override
     public double getEffectivePower() {
         if (damaged) {
