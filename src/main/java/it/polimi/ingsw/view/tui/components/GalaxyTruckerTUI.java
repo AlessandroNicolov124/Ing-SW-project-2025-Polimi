@@ -277,7 +277,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer);
+        // Create a new ship building handler (either first time or after validation failure)
+        activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer, this);
         activeShipBuildingHandler.manageShipBuilding();
         activeShipBuildingHandler = null;
 
@@ -677,6 +678,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         return currentPlayer;
     }
 
+    /**
+     * Check if TUI is currently in ship building state
+     * Used by ShipBuildingHandler to know when to exit
+     */
+    public boolean isInShipBuildingState() {
+        return state == TuiState.SHIP_BUILDING;
+    }
+
     @Override
     public void componentPlaced(Component component, Position position) {
         synchronized (displayMutex) {
@@ -749,16 +758,20 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (isValid) {
                 console.printMessage("✓ " + message);
-                console.printMessage("Ship building complete! Waiting for position assignment...");
+                console.printMessage("✓ Ship building complete! Requesting position assignment...");
+                // Immediately transition away from ship building to stop the ship building handler
+                if (state == TuiState.SHIP_BUILDING) {
+                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+                    console.printMessage("Once all players complete validation, the adventure phase will begin.");
+                }
                 // Position assignment will be handled by positionAssigned() callback
-                // State transition will happen there
             } else {
                 console.printError("✗ " + message);
-                // If validation failed, stay in ship building mode
-                if (state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
-                    console.printMessage("Returning to ship building...");
-                    state = TuiState.SHIP_BUILDING;
-                }
+                console.printMessage("Returning to ship building - please fix the issues and try again...");
+                // Always return to ship building state on validation failure
+                state = TuiState.SHIP_BUILDING;
+                // Clear the active handler so it gets recreated in the main loop
+                activeShipBuildingHandler = null;
             }
         }
     }
@@ -1221,13 +1234,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             int cardPickerPosition = playerPositions.getOrDefault(firstPlayerToAct, -1);
             
             console.printMessage("\n ADVENTURE CARD PICKER: " + cardPickerName + " (position " + cardPickerPosition + ")");
-            console.printMessage("   ↳ The player in the WORST flight position picks cards for everyone!");
             
             console.printMessage("\n=============================================");
             console.printMessage("ADVENTURE CARD RULES:");
-            console.printMessage("• Player with HIGHEST position number (worst flight position) picks cards!");
-            console.printMessage("• Flight day costs move you to HIGHER position numbers (worse positions)");
-            console.printMessage("• Multiple players losing flight days move in reverse order (worst position first)");
+            console.printMessage("• Player with HIGHEST position number picks cards!");
+            console.printMessage("• Flight day costs move you to HIGHER position numbers");
+            console.printMessage("• Multiple players losing flight days move in reverse order");
             console.printMessage("• Players cannot overlap - if a position is occupied, move to next available position");
             
             // Check if we are the card picker
