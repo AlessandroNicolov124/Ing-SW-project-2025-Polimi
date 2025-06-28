@@ -102,7 +102,10 @@ public class AbandonedShip extends AdventureCard {
 
         // Aggiorna crediti e flight days
         gameModel.setCredits(player, currentCredits + creditsGained);
-        gameModel.updatePosition(player, -flightDaysCost);
+        gameModel.updatePosition(player, flightDaysCost);
+        
+        System.out.println("[AbandonedShip] " + player.getNickName() + " used abandoned ship: +" + creditsGained + 
+                         " credits, lost " + flightDaysCost + " flight days");
 
         // Pulisci la mappa dei crew
         Map<CrewType, Integer> crewCounts = player.getShip().getCrewCounts();

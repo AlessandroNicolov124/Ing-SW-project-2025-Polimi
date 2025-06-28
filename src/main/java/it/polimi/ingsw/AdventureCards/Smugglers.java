@@ -139,8 +139,11 @@ public class Smugglers extends AdventureCard {
         if (acceptReward) {
             // Load goods on player's ship
             loadGoods(player);
-            // Move player back on flight board
-            gameModel.updatePosition(player, -flightDaysCost);
+            // Move player back on flight board (positive flight day cost = move to worse position)
+            gameModel.updatePosition(player, flightDaysCost);
+            
+            System.out.println("[Smugglers] " + player.getNickName() + " defeated smugglers and loaded goods, lost " + 
+                             flightDaysCost + " flight days");
         }
         // If player doesn't accept reward, nothing happens to their position
     }

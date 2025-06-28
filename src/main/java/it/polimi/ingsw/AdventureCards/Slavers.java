@@ -124,8 +124,11 @@ public class Slavers extends AdventureCard {
             int currentCredits = gameModel.getCredits(player);
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
-            // Move player back on flight board
-            gameModel.updatePosition(player, -flightDaysCost);
+            // Move player back on flight board (positive flight day cost = move to worse position)
+            gameModel.updatePosition(player, flightDaysCost);
+            
+            System.out.println("[Slavers] " + player.getNickName() + " paid the slavers: +" + rewardCredits + 
+                             " credits, lost " + flightDaysCost + " flight days");
         }
         // If player doesn't accept reward, nothing happens to their position
     }

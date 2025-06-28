@@ -43,6 +43,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 public class SocketClientHandler implements Runnable, GeneralClientIf {
     private final Socket socket;
@@ -293,7 +294,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (currentPlayer == -1) {
             System.out.println("[ServerSocket] No player ID set for client handler");
             showUpdate(new PickAdventureCardResponse(
-                    -1, null, false, "No player ID set", -1));
+                    -1, null, false, "No player ID set", -1, null));
             return;
         }
 
@@ -301,23 +302,23 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (match == null) {
             System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not found", -1));
+                    currentPlayer, null, false, "Match not found", -1, null));
             return;
         }
 
         if (match.getMatchState() != MatchStates.IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not in progress", -1));
+                    currentPlayer, null, false, "Match not in progress", -1, null));
             return;
         }
 
-        // Only the leading player (position 1) can pick adventure cards
+        // Only the leading player (highest position) can pick adventure cards
         int leadingPlayerId = match.getFirstPlayerToAct();
         if (currentPlayer != leadingPlayerId) {
             System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + currentPlayer + " is not the leader (ID: " + leadingPlayerId + ")");
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1));
+                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1, null));
             return;
         }
 
@@ -326,7 +327,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (player == null) {
             System.out.println("[ServerSocket] Player not found with ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Player not found", -1));
+                    currentPlayer, null, false, "Player not found", -1, null));
             return;
         }
 
@@ -345,6 +346,12 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
+        // Get updated player positions after card effects
+        Map<Integer, Integer> updatedPositions = null;
+        if (success && adventureCard != null) {
+            updatedPositions = controller.getCurrentPlayerPositions();
+        }
+
         // Check if there are more adventure cards or if the game is complete
         int nextPlayerTurn = -1; // Default: adventure phase continues
         
@@ -355,7 +362,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             // Send the pick response first
             lobbyManager.multicastToMatch(match.getMatchId(),
                     new PickAdventureCardResponse(
-                            currentPlayer, adventureCard, success, message, nextPlayerTurn));
+                            currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
             
             // Then send completion notification
             String completionReason;
@@ -380,7 +387,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
                 new PickAdventureCardResponse(
-                        currentPlayer, adventureCard, success, message, nextPlayerTurn));
+                        currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
     }
 
     @Override

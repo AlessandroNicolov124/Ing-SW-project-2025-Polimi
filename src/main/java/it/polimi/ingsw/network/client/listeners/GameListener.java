@@ -82,4 +82,18 @@ public interface GameListener {
     void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
     void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
     void adventurePhaseComplete(java.util.UUID matchId, boolean gameComplete, String completionReason);
+
+    /**
+     * Called when an adventure card is picked and positions may have changed
+     * @param playerId The player who picked the card
+     * @param adventureCard The adventure card that was picked
+     * @param success Whether the card pick was successful
+     * @param message Any message associated with the pick
+     * @param nextPlayerTurn Which player should pick next
+     * @param updatedPositions Current positions after card effects (may be null)
+     */
+    default void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, java.util.Map<Integer, Integer> updatedPositions) {
+        // Default implementation calls the old method for backward compatibility
+        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn);
+    }
 }

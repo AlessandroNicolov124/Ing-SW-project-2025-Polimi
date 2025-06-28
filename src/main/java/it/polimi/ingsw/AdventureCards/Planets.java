@@ -26,7 +26,7 @@ import java.util.*;
 public class Planets extends AdventureCard{
     private List<Planet> planets;
     private int flightDaysCost;
-    private Map<Planet, Player> landedPlayers;
+    private transient Map<Planet, Player> landedPlayers;
 
     public Planets(){
         super();
@@ -136,8 +136,9 @@ public class Planets extends AdventureCard{
         });
         
         for (Player player : landedPlayersList) {
-            // Move player back on flight board
-            gameModel.updatePosition(player, -flightDaysCost);
+            // Move player back on flight board (positive flight day cost = move to worse position)
+            gameModel.updatePosition(player, flightDaysCost);
+            System.out.println("[Planets] " + player.getNickName() + " landed on planet, lost " + flightDaysCost + " flight days");
         }
     }
     
