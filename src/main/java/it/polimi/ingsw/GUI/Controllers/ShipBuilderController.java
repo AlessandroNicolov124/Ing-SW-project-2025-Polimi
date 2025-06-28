@@ -82,16 +82,17 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("cabin_starting_4", "/Images/tiles/Cabin_Starting_4.jpg"), // BLUE
 
             Map.entry("lifesupportsystem_brown_DSNS", "/Images/tiles/lifesupportsystem_brown_DSNS.jpg"),
-            Map.entry("lifesupportsystem_brown_NDNT", "/Images/tiles/lifesupportsystem_brown_NDNT.jpg"),
+            Map.entry("lifesupportsystem_brown_NDNU", "/Images/tiles/lifesupportsystem_brown_NDNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNNU", "/Images/tiles/lifesupportsystem_brown_NNNU.jpg"),
             Map.entry("lifesupportsystem_brown_NNSD", "/Images/tiles/lifesupportsystem_brown_NNSD.jpg"),
             Map.entry("lifesupportsystem_brown_SNNU", "/Images/tiles/lifesupportsystem_brown_SNNU.jpg"),
             Map.entry("lifesupportsystem_brown_SSNS", "/Images/tiles/lifesupportsystem_brown_SSNS.jpg"),
+
             Map.entry("lifesupportsystem_purple_DDND", "/Images/tiles/lifesupportsystem_purple_DDND.jpg"),
             Map.entry("lifesupportsystem_purple_DNNU", "/Images/tiles/lifesupportsystem_purple_DNNU.jpg"),
             Map.entry("lifesupportsystem_purple_NNDU", "/Images/tiles/lifesupportsystem_purple_NNDU.jpg"),
             Map.entry("lifesupportsystem_purple_NNNU", "/Images/tiles/lifesupportsystem_purple_NNNU.jpg"),
-            Map.entry("lifesupportsystem_purple_NSNT", "/Images/tiles/lifesupportsystem_purple_NSNT.jpg"),
+            Map.entry("lifesupportsystem_purple_NSNU", "/Images/tiles/lifesupportsystem_purple_NSNU.jpg"),
             Map.entry("lifesupportsystem_purple_SDND", "/Images/tiles/lifesupportsystem_purple_SDND.jpg"),
 
 
@@ -220,9 +221,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("doublecannon_NUNN", "/Images/tiles/doublecannon_NUNN.jpg"),
 
             Map.entry("singlecannon_NDSN", "/Images/tiles/singlecannon_NDSN.jpg"),
+            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg"),
+            Map.entry("singlecannon_NUNS", "/Images/tiles/singlecannon_NUNS.jpg"),
             Map.entry("singlecannon_NDSN_2", "/Images/tiles/singlecannon_NDSN.jpg"),
             Map.entry("singlecannon_NNDN", "/Images/tiles/singlecannon_NNDN.jpg"),
-            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNSN_2", "/Images/tiles/singlecannon_NNSN.jpg"),
             Map.entry("singlecannon_NDDD", "/Images/tiles/singlecannon_NDDD.jpg"),
             Map.entry("singlecannon_NDNN", "/Images/tiles/singlecannon_NDNN.jpg"),
             Map.entry("singlecannon_NDNU", "/Images/tiles/singlecannon_NDNU.jpg"),
@@ -234,15 +237,15 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NNND", "/Images/tiles/singlecannon_NNND.jpg"),
             Map.entry("singlecannon_NNNS", "/Images/tiles/singlecannon_NNNS.jpg"),
             Map.entry("singlecannon_NNSD", "/Images/tiles/singlecannon_NNSD.jpg"),
-            Map.entry("singleengine_NNSN", "/Images/tiles/singleengine_NNSN.jpg"),
-            Map.entry("singleengine_NNUD", "/Images/tiles/singleengine_NNUD.jpg"),
+            Map.entry("singlecannon_NNSN", "/Images/tiles/singlecannon_NNSN.jpg"),
+            Map.entry("singlecannon_NNUD", "/Images/tiles/singlecannon_NNUD.jpg"),
             Map.entry("singlecannon_NNUS", "/Images/tiles/singlecannon_NNUS.jpg"),
             Map.entry("singlecannon_NSDN", "/Images/tiles/singlecannon_NSDN.jpg"),
+            Map.entry("singlecannon_NSND", "/Images/tiles/singlecannon_NSND.jpg"),
             Map.entry("singlecannon_NSNN", "/Images/tiles/singlecannon_NSNN.jpg"),
             Map.entry("singlecannon_NSSS", "/Images/tiles/singlecannon_NSSS.jpg"),
             Map.entry("singlecannon_NSUD", "/Images/tiles/singlecannon_NSUD.jpg"),
-            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
-            Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
+            Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg")
     );
 
     @FXML
