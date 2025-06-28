@@ -1,34 +1,41 @@
 package it.polimi.ingsw;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Represents the flight board that tracks player positions during the flight phase
- * of Galaxy Trucker.
+ * Represents the flight board for Galaxy Trucker with 24 positions (0-23) in a circular track.
+ * Position system: Higher numbers = better positions, Lower numbers = worse positions
+ * Initial positions: 1st place = position 6, 2nd = position 3, 3rd = position 1, 4th = position 0
+ * Flight day costs move players to lower position numbers (worse positions)
+ * 
+ * Wrap-around behavior: If players go below position 0, they wrap around to the end of the track
+ * (e.g., from position 0 losing 2 flight days goes to position 22, losing 3 goes to position 21, etc.)
  */
 public class FlightBoard {
+
     /**
-     * Map that stores each player's position on the flight board
+     * Map of players to their current flight board positions (0-23)
+     * Position 0-23: Lower numbers are better positions
      */
     private Map<Player, Integer> positions;
 
     /**
-     * Constructor for the FlightBoard
+     * Constructor
      */
     public FlightBoard() {
-        this.positions = new HashMap<>();
+        positions = new HashMap<>();
     }
 
     /**
      * Adds a player to the flight board at the starting position (0)
      *
-     * @param player The player to add to the board
+     * @param player Il giocatore da aggiungere
      */
     public void addPlayer(Player player) {
-        positions.put(player, 0); // Default to 0, will be updated by setInitialPosition
+        if (!positions.containsKey(player)) {
+            positions.put(player, -1); // -1 indicates not yet positioned
+            System.out.println("[FlightBoard] Player " + player.getNickName() + " added to flight board (not positioned yet)");
+        }
     }
 
     /**
@@ -39,66 +46,74 @@ public class FlightBoard {
      * @param position The chosen position (1-4).
      * @return true if the position was successfully set, false otherwise.
      */
-    public boolean setInitialPosition(Player player, int position) {
-        if (position < 1 || position > 4) {
-            System.out.println("Invalid position. Please choose a position between 1 and 4.");
+    public boolean setInitialPosition(Player player, int finishOrder) {
+        if (finishOrder < 1 || finishOrder > 4) {
+            System.out.println("Invalid finish order. Must be between 1 and 4.");
             return false;
         }
 
-        // Check if the position is occupied by any other active player
-        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            // We are checking if *any* player is in that spot.
-            // The player attempting to set the position shouldn't already have a non-zero position at this stage.
-            if (!entry.getKey().equals(player) && entry.getValue() == position && entry.getKey().isActive()) {
-                System.out.println("Position " + position + " is already occupied by " + entry.getKey().getNickName());
-                return false;
-            }
+        // Map finish order to flight board position
+        int flightPosition = getFlightPositionFromFinishOrder(finishOrder);
+        
+        // Check if the position is already occupied
+        if (isPositionOccupied(flightPosition, player)) {
+            System.out.println("Position " + flightPosition + " (finish order " + finishOrder + ") is already occupied");
+            return false;
         }
 
-        positions.put(player, position);
-        System.out.println(player.getNickName() + " has chosen starting position: " + position);
+        positions.put(player, flightPosition);
+        System.out.println(player.getNickName() + " finished " + getOrdinalString(finishOrder) + 
+                          " and is placed at flight position " + flightPosition);
         return true;
     }
 
     /**
-     * Gets a list of available starting positions (1-4).
-     * A position is available if it's not occupied by any active player.
-     *
-     * @return A list of integers representing available starting positions.
+     * Maps finish order to flight board position
+     * @param finishOrder 1-4 (1st, 2nd, 3rd, 4th)
+     * @return flight board position (6, 3, 1, 0)
      */
-    public List<Integer> getAvailableStartingPositions() {
-        List<Integer> availablePositions = new ArrayList<>();
-        for (int i = 1; i <= 4; i++) {
-            boolean occupied = false;
-            for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-                // Consider a position occupied if an active player is there and their position is not the default 0
-                if (entry.getValue() == i && entry.getKey().isActive() && positions.get(entry.getKey()) != 0) {
-                    occupied = true;
-                    break;
-                }
-            }
-            if (!occupied) {
-                availablePositions.add(i);
-            }
+    private int getFlightPositionFromFinishOrder(int finishOrder) {
+        switch (finishOrder) {
+            case 1: return 6; // 1st finisher gets position 6 (best)
+            case 2: return 3; // 2nd finisher gets position 3
+            case 3: return 1; // 3rd finisher gets position 1
+            case 4: return 0; // 4th finisher gets position 0 (worst)
+            default: throw new IllegalArgumentException("Invalid finish order: " + finishOrder);
         }
-        return availablePositions;
     }
 
     /**
-      * Checks if a position is already occupied by another player.
-      *
-      * @param position The position to check.
-      * @param currentPlayer The current player (to be excluded from the check).
-      * @return true if the position is occupied, false otherwise.
-      */
-    public boolean isPositionOccupied(int position, Player currentPlayer) {
+     * Gets available finish orders (1-4) that haven't been assigned yet
+     */
+    public List<Integer> getAvailableStartingPositions() {
+        List<Integer> availableOrders = new ArrayList<>();
+        
+        // Check which finish orders are still available
+        for (int order = 1; order <= 4; order++) {
+            int flightPosition = getFlightPositionFromFinishOrder(order);
+            if (!isPositionOccupied(flightPosition, null)) {
+                availableOrders.add(order);
+            }
+        }
+        
+        return availableOrders;
+    }
+
+    /**
+     * Checks if a specific flight board position is occupied
+     */
+    public boolean isPositionOccupied(int flightPosition, Player excludePlayer) {
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
             Player player = entry.getKey();
             int playerPosition = entry.getValue();
 
-            // Se non è il giocatore corrente e occupa la posizione richiesta
-            // Also ensure the player occupying is active and not at the default unassigned position (0)
-            if (!player.equals(currentPlayer) && playerPosition == position && player.isActive() && playerPosition != 0) {
+            // Skip the excluded player and inactive players
+            if (player.equals(excludePlayer) || !player.isActive()) {
+                continue;
+            }
+            
+            // Check if this position is occupied (and player is positioned, not -1)
+            if (playerPosition == flightPosition && playerPosition != -1) {
                 return true;
             }
         }
@@ -106,106 +121,156 @@ public class FlightBoard {
     }
 
     /**
-      * Finds the first available position starting from a given initial position.
-      *
-      * @param startPosition The initial position to start searching from
-      * @param currentPlayer The current player
-      * @return The first available position
-      */
-    private int findFirstAvailablePosition(int startPosition, Player currentPlayer) {
+     * Finds the next available position when moving backwards (lower position numbers)
+     * Used for flight day costs - finds next available position in the direction of movement
+     * Supports wrap-around: positions below 0 continue from position 23
+     */
+    private int findNextAvailablePosition(int startPosition, Player movingPlayer) {
+        // When losing flight days, we move to lower position numbers (worse positions)
         int position = startPosition;
-
-        // Trova la prima posizione non occupata (e greater than 0)
-        while (position > 0 && isPositionOccupied(position, currentPlayer)) {
-            position++; // This logic might need review for edge cases if players can be pushed back to 0
+        int maxPosition = 23; // Flight board has positions 0-23
+        
+        // Search for next available position going towards worse positions (lower numbers)
+        // Check positions from startPosition down to 0, then wrap around from 23 downwards
+        for (int i = 0; i < maxPosition + 1; i++) {
+            // If position goes below 0, wrap around to the end of the track
+            if (position < 0) {
+                position = maxPosition + position + 1; // Wrap around (e.g., -1 becomes 23, -2 becomes 22)
+            }
+            
+            // If this position is not occupied, we found our spot
+            if (!isPositionOccupied(position, movingPlayer)) {
+                return position;
+            }
+            
+            // Move to next position backwards
+            position--;
         }
-        // If after incrementing, it's still occupied, or if the initial check was for pos 0.
-        // This method is generally for forward movement.
-        // For setting initial positions, getAvailableStartingPositions and setInitialPosition are more direct.
-
-        return position;
+        
+        // If all positions are somehow occupied (shouldn't happen), return the original start position
+        return startPosition;
     }
 
     /**
-      * Updates the position of a player on the flight board,
-      * taking into account already occupied positions.
-      *
-      * @param player The player whose position needs to be updated
-      * @param spaces The number of spaces to move (can be positive or negative)
-      */
-    public void updatePosition(Player player, int spaces) {
-        if (!positions.containsKey(player)) {
-            throw new IllegalArgumentException("Il giocatore non è presente sul tabellone di volo");
-        }
-
-        int currentPosition = positions.get(player);
-        int newPosition = currentPosition + spaces;
-
-        // Applica la posizione minima (0)
-        if (newPosition < 0) {
-            newPosition = 0;
-        }
-
-        // Verifica se la nuova posizione è occupata
-        if (newPosition > 0 && isPositionOccupied(newPosition, player)) {
-            // Trova la prima posizione disponibile
-            newPosition = findFirstAvailablePosition(newPosition, player);
-        }
-
-        positions.put(player, newPosition);
-    }
-
-    /**
-      * Gets the current position of a player on the board.
-      *
-      * @param player The player whose position to retrieve
-      * @return The current position of the player
-      */
-    public int getPosition(Player player) {
-        if (!positions.containsKey(player)) {
-            throw new IllegalArgumentException("Il giocatore non è presente sul tabellone di volo");
-        }
-
-        return positions.get(player);
-    }
-
-    /**
-     * Returns the players in order of their position (the farthest first)
-     *
-     * @return List of players sorted by position
+     * Updates a player's position, handling flight day costs and collisions
+     * Supports wrap-around: if a player goes below position 0, they wrap around to position 23, 22, etc.
+     * @param player The player whose position to update
+     * @param flightDaysCost Flight days to lose (positive number = move to worse position)
      */
-    public List<Player> getPlayersInFlightOrder() {
-        List<Player> sortedPlayers = new ArrayList<>(positions.keySet());
-        // Filter out players at position 0 (uninitialized) before sorting for flight order
-        sortedPlayers.removeIf(p -> positions.get(p) == 0 && p.isActive());
-        sortedPlayers.sort((p1, p2) -> {
-            // Handle cases where a player might not be active or not yet positioned
-            Integer pos1 = positions.getOrDefault(p1, 0);
-            Integer pos2 = positions.getOrDefault(p2, 0);
-            return pos2.compareTo(pos1); // Descending order
-        });
-        return sortedPlayers;
-    }
-
-    /**
-     * Checks if a player has reached a specific position on the board
-     *
-     * @param player The player to check
-     * @param position The position to check against
-     * @return true if the player has reached or passed the position, false otherwise
-     */
-    public boolean hasReachedPosition(Player player, int position) {
+    public void updatePosition(Player player, int flightDaysCost) {
         if (!positions.containsKey(player)) {
             throw new IllegalArgumentException("Player is not on the flight board");
         }
 
-        return positions.get(player) >= position;
+        int currentPosition = positions.get(player);
+        if (currentPosition == -1) {
+            throw new IllegalArgumentException("Player has not been positioned yet");
+        }
+
+        // Calculate new position (losing flight days = moving to lower numbers = worse positions)
+        int targetPosition = currentPosition - flightDaysCost;
+        
+        // Allow negative positions - the findNextAvailablePosition method will handle wrap-around
+        // Ensure we don't go better than the best position (23)
+        if (targetPosition > 23) {
+            targetPosition = 23;
+        }
+
+        // Find next available position if target is occupied (handles wrap-around automatically)
+        int finalPosition = findNextAvailablePosition(targetPosition, player);
+        
+        System.out.println("[FlightBoard] " + player.getNickName() + " moves from position " + 
+                          currentPosition + " to position " + finalPosition + 
+                          " (lost " + flightDaysCost + " flight days)" + 
+                          (finalPosition > currentPosition ? " - wrapped around!" : ""));
+        
+        positions.put(player, finalPosition);
     }
 
     /**
-     * Gets the player with the most advanced position on the board
-     *
-     * @return The player in the lead, or null if the board is empty
+     * Updates multiple players' positions in reverse order (worst position moves first)
+     * This implements the rule: "If multiple players lose flight days at the same time, 
+     * they lose them in reverse order (farthest behind moves back first)"
+     */
+    public void updatePositionsInReverseOrder(Map<Player, Integer> playerFlightDayCosts) {
+        // Get players ordered from worst position to best position (highest to lowest position numbers)
+        List<Player> playersInReverseOrder = getPlayersInReverseFlightOrder();
+        
+        // Update positions in reverse order (worst position player moves first)
+        for (Player player : playersInReverseOrder) {
+            if (playerFlightDayCosts.containsKey(player) && player.isActive()) {
+                int flightDaysCost = playerFlightDayCosts.get(player);
+                updatePosition(player, flightDaysCost);
+            }
+        }
+    }
+
+    /**
+     * Gets players in flight order (best position to worst position)
+     * @return List of players ordered by position (position 0 first, position 23 last)
+     */
+    public List<Player> getPlayersInFlightOrder() {
+        List<Player> sortedPlayers = new ArrayList<>();
+        
+        // Only include positioned, active players
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            if (player.isActive() && position != -1) {
+                sortedPlayers.add(player);
+            }
+        }
+        
+        // Sort by position: lower position numbers = better positions = earlier in list
+        sortedPlayers.sort((p1, p2) -> {
+            Integer pos1 = positions.get(p1);
+            Integer pos2 = positions.get(p2);
+            return pos1.compareTo(pos2); // Ascending order (0, 1, 2, ... 23)
+        });
+        
+        return sortedPlayers;
+    }
+
+    /**
+     * Gets players in reverse flight order (worst position to best position)
+     * Used for applying flight day costs in correct order
+     * @return List of players ordered from worst to best position (position 23 first, position 0 last)
+     */
+    public List<Player> getPlayersInReverseFlightOrder() {
+        List<Player> sortedPlayers = new ArrayList<>();
+        
+        // Only include positioned, active players
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            if (player.isActive() && position != -1) {
+                sortedPlayers.add(player);
+            }
+        }
+        
+        // Sort by position: higher position numbers = worse positions = earlier in list
+        sortedPlayers.sort((p1, p2) -> {
+            Integer pos1 = positions.get(p1);
+            Integer pos2 = positions.get(p2);
+            return pos2.compareTo(pos1); // Descending order (23, 22, 21, ... 0)
+        });
+        
+        return sortedPlayers;
+    }
+
+    /**
+     * Gets the current position of a player
+     */
+    public int getPosition(Player player) {
+        if (!positions.containsKey(player)) {
+            throw new IllegalArgumentException("Player is not on the flight board");
+        }
+        return positions.get(player);
+    }
+
+    /**
+     * Gets the leading player (player with the highest position number = best flight position)
+     * This player is in 1st place
      */
     public Player getLeadingPlayer() {
         if (positions.isEmpty()) {
@@ -213,12 +278,17 @@ public class FlightBoard {
         }
 
         Player leadingPlayer = null;
-        int maxPosition = -1;
+        int bestPosition = -1;
 
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            if (entry.getKey().isActive() && entry.getValue() > maxPosition && entry.getValue() != 0) { // Ensure player is active and not at pos 0
-                maxPosition = entry.getValue();
-                leadingPlayer = entry.getKey();
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            
+            // Only consider active, positioned players
+            // Leading player = highest position number (best flight position)
+            if (player.isActive() && position != -1 && position > bestPosition) {
+                bestPosition = position;
+                leadingPlayer = player;
             }
         }
 
@@ -226,31 +296,57 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the current positions of all players
-     *
-     * @return A map with players as keys and their positions as values
+     * Gets the adventure card picker (player with the highest position number = best flight position)
+     * This player picks adventure cards that affect everyone - the leading player picks cards
      */
-    public Map<Player, Integer> getAllPositions() {
-        // Return a copy to prevent external modification
-        return new HashMap<>(positions);
+    public Player getAdventureCardPicker() {
+        if (positions.isEmpty()) {
+            return null;
+        }
+
+        Player cardPicker = null;
+        int bestPosition = -1;
+
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            
+            // Only consider active, positioned players
+            // Card picker = highest position number (best flight position = leading player)
+            if (player.isActive() && position != -1 && position > bestPosition) {
+                bestPosition = position;
+                cardPicker = player;
+            }
+        }
+
+        return cardPicker;
     }
 
     /**
-     * Resets all players to the starting position (0)
+     * Gets the player with the best flight position (lowest position number)
+     * This is used for determining final rankings and winners
      */
-    public void resetPositions() {
-        for (Player player : positions.keySet()) {
-            positions.put(player, 0);
+    public Player getBestPositionPlayer() {
+        if (positions.isEmpty()) {
+            return null;
         }
     }
 
-    /**
-     * Removes a player from the flight board
-     *
-     * @param player The player to remove
-     */
-    public void removePlayer(Player player) {
-        positions.remove(player);
+        Player bestPlayer = null;
+        int bestPosition = Integer.MAX_VALUE;
+
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            
+            // Only consider active, positioned players
+            if (player.isActive() && position != -1 && position < bestPosition) {
+                bestPosition = position;
+                bestPlayer = player;
+            }
+        }
+
+        return bestPlayer;
     }
 
     /**
@@ -264,13 +360,16 @@ public class FlightBoard {
         }
 
         Player lastPlayer = null;
-        int minPosition = Integer.MAX_VALUE;
+        int worstPosition = -1;
 
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            // Ensure player is active and actually on the board (not at pos 0)
-            if (entry.getKey().isActive() && entry.getValue() < minPosition && entry.getValue() != 0) {
-                minPosition = entry.getValue();
-                lastPlayer = entry.getKey();
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            
+            // Only consider active, positioned players
+            if (player.isActive() && position != -1 && position > worstPosition) {
+                worstPosition = position;
+                lastPlayer = player;
             }
         }
 
@@ -278,59 +377,86 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the player at a specific position on the board
-     *
-     * @param position The position to check
-     * @return The player at that position
+     * Gets the player at a specific position (null if no one is there)
      */
     public Player getPlayerAtPosition(int position) {
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
-            // Ensure player is active and at the specified position (and position is not 0)
-            if (entry.getValue() == position && entry.getKey().isActive() && position != 0) {
-                return entry.getKey();
+            Player player = entry.getKey();
+            int playerPosition = entry.getValue();
+            
+            if (player.isActive() && playerPosition == position && position != -1) {
+                return player;
             }
         }
         return null;
     }
 
     /**
-     * Calculates flight bonuses for players based on their positions at the end of a round.
-     * The bonuses are determined by the round number and the order of players.
-     *
-     * @param roundNumber The current round number (1, 2, or 3)
-     * @return A map with players as keys and their flight bonuses as values
+     * Gets all current positions
+     */
+    public Map<Player, Integer> getAllPositions() {
+        return new HashMap<>(positions);
+    }
+
+    /**
+     * Checks if a player has reached a specific position or better
+     */
+    public boolean hasReachedPosition(Player player, int position) {
+        if (!positions.containsKey(player)) {
+            throw new IllegalArgumentException("Player is not on the flight board");
+        }
+        
+        int playerPosition = positions.get(player);
+        return playerPosition != -1 && playerPosition <= position; // Lower or equal position = reached or better
+    }
+
+    /**
+     * Resets all players to unpositioned state
+     */
+    public void resetPositions() {
+        for (Player player : positions.keySet()) {
+            positions.put(player, -1);
+        }
+    }
+
+    /**
+     * Removes a player from the flight board
+     */
+    public void removePlayer(Player player) {
+        positions.remove(player);
+    }
+
+    /**
+     * Calculate flight bonuses based on final positions
      */
     public Map<Player, Integer> calculateFlightBonuses(int roundNumber) {
         Map<Player, Integer> bonuses = new HashMap<>();
-        List<Player> finishedPlayers = getPlayersInFlightOrder(); // Use the updated method
-
-        // Il primo giocatore ottiene il bonus più grande, e così via
-        for (int i = 0; i < finishedPlayers.size(); i++) {
-            Player player = finishedPlayers.get(i);
+        List<Player> playersInOrder = getPlayersInFlightOrder(); // Best to worst
+        
+        // Award bonuses based on final position
+        for (int i = 0; i < playersInOrder.size(); i++) {
+            Player player = playersInOrder.get(i);
             int bonus = 0;
 
-            // I bonus dipendono dal numero di round e dalla posizione
+            // Bonuses depend on round number and position
             switch (roundNumber) {
                 case 1:
-                    // Esempio: 1° ottiene 4, 2° ottiene 2, 3° ottiene 1, il resto ottiene 0
-                    if (i == 0) bonus = 4;
-                    else if (i == 1) bonus = 2;
-                    else if (i == 2) bonus = 1;
+                    if (i == 0) bonus = 4;      // 1st place
+                    else if (i == 1) bonus = 2; // 2nd place
+                    else if (i == 2) bonus = 1; // 3rd place
                     break;
                 case 2:
-                    // Esempio: 1° ottiene 6, 2° ottiene 4, 3° ottiene 2, 4° ottiene 1
-                    if (i == 0) bonus = 6;
-                    else if (i == 1) bonus = 4;
-                    else if (i == 2) bonus = 2;
-                    else if (i == 3) bonus = 1;
+                    if (i == 0) bonus = 6;      // 1st place
+                    else if (i == 1) bonus = 4; // 2nd place
+                    else if (i == 2) bonus = 2; // 3rd place
+                    else if (i == 3) bonus = 1; // 4th place
                     break;
                 case 3:
-                    // Esempio: 1° ottiene 8, 2° ottiene 6, 3° ottiene 4, 4° ottiene 2, 5° ottiene 1
-                    if (i == 0) bonus = 8;
-                    else if (i == 1) bonus = 6;
-                    else if (i == 2) bonus = 4;
-                    else if (i == 3) bonus = 2;
-                    else if (i == 4) bonus = 1;
+                    if (i == 0) bonus = 8;      // 1st place
+                    else if (i == 1) bonus = 6; // 2nd place
+                    else if (i == 2) bonus = 4; // 3rd place
+                    else if (i == 3) bonus = 2; // 4th place
+                    else if (i == 4) bonus = 1; // 5th place
                     break;
             }
 
@@ -340,4 +466,30 @@ public class FlightBoard {
         return bonuses;
     }
 
+    /**
+     * Helper method to convert numbers to ordinal strings
+     */
+    private String getOrdinalString(int number) {
+        switch (number) {
+            case 1: return "1st";
+            case 2: return "2nd";
+            case 3: return "3rd";
+            case 4: return "4th";
+            default: return number + "th";
+        }
+    }
+
+    /**
+     * Updates positions in normal order (best position to worst position)
+     * Used for general position updates that don't require reverse order
+     */
+    public void updatePositionsInOrder(Map<Player, Integer> playerMoves) {
+        List<Player> orderedPlayers = getPlayersInFlightOrder();
+        
+        for (Player player : orderedPlayers) {
+            if (playerMoves.containsKey(player) && player.isActive()) {
+                updatePosition(player, playerMoves.get(player));
+            }
+        }
+    }
 }

@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable {

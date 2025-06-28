@@ -109,8 +109,11 @@ public class CombatZone extends AdventureCard {
         // Find player with fewest crew
         Player weakestCrew = findPlayerWithFewestCrew(players);
         if (weakestCrew != null) {
-            // Apply flight day penalty
-            gameModel.updatePosition(weakestCrew, -flightDayPenalty);
+            // Apply flight day penalty (positive value = move to worse position)
+            gameModel.updatePosition(weakestCrew, flightDayPenalty);
+            
+            System.out.println("[CombatZone] " + weakestCrew.getNickName() + " had fewest crew, lost " + 
+                             flightDayPenalty + " flight days");
         }
     }
 

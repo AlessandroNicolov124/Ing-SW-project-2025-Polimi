@@ -14,17 +14,21 @@ import java.io.IOException;
 public class ShipBuildingHandler {
 
     private final ConsoleManager console;
+    // private final GameController controller; // Keep for local validation/display logic if needed, or remove
     private final Player currentPlayer; // Assuming we know the current player
     private final GeneralClientIf simpleClient; // Added socket client
+    private final GalaxyTruckerTUI parentTUI; // Reference to parent TUI for state checking
 
     private final Random random = new Random();
     private Component currentComponent = null;
 
 
-    public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer) {
+    public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer, GalaxyTruckerTUI parentTUI) {
         this.console = console;
         this.simpleClient = simpleClient;
         this.currentPlayer = currentPlayer;
+        this.parentTUI = parentTUI;
+        // this.controller = controller; // Remove if no longer needed
     }
 
     // Method to be called to redraw the ship display
@@ -48,6 +52,11 @@ public class ShipBuildingHandler {
         this.currentComponent = component;
     }
 
+    // Method to check if we should continue ship building
+    private boolean shouldContinueBuilding() {
+        return parentTUI.isInShipBuildingState();
+    }
+
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
         console.printMessage("Generating random component deck...");
@@ -63,7 +72,7 @@ public class ShipBuildingHandler {
         handlePlaceComponent(currentComponent);
         currentComponent = null;
 
-        while (!buildingDone) {
+        while (!buildingDone && shouldContinueBuilding()) {
             if (currentComponent == null) {
                 try {
                     simpleClient.pickComponentCard(currentPlayer.getId());
@@ -175,6 +184,11 @@ public class ShipBuildingHandler {
                     console.printError("Invalid choice. Please try again.");
                     break;
             }
+        }
+        
+        // Check if we exited due to state change (ship validation succeeded)
+        if (!shouldContinueBuilding() && !buildingDone) {
+            console.printMessage("✓ Ship validation completed! Transitioning to next phase...");
         }
     }
 
@@ -456,7 +470,7 @@ public class ShipBuildingHandler {
         }
 
         try {
-            simpleClient.rotateComponent(1,posToRotate, rotationType);
+            simpleClient.rotateComponent(currentPlayer.getId(), posToRotate, rotationType);
             console.printMessage("Rotation request sent for position (" + x + "," + y + "). Waiting for server confirmation...");
         } catch (IOException | IllegalStateException e) {
             console.printError("Error sending rotation request: " + e.getMessage());
@@ -506,15 +520,12 @@ public class ShipBuildingHandler {
     private boolean handleValidateAndFinish() {
         console.printMessage("Sending validation request to server...");
         try {
-            simpleClient.validateShip(1);
-            // We sent the request. Now we need to wait for the ShipValidationResultMessage.
-            // The TUI loop cannot simply proceed here.
-            // For now, we just return false and let the message handler update the state later.
+            simpleClient.validateShip(currentPlayer.getId());
             console.printMessage("Validation request sent. Waiting for server response...");
-            // The actual result (isValid) is not available synchronously here.
-            // The TUI state needs to be updated when ShipValidationResultMessage arrives.
-            return false; // Indicate building is NOT done yet, waiting for server.
-    } catch (IOException e) {
+            // Return true to exit the ship building loop - validation result will be handled
+            // asynchronously when the server response arrives via ShipValidationResponse
+            return true; // Exit ship building loop, server will handle validation result
+        } catch (IOException e) {
             console.printError("Error sending validation request: " + e.getMessage());
             return false; // Building not done.
         } catch (IllegalStateException e) {

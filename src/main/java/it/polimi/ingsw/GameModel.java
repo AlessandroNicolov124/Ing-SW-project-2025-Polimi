@@ -32,7 +32,6 @@ public class GameModel {
         flightBoard.addPlayer(player);
     }
 
-
     public GameModel() {
         players = new ArrayList<>();
         deck = new ArrayList<>();
@@ -151,35 +150,84 @@ public class GameModel {
     }
 
     /**
-     * Sets the initial starting position for a given player.
+     * Sets the initial starting position for a player based on their ship building completion order
      *
-     * @param player The player choosing the position.
-     * @param position The chosen starting position (1-4).
-     * @return true if the position was set successfully, false otherwise.
+     * @param player Il giocatore
+     * @param finishOrder The order in which the player completed ship building (1-4, where 1 = first to finish)
+     * @return true se la posizione è stata impostata con successo, false altrimenti
      */
-    public boolean setPlayerInitialStartingPosition(Player player, int position) {
-        if (players.contains(player)) {
-            return flightBoard.setInitialPosition(player, position);
+    public boolean setPlayerInitialStartingPosition(Player player, int finishOrder) {
+        if (!players.contains(player)) {
+            System.out.println("[GameModel] Player not found in game when setting position");
+            return false;
         }
-        System.err.println("Player not found in game model when trying to set initial position.");
-        return false;
+        
+        boolean success = flightBoard.setInitialPosition(player, finishOrder);
+        if (success) {
+            System.out.println("[GameModel] Player " + player.getNickName() + " positioned based on finish order " + finishOrder);
+        }
+        return success;
     }
 
     /**
-     * Gets the list of available starting positions from the flight board.
+     * Gets available ship building completion orders (1-4) for position assignment
      *
-     * @return A list of integers representing available starting positions (1-4).
+     * @return Lista delle posizioni di partenza disponibili
      */
     public List<Integer> getAvailableStartingPositions() {
         return flightBoard.getAvailableStartingPositions();
     }
 
     /**
-     * Checks if the game can start based on player readiness.
-     * The game is startable if all players are ready.
+     * Aggiorna la posizione di un giocatore sul tabellone di volo
+     * considerando le posizioni già occupate
      *
-     * @return true if the game can start, false otherwise.
+     * @param player Il giocatore la cui posizione deve essere aggiornata
+     * @param flightDaysCost The number of flight days lost (positive number = move to worse position)
      */
+    public void updatePosition(Player player, int flightDaysCost) {
+        flightBoard.updatePosition(player, flightDaysCost);
+    }
+
+    /**
+     * Updates multiple players' positions in reverse order (farthest behind first).
+     * This method should be used when multiple players lose flight days simultaneously
+     * due to adventure card effects.
+     *
+     * @param playerFlightDayCosts Map containing players and their flight day costs (positive values)
+     */
+    public void updatePositionsInReverseOrder(Map<Player, Integer> playerFlightDayCosts) {
+        flightBoard.updatePositionsInReverseOrder(playerFlightDayCosts);
+    }
+
+    /**
+     * Gets players in reverse flight order (farthest behind first)
+     * Used for applying simultaneous position penalties in correct order
+     *
+     * @return List of players ordered by position (worst position first)
+     */
+    public List<Player> getPlayersInReverseFlightOrder() {
+        return flightBoard.getPlayersInReverseFlightOrder();
+    }
+
+    /**
+     * Gets current flight board positions for all players
+     * @return Map of player ID to current position (0-23, where lower = better)
+     */
+    public Map<Integer, Integer> getCurrentPlayerPositions() {
+        Map<Integer, Integer> positions = new HashMap<>();
+        for (Player player : players) {
+            if (player.isActive()) {
+                int position = flightBoard.getPosition(player);
+                // Only include positioned players (not -1)
+                if (position != -1) {
+                    positions.put(player.getId(), position);
+                }
+            }
+        }
+        return positions;
+    }
+
     public boolean isGameStartable(){
         for (Player p : this.players){
             if (!p.getReady()){
@@ -633,6 +681,7 @@ public class GameModel {
         }
     }
 
+    // Factory methods per creare i diversi tipi di componenti
     private Cabin createCabin(boolean isStarting) {
         Cabin cabin = new Cabin(isStarting);
         if(!isStarting){

@@ -82,8 +82,11 @@ public class AbandonedStation extends AdventureCard{
             return false;
         }
 
-        // Applica il costo in giorni di volo
-        gameModel.updatePosition(player, -flightDaysCost);
+        // Apply flight day cost (positive value = move to worse position)
+        gameModel.updatePosition(player, flightDaysCost);
+        
+        System.out.println("[AbandonedStation] " + player.getNickName() + " docked at station, lost " + 
+                         flightDaysCost + " flight days");
 
         opportunityUsed = true;
         return true;

@@ -49,16 +49,28 @@ public class Stardust extends AdventureCard {
      * @param gameModel The current game state
      */
     public void applyStardust(GameModel gameModel) {
-        List<Player> playersInReverseOrder = getPlayersInReverseOrder(gameModel);
+        // Calculate flight day costs for all players
+        Map<Player, Integer> playerFlightDayCosts = new HashMap<>();
         
-        for (Player player : playersInReverseOrder) {
-            // Count exposed connectors
-            int exposedConnectors = countExposedConnectors(player.getShip());
-
-            // Move player back on flight board
-            if (exposedConnectors > 0) {
-                gameModel.updatePosition(player, -exposedConnectors);
+        for (Player player : gameModel.getPlayers()) {
+            if (player.isActive()) {
+                // Count exposed connectors
+                int exposedConnectors = countExposedConnectors(player.getShip());
+                
+                // Each exposed connector costs 1 flight day
+                if (exposedConnectors > 0) {
+                    playerFlightDayCosts.put(player, exposedConnectors);
+                    System.out.println("[Stardust] " + player.getNickName() + " has " + exposedConnectors + 
+                                     " exposed connectors, loses " + exposedConnectors + " flight days");
+                } else {
+                    System.out.println("[Stardust] " + player.getNickName() + " has no exposed connectors");
+                }
             }
+        }
+        
+        // Apply flight day costs in reverse order (worst position player moves first)
+        if (!playerFlightDayCosts.isEmpty()) {
+            applyFlightDayCostsInReverseOrder(gameModel, playerFlightDayCosts);
         }
     }
     
