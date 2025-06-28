@@ -227,9 +227,7 @@ public class LobbyHandler {
 
     public void matchCreatedCallback(String matchName, UUID matchId, boolean isHost, String playerName, int playerId) {
         String matchNameParsed = matchId.toString() + ": " + matchName;  
-        if (this.playerId == playerId && !handledCreations.add(matchId)) {
-            return;
-        }
+
         if (this.playerId != playerId) {
             if (!this.availableMatches.contains(matchNameParsed)) {
                 this.availableMatches.add(matchNameParsed);

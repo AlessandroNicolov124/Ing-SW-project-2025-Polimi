@@ -560,11 +560,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
-
-    }
-
-    @Override
     public void matchCreatedFailed(String errorMessage) {
 
     }
@@ -800,13 +795,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     }
 
-
-    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId) {
+    public void matchCreated(UUID matchId, String matchName, String playerName, int playerId, Difficulty difficulty) {
         lobbyHandler.matchCreatedCallback(matchName, matchId, true, playerName, playerId);
         this.state = TuiState.WAIT_IN_MATCH;
     }
-
-
+    
     public void updateAvailableMatches(List<String> matches) {
         lobbyHandler.setAvailableMatches(matches);
     }
