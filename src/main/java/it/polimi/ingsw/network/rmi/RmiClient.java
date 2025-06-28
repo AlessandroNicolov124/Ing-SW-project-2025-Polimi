@@ -137,7 +137,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     }
 
     @Override
-    public void getPlayersOrderForFlightboard(UUID matchId, int playerId) {
+    public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws RemoteException {
     }
 
     @Override

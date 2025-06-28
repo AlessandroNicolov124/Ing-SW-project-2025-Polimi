@@ -21,8 +21,8 @@ public class GUIApp extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
-        //showLoginPage();
-        showFlightBoard();
+        showLoginPage();
+        //showFlightBoard();
     }
 
     public static void showLoginPage() throws Exception {

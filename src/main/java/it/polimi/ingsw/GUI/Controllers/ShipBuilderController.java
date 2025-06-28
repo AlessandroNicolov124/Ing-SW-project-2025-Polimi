@@ -22,9 +22,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ShipBuilderController extends GuiContoller implements GameStateUpdateListener {
     @FXML
@@ -52,6 +50,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
+    private final List<Component> StashedComponents = new ArrayList<>();
 
     private boolean isReadyingForFlight = false;
 
@@ -64,7 +63,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private static final int STASH_CARDS = 2;
     private static final double GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
-    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;
 
 
     private static final boolean[][] VALID_SQUARES = {
@@ -342,7 +341,39 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                         statusLabel.setText("Failed to place: " + e.getMessage());
                     }
                 } else {
-                    statusLabel.setText("Invalid position or position occupied!");
+                    if(isDropPositionSthasingArea(dropPosition))
+                    {
+                        if (StashedComponents.size() < 2)
+                        {
+                            StashedComponents.add(currentComponent);
+                            String imagePath = getComponentImgPath(currentComponent);
+                            if (imagePath == null) return;
+
+                            InputStream imageStream = getClass().getResourceAsStream(imagePath);
+                            if (imageStream == null) return;
+
+                            ImageView placed = new ImageView(new Image(imageStream));
+                            placed.setFitWidth(SQUARE_SIZE);
+                            placed.setFitHeight(SQUARE_SIZE);
+                            placed.setLayoutX(GRIST_STASH_CARDS_START_X + (dropPosition.getX() - 5) * SQUARE_SIZE);
+                            placed.setLayoutY(GRIST_STASH_CARDS_START_Y);
+                            placed.setImage(new Image(imageStream));
+
+
+                            anchorPane.getChildren().add(placed);
+
+                            statusLabel.setText("Component Stashed successfully!");
+                            currentComponent = null;
+                            cardImage.setImage(null);
+                            success = true;
+                        }
+                        System.out.println("Stashing comp");
+                    }
+                    else
+                    {
+                        statusLabel.setText("Invalid position or position occupied!");
+                    }
+
                 }
             }
 
@@ -497,6 +528,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                pos.getY() >= 0 && pos.getY() < GRID_ROWS &&
                VALID_SQUARES[pos.getY()][pos.getX()] &&
                !cellViews.containsKey(pos);
+    }
+
+    private boolean isDropPositionSthasingArea(Position pos) {
+        return ((pos.getY() == 0 && pos.getX() == GRID_COLS - 1) || (pos.getY() == 0 && pos.getX() == GRID_COLS - 2));
     }
 
     private void selectImageView(ImageView imageView) {
