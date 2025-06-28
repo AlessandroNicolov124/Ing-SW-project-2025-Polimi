@@ -39,7 +39,7 @@ assets/*
 .idea/modules
 *.iml
 *.ipr
-
+META-INF/
 # CMake
 cmake-build-*/
 
