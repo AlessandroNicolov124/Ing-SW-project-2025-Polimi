@@ -435,18 +435,16 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     if(p.getX() == GRID_COLS - 2) {
                         currentComponent = StashedComponents.removeFirst();
                         selectedImageView.setImage(null);
-                        clearSelection();
                         gameComponentPicked(currentComponent);
 
                     }
                     else if(p.getX() >= GRID_COLS - 1) {
                         currentComponent = StashedComponents.remove(1);
                         selectedImageView.setImage(null);
-                        clearSelection();
                         gameComponentPicked(currentComponent);
                     }
                 }
-
+                clearSelection();
             }
         }
 
