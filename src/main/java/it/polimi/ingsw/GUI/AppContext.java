@@ -1,7 +1,6 @@
 package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
-import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;

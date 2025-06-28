@@ -88,58 +88,6 @@ public class ShipBuilder {
             System.out.println("Position not valid on board");
             return false;
         }
-        //TODO ALE: Cancellare
-        // Se non è il primo componente, deve essere collegato a un componente esistente
-//        if (!components.isEmpty()) {
-//
-//            Position adjPos = null;
-//            switch(component){
-//                case Engine e:
-//                    Direction engineDir = e.getComponentDirection();
-//                    Direction opposite = switch(engineDir) {
-//                        case NORTH -> Direction.SOUTH;
-//                        case SOUTH -> Direction.NORTH;
-//                        case EAST  -> Direction.WEST;
-//                        case WEST  -> Direction.EAST;
-//                    };
-//                    Position behind = position.getAdjacentPosition(opposite);
-//                    if (isPositionValid(behind) && isPositionOccupied(behind)) {
-//                        System.out.println("Cannot place Engine: cell immediately behind (" + behind + ") is occupied");
-//                        return false;
-//                    }
-//                    break;
-//                case Cannon c: {
-//                    Direction cannonDir = c.getComponentDirection();
-//                    Position ahead = position.getAdjacentPosition(cannonDir);
-//                    if (isPositionValid(ahead) && isPositionOccupied(ahead)) {
-//                        System.out.println("  Cannot place Cannon: cell immediately ahead (" + ahead + ") is occupied");
-//                        return false;
-//                    }
-//                    break;
-//                }
-//                default:
-//                    break;
-//            }
-//
-//            boolean isConnected = true;
-//
-//            for (Direction direction : Direction.values()) {
-//                Position adjacentPosition = direction.getAdjacentPosition(position);
-//                Component adjacentComponent = getComponentAt(adjacentPosition);
-//
-//                if (adjacentComponent != null && !component.canConnectTo(adjacentComponent, direction)) {
-//                    isConnected = false;
-//                    break;
-//                }
-//            }
-//
-//            if (!isConnected) {
-//                System.out.print(" not connected, ");
-//                return false;
-//            }
-//        }
-
-        // Posiziona il componente
 
         components.put(component, position);
         return true;
@@ -240,29 +188,8 @@ public class ShipBuilder {
                }
                // TODO verificare che il giocatore abbia ancora umani altrimenti ha perso
            }
-//           case LifeSupportSystem lifeSupport -> {
-//               disconnectLifeSupportConnections(lifeSupport);
-//           }
            default -> { /* Other components can be removed */ }
        }
-
-
-//        // Handle single component case
-        //TODO se è ultimo componente il giocatore perde
-//        if (components.size() == 1) {
-//            // Don't allow removing the only component if it's a starting cabin
-//            if (component.isStartingCabin()) {
-//                return false; // Cannot remove starting cabin
-//            }
-//            // Otherwise allow removal during ship building
-//            components.remove(component);
-//            return true;
-//        }
-
-        // For multiple components: check connectivity and cabin protection
-//        if (component.isStartingCabin()) {
-//            return false; // Never allow removing starting cabin
-//        }
 
         //Check if removing this component would disconnect the ship
         if (wouldDisconnectShip(component)) {
@@ -708,29 +635,6 @@ public class ShipBuilder {
      * @return The total number of crew members removed
      */
     public int removeCrewMembers(int count) {
-//        if (count <= 0) {
-//            return 0;  // Nessun membro da rimuovere
-//        }
-//
-//        int removedCount = 0;
-//        List<Cabin> cabinsWithCrew = getCabinsWithCrew();  // Ottieni tutte le cabine occupate
-//
-//        for (Cabin cabin : cabinsWithCrew) {
-//            if (removedCount >= count) {
-//                break;  // Abbiamo rimosso il numero richiesto di membri dell'equipaggio
-//            }
-//
-//            List<Crew> crewToRemove = cabin.getCrew();  // Ottieni il membro dell'equipaggio nella cabina
-//            if (crewToRemove != null) {
-//                for (Crew crew : crewToRemove) {
-//                    if (removeCrewFromCabin(crew, cabin)) {
-//                        removedCount++;
-//                    }
-//                }
-//            }
-//        }
-//
-//        return removedCount;
 
         int remainingToRemove = count;
 
@@ -748,43 +652,6 @@ public class ShipBuilder {
         return count - remainingToRemove; // Ritorna il numero di membri rimossi
     }
 
-    /**
-     * return a list of cabins that have crew members.
-     * This method iterates through all cabins and checks if they contain crew members.
-     * It also sorts the cabins based on the priority of crew removal,
-     * with aliens being removed first.
-     * @return A list of cabins that have crew members, sorted by removal priority
-     *
-     * @return Lista di cabine occupate da membri dell'equipaggio
-     */
-    // private List<Cabin> getCabinsWithCrew() {
-    //     List<Cabin> cabinsWithCrew = new ArrayList<>();
-
-    //     // Assumo che tu abbia una collezione di cabine da qualche parte nella classe
-    //     // Sostituisci 'allCabins' con la tua variabile effettiva
-    //     List<Cabin> allCabins = getAllCabins();
-    //     for (Cabin cabin : allCabins) {
-    //         if (!cabin.getCrew().isEmpty()) {
-    //             cabinsWithCrew.add(cabin);
-    //         }
-    //     }
-
-    //     // Ordina la lista in base alla priorità di rimozione
-    //     // Ad esempio, per rimuovere prima gli alieni:
-    //     cabinsWithCrew.sort((cabin1, cabin2) -> {
-    //         CrewType type1 = cabin1.getCrew().getFirst().getType();
-    //         CrewType type2 = cabin2.getCrew().getFirst().getType();
-
-    //         if (type1 != CrewType.HUMAN && type2 == CrewType.HUMAN) {
-    //             return -1;  // Alieni prima
-    //         } else if (type1 == CrewType.HUMAN && type2 != CrewType.HUMAN) {
-    //             return 1;   // Umani dopo
-    //         }
-    //         return 0;       // Stesso tipo, ordine invariato
-    //     });
-
-    //     return cabinsWithCrew;
-    // }
 
     /** remove a specified number of aliens from the ship.
      * This method iterates through all cabins and removes the specified number of aliens.
@@ -871,13 +738,6 @@ public class ShipBuilder {
         }
     }
 
-
-//    Metti 2 umani nella tua cabina di partenza.
-//            • Metti in ogni altra cabina 2 umani o 1 alieno. Puoi scegliere
-//    un alieno solo se la cabina è interconnessa ad un modulo
-//    di supporto vitale del corrispondente colore.
-//            • La tua nave non può ospitare più di 1 alieno per ciascun
-//    colore.
     /** Distribute crew members automatically based on the ship's rules.
      * This method places 2 humans in the starting cabin and then distributes
      * crew members in other cabins according to the specified rules.
@@ -939,13 +799,6 @@ public class ShipBuilder {
                 }
             }
         }
-
-//        List<DoubleCannon> doubleCannons = getOperationalDoubleCannons();
-//        for (DoubleCannon cannon : doubleCannons) {
-//            if(chargeWeapon(cannon)){
-//                chargedCannons++;
-//            }
-//        }
 
         return chargedCannons;
     }

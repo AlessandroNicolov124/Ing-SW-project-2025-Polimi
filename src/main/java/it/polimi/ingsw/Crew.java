@@ -19,8 +19,6 @@ public abstract class Crew implements Serializable{
      */
     public abstract boolean canLiveIn(Cabin cabin);
 
-    //public abstract void applyAbility(ShipBuilder ship);
-
     public CrewType getType() {
         return type;
     }

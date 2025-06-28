@@ -14,7 +14,6 @@ import java.io.IOException;
 public class ShipBuildingHandler {
 
     private final ConsoleManager console;
-    // private final GameController controller; // Keep for local validation/display logic if needed, or remove
     private final Player currentPlayer; // Assuming we know the current player
     private final GeneralClientIf simpleClient; // Added socket client
 
@@ -26,7 +25,6 @@ public class ShipBuildingHandler {
         this.console = console;
         this.simpleClient = simpleClient;
         this.currentPlayer = currentPlayer;
-        // this.controller = controller; // Remove if no longer needed
     }
 
     // Method to be called to redraw the ship display
@@ -331,17 +329,6 @@ public class ShipBuildingHandler {
             case StructuralModule sm -> "SM";
             default -> "??";
         };
-//        if (component instanceof Cabin) return "C";
-//        if (component instanceof SingleEngine) return "E";
-//        if (component instanceof DoubleEngine) return "E"; // Could be E2
-//        if (component instanceof SingleCannon) return "S"; // S for single cannon
-//        if (component instanceof DoubleCannon) return "D"; // D for double cannon
-//        if (component instanceof CargoHolds) return "H"; // H for holds
-//        if (component instanceof BatteryCompartment) return "B";
-//        if (component instanceof ShieldGenerator) return "G";
-//        if (component instanceof LifeSupportSystem) return "L";
-//        if (component instanceof StructuralModule) return "X"; // For structural
-//        return "?"; // Unknown
     }
 
 
