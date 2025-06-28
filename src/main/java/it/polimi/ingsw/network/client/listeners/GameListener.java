@@ -1,12 +1,16 @@
 package it.polimi.ingsw.network.client.listeners;
 
 
+import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface GameListener {
@@ -22,7 +26,7 @@ public interface GameListener {
     void componentRemoved(Position position);
     void componentRemovedFailed(String errorMessage);
 
-    void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid);
+    void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid, Component rotatedComponent);
     void componentRotatedFailed(String errorMessage);
 
     void shipValidated(boolean isValid, String message);
@@ -77,6 +81,14 @@ public interface GameListener {
     void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid);
     void playerReadyForFlightFailed(String errorMessage);
 
-    void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
-    void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
+    void adventurePhaseStarted(java.util.UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct);
+    void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
+
+    void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents);
+
+    void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage);
+    
+    void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens);
+
+    void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage);
 }

@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -96,6 +97,24 @@ public abstract class GuiContoller {
             alert.getDialogPane().setContent(textArea);
             alert.showAndWait();
         });
+    }
+
+
+    protected String showPlayerSelectionDialog() {
+        List<String> players = new ArrayList<>(context.getPlayersInMatchList());
+        players.removeIf(player -> player.equals(context.getUsername()));
+        
+        if (players.isEmpty()) {
+            showErrorDialog("No Players", "No other players in the match to view");
+            return null;
+        }
+        
+        ChoiceDialog<String> choiceDialog = new ChoiceDialog<>(players.get(0), players);
+        choiceDialog.setTitle("Select Player");
+        choiceDialog.setHeaderText("Choose a player to view their ship");
+        choiceDialog.setContentText("Player:");
+
+        return choiceDialog.showAndWait().orElse(null);
     }
     
 }

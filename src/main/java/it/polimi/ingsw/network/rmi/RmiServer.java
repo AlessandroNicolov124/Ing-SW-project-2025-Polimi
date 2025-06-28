@@ -1,8 +1,15 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.Crew;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.ShipBuilder;
+import it.polimi.ingsw.TokenType;
+import it.polimi.ingsw.Components.BatteryCompartment;
+import it.polimi.ingsw.Components.Cabin;
+import it.polimi.ingsw.Components.Cargo;
+import it.polimi.ingsw.Components.CargoHolds;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.GameMatch;
@@ -17,10 +24,14 @@ import it.polimi.ingsw.network.messages.lobby.LeaveMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.PlayersInMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.StartMatchResponse;
 import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerShipResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerTokenListResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveTokenFromComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.RotationType;
@@ -36,8 +47,10 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.server.Unreferenced;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
 
 public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable {
@@ -285,7 +298,6 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public Component pickComponent(int playerId, RmiClientIf client) throws RemoteException {
-
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         
         if (match == null || match.getMatchState() != MatchStates.IN_PROGRESS) {
@@ -307,6 +319,9 @@ public class RmiServer extends UnicastRemoteObject
             return null;
         }
 
+        // SALVA LO STATO ORIGINALE QUI!
+        comp.saveOriginalState();
+        
         client.showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
         return comp;
     }
@@ -376,7 +391,7 @@ public class RmiServer extends UnicastRemoteObject
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match != null && match.getMatchState() == MatchStates.IN_PROGRESS) {
             GameController controller = match.getController();
-            Player player= controller.getPlayerById(playerId);
+            Player player = controller.getPlayerById(playerId);
             if (player != null) {
                 Component componentToRotate = player.getShip().getComponentAt(position);
                 boolean isValidRotation = false;
@@ -396,14 +411,25 @@ public class RmiServer extends UnicastRemoteObject
                             isValidRotation = true;
                             break;
                     }
+                    
+                    Component rotatedComponent = player.getShip().getComponentAt(position);
+                    
+                    System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
+                    
+                    client.showUpdate(new RotateComponentResponse(
+                        playerId, 
+                        position, 
+                        rotationType, 
+                        isValidRotation, 
+                        true, 
+                        "Component rotated successfully",
+                        rotatedComponent  
+                    ));
                 }
-                
-                System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
-                client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, isValidRotation, true, "Component rotated successfully"));
             }
         } else {
             System.out.println("[ServerRMI] Match not found or not in progress for player " + playerId);
-            client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, false ,false, "Match not found or not in progress"));
+            client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, false, false, "Match not found or not in progress", null));
         }
     }
 
@@ -528,6 +554,154 @@ public class RmiServer extends UnicastRemoteObject
         if (match.allPlayersReadyForFlight()) {
             match.setMatchState(MatchStates.FLIGHT_PREPARATION);
             lobbyManager.multicastToMatch(matchId, new FlightPreparationStartResponse(matchId, true, "All players ready – flight preparation begins"));
+        }
+    }
+
+    @Override
+    public void getPlayerShip(String playerName, RmiClientIf client) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+
+        if (match == null) {
+            client.showUpdate(new GetPlayerShipResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        // find the player id by player name
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            client.showUpdate(new GetPlayerShipResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Component, Position> ship = player.getShip().getComponents();
+
+        if (ship.isEmpty()) {
+            client.showUpdate(new GetPlayerShipResponse(playerName, null, false, "No components in ship"));
+            return;
+        }
+
+        // invert the map in Map<Position, Component>
+        Map<Position, Component> invertedShip = ship.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey
+                ));
+        
+        // send the ship to the client
+        client.showUpdate(new GetPlayerShipResponse(playerName, invertedShip, true, "Ship retrieved successfully"));
+
+    }
+
+    // addTokenToComponent
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType, RmiClientIf client) throws RemoteException {
+
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            client.showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            client.showUpdate(new AddTokenToComponentResponse( playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        if (!player.getShip().checkPlacingToken(position)) {
+            client.showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Cannot place token at this position"));
+            return;
+        }
+
+        try {
+            controller.addTokenToComponent(player, position, tokenType);
+            client.showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, true, "Token added successfully"));
+        } catch (Exception e) {
+            client.showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Error adding token: " + e.getMessage()));
+        }
+        
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName, RmiClientIf client) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+
+        if (match == null) {
+            client.showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            client.showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Position, List<TokenType>> tokens = player.getShip().getTokens();
+        
+        client.showUpdate(new GetPlayerTokenListResponse(playerName, tokens, true, "Token list retrieved successfully"));
+    }
+
+
+    // In RmiServer
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, RmiClientIf client) throws RemoteException {
+        
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
+
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(match.getPlayerByName(playerName).getId());
+
+        if (player == null) {
+            client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        try {
+            ShipBuilder ship = player.getShip();
+            Component comp = ship.getComponentAt(position);
+            
+            if (comp == null) {
+                client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "No component at position"));
+                return;
+            }
+
+            switch (tokenType) {
+                case HUMAN, BROWN_ALIEN, PURPLE_ALIEN -> {
+                    if (comp instanceof Cabin cabin && !cabin.getCrew().isEmpty()) {
+                        Crew lastCrew = cabin.getCrew().get(cabin.getCrew().size() - 1);
+                        ship.removeCrewFromCabin(lastCrew, cabin);
+                    }
+                }
+                case BATTERY -> {
+                    if (comp instanceof BatteryCompartment battery && battery.getChargeLevel() > 0) {
+                        battery.discharge(1);
+                    }
+                }
+                // case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK, YELLOW_GOOD_BLOCK -> {
+                //     if (comp instanceof CargoHolds cargoHold && !cargoHold.getCargos().isEmpty()) {
+                //         cargoHold.removeCargo();
+                //     }
+                // }
+                default -> throw new IllegalArgumentException("Unexpected value: " + tokenType);
+            }
+            
+            ship.removeToken(position);
+            
+            client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, true, "Token removed successfully"));
+            
+        } catch (Exception e) {
+            client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Error: " + e.getMessage()));
         }
     }
 

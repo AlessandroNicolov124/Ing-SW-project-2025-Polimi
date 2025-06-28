@@ -5,6 +5,7 @@ import java.util.*;
 public sealed abstract class CargoHolds extends Component permits NormalCargoHolds, SpecialCargoHolds {
 
     private int capacity;
+    protected CargoHoldsSize size;
     private List<Cargo> cargos = new ArrayList<>();
 
     public CargoHolds() {
@@ -18,8 +19,16 @@ public sealed abstract class CargoHolds extends Component permits NormalCargoHol
         this.capacity = capacity;
     }
 
+    protected void setSize(CargoHoldsSize size) {
+        this.size = size;
+    }
+
     public int getCapacity() {
         return capacity;
+    }
+
+    protected CargoHoldsSize getSize() {
+        return size;
     }
 
     public List<Cargo> getCargos() {
@@ -56,6 +65,16 @@ public sealed abstract class CargoHolds extends Component permits NormalCargoHol
 
     public int sumCargoValue() {
         return cargos.stream().mapToInt(Cargo::getValue).sum();
+    }
+
+    @Override
+    protected String calculateComponentString() {
+        String sizeStr = switch (getSize()) {
+            case SINGLE -> "single";
+            case DOUBLE -> "double";
+            case TRIPLE -> "triple";
+        };
+        return "cargoholds_" + sizeStr + "_" + getConnectionsString();
     }
 
 }

@@ -196,6 +196,17 @@ public class GeneralServer implements LobbyManager {
         }
         return null;
     }
+    
+    @Override
+    public GameMatch findMatchByPlayerName(String playername) {
+        for (GameMatch match : matches.values()) {
+            if (match.getPlayerByName(playername) != null) {
+                return match;
+            }
+        }
+        return null;
+    }  
+
 
     public List<String> getAvailableMatches() {
         List<String> matchList = new ArrayList<>();

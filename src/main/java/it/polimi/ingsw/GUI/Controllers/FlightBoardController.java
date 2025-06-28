@@ -1,16 +1,11 @@
 package it.polimi.ingsw.GUI.Controllers;
 
-import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
-import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;

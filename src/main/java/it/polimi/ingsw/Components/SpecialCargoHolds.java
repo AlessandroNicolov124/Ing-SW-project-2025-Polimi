@@ -8,6 +8,7 @@ public final class SpecialCargoHolds extends CargoHolds {
             throw new IllegalArgumentException("SpecialCargoHolds cannot be of TRIPLE size");
         }
         this.setCapacity(size.getCapacity());
+        this.setSize(size);
     }
 
     @Override
@@ -19,9 +20,13 @@ public final class SpecialCargoHolds extends CargoHolds {
     }
 
     @Override
-    public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_" + CargoHoldsSize.fromInt(this.getCapacity()).toString().toLowerCase() +"_";
-        s += getConnectionsString();
-        return s;
+    protected String calculateComponentString() {
+        String sizeStr = switch(getSize()) {
+            case SINGLE -> "single";
+            case DOUBLE -> "double";
+            case TRIPLE -> "triple";
+        };
+        return "specialcargoholds_" + sizeStr + "_" + getConnectionsString();
     }
+            
 }
