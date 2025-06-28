@@ -98,10 +98,6 @@ public class Player implements Serializable {
         return ship.removeComponentAt(position);
     }
 
-    // public boolean removeComponent(Component component) {
-    //     return ship.removeComponent(component);
-    // }
-
     public boolean validateShip() {
         String errors = ship.validateShip();
         return errors == null;

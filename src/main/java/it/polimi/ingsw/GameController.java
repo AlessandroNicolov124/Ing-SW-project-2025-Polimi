@@ -126,14 +126,6 @@ public class  GameController {
         return false;
     }
 
-    // public boolean removeComponentForPlayer(Player player, Component component) {
-
-    //     if (isPlayerThere(player)) {
-    //         return player.removeComponent(component);
-    //     }
-    //     return false;
-    // }
-
     public void pickCardForPlayer(Player player) {
         if (isPlayerThere(player)) {
            gameModel.pickAdventureCardForPlayer(player);
@@ -440,11 +432,6 @@ public class  GameController {
     }
 
     public void updateView(){}
-
-
-    // Metodi di supporto
-
-
 
     /**
      * Prints the current status of the flight board, showing each player's position.
