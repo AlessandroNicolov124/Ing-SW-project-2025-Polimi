@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Crew;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
@@ -41,6 +42,10 @@ import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
+import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -298,6 +303,7 @@ public class RmiServer extends UnicastRemoteObject
 
     @Override
     public Component pickComponent(int playerId, RmiClientIf client) throws RemoteException {
+
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         
         if (match == null || match.getMatchState() != MatchStates.IN_PROGRESS) {
@@ -426,6 +432,9 @@ public class RmiServer extends UnicastRemoteObject
                         rotatedComponent  
                     ));
                 }
+                
+                System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
+                client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, isValidRotation, true, "Component rotated successfully"));
             }
         } else {
             System.out.println("[ServerRMI] Match not found or not in progress for player " + playerId);
@@ -466,6 +475,16 @@ public class RmiServer extends UnicastRemoteObject
             //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
             return;
         }
+
+        // Only the leading player (position 1) can pick adventure cards
+        int leadingPlayerId = match.getFirstPlayerToAct();
+        if (playerId != leadingPlayerId) {
+            System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
+            client.showUpdate(new PickAdventureCardResponse(
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1));
+            return;
+        }
+
         GameController controller = match.getController();
         Player player = controller.getPlayerById(playerId);
         if (player == null) {
@@ -484,6 +503,38 @@ public class RmiServer extends UnicastRemoteObject
 
         System.out.println("[ServerRMI] Adventure card pick for player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
+
+        // Check if there are more adventure cards or if the game is complete
+        int nextPlayerTurn = -1; // Default: adventure phase continues
+        
+        if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
+            // Adventure deck is empty or game is complete
+            nextPlayerTurn = -2; // Special value indicating deck is empty
+            
+            // Send the pick response first
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new PickAdventureCardResponse(
+                            playerId, adventureCard, success, message, nextPlayerTurn));
+            
+            // Then send completion notification
+            String completionReason;
+            boolean gameComplete = controller.isFlightComplete();
+            
+            if (!controller.hasMoreAdventureCards()) {
+                completionReason = "Adventure deck is empty - all cards have been resolved";
+            } else {
+                completionReason = "Only one active player remains";
+            }
+            
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new AdventurePhaseCompleteResponse(
+                            match.getMatchId(), gameComplete, completionReason));
+            return;
+        } else {
+            // More cards available - find new leader after effects have been applied
+            int newLeaderId = match.getFirstPlayerToAct();
+            System.out.println("[ServerRMI] New leading player for next adventure card: " + newLeaderId);
+        }
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
@@ -513,6 +564,24 @@ public class RmiServer extends UnicastRemoteObject
             detailedMessage = "Ship is valid and ready for flight!";
             match.getPlayersValidated().put(playerId, true);
             match.recordPlayerValidation(playerId);
+            
+            // Assign position based on completion order
+            int assignedPosition = match.assignPlayerPosition(playerId);
+            if (assignedPosition > 0) {
+                // Notify all players about the position assignment
+                String positionMessage = player.getNickName() + " finished building and got position " + assignedPosition;
+                lobbyManager.multicastToMatch(match.getMatchId(), 
+                    new PositionAssignmentResponse(
+                        playerId, player.getNickName(), assignedPosition, true, positionMessage));
+                
+                // Check if all players have been positioned and start adventure phase
+                if (match.allPlayersPositioned()) {
+                    int firstPlayerToAct = match.getFirstPlayerToAct();
+                    lobbyManager.multicastToMatch(match.getMatchId(),
+                        new AdventurePhaseStartResponse(
+                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+                }
+            }
             
         } else {
             String validationErrors = controller.getShipValidationErrors(player);

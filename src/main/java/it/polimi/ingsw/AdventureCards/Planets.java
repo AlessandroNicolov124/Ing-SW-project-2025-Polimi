@@ -93,8 +93,8 @@ public class Planets extends AdventureCard{
     }
 
     @Override
-    public void effect(){
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel){
+        processPlanets(gameModel);
     }
 
     @Override
@@ -268,7 +268,8 @@ public class Planets extends AdventureCard{
         }
     }
 
-    public static class Planet {
+    public static class Planet implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private String name;
         private List<Cargo> goodsToLoad;
         

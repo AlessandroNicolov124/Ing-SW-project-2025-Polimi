@@ -42,7 +42,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Button validateShipButton;
     @FXML
+    private Button restoreCompButton;
+    @FXML
     private Label statusLabel;
+
 
     // Component management
     private Component currentComponent = null;
@@ -50,10 +53,12 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     // Visual elements tracking
     private ImageView selectedImageView = null;
+    private Position selectedPosition = null;
     //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
+    private final List<Component> StashedComponents = new ArrayList<>();
 
     private boolean isReadyingForFlight = false;
 
@@ -66,7 +71,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     private static final int STASH_CARDS = 2;
     private static final double GRIST_STASH_CARDS_START_X = GRID_START_X + (5*SQUARE_SIZE) + 20;
-    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;;
+    private static final double GRIST_STASH_CARDS_START_Y = GRID_START_Y - 8;
 
 
     private static final boolean[][] VALID_SQUARES = {
@@ -349,7 +354,39 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                         statusLabel.setText("Failed to place: " + e.getMessage());
                     }
                 } else {
-                    statusLabel.setText("Invalid position or position occupied!");
+                    if(isDropPositionSthasingArea(dropPosition))
+                    {
+                        if (StashedComponents.size() < 2)
+                        {
+                            StashedComponents.add((dropPosition.getX() - (GRID_COLS - 2)), currentComponent);
+                            String imagePath = getComponentImgPath(currentComponent);
+                            if (imagePath == null) return;
+
+                            InputStream imageStream = getClass().getResourceAsStream(imagePath);
+                            if (imageStream == null) return;
+
+                            ImageView placed = new ImageView(new Image(imageStream));
+                            placed.setFitWidth(SQUARE_SIZE);
+                            placed.setFitHeight(SQUARE_SIZE);
+                            placed.setLayoutX(GRIST_STASH_CARDS_START_X + (dropPosition.getX() - 5) * SQUARE_SIZE);
+                            placed.setLayoutY(GRIST_STASH_CARDS_START_Y);
+                            placed.setOnMouseClicked(_ -> handleComponentClick(placed, dropPosition));
+
+
+                            anchorPane.getChildren().add(placed);
+
+                            statusLabel.setText("Component Stashed successfully!");
+                            currentComponent = null;
+                            cardImage.setImage(null);
+                            success = true;
+                        }
+                        System.out.println("Stashing comp");
+                    }
+                    else
+                    {
+                        statusLabel.setText("Invalid position or position occupied!");
+                    }
+
                 }
             }
 
@@ -387,6 +424,46 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         });
 
         anchorPane.getChildren().add(removeButton);
+    }
+
+    @FXML
+    public void RestoreSelectedStashedComp()
+    {
+        if (selectedImageView == null){
+            statusLabel.setText("No Item Selected");
+            return;
+        }
+        else{
+            if (currentComponent != null) {
+                statusLabel.setText("Place current component before unstashing");
+            }
+            else{
+
+                //Position p = calculateGridPosition(selectedImageView.getX(),selectedImageView.getY());
+                if(selectedPosition.getY() == 0)
+                {
+                    if(selectedPosition.getX() == GRID_COLS - 2) {
+                        currentComponent = StashedComponents.get(0);
+                        if (currentComponent  != null) {
+                            StashedComponents.set(0, null);
+                            selectedImageView.setImage(null);
+                            gameComponentPicked(currentComponent);
+                        }
+                    }
+                    else if(selectedPosition.getX() >= GRID_COLS - 1) {
+                        currentComponent = StashedComponents.get(1);
+                        if(currentComponent != null) {
+                            StashedComponents.set(1, null);
+                            selectedImageView.setImage(null);
+                            gameComponentPicked(currentComponent);
+                        }
+                    }
+                }
+
+            }
+        }
+        clearSelection();
+
     }
 
     @FXML
@@ -506,6 +583,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                !cellViews.containsKey(pos);
     }
 
+    private boolean isDropPositionSthasingArea(Position pos) {
+        return ((pos.getY() == 0 && pos.getX() == GRID_COLS - 1) || (pos.getY() == 0 && pos.getX() == GRID_COLS - 2));
+    }
+
     private void selectImageView(ImageView imageView) {
         clearSelection();
 
@@ -532,6 +613,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private void handleComponentClick(ImageView imageView, Position position) {
+        selectedPosition = position;
         if (isRemoveMode) {
             try {
                 context.getClient().removeComponent(position, context.getPlayerId());
@@ -608,7 +690,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     @Override
-    public void gameComponentRotated(Position position, RotationType rotationType, Component rotatedComponent) {
+    public void gameComponentRotated(Position position, RotationType rotationType) {
         Platform.runLater(() -> {
             ImageView imageView = cellViews.get(position);
             
@@ -646,16 +728,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             
             if (isValid) {
                 statusLabel.setText("Ship validated! Ready for flight");
+                
                 validateShipButton.setText("Ready for Flight");
                 validateShipButton.setOnAction(e -> readyForFlight());
             } else {
                 statusLabel.setText("Validation failed");
                 
-                String errorMessage = (message != null && !message.trim().isEmpty()) 
-                    ? message 
-                    : "Ship validation failed. Please check your ship configuration.";
-                
-                showValidationErrorDialog(errorMessage);
+                showValidationErrorDialog(message);
                 
                 validateShipButton.setText("Validate Ship");
                 validateShipButton.setStyle("");

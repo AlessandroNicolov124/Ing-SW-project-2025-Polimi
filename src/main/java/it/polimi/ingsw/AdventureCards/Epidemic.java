@@ -1,5 +1,6 @@
 package it.polimi.ingsw.AdventureCards;
 
+import it.polimi.ingsw.GameModel;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Position;
@@ -37,8 +38,11 @@ public class Epidemic extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel) {
+        // Apply epidemic to all players
+        for (Player player : gameModel.getPlayers()) {
+            applyEpidemic(player);
+        }
     }
     
     /**

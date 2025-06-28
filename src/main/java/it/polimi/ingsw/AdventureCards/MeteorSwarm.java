@@ -88,8 +88,8 @@ public class MeteorSwarm extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel) {
+        processMeteorImpacts(gameModel);
     }
     
     /**
@@ -314,7 +314,8 @@ public class MeteorSwarm extends AdventureCard {
     /**
      * Inner class to represent a meteor
      */
-    public static class Meteor {
+    public static class Meteor implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private MeteorSize size;
         private Direction direction;
         

@@ -62,8 +62,8 @@ public class Pirates extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel) {
+        fightPirates(gameModel);
     }
 
     @Override
@@ -292,9 +292,10 @@ public class Pirates extends AdventureCard {
     }
 
     /**
-     * Inner class to represent a meteor
+     * Inner class to represent a pirate cannon
      */
-    public static class PiratesCannon {
+    public static class PiratesCannon implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
         private CannonSize size;
         private Direction direction;
 

@@ -49,7 +49,7 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void readyForFlight(UUID matchId, int playerId) throws Exception;
 
-    void getPlayerShip(String playerName) throws Exception;
+    void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception;
 
     void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception;
 

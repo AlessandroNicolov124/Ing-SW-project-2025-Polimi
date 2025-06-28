@@ -5,6 +5,7 @@ import java.io.Serializable;
 public sealed abstract class Cargo implements Serializable
     permits BlueCargo, RedCargo, GreenCargo, YellowCargo  {
 
+    private static final long serialVersionUID = 1L;
     private final int value;
 
     public Cargo(int value) {
