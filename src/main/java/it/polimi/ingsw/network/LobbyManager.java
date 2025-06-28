@@ -29,6 +29,8 @@ public interface LobbyManager {
     List<String> getAvailableMatches();
     
     GameMatch findMatchByPlayerId(int playerId);
+
+    GameMatch findMatchByPlayerName(String playerName);
     
     GameMatch findMatchById(UUID matchId);
     

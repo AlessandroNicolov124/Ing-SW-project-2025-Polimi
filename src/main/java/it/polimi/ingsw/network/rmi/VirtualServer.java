@@ -1,6 +1,8 @@
 package it.polimi.ingsw.network.rmi;
 
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
+import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.GameMatch;
@@ -10,6 +12,7 @@ import it.polimi.ingsw.network.messages.RotationType;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface VirtualServer extends Remote {
@@ -49,6 +52,12 @@ public interface VirtualServer extends Remote {
     void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException;
     void readyForFlight(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
 
-    //void getPlayerOrderFromsrv();
+    void getPlayerShip(String playerName, RmiClientIf client) throws RemoteException;
+
+    void addTokenToComponent(String playerName, Position position, TokenType tokenType, RmiClientIf client) throws RemoteException;
+
+    void getPlayerTokenList(String playerName, RmiClientIf client) throws RemoteException;
+
+    void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, RmiClientIf client) throws RemoteException;
 
 }

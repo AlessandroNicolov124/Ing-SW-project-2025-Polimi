@@ -8,6 +8,7 @@ public final class NormalCargoHolds extends CargoHolds {
             throw new IllegalArgumentException("NormalCargoHolds cannot be of SINGLE size");
         }
         this.setCapacity(size.getCapacity());
+        this.setSize(size);
     }
 
     @Override
@@ -20,9 +21,12 @@ public final class NormalCargoHolds extends CargoHolds {
     }
 
     @Override
-    public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_" + CargoHoldsSize.fromInt(this.getCapacity()).toString().toLowerCase() +"_";
-        s += getConnectionsString();
-        return s;
+    protected String calculateComponentString() {
+        String sizeStr = switch(getSize()) {
+            case SINGLE -> "single";
+            case DOUBLE -> "double";
+            case TRIPLE -> "triple";
+        };
+        return "normalcargoholds_" + sizeStr + "_" + getConnectionsString();
     }
 }

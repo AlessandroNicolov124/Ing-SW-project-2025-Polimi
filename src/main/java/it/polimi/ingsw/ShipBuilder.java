@@ -273,93 +273,6 @@ public class ShipBuilder {
         return true;
     }
 
-    // private boolean areAllComponentsConnected() {
-    //     if (components.isEmpty()) {
-    //         return true;
-    //     }
-
-    //     Set<Component> visited = new HashSet<>();
-    //     Queue<Component> queue = new LinkedList<>();
-
-    //     // Start BFS from the first component (should be starting cabin)
-    //     Component firstComponent = null;
-    //     for (Map.Entry<Component, Position> entry : components.entrySet()) {
-    //         if (entry.getKey() instanceof Cabin && ((Cabin) entry.getKey()).isStartingCabin()) {
-    //             firstComponent = entry.getKey();
-    //             break;
-    //         }
-    //     }
-        
-    //     // If no starting cabin, take the first component
-    //     if (firstComponent == null) {
-    //         firstComponent = components.keySet().iterator().next();
-    //     }
-        
-    //     queue.add(firstComponent);
-    //     visited.add(firstComponent);
-
-    //     while (!queue.isEmpty()) {
-    //         Component current = queue.poll();
-    //         Position currentPos = components.get(current);
-
-    //         // Check all adjacent positions
-    //         for (Direction direction : Direction.values()) {
-    //             Position adjacentPos = direction.getAdjacentPosition(currentPos);
-    //             Component adjacentComponent = getComponentAt(adjacentPos);
-
-    //             if (adjacentComponent != null && !visited.contains(adjacentComponent)) {
-    //                 // Verifica che i componenti siano effettivamente connessi
-    //                 if (current.canConnectTo(adjacentComponent, direction)) {
-    //                     visited.add(adjacentComponent);
-    //                     queue.add(adjacentComponent);
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     // If visited components count equals all components, all are connected
-    //     return visited.size() == components.size();
-    // }
-
-    // private List<String> getIllegalConnectorContacts() {
-    //     List<String> errors = new ArrayList<>();
-    //     Set<String>  alreadyReportedKeys = new HashSet<>();
-
-    //     for (var entry : components.entrySet()) {
-    //         Component c1 = entry.getKey();
-    //         Position  p1 = entry.getValue();
-
-    //         for (Direction dir : Direction.values()) {
-    //             Position  p2 = dir.getAdjacentPosition(p1);
-    //             Component c2 = getComponentAt(p2);
-    //             if (c2 == null)     
-    //                 continue;
-
-    //             Connector k1 = c1.getConnectorByDirection(dir);
-    //             Connector k2 = c2.getConnectorByDirection(dir.getOpposite());
-
-    //             /* ---- UNICA riga di test ---- */
-    //             boolean compatible = k1.isCompatibleWith(k2) && k2.isCompatibleWith(k1);
-
-    //             if (!compatible) {
-    //                 // chiave simmetrica per evitare doppioni
-    //                 String key = Stream.of(p1, p2)
-    //                                 .sorted(Comparator.comparing(Position::toString))
-    //                                 .map(Position::toString)
-    //                                 .collect(Collectors.joining("-"));
-
-    //                 if (alreadyReportedKeys.add(key)) {
-    //                     errors.add("Incompatible connectors between "
-    //                             + c1.getClass().getSimpleName() + " at " + p1
-    //                             + " and " + c2.getClass().getSimpleName() + " at " + p2);
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     return errors;
-    // }
-
-
     private Position getNeighborPosition(Position pos, Direction direction) {
         switch (direction) {
             case NORTH:
@@ -409,6 +322,35 @@ public class ShipBuilder {
 
         if (startingCabin == null) {
             return "The ship must have a starting cabin!";
+        }
+
+        boolean hasEngine = false;
+        for (Component comp : components.keySet()) {
+            if (comp instanceof SingleEngine || comp instanceof DoubleEngine) {
+                if (!comp.isDamaged()) {
+                    hasEngine = true;
+                    break;
+                }
+            }
+        }
+        
+        if (!hasEngine) {
+            return "The ship must have at least one functional engine!";
+        }
+
+        boolean hasCannon = false;
+        
+        for (Component comp : components.keySet()) {
+            if (comp instanceof SingleCannon || comp instanceof DoubleCannon) {
+                if (!comp.isDamaged()) {
+                    hasCannon = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasCannon) {
+            return "The ship must have at least one functional cannon!";
         }
 
         Set<Component> visited = new HashSet<>();
@@ -487,24 +429,9 @@ public class ShipBuilder {
             }
         }
 
-        // Verifica requisiti specifici dei componenti
-        for (Map.Entry<Component, Position> entry : components.entrySet()) {
-            Component comp = entry.getKey();
-            
-            if (comp instanceof Engine) {
-                Connector southConnector = comp.getConnectorByDirection(Direction.SOUTH);
-                if (southConnector == null || !(southConnector.getConnectorType() instanceof NullConnectorType)) {
-                    return "Engines must have their exhaust (south connector) pointing outward!";
-                }
-            }
-            
-            if (comp instanceof Cannon) {
-                Connector northConnector = comp.getConnectorByDirection(Direction.NORTH);
-                if (northConnector == null || !(northConnector.getConnectorType() instanceof NullConnectorType)) {
-                    return "Cannons must have their firing direction (north connector) pointing outward!";
-                }
-            }
-        }
+        checkCannonFire();
+        checkEngineFire();
+        areLifeSupportsConnectedToCabins();
 
         return null;
     }
@@ -609,21 +536,20 @@ public class ShipBuilder {
         Position position = getPositionOf(lifeSupport);
         LifeSupportSystemType type = lifeSupport.getType();
 
-        // Check adjacent positions for cabins
+        System.out.println("[ShipBuilder] Updating connections for " + type + " life support at " + position);
+
         for (Direction dir : Direction.values()) {
             Position adjacentPos = dir.getAdjacentPosition(position);
             Component adjacentComponent = getComponentAt(adjacentPos);
 
-            switch (adjacentComponent) {
-                case Cabin cabin -> {
-                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
-                        cabin.connectLifeSupport(type);
-                    }
-                }
-                case null -> {
-                    // Non c'è un componente adiacente, non fare nulla
-                }
-                default -> {
+            if (adjacentComponent instanceof Cabin cabin) {
+                Connector lifeSupportConnector = lifeSupport.getConnectorByDirection(dir);
+                Connector cabinConnector = cabin.getConnectorByDirection(dir.getOpposite());
+                
+                if (lifeSupportConnector != null && cabinConnector != null && 
+                    lifeSupportConnector.isCompatibleWith(cabinConnector)) {
+                    cabin.connectLifeSupport(type);
+                    System.out.println("[ShipBuilder] Connected " + type + " to cabin at " + adjacentPos);
                 }
             }
         }
@@ -643,20 +569,67 @@ public class ShipBuilder {
         for (Direction dir : Direction.values()) {
             Position adjacentPos = dir.getAdjacentPosition(position);
             Component adjacentComponent = getComponentAt(adjacentPos);
-
-            switch (adjacentComponent) {
-                case Cabin cabin -> {
-                    if (lifeSupport.canConnectTo(adjacentComponent, dir)) {
-                        cabin.disconnectLifeSupport(type);
-                    }
-                }
-                case null -> {
-                    // Non c'è un componente adiacente, non fare nulla
-                }
-                default -> {
+            
+            if (adjacentComponent instanceof LifeSupportSystem) {
+                LifeSupportSystem lifeSupport = (LifeSupportSystem) adjacentComponent;
+                
+                if (lifeSupport.canConnectTo(cabin, dir.getOpposite())) {
+                    cabin.connectLifeSupport(lifeSupport.getType());
+                    System.out.println("[ShipBuilder] Connected " + lifeSupport.getType() + 
+                                    " life support to cabin at " + cabinPosition);
                 }
             }
         }
+    }
+
+    public void updateAllLifeSupportConnections() {
+        System.out.println("[ShipBuilder] Updating all life support connections...");
+        
+        for (Component comp : components.keySet()) {
+            if (comp instanceof Cabin cabin) {
+                cabin.getConnectedLifeSupports().clear();
+            }
+        }
+        
+        for (Component comp : components.keySet()) {
+            if (comp instanceof LifeSupportSystem) {
+                updateLifeSupportConnections((LifeSupportSystem) comp);
+            }
+        }
+        
+        for (Map.Entry<Component, Position> entry : components.entrySet()) {
+            if (entry.getKey() instanceof Cabin cabin) {
+                System.out.println("[ShipBuilder] Cabin at " + entry.getValue() + 
+                                " connected to: " + cabin.getConnectedLifeSupports());
+            }
+        }
+        
+        System.out.println("[ShipBuilder] Finished updating all life support connections");
+    }
+
+    public boolean areLifeSupportsConnectedToCabins() {
+        for (Component comp : components.keySet()) {
+            if (comp instanceof LifeSupportSystem lifeSupportSystem) {
+                Position pos = getPositionOf(lifeSupportSystem);
+                boolean isConnected = false;
+
+                for (Direction dir : Direction.values()) {
+                    Position adjPos = dir.getAdjacentPosition(pos);
+                    Component adjComp = getComponentAt(adjPos);
+
+                    if (adjComp instanceof Cabin && lifeSupportSystem.canConnectTo(adjComp, dir)) {
+                        isConnected = true;
+                        break;
+                    }
+                }
+
+                if (!isConnected) {
+                    System.out.println("[ShipBuilder] Life support at " + pos + " is not connected to any cabin");
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /** add a crew member to a cabin.
@@ -668,18 +641,19 @@ public class ShipBuilder {
      * @return true if the crew member was successfully added, false otherwise
      */
     public boolean addCrewToCabin(Crew crew, Cabin cabin) {
-        // Verifica limiti a livello di nave per gli alieni
         if (crew.getType() != CrewType.HUMAN) {
             if (crewCount.getOrDefault(crew.getType(), 0) >= 1) {
+                System.out.println("[ShipBuilder] Cannot add " + crew.getType() + 
+                                ": already 1 on ship (max 1 per color)");
                 return false;
             }
         }
 
-        // Prova ad aggiungere l'equipaggio
         if (cabin.addCrew(crew)) {
-            //if (crew.getType() != CrewType.HUMAN) {
-                crewCount.put(crew.getType(), crewCount.getOrDefault(crew.getType(), 0) + 1);
-            //}
+            crewCount.put(crew.getType(), crewCount.getOrDefault(crew.getType(), 0) + 1);
+            System.out.println("[ShipBuilder] Successfully added " + crew.getType() + 
+                            " to cabin. Ship now has " + crewCount.get(crew.getType()) + 
+                            " of this type");
             return true;
         }
 
@@ -778,34 +752,34 @@ public class ShipBuilder {
      *
      * @return Lista di cabine occupate da membri dell'equipaggio
      */
-    private List<Cabin> getCabinsWithCrew() {
-        List<Cabin> cabinsWithCrew = new ArrayList<>();
+    // private List<Cabin> getCabinsWithCrew() {
+    //     List<Cabin> cabinsWithCrew = new ArrayList<>();
 
-        // Assumo che tu abbia una collezione di cabine da qualche parte nella classe
-        // Sostituisci 'allCabins' con la tua variabile effettiva
-        List<Cabin> allCabins = getAllCabins();
-        for (Cabin cabin : allCabins) {
-            if (!cabin.getCrew().isEmpty()) {
-                cabinsWithCrew.add(cabin);
-            }
-        }
+    //     // Assumo che tu abbia una collezione di cabine da qualche parte nella classe
+    //     // Sostituisci 'allCabins' con la tua variabile effettiva
+    //     List<Cabin> allCabins = getAllCabins();
+    //     for (Cabin cabin : allCabins) {
+    //         if (!cabin.getCrew().isEmpty()) {
+    //             cabinsWithCrew.add(cabin);
+    //         }
+    //     }
 
-        // Ordina la lista in base alla priorità di rimozione
-        // Ad esempio, per rimuovere prima gli alieni:
-        cabinsWithCrew.sort((cabin1, cabin2) -> {
-            CrewType type1 = cabin1.getCrew().getFirst().getType();
-            CrewType type2 = cabin2.getCrew().getFirst().getType();
+    //     // Ordina la lista in base alla priorità di rimozione
+    //     // Ad esempio, per rimuovere prima gli alieni:
+    //     cabinsWithCrew.sort((cabin1, cabin2) -> {
+    //         CrewType type1 = cabin1.getCrew().getFirst().getType();
+    //         CrewType type2 = cabin2.getCrew().getFirst().getType();
 
-            if (type1 != CrewType.HUMAN && type2 == CrewType.HUMAN) {
-                return -1;  // Alieni prima
-            } else if (type1 == CrewType.HUMAN && type2 != CrewType.HUMAN) {
-                return 1;   // Umani dopo
-            }
-            return 0;       // Stesso tipo, ordine invariato
-        });
+    //         if (type1 != CrewType.HUMAN && type2 == CrewType.HUMAN) {
+    //             return -1;  // Alieni prima
+    //         } else if (type1 == CrewType.HUMAN && type2 != CrewType.HUMAN) {
+    //             return 1;   // Umani dopo
+    //         }
+    //         return 0;       // Stesso tipo, ordine invariato
+    //     });
 
-        return cabinsWithCrew;
-    }
+    //     return cabinsWithCrew;
+    // }
 
     /** remove a specified number of aliens from the ship.
      * This method iterates through all cabins and removes the specified number of aliens.
@@ -1159,6 +1133,8 @@ public class ShipBuilder {
                 Direction newConnectorDirection = connector.getDirection().getClockwise();
                 connector.setDirection(newConnectorDirection);
             }
+            
+            updateAllLifeSupportConnections();
         }
     }
 
@@ -1191,6 +1167,7 @@ public class ShipBuilder {
                 connector.setDirection(newConnectorDirection);
             }
         }
+        updateAllLifeSupportConnections();
     }
 
     public Component rotateComponentCounterClockwise(Component component) {
@@ -1222,6 +1199,7 @@ public class ShipBuilder {
                 connector.setDirection(newConnectorDirection);
             }
         }
+        updateAllLifeSupportConnections();
     }
 
     public Component rotateComponentOpposite(Component component) {
@@ -1444,4 +1422,46 @@ public class ShipBuilder {
                 .filter(component -> !component.isDamaged())
                 .collect(Collectors.toList());
     }
+
+
+    public boolean checkPlacingToken(Position pos) {
+        Component component = getComponentAt(pos);
+
+        switch(component) {
+            case BatteryCompartment batteryCompartment -> {
+                return batteryCompartment.getChargeLevel() < batteryCompartment.getMaxCapacity();
+            }
+            case CargoHolds cargoHolds -> {
+                return cargoHolds.getCargos().size() < cargoHolds.getCapacity();
+            }
+            case Cabin cabin -> {
+                return cabin.getCrew().size() < 2;
+            }
+            default -> {
+                return false;
+            }
+        }
+
+    }    
+
+    public Map<Position, List<TokenType>> getTokens() { 
+        return tokens; 
+    }
+
+    public void addToken(Position p, TokenType t){
+        tokens.computeIfAbsent(p,k->new ArrayList<>()).add(t);
+    }
+
+    public void removeToken(Position position){
+        List<TokenType> list = tokens.get(position);
+        if(list!=null && !list.isEmpty()) {
+            list.remove(list.size()-1);
+        }
+
+        if(list!=null && list.isEmpty()) {
+            tokens.remove(position);
+        }
+    }
+
+
 }

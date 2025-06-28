@@ -5,6 +5,7 @@ import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
@@ -602,6 +603,26 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception{
+
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName) throws Exception {
+
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+
+    }
+
+    @Override
+    public void getPlayerShip(String playerName) throws Exception {
 
     }
 
