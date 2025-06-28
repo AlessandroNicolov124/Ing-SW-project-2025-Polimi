@@ -71,7 +71,7 @@ class CrewTest {
         @Test
         @DisplayName("Test BrownAlienCrew inheritance")
         void testBrownAlienCrewInheritance() {
-            assertTrue(brownAlienCrew instanceof Crew);
+            assertInstanceOf(Crew.class, brownAlienCrew);
         }
     }
 
@@ -127,7 +127,7 @@ class CrewTest {
         @Test
         @DisplayName("Test HumanCrew inheritance")
         void testHumanCrewInheritance() {
-            assertTrue(humanCrew instanceof Crew);
+            assertInstanceOf(Crew.class, humanCrew);
         }
     }
 
@@ -199,7 +199,7 @@ class CrewTest {
         @Test
         @DisplayName("Test PurpleAlienCrew inheritance")
         void testPurpleAlienCrewInheritance() {
-            assertTrue(purpleAlienCrew instanceof Crew);
+            assertInstanceOf(Crew.class, purpleAlienCrew);
         }
     }
 

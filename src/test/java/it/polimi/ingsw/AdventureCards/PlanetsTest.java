@@ -139,7 +139,7 @@ public class PlanetsTest {
         goods.add(new GreenCargo());
         goods.add(new YellowCargo());
         Planets.Planet planet = new Planets.Planet("TestPlanet", goods);
-        Planets testPlanets = new Planets(1, 5, Arrays.asList(planet), 2);
+        Planets testPlanets = new Planets(1, 5, List.of(planet), 2);
         // Only one good should be loaded, and it should be the red one (priority)
         testPlanets.loadGoods(player, planet);
         List<Cargo> loaded = player.getShip().getCargoList();

@@ -9,6 +9,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 import static org.junit.jupiter.api.Assertions.*;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
 
 public class ConnectorTest {
 
@@ -218,16 +219,16 @@ public class ConnectorTest {
     @DisplayName("Connector should implement Serializable")
     public void testConnectorSerializable() {
         Connector connector = new Connector(Direction.NORTH, singleType);
-        assertTrue(connector instanceof java.io.Serializable);
+        assertInstanceOf(Serializable.class, connector);
     }
 
     @Test
     @DisplayName("ConnectorType should implement Serializable")
     public void testConnectorTypeSerializable() {
-        assertTrue(singleType instanceof java.io.Serializable);
-        assertTrue(doubleType instanceof java.io.Serializable);
-        assertTrue(universalType instanceof java.io.Serializable);
-        assertTrue(nullType instanceof java.io.Serializable);
+        assertInstanceOf(Serializable.class, singleType);
+        assertInstanceOf(Serializable.class, doubleType);
+        assertInstanceOf(Serializable.class, universalType);
+        assertInstanceOf(Serializable.class, nullType);
     }
 
     // ===== EDGE CASES =====
