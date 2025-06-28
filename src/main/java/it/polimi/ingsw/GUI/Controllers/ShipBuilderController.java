@@ -49,6 +49,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
 
     // Visual elements tracking
     private ImageView selectedImageView = null;
+    private Position selectedPosition = null;
     //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
@@ -348,7 +349,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     {
                         if (StashedComponents.size() < 2)
                         {
-                            StashedComponents.add(currentComponent);
+                            StashedComponents.add((dropPosition.getX() - (GRID_COLS - 2)), currentComponent);
                             String imagePath = getComponentImgPath(currentComponent);
                             if (imagePath == null) return;
 
@@ -429,24 +430,30 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             }
             else{
 
-                Position p = calculateGridPosition(selectedImageView.getX(),selectedImageView.getY());
-                if(p.getY() == 0)
+                //Position p = calculateGridPosition(selectedImageView.getX(),selectedImageView.getY());
+                if(selectedPosition.getY() == 0)
                 {
-                    if(p.getX() == GRID_COLS - 2) {
-                        currentComponent = StashedComponents.removeFirst();
-                        selectedImageView.setImage(null);
-                        gameComponentPicked(currentComponent);
-
+                    if(selectedPosition.getX() == GRID_COLS - 2) {
+                        currentComponent = StashedComponents.get(0);
+                        if (currentComponent  != null) {
+                            StashedComponents.set(0, null);
+                            selectedImageView.setImage(null);
+                            gameComponentPicked(currentComponent);
+                        }
                     }
-                    else if(p.getX() >= GRID_COLS - 1) {
-                        currentComponent = StashedComponents.remove(1);
-                        selectedImageView.setImage(null);
-                        gameComponentPicked(currentComponent);
+                    else if(selectedPosition.getX() >= GRID_COLS - 1) {
+                        currentComponent = StashedComponents.get(1);
+                        if(currentComponent != null) {
+                            StashedComponents.set(1, null);
+                            selectedImageView.setImage(null);
+                            gameComponentPicked(currentComponent);
+                        }
                     }
                 }
-                clearSelection();
+
             }
         }
+        clearSelection();
 
     }
 
@@ -597,6 +604,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private void handleComponentClick(ImageView imageView, Position position) {
+        selectedPosition = position;
         if (isRemoveMode) {
             try {
                 context.getClient().removeComponent(position, context.getPlayerId());
