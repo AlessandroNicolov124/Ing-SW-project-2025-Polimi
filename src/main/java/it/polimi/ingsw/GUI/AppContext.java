@@ -734,11 +734,6 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
-
-    }
-
-    @Override
     public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
         Platform.runLater(() -> {
             System.out.println("Adventure phase complete - Game: " + gameComplete + ", Reason: " + completionReason);
@@ -748,6 +743,11 @@ public class AppContext implements GameListener {
                 showInfoMessage("Game Over", "The game has ended! " + completionReason);
             }
         });
+    }
+
+    @Override
+    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
+
     }
 
 }

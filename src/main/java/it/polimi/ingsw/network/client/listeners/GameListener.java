@@ -1,6 +1,7 @@
 package it.polimi.ingsw.network.client.listeners;
 
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
@@ -80,7 +81,6 @@ public interface GameListener {
     void playerReadyForFlightFailed(String errorMessage);
 
     void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
-    void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
     void adventurePhaseComplete(java.util.UUID matchId, boolean gameComplete, String completionReason);
 
     /**
@@ -92,8 +92,5 @@ public interface GameListener {
      * @param nextPlayerTurn Which player should pick next
      * @param updatedPositions Current positions after card effects (may be null)
      */
-    default void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, java.util.Map<Integer, Integer> updatedPositions) {
-        // Default implementation calls the old method for backward compatibility
-        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn);
-    }
+    void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, java.util.Map<Integer, Integer> updatedPositions);
 }
