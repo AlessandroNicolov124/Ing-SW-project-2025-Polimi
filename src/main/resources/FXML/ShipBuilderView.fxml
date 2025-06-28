@@ -23,6 +23,7 @@
                 <Button fx:id="pickComponentButton" text="Pick Component" onAction="#pickComponent"/>
                 <Button fx:id="rotateClockwiseButton" text="Rotate Clockwise" onAction="#rotateCardClockwise"/>
                 <Button fx:id="rotateCounterClockwiseButton" text="Rotate Counter-clockwise" onAction="#rotateCardAntiClockwise"/>
+                <Button fx:id="restoreCompButton" text="Restore component" onAction="#RestoreSelectedStashedComp"/>
                 <Button fx:id="validateShipButton" text="Validate Ship" onAction="#validateShip"/>
             </HBox>
         </VBox>

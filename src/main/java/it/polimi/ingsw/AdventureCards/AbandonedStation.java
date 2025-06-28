@@ -50,8 +50,10 @@ public class AbandonedStation extends AdventureCard{
     }
 
     @Override
-    public void effect(){
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel){
+        // For abandoned station, players can choose to dock in flight order
+        // This implementation would need UI interaction, so for now just log
+        System.out.println("Abandoned Station encountered - players can choose to dock for goods");
     }
     
     /**

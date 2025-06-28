@@ -2,6 +2,7 @@ package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
 import it.polimi.ingsw.Player;
@@ -38,6 +39,7 @@ public class AppContext implements GameListener {
     private boolean needsRefresh = false;
     private List<GameStateUpdateListener> guiUpdateListeners = new ArrayList<>();
     private List<LobbyListener> lobbyListeners = new ArrayList<>();
+    private List<FlightBoardListener> flightBoardListeners = new ArrayList<>();
 
     public AppContext() {
         username = "";
@@ -48,6 +50,11 @@ public class AppContext implements GameListener {
 
         client = null;
     }
+
+    public void addFlightboardListener(FlightBoardListener l) {
+        flightBoardListeners.add(l);
+    }
+    public void removeFlightboardListener(FlightBoardListener l) { flightBoardListeners.remove(l); }
 
     public void addLobbyListener(LobbyListener l) { 
         lobbyListeners.add(l); 
@@ -729,6 +736,18 @@ public class AppContext implements GameListener {
     @Override
     public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
 
+    }
+
+    @Override
+    public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
+        Platform.runLater(() -> {
+            System.out.println("Adventure phase complete - Game: " + gameComplete + ", Reason: " + completionReason);
+            showInfoMessage("Adventure Phase Complete", completionReason);
+            
+            if (gameComplete) {
+                showInfoMessage("Game Over", "The game has ended! " + completionReason);
+            }
+        });
     }
 
 }

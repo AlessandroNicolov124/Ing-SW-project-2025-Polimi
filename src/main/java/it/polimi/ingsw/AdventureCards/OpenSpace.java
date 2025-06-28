@@ -38,8 +38,8 @@ public class OpenSpace extends AdventureCard {
     }
 
     @Override
-    public void effect() {
-        // This would be called when the card is drawn
+    public void effect(GameModel gameModel) {
+        applyOpenSpace(gameModel);
     }
 
     @Override

@@ -49,4 +49,6 @@ public interface VirtualServer extends Remote {
     void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException;
     void readyForFlight(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
 
+    //void getPlayerOrderFromsrv();
+
 }

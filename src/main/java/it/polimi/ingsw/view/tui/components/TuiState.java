@@ -13,6 +13,7 @@ public enum TuiState {
     WAIT_FOR_ALL_PLAYERS_POSITIONED, // New state for waiting after this player chose position
     ADVENTURE_PHASE,      // Pick adventure cards in position order
     RUNNING,              // execute game commands
+    GAME_ENDED,           // Game completed (adventure deck empty)
     TERMINATED,            // exit
 
     LOBBY_MENU,

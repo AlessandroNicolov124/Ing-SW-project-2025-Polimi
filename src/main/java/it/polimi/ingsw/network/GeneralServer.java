@@ -197,6 +197,7 @@ public class GeneralServer implements LobbyManager {
         return null;
     }
 
+    @Override
     public List<String> getAvailableMatches() {
         List<String> matchList = new ArrayList<>();
         for (GameMatch match : matches.values()) {
