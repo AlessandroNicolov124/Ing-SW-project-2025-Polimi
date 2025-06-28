@@ -428,8 +428,7 @@ public class RmiServer extends UnicastRemoteObject
                         rotationType, 
                         isValidRotation, 
                         true, 
-                        "Component rotated successfully",
-                        rotatedComponent  
+                        "Component rotated successfully"
                     ));
                 }
                 
@@ -438,7 +437,7 @@ public class RmiServer extends UnicastRemoteObject
             }
         } else {
             System.out.println("[ServerRMI] Match not found or not in progress for player " + playerId);
-            client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, false, false, "Match not found or not in progress", null));
+            client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, false, false, "Match not found or not in progress"));
         }
     }
 
@@ -463,7 +462,7 @@ public class RmiServer extends UnicastRemoteObject
     }
 
     @Override
-    public void pickAdventureCard(int playerId) throws RemoteException {
+    public void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
             System.out.println("[ServerRMI] Match not found for player ID: " + playerId);
@@ -505,7 +504,7 @@ public class RmiServer extends UnicastRemoteObject
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
         // Check if there are more adventure cards or if the game is complete
-        int nextPlayerTurn = -1; // Default: adventure phase continues
+        nextPlayerTurn = -1; // Default: adventure phase continues
         
         if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
             // Adventure deck is empty or game is complete

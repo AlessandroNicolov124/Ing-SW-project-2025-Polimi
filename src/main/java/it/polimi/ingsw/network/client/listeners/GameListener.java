@@ -26,7 +26,7 @@ public interface GameListener {
     void componentRemoved(Position position);
     void componentRemovedFailed(String errorMessage);
 
-    void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid, Component rotatedComponent);
+    void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid);
     void componentRotatedFailed(String errorMessage);
 
     void shipValidated(boolean isValid, String message);
@@ -93,4 +93,6 @@ public interface GameListener {
     void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens);
 
     void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage);
+
+    void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason);
 }

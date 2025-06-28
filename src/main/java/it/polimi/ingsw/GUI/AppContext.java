@@ -46,6 +46,7 @@ public class AppContext implements GameListener {
     private boolean needsRefresh = false;
     private List<GameStateUpdateListener> guiUpdateListeners = new ArrayList<>();
     private List<LobbyListener> lobbyListeners = new ArrayList<>();
+    private List<FlightBoardListener> flightBoardListeners = new ArrayList<>();
     private List<PreparationFlightListener> preparationFlightListeners = new ArrayList<>();
 
     public AppContext() {
@@ -481,13 +482,13 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid, Component rotatedComponent) {
+    public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component rotated - Player: " + playerId + ", Position: " + position + ", Valid: " + isValid);
             
             for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
-                    listener.gameComponentRotated(position, rotationType, rotatedComponent);
+                    listener.gameComponentRotated(position, rotationType);
                 } catch (Exception e) {
                     System.err.println("Error notifying rotation: " + e.getMessage());
                 }
@@ -800,7 +801,7 @@ public class AppContext implements GameListener {
 
     }
 
-    @Override
+
     public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
         Platform.runLater(() -> {
             System.out.println("Adventure phase complete - Game: " + gameComplete + ", Reason: " + completionReason);

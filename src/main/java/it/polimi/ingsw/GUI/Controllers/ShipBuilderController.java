@@ -23,10 +23,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ShipBuilderController extends GuiContoller implements GameStateUpdateListener {
     @FXML
@@ -704,11 +701,11 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 double currentRotation = imageView.getRotate();
                 imageView.setRotate(currentRotation + rotation);
                 
-                if (rotatedComponent != null) {
-                    shipComponents.put(position, rotatedComponent);
-                    System.out.println("[GUI] Updated local component at " + position + " with direction: " 
-                                        + rotatedComponent.getComponentDirection());
-                }
+//                if (rotatedComponent != null) {
+//                    shipComponents.put(position, rotatedComponent);
+//                    System.out.println("[GUI] Updated local component at " + position + " with direction: "
+//                                        + rotatedComponent.getComponentDirection());
+//                }
                 
                 statusLabel.setText("Component rotated successfully");
                 

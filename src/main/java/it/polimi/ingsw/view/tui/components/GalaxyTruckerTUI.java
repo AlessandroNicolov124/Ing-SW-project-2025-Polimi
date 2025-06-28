@@ -12,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
@@ -967,6 +968,26 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 console.printError("✗ Failed to pick adventure card: " + message);
             }
         }
+    }
+
+    @Override
+    public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
+        
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage) {
+
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens) {
+
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage) {
+
     }
 
     @Override

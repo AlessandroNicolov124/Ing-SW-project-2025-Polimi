@@ -11,7 +11,7 @@ public interface GameStateUpdateListener {
     void gameComponentPicked(Component component);
     void gameComponentPlaced(Component component, Position position);
     void gameComponentRemoved(Position position);
-    void gameComponentRotated(Position position, RotationType rotationType, Component rotatedComponent);
+    void gameComponentRotated(Position position, RotationType rotationType);
     void gameShipValidated(boolean isValid, String message);
 
 
