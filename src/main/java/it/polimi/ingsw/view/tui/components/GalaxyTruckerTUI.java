@@ -81,6 +81,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
+                case GAME_ENDED           -> handleGameEndedState();
                 case TERMINATED           -> { return; }
             }
         }
@@ -501,6 +502,45 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+    private void handleGameEndedState() {
+        console.printMessage("\n GAME COMPLETE! ");
+        console.printMessage("The adventure card phase has ended.");
+        console.printMessage("");
+        console.printMessage("Final game statistics would be shown here in a complete implementation.");
+        console.printMessage("");
+        console.printMessage("Commands:");
+        console.printMessage("  status  - Show final game state");
+        console.printMessage("  quit    - Exit the game");
+        
+        while (state == TuiState.GAME_ENDED) {
+            String cmd = console.pollCommand(1000);
+            
+            if (cmd != null) {
+                cmd = cmd.trim().toLowerCase();
+                switch (cmd) {
+                    case "status":
+                        if (currentPlayer != null) {
+                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
+                            console.printMessage("Game state: Complete - adventure cards exhausted or only one player remaining");
+                        }
+                        break;
+                    case "quit":
+                        console.printMessage("Thanks for playing Galaxy Trucker!");
+                        state = TuiState.TERMINATED;
+                        return;
+                    case "help":
+                        console.printMessage("Available commands:");
+                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  quit   - Exit the game");
+                        break;
+                    default:
+                        console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
+                        break;
+                }
+            }
+        }
+    }
+
     @Override
     public void displayRefresh() {
         synchronized (displayMutex) {
@@ -913,13 +953,35 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 
                 // Show detailed card information for everyone
                 displayAdventureCard(adventureCard);
-                adventureCard.effect();
+                // Note: The actual card effect is applied on the server side
+                console.printMessage("Adventure card effects have been applied to the game state.");
                 
-                // Adventure phase is complete after the leading player picks
-                console.printMessage("Adventure card phase complete. Proceeding to main game...");
-                state = TuiState.RUNNING;
+                // Check if there are more adventure cards to pick
+                if (nextPlayerTurn == -2) { // Special value indicating deck is empty or game ended
+                    console.printMessage("Adventure card deck is empty. Waiting for game completion notification...");
+                } else {
+                    console.printMessage("Waiting for the new leading player to pick the next adventure card...");
+                    console.printMessage("(The leader may have changed due to card effects)");
+                }
             } else {
                 console.printError("✗ Failed to pick adventure card: " + message);
+            }
+        }
+    }
+
+    @Override
+    public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
+        synchronized (displayMutex) {
+            console.printMessage("\n=== ADVENTURE PHASE COMPLETE ===");
+            console.printMessage("Reason: " + completionReason);
+            
+            if (gameComplete) {
+                console.printMessage(" GAME OVER! ");
+                console.printMessage("Final results will be calculated...");
+                state = TuiState.GAME_ENDED;
+            } else {
+                console.printMessage("Adventure phase finished. Proceeding to main game...");
+                state = TuiState.RUNNING;
             }
         }
     }

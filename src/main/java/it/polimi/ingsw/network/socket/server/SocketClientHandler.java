@@ -1,5 +1,6 @@
 package it.polimi.ingsw.network.socket.server;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -34,6 +35,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
+import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 
 import java.io.*;
@@ -330,15 +332,50 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
         // Pick adventure card using the controller - only for the leading player
         controller.pickCardForPlayer(player);
-        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
+
+        // Apply the adventure card effect to the game state
+        if (success && adventureCard != null) {
+            System.out.println("[ServerSocket] Applying adventure card effect: " + adventureCard.getClass().getSimpleName());
+            controller.applyAdventureCardEffect(adventureCard);
+        }
 
         System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
-        // Adventure phase is complete after the leading player picks
-        int nextPlayerTurn = -1; // No next player since only leader picks
+        // Check if there are more adventure cards or if the game is complete
+        int nextPlayerTurn = -1; // Default: adventure phase continues
+        
+        if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
+            // Adventure deck is empty or game is complete
+            nextPlayerTurn = -2; // Special value indicating deck is empty
+            
+            // Send the pick response first
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new PickAdventureCardResponse(
+                            currentPlayer, adventureCard, success, message, nextPlayerTurn));
+            
+            // Then send completion notification
+            String completionReason;
+            boolean gameComplete = controller.isFlightComplete();
+            
+            if (!controller.hasMoreAdventureCards()) {
+                completionReason = "Adventure deck is empty - all cards have been resolved";
+            } else {
+                completionReason = "Only one active player remains";
+            }
+            
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                    new AdventurePhaseCompleteResponse(
+                            match.getMatchId(), gameComplete, completionReason));
+            return;
+        } else {
+            // More cards available - find new leader after effects have been applied
+            int newLeaderId = match.getFirstPlayerToAct();
+            System.out.println("[ServerSocket] New leading player for next adventure card: " + newLeaderId);
+        }
 
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
@@ -563,7 +600,10 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         }
     }
 
+    @Override
+    public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception{
 
+    }
 
 
 }

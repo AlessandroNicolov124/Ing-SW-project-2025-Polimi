@@ -1,7 +1,8 @@
 package it.polimi.ingsw.GUI.Controllers;
 
 import it.polimi.ingsw.Components.Component;
-import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
+import it.polimi.ingsw.GUI.AppContext;
+import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
@@ -22,7 +23,7 @@ import javafx.scene.text.Text;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FlightBoardController extends GuiContoller {
+public class FlightBoardController extends GuiContoller implements FlightBoardListener {
     @FXML
     private AnchorPane anchorPane;
     @FXML
@@ -34,6 +35,8 @@ public class FlightBoardController extends GuiContoller {
     private static final float ELLIPSE_CENTER_Y = 318.0f;
     private static final float ELLIPSE_RADIUS_X = 400.0f;
     private static final float ELLIPSE_RADIUS_Y = 220.0f;
+    private static final int CORRECTION_ADDENDUM = 37;
+    private static final int STARTING_ANGLE = 132;
 
 
     @FXML
@@ -79,12 +82,13 @@ public class FlightBoardController extends GuiContoller {
         double arcLengthPerPoint = circumference / numCircles;
         // Angle offset to align the first circle with the board's starting position.
         // I've adjusted this slightly to better match the visual layout.
-        double angleOffset = -Math.toRadians(130);
+        double x,y;
+        double angleOffset = -Math.toRadians(STARTING_ANGLE);
         double angle = angleOffset;
-        double x = ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(angle);
-        double y = ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(angle);
+//        double x = ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(angle);
+//        double y = ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(angle);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < numCircles; i++) {
             // Calculate the angle for each circle. We subtract to go counter-clockwise.
             //double angle = angleOffset + (i * (2 * Math.PI / numCircles));
 
@@ -94,7 +98,7 @@ public class FlightBoardController extends GuiContoller {
 
             // Create the circle for the position
             Circle positionCircle = new Circle(x, y, 15); // 20 is the radius of the circle
-            positionCircle.setFill(Color.web("crimson", 0.7)); // Semi-transparent red
+            positionCircle.setFill(Color.web("transparent", 0.4)); // Semi-transparent red
             positionCircle.setStroke(Color.WHITE);
             positionCircle.setStrokeWidth(2);
 
@@ -117,9 +121,10 @@ public class FlightBoardController extends GuiContoller {
 
             double currentArc = 0;
             double lastAngle = angle;
-            Point2D arcStatringPoint= new Point2D(ELLIPSE_CENTER_X + ELLIPSE_RADIUS_Y * Math.cos(lastAngle), ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(lastAngle));
+            //Point2D arcStatringPoint= new Point2D(ELLIPSE_CENTER_X + ELLIPSE_RADIUS_Y * Math.cos(lastAngle), ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(lastAngle));
             while (currentArc < arcLengthPerPoint) {
-                angle += Math.toRadians(1); // Move angle by a small step (clockwise)
+                angle += Math.toRadians(0.1); // Move angle by a small step (clockwise)
+                Point2D arcStatringPoint= new Point2D(ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(lastAngle), ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(lastAngle));
                 currentArc += arcStatringPoint.distance(new Point2D(ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(angle), ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(angle)));
                 lastAngle = angle;
             }
@@ -129,11 +134,23 @@ public class FlightBoardController extends GuiContoller {
     private double estimateEllipseCircumference() {
         //double h = Math.pow(ELLIPSE_RADIUS_X - ELLIPSE_RADIUS_Y, 2) / Math.pow(ELLIPSE_RADIUS_X + ELLIPSE_RADIUS_Y, 2);
         //return Math.PI * (ELLIPSE_RADIUS_X + ry) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
-        return 2 * Math.PI * (Math.sqrt((Math.pow(ELLIPSE_RADIUS_X, 2) + Math.pow(ELLIPSE_RADIUS_Y, 2))/2));
+        return (2 * Math.PI * (Math.sqrt((Math.pow(ELLIPSE_RADIUS_X, 2) + Math.pow(ELLIPSE_RADIUS_Y, 2))/2)) - CORRECTION_ADDENDUM);
     }
 
     @FXML
     public void PickAdventureCardFromSrv() {
 
+        positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
+        try {
+            context.getClient().pickAdventureCard(context.getPlayerId());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void setContext(AppContext context) {
+        super.setContext(context);
+        context.addFlightboardListener(this);
     }
 }
