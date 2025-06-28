@@ -38,7 +38,10 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @FXML
     private Button validateShipButton;
     @FXML
+    private Button restoreCompButton;
+    @FXML
     private Label statusLabel;
+
 
     // Component management
     private Component currentComponent = null;
@@ -411,6 +414,42 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
         });
 
         anchorPane.getChildren().add(removeButton);
+    }
+
+    @FXML
+    public void RestoreSelectedStashedComp()
+    {
+        if (selectedImageView == null){
+            statusLabel.setText("No Item Selected");
+            return;
+        }
+        else{
+            if (currentComponent != null) {
+                statusLabel.setText("Place current component before unstashing");
+            }
+            else{
+
+                Position p = calculateGridPosition(selectedImageView.getX(),selectedImageView.getY());
+                if(p.getY() == 0)
+                {
+                    if(p.getX() == GRID_COLS - 2) {
+                        currentComponent = StashedComponents.removeFirst();
+                        selectedImageView.setImage(null);
+                        clearSelection();
+                        gameComponentPicked(currentComponent);
+
+                    }
+                    else if(p.getX() >= GRID_COLS - 1) {
+                        currentComponent = StashedComponents.remove(1);
+                        selectedImageView.setImage(null);
+                        clearSelection();
+                        gameComponentPicked(currentComponent);
+                    }
+                }
+
+            }
+        }
+
     }
 
     @FXML
