@@ -12,7 +12,6 @@ import java.util.Map;
  */
 public class  GameController {
     private GameModel gameModel;
-    private GameView gameView;
 
     public GameController() {
         gameModel = new GameModel();
