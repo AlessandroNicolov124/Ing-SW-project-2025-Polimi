@@ -465,27 +465,34 @@ public class GameMatch {
     }
 
     /**
-     * Gets the player ID of the player in position 1 (first to act in adventure phase).
+     * Gets the player ID of the player who should pick adventure cards (leading player).
      * This method now checks the actual flight board positions after adventure card effects.
      * 
-     * @return The player ID of the leading player, or -1 if not found
+     * @return The player ID of the adventure card picker (leading player), or -1 if not found
      */
     public synchronized int getFirstPlayerToAct() {
         if (controller != null) {
-            // Get the actual leading player from the flight board after effects
-            Player leadingPlayer = controller.getLeadinPlayer();
-            if (leadingPlayer != null) {
-                return leadingPlayer.getId();
+            // Get the adventure card picker from the flight board after effects
+            Player cardPicker = controller.getAdventureCardPicker();
+            if (cardPicker != null) {
+                return cardPicker.getId();
             }
         }
         
         // Fallback to initial positions if controller not available
+        // Find player with best completion order (lowest number = best initial position)
+        int bestCompletionOrder = Integer.MAX_VALUE;
+        int bestPlayerId = -1;
+        
         for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
-            if (entry.getValue() == 1) {
-                return entry.getKey(); // Return the player ID with position 1
+            int completionOrder = entry.getValue();
+            if (completionOrder < bestCompletionOrder) {
+                bestCompletionOrder = completionOrder;
+                bestPlayerId = entry.getKey();
             }
         }
-        return -1; // No player found
+        
+        return bestPlayerId;
     }
 
     // TODO: implement something to retrieve match statistics or results 

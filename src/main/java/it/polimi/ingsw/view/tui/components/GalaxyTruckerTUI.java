@@ -378,13 +378,13 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private void handleWaitForAllPlayersPositionedState() {
         console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
         console.printMessage("Your ship has been validated and you have been assigned a position!");
-        console.printMessage("Positions are assigned based on completion order:");
-        console.printMessage("  • 1st to finish → Position 1 (LEADING PLAYER - picks adventure card for everyone)");
-        console.printMessage("  • 2nd to finish → Position 2");
-        console.printMessage("  • 3rd to finish → Position 3");
-        console.printMessage("  • 4th to finish → Position 4");
+        console.printMessage("Flight board positions assigned based on completion order:");
+        console.printMessage("  • 1st to finish → Flight Position 6 (BEST POSITION)");
+        console.printMessage("  • 2nd to finish → Flight Position 3");
+        console.printMessage("  • 3rd to finish → Flight Position 1");
+        console.printMessage("  • 4th to finish → Flight Position 0 (worst position)");
         console.printMessage("");
-        console.printMessage("IMPORTANT: Only the leading player (position 1) will pick adventure cards!");
+        console.printMessage("IMPORTANT: Player in the BEST position (highest number) picks adventure cards!");
         console.printMessage("Waiting for other players to complete ship building...");
         console.printMessage("Adventure phase will start once all players are positioned.");
         console.printMessage("Type 'status' to check current state or 'help' for available commands.");
@@ -454,8 +454,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private void handleAdventurePhaseState() {
         console.printMessage("\n=== ADVENTURE CARD PHASE ===");
-        console.printMessage("Only the leading player (position 1) can pick adventure cards for everyone");
-        console.printMessage("Wait for the leader to pick or type 'status' to check current state");
+        console.printMessage("Only the LEADING player (highest position number) can pick adventure cards for everyone");
+        console.printMessage("Wait for the card picker to pick or type 'status' to check current state");
         
         while (state == TuiState.ADVENTURE_PHASE) {
             String cmd = console.pollCommand(1000); // Poll with timeout
@@ -1001,7 +1001,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
      * Display position changes after adventure card effects
      */
     private void displayPositionUpdates(Map<Integer, Integer> previousPositions, Map<Integer, Integer> currentPositions) {
-        console.printMessage("\n=== FLIGHT BOARD POSITIONS (0-23, lower = better) ===");
+        console.printMessage("\n=== FLIGHT BOARD POSITIONS (0-23, higher = better) ===");
         
         // Track if any position actually changed
         boolean hasChanges = false;
@@ -1020,14 +1020,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             Integer previousPos = previousPositions.get(playerId);
             if (previousPos != null && !previousPos.equals(position)) {
                 hasChanges = true;
-                if (position < previousPos) {
-                    // Lower position number = better position = moved forward
-                    int improvement = previousPos - position;
+                if (position > previousPos) {
+                    // Higher position number = better position = moved forward
+                    int improvement = position - previousPos;
                     playerName += " (↑" + improvement + ")";
                     changeDetails.add(playerName.replace(" (↑" + improvement + ")", "") + " moved forward " + improvement + " positions");
                 } else {
-                    // Higher position number = worse position = moved backward
-                    int decline = position - previousPos;
+                    // Lower position number = worse position = moved backward
+                    int decline = previousPos - position;
                     playerName += " (↓" + decline + ")";
                     changeDetails.add(playerName.replace(" (↓" + decline + ")", "") + " moved backward " + decline + " positions");
                 }
@@ -1040,9 +1040,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 (playerNames.containsKey(position) ? ", " : "") + playerName);
         }
         
-        // Display positions from best to worst (lowest to highest position numbers)
+        // Display positions from best to worst (highest to lowest position numbers)
         List<Integer> sortedPositions = new ArrayList<>(playerNames.keySet());
-        sortedPositions.sort(Integer::compareTo); // Ascending order (0, 1, 2, ... 23)
+        sortedPositions.sort(Collections.reverseOrder()); // Descending order (23, 22, 21, ... 0)
         
         // Create rank based on the sorted order
         int rank = 1;
@@ -1226,7 +1226,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 rank++;
             }
             
-            // Show who picks adventure cards (player with highest position number = worst flight position)
+            // Show who picks adventure cards (player with highest position number = best flight position)
             String cardPickerName = (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) ? 
                 "You" : "Player " + firstPlayerToAct;
             
@@ -1237,8 +1237,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             
             console.printMessage("\n=============================================");
             console.printMessage("ADVENTURE CARD RULES:");
-            console.printMessage("• Player with HIGHEST position number picks cards!");
-            console.printMessage("• Flight day costs move you to HIGHER position numbers");
+            console.printMessage("• LEADING player (highest position number) picks cards!");
+            console.printMessage("• Flight day costs move you to LOWER position numbers (worse positions)");
             console.printMessage("• Multiple players losing flight days move in reverse order");
             console.printMessage("• Players cannot overlap - if a position is occupied, move to next available position");
             

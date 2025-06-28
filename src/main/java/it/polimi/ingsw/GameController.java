@@ -171,6 +171,10 @@ public class  GameController {
         return gameModel.getFlightBoard().getLeadingPlayer();
     }
 
+    public Player getAdventureCardPicker() {
+        return gameModel.getFlightBoard().getAdventureCardPicker();
+    }
+
     public List<Player> getPlayersInFlightOrder() {
         return gameModel.getFlightBoard().getPlayersInFlightOrder();
     }

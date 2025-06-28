@@ -313,7 +313,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
-        // Only the leading player (position 1) can pick adventure cards
+        // Only the leading player (highest position) can pick adventure cards
         int leadingPlayerId = match.getFirstPlayerToAct();
         if (currentPlayer != leadingPlayerId) {
             System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + currentPlayer + " is not the leader (ID: " + leadingPlayerId + ")");

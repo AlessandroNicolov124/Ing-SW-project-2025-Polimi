@@ -3,10 +3,13 @@ package it.polimi.ingsw;
 import java.util.*;
 
 /**
- * Represents the flight board for Galaxy Trucker with 24 positions (0-23).
- * Position system: Lower numbers = better positions, Higher numbers = worse positions
+ * Represents the flight board for Galaxy Trucker with 24 positions (0-23) in a circular track.
+ * Position system: Higher numbers = better positions, Lower numbers = worse positions
  * Initial positions: 1st place = position 6, 2nd = position 3, 3rd = position 1, 4th = position 0
- * Flight day costs move players to higher position numbers (worse positions)
+ * Flight day costs move players to lower position numbers (worse positions)
+ * 
+ * Wrap-around behavior: If players go below position 0, they wrap around to the end of the track
+ * (e.g., from position 0 losing 2 flight days goes to position 22, losing 3 goes to position 21, etc.)
  */
 public class FlightBoard {
 
@@ -118,28 +121,39 @@ public class FlightBoard {
     }
 
     /**
-     * Finds the next available position when moving backwards (higher position numbers)
+     * Finds the next available position when moving backwards (lower position numbers)
      * Used for flight day costs - finds next available position in the direction of movement
+     * Supports wrap-around: positions below 0 continue from position 23
      */
     private int findNextAvailablePosition(int startPosition, Player movingPlayer) {
-        // When losing flight days, we move to higher position numbers (worse positions)
+        // When losing flight days, we move to lower position numbers (worse positions)
         int position = startPosition;
+        int maxPosition = 23; // Flight board has positions 0-23
         
-        // Search for next available position going towards worse positions (higher numbers)
-        while (position <= 23 && isPositionOccupied(position, movingPlayer)) {
-            position++;
+        // Search for next available position going towards worse positions (lower numbers)
+        // Check positions from startPosition down to 0, then wrap around from 23 downwards
+        for (int i = 0; i < maxPosition + 1; i++) {
+            // If position goes below 0, wrap around to the end of the track
+            if (position < 0) {
+                position = maxPosition + position + 1; // Wrap around (e.g., -1 becomes 23, -2 becomes 22)
+            }
+            
+            // If this position is not occupied, we found our spot
+            if (!isPositionOccupied(position, movingPlayer)) {
+                return position;
+            }
+            
+            // Move to next position backwards
+            position--;
         }
         
-        // If we've gone beyond position 23, stay at 23 (worst possible position)
-        if (position > 23) {
-            position = 23;
-        }
-        
-        return position;
+        // If all positions are somehow occupied (shouldn't happen), return the original start position
+        return startPosition;
     }
 
     /**
      * Updates a player's position, handling flight day costs and collisions
+     * Supports wrap-around: if a player goes below position 0, they wrap around to position 23, 22, etc.
      * @param player The player whose position to update
      * @param flightDaysCost Flight days to lose (positive number = move to worse position)
      */
@@ -153,25 +167,22 @@ public class FlightBoard {
             throw new IllegalArgumentException("Player has not been positioned yet");
         }
 
-        // Calculate new position (losing flight days = moving to higher numbers = worse positions)
-        int targetPosition = currentPosition + flightDaysCost;
+        // Calculate new position (losing flight days = moving to lower numbers = worse positions)
+        int targetPosition = currentPosition - flightDaysCost;
         
-        // Ensure we don't go beyond the worst position (23)
+        // Allow negative positions - the findNextAvailablePosition method will handle wrap-around
+        // Ensure we don't go better than the best position (23)
         if (targetPosition > 23) {
             targetPosition = 23;
         }
-        
-        // Ensure we don't go better than the best position (0)
-        if (targetPosition < 0) {
-            targetPosition = 0;
-        }
 
-        // Find next available position if target is occupied
+        // Find next available position if target is occupied (handles wrap-around automatically)
         int finalPosition = findNextAvailablePosition(targetPosition, player);
         
         System.out.println("[FlightBoard] " + player.getNickName() + " moves from position " + 
                           currentPosition + " to position " + finalPosition + 
-                          " (lost " + flightDaysCost + " flight days)");
+                          " (lost " + flightDaysCost + " flight days)" + 
+                          (finalPosition > currentPosition ? " - wrapped around!" : ""));
         
         positions.put(player, finalPosition);
     }
@@ -258,8 +269,8 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the leading player for adventure card picking (player with the highest position number = worst flight position)
-     * This player picks adventure cards that affect everyone
+     * Gets the leading player (player with the highest position number = best flight position)
+     * This player is in 1st place
      */
     public Player getLeadingPlayer() {
         if (positions.isEmpty()) {
@@ -267,21 +278,48 @@ public class FlightBoard {
         }
 
         Player leadingPlayer = null;
-        int worstPosition = -1;
+        int bestPosition = -1;
 
         for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
             Player player = entry.getKey();
             int position = entry.getValue();
             
             // Only consider active, positioned players
-            // Leading player = highest position number (worst flight position)
-            if (player.isActive() && position != -1 && position > worstPosition) {
-                worstPosition = position;
+            // Leading player = highest position number (best flight position)
+            if (player.isActive() && position != -1 && position > bestPosition) {
+                bestPosition = position;
                 leadingPlayer = player;
             }
         }
 
         return leadingPlayer;
+    }
+
+    /**
+     * Gets the adventure card picker (player with the highest position number = best flight position)
+     * This player picks adventure cards that affect everyone - the leading player picks cards
+     */
+    public Player getAdventureCardPicker() {
+        if (positions.isEmpty()) {
+            return null;
+        }
+
+        Player cardPicker = null;
+        int bestPosition = -1;
+
+        for (Map.Entry<Player, Integer> entry : positions.entrySet()) {
+            Player player = entry.getKey();
+            int position = entry.getValue();
+            
+            // Only consider active, positioned players
+            // Card picker = highest position number (best flight position = leading player)
+            if (player.isActive() && position != -1 && position > bestPosition) {
+                bestPosition = position;
+                cardPicker = player;
+            }
+        }
+
+        return cardPicker;
     }
 
     /**

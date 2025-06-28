@@ -449,7 +449,7 @@ public class RmiServer extends UnicastRemoteObject
             return;
         }
 
-        // Only the leading player (position 1) can pick adventure cards
+        // Only the leading player (highest position) can pick adventure cards
         int leadingPlayerId = match.getFirstPlayerToAct();
         if (playerId != leadingPlayerId) {
             System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
