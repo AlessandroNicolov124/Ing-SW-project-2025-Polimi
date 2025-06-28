@@ -43,6 +43,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 public class SocketClientHandler implements Runnable, GeneralClientIf {
     private final Socket socket;
@@ -345,6 +346,12 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
+        // Get updated player positions after card effects
+        Map<Integer, Integer> updatedPositions = null;
+        if (success && adventureCard != null) {
+            updatedPositions = controller.getCurrentPlayerPositions();
+        }
+
         // Check if there are more adventure cards or if the game is complete
         int nextPlayerTurn = -1; // Default: adventure phase continues
         
@@ -355,7 +362,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             // Send the pick response first
             lobbyManager.multicastToMatch(match.getMatchId(),
                     new PickAdventureCardResponse(
-                            currentPlayer, adventureCard, success, message, nextPlayerTurn));
+                            currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
             
             // Then send completion notification
             String completionReason;
@@ -380,7 +387,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
                 new PickAdventureCardResponse(
-                        currentPlayer, adventureCard, success, message, nextPlayerTurn));
+                        currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
     }
 
     @Override

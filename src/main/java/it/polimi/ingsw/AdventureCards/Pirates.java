@@ -121,7 +121,7 @@ public class Pirates extends AdventureCard {
     }
     
     /**
-     * Offer the player a reward for defeating pirates
+     * Offers a reward to the player who defeated the pirates
      * @param player The player who defeated the pirates
      * @param gameModel The current game state
      * @param acceptReward Whether the player accepts the reward
@@ -136,8 +136,11 @@ public class Pirates extends AdventureCard {
             int currentCredits = gameModel.getCredits(player);
             gameModel.setCredits(player, currentCredits + rewardCredits);
             
-            // Move player back on flight board
-            gameModel.updatePosition(player, -flightDaysCost);
+            // Move player back on flight board (positive flight day cost = move to worse position)
+            gameModel.updatePosition(player, flightDaysCost);
+            
+            System.out.println("[Pirates] " + player.getNickName() + " accepted reward: +" + rewardCredits + 
+                             " credits, lost " + flightDaysCost + " flight days");
         }
         // If player doesn't accept reward, nothing happens to their position
     }

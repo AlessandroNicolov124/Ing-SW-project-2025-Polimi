@@ -359,10 +359,11 @@ public class GameMatch {
 
     /**
      * Assigns a position to a player based on ship building completion order.
-     * The first player to complete gets position 1, second gets position 2, etc.
+     * The first player to complete gets completion order 1 and flight position 6,
+     * second gets completion order 2 and flight position 3, etc.
      * 
      * @param playerId The ID of the player who completed ship building
-     * @return The assigned position (1-4), or -1 if player not found or already assigned
+     * @return The assigned completion order (1-4), or -1 if player not found or already assigned
      */
     public synchronized int assignPlayerPosition(int playerId) {
         // Check if player is in the match
@@ -374,23 +375,37 @@ public class GameMatch {
         // Check if player already has a position assigned
         if (playerPositions.containsKey(playerId)) {
             int existingPosition = playerPositions.get(playerId);
-            System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " already has position " + existingPosition);
+            System.out.println("[GameMatch " + matchId + "] Player ID " + playerId + " already has completion order " + existingPosition);
             return existingPosition;
         }
         
-        // Assign the next available position
-        int assignedPosition = nextPosition.getAndIncrement();
-        if (assignedPosition > MAX_PLAYERS) {
+        // Assign the next available completion order
+        int assignedCompletionOrder = nextPosition.getAndIncrement();
+        if (assignedCompletionOrder > MAX_PLAYERS) {
             System.out.println("[GameMatch " + matchId + "] No more positions available for player ID " + playerId);
             return -1;
         }
         
-        playerPositions.put(playerId, assignedPosition);
-        Player player = getPlayerById(playerId);
-        String playerName = player != null ? player.getNickName() : "Unknown";
+        // Store the completion order in playerPositions (for backward compatibility)
+        playerPositions.put(playerId, assignedCompletionOrder);
         
-        System.out.println("[GameMatch " + matchId + "] Player " + playerName + " (ID: " + playerId + ") assigned position " + assignedPosition);
-        return assignedPosition;
+        // Set the actual flight board position based on completion order
+        Player player = getPlayerById(playerId);
+        if (player != null && controller != null) {
+            boolean success = controller.setPlayerInitialStartingPosition(player, assignedCompletionOrder);
+            if (!success) {
+                System.out.println("[GameMatch " + matchId + "] Failed to set flight board position for player " + player.getNickName());
+                // Remove from completion order tracking if flight board position failed
+                playerPositions.remove(playerId);
+                nextPosition.decrementAndGet(); // Rollback the increment
+                return -1;
+            }
+        }
+        
+        String playerName = player != null ? player.getNickName() : "Unknown";
+        System.out.println("[GameMatch " + matchId + "] Player " + playerName + " (ID: " + playerId + 
+                          ") assigned completion order " + assignedCompletionOrder + " and flight board position");
+        return assignedCompletionOrder;
     }
     
     /**

@@ -43,6 +43,7 @@ import java.rmi.server.Unreferenced;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 
 public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable {
@@ -480,6 +481,12 @@ public class RmiServer extends UnicastRemoteObject
         System.out.println("[ServerRMI] Adventure card pick by leading player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
+        // Get updated player positions after card effects
+        Map<Integer, Integer> updatedPositions = null;
+        if (success && adventureCard != null) {
+            updatedPositions = controller.getCurrentPlayerPositions();
+        }
+
         // Check if there are more adventure cards or if the game is complete
         int nextPlayerTurn = -1; // Default: adventure phase continues
         
@@ -490,7 +497,7 @@ public class RmiServer extends UnicastRemoteObject
             // Send the pick response first
             lobbyManager.multicastToMatch(match.getMatchId(),
                     new PickAdventureCardResponse(
-                            playerId, adventureCard, success, message, nextPlayerTurn));
+                            playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
             
             // Then send completion notification
             String completionReason;
@@ -515,7 +522,7 @@ public class RmiServer extends UnicastRemoteObject
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
                 new PickAdventureCardResponse(
-                        playerId, adventureCard, success, message, nextPlayerTurn));
+                        playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
     }
 
     @Override

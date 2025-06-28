@@ -134,6 +134,14 @@ public class  GameController {
         return gameModel.isFlightComplete();
     }
 
+    /**
+     * Gets current flight board positions for all players
+     * @return Map of player ID to current position
+     */
+    public Map<Integer, Integer> getCurrentPlayerPositions() {
+        return gameModel.getCurrentPlayerPositions();
+    }
+
     public boolean startMatchIfPossible()
     {
         boolean eval = gameModel.isGameStartable();

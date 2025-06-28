@@ -1,6 +1,5 @@
 package it.polimi.ingsw.view.tui.components;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -8,6 +7,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Collections;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -41,6 +43,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private boolean localReady = false;
 
     private CompletableFuture<Player> playerCreationFuture;
+    private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
 
 
     public GalaxyTruckerTUI()
@@ -943,6 +946,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn, null);
+    }
+
+    @Override
+    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
             if (success && adventureCard != null) {
                 // Find player name for display
@@ -956,6 +964,13 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 // Note: The actual card effect is applied on the server side
                 console.printMessage("Adventure card effects have been applied to the game state.");
                 
+                // Display updated positions if provided
+                if (updatedPositions != null && !updatedPositions.isEmpty()) {
+                    Map<Integer, Integer> previousPositions = new HashMap<>(currentPlayerPositions);
+                    currentPlayerPositions = new HashMap<>(updatedPositions); // Make a defensive copy
+                    displayPositionUpdates(previousPositions, currentPlayerPositions);
+                }
+                
                 // Check if there are more adventure cards to pick
                 if (nextPlayerTurn == -2) { // Special value indicating deck is empty or game ended
                     console.printMessage("Adventure card deck is empty. Waiting for game completion notification...");
@@ -966,6 +981,94 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             } else {
                 console.printError("✗ Failed to pick adventure card: " + message);
             }
+        }
+    }
+
+    /**
+     * Display position changes after adventure card effects
+     */
+    private void displayPositionUpdates(Map<Integer, Integer> previousPositions, Map<Integer, Integer> currentPositions) {
+        console.printMessage("\n=== FLIGHT BOARD POSITIONS (0-23, lower = better) ===");
+        
+        // Track if any position actually changed
+        boolean hasChanges = false;
+        List<String> changeDetails = new ArrayList<>();
+        
+        // Find all players and their positions
+        Map<Integer, String> playerNames = new HashMap<>(); // position -> player names at that position
+        for (Map.Entry<Integer, Integer> entry : currentPositions.entrySet()) {
+            int playerId = entry.getKey();
+            int position = entry.getValue();
+            
+            String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                "You" : "Player " + playerId;
+            
+            // Check if position changed
+            Integer previousPos = previousPositions.get(playerId);
+            if (previousPos != null && !previousPos.equals(position)) {
+                hasChanges = true;
+                if (position < previousPos) {
+                    // Lower position number = better position = moved forward
+                    int improvement = previousPos - position;
+                    playerName += " (↑" + improvement + ")";
+                    changeDetails.add(playerName.replace(" (↑" + improvement + ")", "") + " moved forward " + improvement + " positions");
+                } else {
+                    // Higher position number = worse position = moved backward
+                    int decline = position - previousPos;
+                    playerName += " (↓" + decline + ")";
+                    changeDetails.add(playerName.replace(" (↓" + decline + ")", "") + " moved backward " + decline + " positions");
+                }
+            } else if (previousPos == null) {
+                // Player wasn't tracked before - this shouldn't happen during adventure phase
+                changeDetails.add(playerName + " position tracking started");
+            }
+            
+            playerNames.put(position, playerNames.getOrDefault(position, "") + 
+                (playerNames.containsKey(position) ? ", " : "") + playerName);
+        }
+        
+        // Display positions from best to worst (lowest to highest position numbers)
+        List<Integer> sortedPositions = new ArrayList<>(playerNames.keySet());
+        sortedPositions.sort(Integer::compareTo); // Ascending order (0, 1, 2, ... 23)
+        
+        // Create rank based on the sorted order
+        int rank = 1;
+        for (int position : sortedPositions) {
+            String playersAtPosition = playerNames.get(position);
+            String positionLabel = getPositionLabel(rank);
+            console.printMessage("Position " + position + " " + positionLabel + ": " + playersAtPosition);
+            rank++;
+        }
+        
+        // Show position changes summary
+        if (hasChanges) {
+            console.printMessage("\nPosition changes from this card:");
+            for (String change : changeDetails) {
+                console.printMessage("  • " + change);
+            }
+        } else {
+            // Check if positions are identical
+            boolean identicalMaps = previousPositions.equals(currentPositions);
+            if (identicalMaps) {
+                console.printMessage("(No position changes from this card)");
+            } else {
+                console.printMessage("(Position data updated but no player movements detected)");
+            }
+        }
+        
+        console.printMessage("================================================\n");
+    }
+
+    /**
+     * Get a descriptive label for a rank
+     */
+    private String getPositionLabel(int rank) {
+        switch (rank) {
+            case 1: return "(1st place)";
+            case 2: return "(2nd place)";
+            case 3: return "(3rd place)";
+            case 4: return "(4th place)";
+            default: return "(" + rank + "th place)";
         }
     }
 
@@ -1087,30 +1190,51 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
         synchronized (displayMutex) {
-            console.printMessage("\nALL PLAYERS POSITIONED! Starting Adventure Phase!");
-            console.printMessage("=== FINAL POSITIONS ===");
+            // Initialize position tracking
+            currentPlayerPositions = new HashMap<>(playerPositions);
             
-            // Display final position standings
-            for (int position = 1; position <= playerPositions.size(); position++) {
-                for (Map.Entry<Integer, Integer> entry : playerPositions.entrySet()) {
-                    if (entry.getValue() == position) {
-                        int playerId = entry.getKey();
-                        String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
-                            "You" : "Player " + playerId;
-                        console.printMessage("Position " + position + ": " + playerName);
-                        break;
-                    }
-                }
+            console.printMessage("\nALL PLAYERS POSITIONED! Starting Adventure Phase!");
+            console.printMessage("=== STARTING POSITIONS (0-23, lower = better for winning) ===");
+            
+            // Sort players by position (best to worst for flight race)
+            List<Map.Entry<Integer, Integer>> sortedEntries = new ArrayList<>(playerPositions.entrySet());
+            sortedEntries.sort(Map.Entry.comparingByValue()); // Sort by position value (ascending)
+            
+            // Display flight race standings
+            int rank = 1;
+            for (Map.Entry<Integer, Integer> entry : sortedEntries) {
+                int playerId = entry.getKey();
+                int position = entry.getValue();
+                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
+                    "You" : "Player " + playerId;
+                
+                String rankStr = getRankString(rank);
+                console.printMessage(rankStr + " in flight race (pos " + position + "): " + playerName);
+                rank++;
             }
             
-            console.printMessage("======================\n");
-            console.printMessage("ADVENTURE CARD RULE: Only the leading player (position 1) picks adventure cards for everyone!");
+            // Show who picks adventure cards (player with highest position number = worst flight position)
+            String cardPickerName = (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) ? 
+                "You" : "Player " + firstPlayerToAct;
             
-            // Check if we are the leader
+            // Find the position of the card picker
+            int cardPickerPosition = playerPositions.getOrDefault(firstPlayerToAct, -1);
+            
+            console.printMessage("\n ADVENTURE CARD PICKER: " + cardPickerName + " (position " + cardPickerPosition + ")");
+            console.printMessage("   ↳ The player in the WORST flight position picks cards for everyone!");
+            
+            console.printMessage("\n=============================================");
+            console.printMessage("ADVENTURE CARD RULES:");
+            console.printMessage("• Player with HIGHEST position number (worst flight position) picks cards!");
+            console.printMessage("• Flight day costs move you to HIGHER position numbers (worse positions)");
+            console.printMessage("• Multiple players losing flight days move in reverse order (worst position first)");
+            console.printMessage("• Players cannot overlap - if a position is occupied, move to next available position");
+            
+            // Check if we are the card picker
             if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
-                console.printMessage("You are the leading player! Type 'pick' to draw an adventure card for all players.");
+                console.printMessage("\n You are the adventure card picker! Type 'pick' to draw a card for all players.");
             } else {
-                console.printMessage("Waiting for the leading player (position 1) to pick an adventure card...");
+                console.printMessage("\n Waiting for " + cardPickerName + " to pick an adventure card...");
             }
             
             // Transition to adventure phase
@@ -1118,5 +1242,17 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+    /**
+     * Convert rank number to ordinal string
+     */
+    private String getRankString(int rank) {
+        switch (rank) {
+            case 1: return "1st";
+            case 2: return "2nd";
+            case 3: return "3rd";
+            case 4: return "4th";
+            default: return rank + "th";
+        }
+    }
 
 }
