@@ -14,9 +14,8 @@ public final class LifeSupportSystem extends Component {
     }
 
     @Override
-    public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
-        s += type.toString().toLowerCase() + "_" + getConnectionsString();
-        return s;
+    protected String calculateComponentString() {
+        String typeStr = (type == LifeSupportSystemType.BROWN) ? "brown" : "purple";
+        return "lifesupportsystem_" + typeStr + "_" + getConnectionsString();
     }
 }

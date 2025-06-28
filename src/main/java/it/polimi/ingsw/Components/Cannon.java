@@ -52,6 +52,13 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
 
     public abstract double getEffectivePower();
 
+    @Override
+    protected String calculateComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString();
+        return s;
+    }
+
 }
 
 

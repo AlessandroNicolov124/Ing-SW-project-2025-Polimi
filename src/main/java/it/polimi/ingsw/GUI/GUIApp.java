@@ -17,15 +17,21 @@ public class GUIApp extends Application {
     private static Stage primaryStage;
     private static AppContext context = new AppContext();
 
+    private static String currentMainPage = "Login";
+    private static FlightPreparationController currentFlightPrepController = null;
+    
+
 
     @Override
     public void start(Stage stage) throws Exception {
         primaryStage = stage;
+        //showFlightPreparation();
         showLoginPage();
         //showFlightBoard();
     }
 
     public static void showLoginPage() throws Exception {
+        currentMainPage = "Login";
         FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/LoginView.fxml"));
         Parent root = loader.load();
 
@@ -40,6 +46,7 @@ public class GUIApp extends Application {
     }
 
     public static void showShipBuilder() throws Exception {
+        currentMainPage = "ShipBuilder";
         FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/ShipBuilderView.fxml"));
         Parent root = loader.load();
 
@@ -53,6 +60,7 @@ public class GUIApp extends Application {
     }
 
     public static void showLobbyPage() throws Exception {
+        currentMainPage = "Lobby";
         FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/lobby.fxml"));
         Parent root = loader.load();
 
@@ -65,19 +73,23 @@ public class GUIApp extends Application {
     }
 
     public static void showFlightPreparation() throws IOException {
+        currentMainPage = "FlightPreparation";
+        
         FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/FlightPreparation.fxml"));
         Parent root = loader.load();
         
         FlightPreparationController controller = loader.getController();
-        controller.setContext(context);
+        currentFlightPrepController = loader.getController();
+        currentFlightPrepController.setContext(context);
         
-        Scene scene = new Scene(root, 800, 600);
+        Scene scene = new Scene(root, 1300, 1000);
         primaryStage.setScene(scene);
         primaryStage.setTitle("Flight Preparation");
         primaryStage.show();
     }
 
     public static void showFlightBoard() throws Exception {
+        currentMainPage = "FlightBoard";
         FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/FlightboardView.fxml"));
         Parent root = loader.load();
 
@@ -87,6 +99,50 @@ public class GUIApp extends Application {
         primaryStage.setScene(new Scene(root, 1400, 950));
         primaryStage.setTitle("FlightBoard");
         primaryStage.show();
+    }
+
+    public static void showPlayerShip(String targetPlayerName) throws IOException {
+        FXMLLoader loader = new FXMLLoader(GUIApp.class.getResource("/FXML/PlayerShipView.fxml"));
+        Parent root = loader.load();
+        
+        PlayerShipController controller = loader.getController();
+        controller.setPlayerToView(targetPlayerName);
+        controller.setContext(getAppContext());
+        
+        Scene scene = new Scene(root, 937, 679);
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Player Ship View - " + targetPlayerName);
+        primaryStage.show();
+    }
+
+    public static AppContext getAppContext() {
+        return context;
+    }
+
+    public static void returnToPreviousPage() throws IOException {
+        try {
+            switch (currentMainPage) {
+                case "FlightBoard":
+                    showFlightBoard();
+                    break;
+                case "FlightPreparation":
+                    showFlightPreparation();
+                    break;
+                case "ShipBuilder":
+                    showShipBuilder();
+                    break;
+                case "Lobby":
+                    showLobbyPage();
+                    break;
+                case "Login":
+                    showLoginPage();
+                default:
+                    throw new IllegalStateException("Unexpected value: " + currentMainPage);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IOException("Error returning to previous page", e);
+        }
     }
 
     public static void main(String[] args) {

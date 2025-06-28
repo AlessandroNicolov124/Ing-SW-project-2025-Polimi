@@ -23,14 +23,11 @@ public final class Cabin extends Component {
     }
 
     @Override
-    public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
-        if(isStartingCabin){
-            s += "starting";
-        }else{
-            s += getConnectionsString();
+    protected String calculateComponentString() {
+        if (isStartingCabin()) {
+            return "cabin_starting";
         }
-        return s;
+        return "cabin_" + getConnectionsString();
     }
 
     public Cabin(boolean isStartingCabin) {
@@ -71,30 +68,64 @@ public final class Cabin extends Component {
         return new HashSet<>(connectedLifeSupports);
     }
 
+    public boolean hasAnyConnectedLifeSupport() {
+        return !connectedLifeSupports.isEmpty();
+    }
+
     public boolean addCrew(Crew crewMember) {
         // Check if this is the starting cabin and the crew is alien
         if (isStartingCabin && crewMember.getType() != CrewType.HUMAN) {
-            return false; // Aliens can't live in the starting cabin
-        }
-
-        // Check if there are already 2 humans or an alien
-        if (crew.size() >= 2 || (crew.size() == 1 && crew.get(0).getType() != CrewType.HUMAN)) {
-            return false; // Cabin is full
-        }
-
-        // Check if the crew member can live in this cabin
-        if (!crewMember.canLiveIn(this)) {
+            System.out.println("[Cabin] Starting cabin cannot host aliens");
             return false;
         }
 
-        // If we have one alien, we can't add another of any type
-        if (crew.size() == 1 && crew.get(0).getType() != CrewType.HUMAN && crewMember.getType() != CrewType.HUMAN) {
-            return false;
+        // Check current occupancy
+        int currentOccupants = crew.size();
+        
+        // If cabin is empty, check based on crew type
+        if (currentOccupants == 0) {
+            if (crewMember.getType() != CrewType.HUMAN) {
+                // Alien needs appropriate life support
+                LifeSupportSystemType requiredType = switch (crewMember.getType()) {
+                    case BROWN_ALIEN -> LifeSupportSystemType.BROWN;
+                    case PURPLE_ALIEN -> LifeSupportSystemType.PURPLE;
+                    default -> null;
+                };
+                
+                if (requiredType != null && !hasConnectedLifeSupport(requiredType)) {
+                    System.out.println("[Cabin] Cannot add " + crewMember.getType() + 
+                                    ": no " + requiredType + " life support connected");
+                    return false;
+                }
+            }
+            crew.add(crewMember);
+            return true;
         }
-
-        // If all checks pass, add the crew member
-        crew.add(crewMember);
-        return true;
+        
+        // If cabin has 1 occupant
+        if (currentOccupants == 1) {
+            Crew existingCrew = crew.get(0);
+            
+            // If existing is alien, cabin is full (aliens take 2 spaces)
+            if (existingCrew.getType() != CrewType.HUMAN) {
+                System.out.println("[Cabin] Cabin with alien is full");
+                return false;
+            }
+            
+            // If existing is human and new is alien, reject (no mixing)
+            if (crewMember.getType() != CrewType.HUMAN) {
+                System.out.println("[Cabin] Cannot mix humans and aliens");
+                return false;
+            }
+            
+            // Both are humans - add the second human
+            crew.add(crewMember);
+            return true;
+        }
+        
+        // Cabin already has 2 occupants
+        System.out.println("[Cabin] Cabin is full");
+        return false;
     }
 
     public boolean canAddAlien(CrewType alienType) {

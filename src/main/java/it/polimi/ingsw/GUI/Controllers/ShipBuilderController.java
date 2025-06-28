@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
@@ -78,7 +79,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             {true, true,  true,  false, true,  true,  true },
     };
 
-    private final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
+    public static final Map<String, String> COMP_IMAGE_MAP = Map.ofEntries(
             Map.entry("cabin_starting_1", "/Images/tiles/Cabin_Starting_1.jpg"), // RED
             Map.entry("cabin_starting_2", "/Images/tiles/Cabin_Starting_2.jpg"), // YELLOW
             Map.entry("cabin_starting_3", "/Images/tiles/Cabin_Starting_3.jpg"), // GREEN
@@ -116,23 +117,23 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("cabin_SNSU", "/Images/tiles/cabin_SNSU.jpg"),
             Map.entry("cabin_UNND", "/Images/tiles/cabin_UNND.jpg"),
 
-            Map.entry("batterycompartment_double_DSDS", "/Images/tiles/batterycompartment_double_DSDS.jpg"),
-            Map.entry("batterycompartment_double_NNNU", "/Images/tiles/batterycompartment_double_NNNU.jpg"),
-            Map.entry("batterycompartment_double_NNNU_2","/Images/tiles/batterycompartment_double_NNNU_2.jpg"),
-            Map.entry("batterycompartment_double_NUNU", "/Images/tiles/batterycompartment_double_NUNU.jpg"),
-            Map.entry("batterycompartment_double_UDDD", "/Images/tiles/batterycompartment_double_UDDD.jpg"),
-            Map.entry("batterycompartment_double_UDNN", "/Images/tiles/batterycompartment_double_UDNN.jpg"),
-            Map.entry("batterycompartment_double_UDSN", "/Images/tiles/batterycompartment_double_UDSN.jpg"),
-            Map.entry("batterycompartment_double_UNNS", "/Images/tiles/batterycompartment_double_UNNS.jpg"),
-            Map.entry("batterycompartment_double_UNNU", "/Images/tiles/batterycompartment_double_UNNU.jpg"),
-            Map.entry("batterycompartment_double_USDN", "/Images/tiles/batterycompartment_double_USDN.jpg"),
-            Map.entry("batterycompartment_double_USSS", "/Images/tiles/batterycompartment_double_USSS.jpg"),
-            Map.entry("batterycompartment_triple_DDSN", "/Images/tiles/batterycompartment_triple_DDSN.jpg"),
-            Map.entry("batterycompartment_triple_DNNN", "/Images/tiles/batterycompartment_triple_DNNN.jpg"),
-            Map.entry("batterycompartment_triple_DSNN", "/Images/tiles/batterycompartment_triple_DSNN.jpg"),
-            Map.entry("batterycompartment_triple_NNNS", "/Images/tiles/batterycompartment_triple_NNNS.jpg"),
-            Map.entry("batterycompartment_triple_SNDN", "/Images/tiles/batterycompartment_triple_SNDN.jpg"),
-            Map.entry("batterycompartment_triple_SSDN", "/Images/tiles/batterycompartment_triple_SSDN.jpg"),
+            Map.entry("batterycompartment_double_DSDS", "/Images/tiles/BatteryCompartment_Double_DSDS.jpg"),
+            Map.entry("batterycompartment_double_NNNU", "/Images/tiles/BatteryCompartment_Double_NNNU.jpg"),
+            Map.entry("batterycompartment_double_NNNU_2","/Images/tiles/batterycompartment_Double_NNNU_2.jpg"),
+            Map.entry("batterycompartment_double_NUNU", "/Images/tiles/BatteryCompartment_Double_NUNU.jpg"),
+            Map.entry("batterycompartment_double_UDDD", "/Images/tiles/BatteryCompartment_Double_UDDD.jpg"),
+            Map.entry("batterycompartment_double_UDNN", "/Images/tiles/BatteryCompartment_Double_UDNN.jpg"),
+            Map.entry("batterycompartment_double_UDSN", "/Images/tiles/BatteryCompartment_Double_UDSN.jpg"),
+            Map.entry("batterycompartment_double_UNNS", "/Images/tiles/BatteryCompartment_Double_UNNS.jpg"),
+            Map.entry("batterycompartment_double_UNNU", "/Images/tiles/BatteryCompartment_Double_UNNU.jpg"),
+            Map.entry("batterycompartment_double_USDN", "/Images/tiles/BatteryCompartment_Double_USDN.jpg"),
+            Map.entry("batterycompartment_double_USSS", "/Images/tiles/BatteryCompartment_Double_USSS.jpg"),
+            Map.entry("batterycompartment_triple_DDSN", "/Images/tiles/BatteryCompartment_Triple_DDSN.jpg"),
+            Map.entry("batterycompartment_triple_DNNN", "/Images/tiles/BatteryCompartment_Triple_DNNN.jpg"),
+            Map.entry("batterycompartment_triple_DSNN", "/Images/tiles/BatteryCompartment_Triple_DSNN.jpg"),
+            Map.entry("batterycompartment_triple_NNNS", "/Images/tiles/BatteryCompartment_Triple_NNNS.jpg"),
+            Map.entry("batterycompartment_triple_SNDN", "/Images/tiles/BatteryCompartment_Triple_SNDN.jpg"),
+            Map.entry("batterycompartment_triple_SSDN", "/Images/tiles/BatteryCompartment_Triple_SSDN.jpg"),
 
             Map.entry("normalcargoholds_double_DSUN", "/Images/tiles/normalcargoholds_double_DSUN.jpg"),
             Map.entry("normalcargoholds_double_DSUS", "/Images/tiles/normalcargoholds_double_DSUS.jpg"),
@@ -245,8 +246,13 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             Map.entry("singlecannon_NSSS", "/Images/tiles/singlecannon_NSSS.jpg"),
             Map.entry("singlecannon_NSUD", "/Images/tiles/singlecannon_NSUD.jpg"),
             Map.entry("singlecannon_NSUN", "/Images/tiles/singlecannon_NSUN.jpg"),
+            Map.entry("singlecannon_NSND", "/Images/tiles/singlecannon_NSND.jpg"),
             Map.entry("singlecannon_NUSN", "/Images/tiles/singlecannon_NUSN.jpg")
     );
+
+    public Map<Position, Component> getShipComponents() {
+        return Collections.unmodifiableMap(this.shipComponents);
+    }
 
     @FXML
     public void initialize() {
@@ -282,7 +288,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                     y = GRID_START_Y + row * SQUARE_SIZE;
                     Rectangle rect = new Rectangle(x, y, SQUARE_SIZE, SQUARE_SIZE);
                     rect.setFill(Color.TRANSPARENT);
-                    rect.setStroke(Color.WHITE);
+                    rect.setStroke(Color.TRANSPARENT);
                     rect.setStrokeWidth(2.0);
                     anchorPane.getChildren().add(rect);
                 }
@@ -631,6 +637,9 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 default -> "cabin_starting_1";
             };
         }
+    
+        System.out.println("Component: " + c.getClass().getSimpleName() + ", Key: " + key + ", Direction: " + c.getComponentDirection());
+        
         return COMP_IMAGE_MAP.get(key);
     }
 
@@ -681,6 +690,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     public void gameComponentRotated(Position position, RotationType rotationType) {
         Platform.runLater(() -> {
             ImageView imageView = cellViews.get(position);
+            
             if (imageView != null) {
                 double rotation = switch (rotationType) {
                     case CLOCKWISE -> 90;
@@ -690,6 +700,12 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 
                 double currentRotation = imageView.getRotate();
                 imageView.setRotate(currentRotation + rotation);
+                
+//                if (rotatedComponent != null) {
+//                    shipComponents.put(position, rotatedComponent);
+//                    System.out.println("[GUI] Updated local component at " + position + " with direction: "
+//                                        + rotatedComponent.getComponentDirection());
+//                }
                 
                 statusLabel.setText("Component rotated successfully");
                 
@@ -705,7 +721,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     @Override
     public void gameShipValidated(boolean isValid, String message) {
         Platform.runLater(() -> {
-            validateShipButton.setDisable(false); 
+            validateShipButton.setDisable(false);
             
             if (isValid) {
                 statusLabel.setText("Ship validated! Ready for flight");

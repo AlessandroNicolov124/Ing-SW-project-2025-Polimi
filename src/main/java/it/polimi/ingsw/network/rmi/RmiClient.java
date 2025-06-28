@@ -1,7 +1,9 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.RmiClientIf;
@@ -151,6 +153,27 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         } catch (RemoteException e) {
             throw new RemoteException("Error picking adventure card", e);
         }
+    }
+
+
+    @Override
+    public void getPlayerShip(String playerName) throws RemoteException {
+        server.getPlayerShip(playerName, this);
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws RemoteException {
+        server.addTokenToComponent(playerName, position, tokenType, this);
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName) throws RemoteException {
+        server.getPlayerTokenList(playerName, this);
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws RemoteException {
+        server.removeTokenFromComponent(playerName, position, tokenType, this);
     }
 
 }

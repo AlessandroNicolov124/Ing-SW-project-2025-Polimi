@@ -39,7 +39,6 @@
         <HBox spacing="12" alignment="CENTER" style="-fx-padding: 12;">
             <Button fx:id="createMatchButton" text="Create Match" />
             <Button fx:id="joinMatchButton"   text="Join Selected Match" />
-            <!-- nuovo bottone Leave -->
             <Button fx:id="leaveMatchButton"  text="Leave Match" />
             <Button fx:id="startMatchButton"  text="Start Match" />
             <Button fx:id="refreshButton"     text="Load Matches" />

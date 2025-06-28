@@ -2,7 +2,7 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.Cabin;
 
-public class HumanCrew extends Crew {
+public class HumanCrew extends Crew  {
 
     public HumanCrew() {
         super(CrewType.HUMAN);

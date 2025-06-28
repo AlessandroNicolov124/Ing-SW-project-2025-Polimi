@@ -16,11 +16,19 @@ import java.util.*;
 
 public class LobbyController extends GuiContoller implements LobbyListener {
 
-    @FXML private Label statusLabel;
-    @FXML private Label welcomeLabel;
-    @FXML private ListView<String> matchesListView;
-    @FXML private ListView<String> playersListView;
+    @FXML 
+    private Label statusLabel;
+    
+    @FXML 
+    private Label welcomeLabel;
+    
+    @FXML 
+    private ListView<String> matchesListView;
+    
+    @FXML 
+    private ListView<String> playersListView;
 
+    
     @FXML
     private Button createMatchButton, joinMatchButton, leaveMatchButton, startMatchButton, refreshButton, readyButton;
 

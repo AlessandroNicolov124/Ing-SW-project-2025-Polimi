@@ -452,6 +452,8 @@ public class GameModel {
                 System.err.println("Connettori non validi per " + componentType + ": " + connectors);
                 return null;
             }
+
+            component.saveOriginalState();
         }
 
         return component;
@@ -531,13 +533,21 @@ public class GameModel {
         }
     }
 
-    // Factory methods per creare i diversi tipi di componenti
     private Cabin createCabin(boolean isStarting) {
         Cabin cabin = new Cabin(isStarting);
         if(!isStarting){
             // Inizializza i connettori in modo casuale o predefinito
             initializeRandomConnectors(cabin);
+        } else {
+            cabin.initializeConnectors(
+                new UniversalConnectorType(),
+                new UniversalConnectorType(),
+                new UniversalConnectorType(),
+                new UniversalConnectorType()
+            );
         }
+
+        cabin.saveOriginalState();
         return cabin;
     }
 
@@ -548,6 +558,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
+
+        engine.saveOriginalState();
         return engine;
     }
 
@@ -558,6 +570,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
+
+        engine.saveOriginalState();
         return engine;
     }
 
@@ -569,6 +583,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
+
+        cannon.saveOriginalState();
         return cannon;
     }
 
@@ -580,28 +596,38 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
+
+        cannon.saveOriginalState();
         return cannon;
     }
 
     private CargoHolds createNormalDoubleCargoHolds() {
         CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
     private CargoHolds createNormalTripleCargoHolds() {
         CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
 
     private CargoHolds createSpecialDoubleCargoHolds() {
         CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
     private CargoHolds createSpecialSingleCargoHolds() {
         CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.SINGLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
 
@@ -618,29 +644,39 @@ public class GameModel {
         BatteryCompartment battery = new BatteryCompartment(maxC, randomType,0);
 
         initializeRandomConnectors(battery);
+
+        battery.saveOriginalState();
         return battery;
     }
 
     private ShieldGenerator createShieldGenerator() {
         ShieldGenerator shield = new ShieldGenerator();
         initializeRandomConnectors(shield);
+
+        shield.saveOriginalState();
         return shield;
     }
 
     private LifeSupportSystem createPurpleLifeSupportSystem() {
         LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         initializeRandomConnectors(lifeSupportSystem);
+
+        lifeSupportSystem.saveOriginalState();
         return lifeSupportSystem;
     }
     private LifeSupportSystem createBrownLifeSupportSystem() {
         LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
         initializeRandomConnectors(lifeSupportSystem);
+
+        lifeSupportSystem.saveOriginalState();
         return lifeSupportSystem;
     }
 
     private StructuralModule createStructuralModule() {
         StructuralModule structuralModule = new StructuralModule();
         initializeRandomConnectors(structuralModule);
+
+        structuralModule.saveOriginalState();
         return structuralModule;
     }
 

@@ -1,10 +1,12 @@
 package it.polimi.ingsw;
 
+import java.io.Serializable;
+
 import it.polimi.ingsw.Components.*;
 
 // Base class for all crew members
-public abstract class Crew {
-    protected CrewType type;
+public abstract class Crew implements Serializable{
+    protected CrewType type; 
 
     public Crew(CrewType crewType) {
         this.type = crewType;

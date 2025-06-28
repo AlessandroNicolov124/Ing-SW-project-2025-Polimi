@@ -75,14 +75,28 @@ public class  GameController {
 
     public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
-            return player.placeComponent(component, pos);
+            boolean result = player.placeComponent(component, pos);
+            
+            if (result) {
+                player.getShip().updateAllLifeSupportConnections();
+                System.out.println("[GameController] Updated life support connections after placing " + component.getClass().getSimpleName());
+            }
+            
+            return result;
         }
-        return false; // Player not found or other issue
+        return false;
     }
 
     public boolean removeComponentAt(Player player, Position position) {
         if (isPlayerThere(player)) {
-            return player.removeComponentAt(position);
+            boolean result = player.getShip().removeComponentAt(position);
+            
+            if (result) {
+                player.getShip().updateAllLifeSupportConnections();
+                System.out.println("[GameController] Updated life support connections after removing component at " + position);
+            }
+            
+            return result;
         }
         return false;
     }
@@ -429,5 +443,139 @@ public class  GameController {
 
     }
 
+    public void addTokenToComponent(Player player, Position position, TokenType tokenType) {
+
+        if (!isPlayerThere(player)) {
+            return;
+        }
+
+        ShipBuilder ship = player.getShip();
+        if (ship == null) {
+            System.out.println("[GameController] Ship not found for player " + player.getNickName());
+            return;
+        }
+
+        Component comp = ship.getComponentAt(position);
+        if (comp == null) {
+            System.out.println("[GameController] No component at " + position);
+            return;
+        }
+
+        switch (tokenType) {
+            case HUMAN -> {
+                switch (comp) {
+                    case Cabin cabin -> {
+                        boolean ok = ship.addCrewToCabin(new HumanCrew(), cabin);
+                        if (!ok) {
+                            throw new IllegalStateException("Cannot add another human to cabin " + position);
+                        }
+                    }
+                    default -> throw new IllegalStateException("Humans can be placed only on a cabin");
+                }
+            }
+
+            /* ---------- BATTERIE ---------- */
+            case BATTERY -> {
+                switch (comp) {
+                    case BatteryCompartment batteryCompartment -> {
+                        if (batteryCompartment.getChargeLevel() >= batteryCompartment.getMaxCapacity()){
+                            throw new IllegalStateException("Battery compartment at " + position + " is already full");
+                        }
+                        batteryCompartment.recharge(1);
+                    }
+                    default -> throw new IllegalStateException("Battery tokens can be placed only on a BatteryCompartment");
+                }
+            }
+
+            /* ---------- ALIENI ---------- */
+            case PURPLE_ALIEN, BROWN_ALIEN -> {
+                switch (comp) {
+                    case Cabin cabin -> {
+                        Crew alien = (tokenType == TokenType.PURPLE_ALIEN)
+                                    ? new PurpleAlienCrew()
+                                    : new BrownAlienCrew();
+
+                        boolean ok = ship.addCrewToCabin(alien, cabin);
+                        if (!ok){
+                            throw new IllegalStateException("Rules forbid alien here");
+                        }
+                    }
+                    default -> throw new IllegalStateException("Aliens can be placed only on a cabin");
+                }
+            }
+
+            /* ---------- GOOD BLOCKS (cargo) ---------- */
+            case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK,  YELLOW_GOOD_BLOCK -> {
+
+                switch (comp) {
+                    case CargoHolds cargoHold -> {
+                        Cargo cargo = switch (tokenType) {
+                            case BLUE_GOOD_BLOCK   -> new BlueCargo();
+                            case RED_GOOD_BLOCK    -> new RedCargo();
+                            case GREEN_GOOD_BLOCK  -> new GreenCargo();
+                            case YELLOW_GOOD_BLOCK -> new YellowCargo();
+                            default -> throw new IllegalStateException("Unexpected cargo token " + tokenType);
+                        };
+
+                        cargoHold.loadCargo(cargo);
+                    }
+
+                    default -> throw new IllegalStateException("Cargo tokens can be placed only on CargoHolds");
+                }
+            }
+ 
+
+            default -> throw new IllegalArgumentException("Unsupported token: " + tokenType);
+        }
+
+        ship.addToken(position, tokenType);
+    }
+    
+
+    public void removeTokenFromComponent(int playerId, Position position) {
+        
+        Player player = getPlayerById(playerId);
+
+        if (!isPlayerThere(player)) {   
+            return;
+        }
+
+        ShipBuilder ship = player.getShip();
+
+        if (ship == null) {
+            System.out.println("[GameController] Ship not found for player " + player.getNickName());
+            return;
+        }
+
+        Component comp = ship.getComponentAt(position);
+        if (comp == null) {
+            System.out.println("[GameController] No component at " + position);
+            return;
+        }
+
+        ship.removeToken(position);
+
+        switch (comp) {
+            case Cabin cabin -> {
+                if (cabin.getCrew() instanceof HumanCrew) {
+                    ship.removeHumans(1);
+                } else if (cabin.getCrew() instanceof PurpleAlienCrew || cabin.getCrew() instanceof BrownAlienCrew) {
+                    ship.removeAliens(1);
+                } else {
+                    System.out.println("[GameController] No crew to remove from cabin at " + position);
+                }
+            }
+            case BatteryCompartment batteryCompartment -> {
+                batteryCompartment.discharge(1);
+            }
+            // case CargoHolds cargoHold -> {
+            //     cargoHold.unloadCargo(cargo);
+            // }
+            default -> throw new IllegalStateException("Tokens can be removed only from a Cabin, BatteryCompartment or CargoHolds");
+        }
+
+    }
+
+    
 
 }

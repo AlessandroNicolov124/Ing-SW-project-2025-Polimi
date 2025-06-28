@@ -90,6 +90,13 @@ public class GameMatch {
                 .orElse(null);
     }
 
+    public Player getPlayerByName(String playerName) {
+        return players.stream()
+                .filter(player -> player.getNickName().equalsIgnoreCase(playerName))
+                .findFirst()
+                .orElse(null);
+    }
+
     public Map<Integer, Boolean> getReadyPlayersMap() {
         return readyPlayersMap;
     }

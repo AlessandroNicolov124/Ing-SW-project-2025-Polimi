@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.polimi.ingsw.GUI.Controllers.PlayerShipController">
+
+    <center>
+        <AnchorPane fx:id="anchorPane" prefWidth="937" prefHeight="679" minWidth="937" minHeight="679" maxWidth="937" maxHeight="679">
+        </AnchorPane>
+    </center>
+
+    <bottom>
+        <VBox spacing="10" alignment="CENTER">
+            <Label fx:id="statusLabel" text="Ready - Place the resources to start" style="-fx-font-size: 14px; -fx-font-weight: bold;"/>
+
+            <HBox alignment="CENTER" spacing="50"> <Label text="Selected resource:"/>
+                <Button fx:id="previousView" text="Return to previous view" onAction="#previousView"/>
+            </HBox>
+        </VBox>
+    </bottom>
+</BorderPane>

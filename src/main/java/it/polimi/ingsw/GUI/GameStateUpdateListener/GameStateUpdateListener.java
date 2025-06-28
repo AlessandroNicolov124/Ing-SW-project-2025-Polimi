@@ -1,6 +1,7 @@
 package it.polimi.ingsw.GUI.GameStateUpdateListener;
 
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.Components.Component;
 
 import it.polimi.ingsw.network.messages.RotationType;
