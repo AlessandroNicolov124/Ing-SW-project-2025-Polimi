@@ -122,8 +122,47 @@ Once you have launched the client (see instructions above), you will follow thes
 
 ---
 
+
+## Spaceship Construction Rules
+
+During the Spaceship Construction Phase, each player must assemble their spaceship according to the following rules:
+
+1. **Connectivity**
+  - All tiles (modules) must be connected directly or indirectly to the cockpit (the central starting tile).
+  - There can be no isolated modules.
+
+2. **No Overlapping**
+  - Tiles cannot overlap or be placed on top of each other.
+
+3. **Placement**
+  - You must respect the grid boundaries: modules cannot be placed outside the designated construction area.
+
+4. **Component Compatibility**
+  - Some modules require specific connections (e.g., connectors, engines, batteries) and cannot be attached arbitrarily.
+  - Modules with incompatible connectors cannot be joined.
+
+5. **Open Connectors**
+  - Try to minimize open connectors (i.e., connectors that do not connect to another module or the ship's border), as these may expose your spaceship to risks during flight.
+
+6. **Required Components**
+  - The spaceship must contain at least:
+    - 1 cockpit (mandatory)
+    - 1 engine
+    - 1 crew cabin
+  - Additional modules (cargo holds, shields, batteries, etc.) are optional but recommended for better performance.
+
+7. **Orientation**
+  - Some modules (e.g., engines, shields) are directional and must be oriented correctly to be effective.
+
+8. **Validation**
+  - Before proceeding, your spaceship will be validated by the system. If any rule is violated, you will be prompted to correct your design.
+
+**Note:**  
+Invalid spaceships (e.g., disconnected modules, missing required components, or incorrect placements) cannot proceed to the flight phase.  
+Follow in-game prompts and warnings to adjust your design as needed.
+
+---
+
 **Note:**
 - Both GUI and TUI offer equivalent functionalities, though the interface style will differ.
 - In any phase, follow on-screen instructions to proceed.
-
-If you need more details or step-by-step screenshots, let me know!
