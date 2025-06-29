@@ -28,6 +28,9 @@ class AbandonedShipTest {
         gameModel = new GameModel();
         gameModel.addPlayer(player);
         gameModel.setCredits(player, 10);
+        
+        // Position player on flight board (required for position updates)
+        gameModel.getFlightBoard().setInitialPosition(player, 1);
 
         Cabin c = new Cabin(true);
         ship.placeComponent(c, ship.getStartingPosition());
@@ -75,7 +78,10 @@ class AbandonedShipTest {
         };
         Player p2 = new Player(2, "Fake", true, fakeShip);
         fakeShip.addCrewOfType(CrewType.HUMAN, 2);
+        gameModel.addPlayer(p2);
         gameModel.setCredits(p2, 20);
+        // Position fake player on flight board (required for position updates)
+        gameModel.getFlightBoard().setInitialPosition(p2, 2);
         assertFalse(card.useOpportunity(p2, gameModel));
         assertFalse(card.isOpportunityUsed());
         assertEquals(20, gameModel.getCredits(p2));

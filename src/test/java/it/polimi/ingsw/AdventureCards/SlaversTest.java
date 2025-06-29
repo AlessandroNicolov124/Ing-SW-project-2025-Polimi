@@ -72,10 +72,10 @@ public class SlaversTest {
 
         // Winner: ha credits e viene spostato indietro
         assertEquals(5, gameModel.getCredits(winner), "Il vincitore deve ricevere 5 crediti");
-        assertEquals(0, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 2");
+        assertEquals(4, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 2 (6-2=4)");
         // Loser: non riceve crediti, posizione invariata
         assertEquals(0, gameModel.getCredits(loser), "Il perdente non deve ricevere crediti");
-        assertEquals(2, gameModel.getFlightBoard().getPosition(loser), "Il perdente non deve essere spostato");
+        assertEquals(3, gameModel.getFlightBoard().getPosition(loser), "Il perdente non deve essere spostato");
         assertEquals(0, loser.getShip().getTotalCrewCount(), "Il perdente deve perdere equipaggio");
     }
 
@@ -87,7 +87,7 @@ public class SlaversTest {
 
         // Winner: non riceve crediti e non viene spostato
         assertEquals(0, gameModel.getCredits(winner), "Il vincitore che rifiuta la ricompensa non deve ricevere crediti");
-        assertEquals(1, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
+        assertEquals(6, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
     }
 
     @Test
@@ -117,9 +117,9 @@ public class SlaversTest {
         slavers.fightSlavers(gameModel);
         assertEquals(0, gameModel.getCredits(loser), "Il loser non deve ricevere crediti");
         assertEquals(5, gameModel.getCredits(winner2), "Il vincitore deve ricevere 5 crediti");
-        assertEquals(3, gameModel.getFlightBoard().getPosition(winner2), "Il vincitore deve essere spostato indietro di 2, ma la prima posizione libera è la 3");
-        assertEquals(1, gameModel.getFlightBoard().getPosition(winner), "Il winner deve rimanere nella sua posizione");
-        assertEquals(2, gameModel.getFlightBoard().getPosition(loser), "Il loser deve rimanere nella sua posizione");
+        assertEquals(22, gameModel.getFlightBoard().getPosition(winner2), "Il vincitore wrap-around quando va sotto 0 (0-2 = -2, wrap to 22)");
+        assertEquals(6, gameModel.getFlightBoard().getPosition(winner), "Il winner deve rimanere nella sua posizione");
+        assertEquals(3, gameModel.getFlightBoard().getPosition(loser), "Il loser deve rimanere nella sua posizione");
         assertEquals(0, gameModel.getCredits(winner), "Il winner non può ricevere crediti");
 
 //

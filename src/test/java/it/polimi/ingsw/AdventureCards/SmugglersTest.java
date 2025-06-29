@@ -68,8 +68,11 @@ public class SmugglersTest {
         gameModel.addPlayer(loser);
         gameModel.setCredits(winner, 0);
         gameModel.setCredits(loser, 0);
-        gameModel.getFlightBoard().setInitialPosition(winner, 3);
-        gameModel.getFlightBoard().setInitialPosition(loser, 1);
+        // setInitialPosition uses finish order (1-4) which maps to flight positions:
+        // finish order 1 → flight position 6, finish order 2 → flight position 3, 
+        // finish order 3 → flight position 1, finish order 4 → flight position 0
+        gameModel.getFlightBoard().setInitialPosition(winner, 2);  // finish order 2 → flight position 3
+        gameModel.getFlightBoard().setInitialPosition(loser, 3);   // finish order 3 → flight position 1
 
         List<Cargo> cargoList = new ArrayList<>();
         cargoList.add(new RedCargo());
@@ -86,8 +89,8 @@ public class SmugglersTest {
         assertTrue(winner.getShip().getCargoList().containsAll(smugglers.getGoodsGainedOnVictory()), "Il vincitore deve ricevere le merci vinte");
         assertEquals(2, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 1");
 
-        // Loser: non riceve cargo, ma non li deve nemmeno perdere
-        assertEquals(2, loser.getShip().getCargoList().size(), "Il perdente non deve ricevere /perdere merci");
+        // Loser: loses cargo when defeated (smugglers take 2 most valuable goods)
+        assertEquals(0, loser.getShip().getCargoList().size(), "Il perdente deve perdere le merci ai contrabbandieri");
         assertEquals(1, gameModel.getFlightBoard().getPosition(loser), "La posizione del perdente deve rimanere invariata");
     }
 

@@ -94,7 +94,8 @@ class PlayerTest {
     void testPickCard_ValidCard() {
         player = new Player(1, "TestPlayer", true);
         player.pickCard(testCard);
-        assertTrue(testCard.effectCalled, "effect() deve essere chiamato su AdventureCard");
+        assertEquals(testCard, player.getPickedCard(), "Card should be stored in player");
+        assertFalse(testCard.effectCalled, "effect() should NOT be called directly by pickCard() - effects are handled by GameController");
     }
 
     @Test

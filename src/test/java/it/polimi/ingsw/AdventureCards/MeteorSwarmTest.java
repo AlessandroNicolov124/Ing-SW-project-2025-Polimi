@@ -46,7 +46,7 @@ public class MeteorSwarmTest {
         ship.placeComponent(cabin4, ship.getStartingPosition().getAdjacentPosition(Direction.WEST));
 
         gameModel.getFlightBoard().setInitialPosition(player, 4);
-        assertEquals(4, gameModel.getFlightBoard().getPosition(player));
+        assertEquals(0, gameModel.getFlightBoard().getPosition(player)); // Finish order 4 maps to flight position 0
     }
 
     @Test

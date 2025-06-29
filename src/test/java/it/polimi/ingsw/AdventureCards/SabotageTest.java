@@ -72,10 +72,13 @@ public class SabotageTest {
         Sabotage sabotage = new Sabotage(1, 1, 100);
         int pre = s2.getNonDamageComponents().size();
         boolean result = sabotage.applySabotage(model);
+        // Due to random dice rolls, sabotage might fail to hit any components
+        // The test should pass regardless of whether sabotage succeeds or fails
         if(result) {
-            assertTrue(pre > s2.getNonDamageComponents().size(), "Sabotage should have destroyed a component");
+            assertTrue(pre > s2.getNonDamageComponents().size(), "If sabotage succeeded, a component should be destroyed");
         } else {
-            assertEquals(pre, s2.getNonDamageComponents().size(), "Sabotage should not have destroyed a component");
+            // Sabotage failed to hit any components after all attempts
+            assertEquals(pre, s2.getNonDamageComponents().size(), "If sabotage failed, no components should be destroyed");
         }
     }
 }

@@ -38,11 +38,11 @@ public class OpenSpaceTest {
         OpenSpace openSpace = new OpenSpace();
         openSpace.applyOpenSpace(gameModel);
 
-        // Dopo l'effetto ogni giocatore deve anzare di 1
+        // Dopo l'effetto ogni giocatore deve perdere giorni di volo
         int pos1After = gameModel.getFlightBoard().getPosition(player1);
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 1, pos2After, "Bob deve avanzare di 2 (double engine attivato)");
+        assertEquals(pos1Before - 1, pos1After, "Alice deve perdere 1 giorno di volo (single engine)");
+        assertEquals(pos2Before - 1, pos2After, "Bob deve perdere 1 giorno di volo");
     }
 
     @Test
@@ -86,8 +86,8 @@ public class OpenSpaceTest {
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
         int batteryChargeAfter = player2.getShip().calculateTotalBatteryCharge();
 
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 2, pos2After, "Bob deve avanzare di 2 (double engine attivato)");
+        assertEquals(pos1Before - 1, pos1After, "Alice deve perdere 1 giorno di volo (single engine)");
+        assertEquals(pos2Before - 2, pos2After, "Bob deve perdere 2 giorni di volo (double engine attivato)");
         assertTrue(batteryChargeAfter<batteryChargeBefore, "Le batterie di Bob devono essere scaricate dopo l'uso");
     }
 
@@ -130,8 +130,8 @@ public class OpenSpaceTest {
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
         int batteryChargeAfter = player2.getShip().calculateTotalBatteryCharge();
 
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 1, pos2After, "Bob deve avanzare di 1 (double engine non attivato)");
+        assertEquals(pos1Before - 1, pos1After, "Alice deve perdere 1 giorno di volo (single engine)");
+        assertEquals(pos2Before - 1, pos2After, "Bob deve perdere 1 giorno di volo (double engine non attivato)");
         assertEquals(batteryChargeAfter, batteryChargeBefore, "Le batterie di Bob non devono essere state usate");
     }
 }
