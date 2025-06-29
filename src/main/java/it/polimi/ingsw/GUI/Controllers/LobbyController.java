@@ -345,8 +345,13 @@ public class LobbyController extends GuiContoller implements LobbyListener {
 
     @Override
     public void cabinColorSelected(String color) {
+        if (!color.equals(context.getSelectedCabinColor())) {
+            return;
+        }
+        
         Platform.runLater(() -> {
             this.colorChosen = true;
+            context.setSelectedCabinColor(color);
             statusLabel.setText("Chosen color: " + color);
         });
     }

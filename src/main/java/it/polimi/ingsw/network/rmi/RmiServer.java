@@ -328,7 +328,6 @@ public class RmiServer extends UnicastRemoteObject
             return null;
         }
 
-        // SALVA LO STATO ORIGINALE QUI!
         comp.saveOriginalState();
         
         client.showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
@@ -443,20 +442,21 @@ public class RmiServer extends UnicastRemoteObject
     public void selectCabinColor(String color, int playerId, RmiClientIf client) throws RemoteException {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Match not found"));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Match not found", color));
             return;
         }
         String existing = match.getPlayerCabinColor(playerId);
         if (existing != null) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Color already selected " + existing));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already selected: " + existing, color));
             return;
         }
         if (match.isColorTaken(color)) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Color already taken by another player"));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already taken by another player", color));
             return;
         }
         match.setPlayerCabinColor(playerId, color);
-        client.showUpdate(new CabinColorSelectionResponse(true, color));
+        //client.showUpdate(new CabinColorSelectionResponse(true, color));
+        lobbyManager.multicastToMatch(match.getMatchId(),new CabinColorSelectionResponse(playerId, true, "Cabin color selected successfully", color));
     }
 
     @Override

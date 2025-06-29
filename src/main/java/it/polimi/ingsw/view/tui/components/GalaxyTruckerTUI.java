@@ -1143,7 +1143,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void cabinColorSelected(String color) {
+    public void cabinColorSelected(int playerId, String color) {
 
     }
 

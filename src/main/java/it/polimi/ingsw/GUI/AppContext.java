@@ -23,6 +23,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +38,10 @@ public class AppContext implements GameListener {
     private UUID currentMatchId;
     private String selectedCabinColor;
     private String previousController;
+
+    Map<Integer, String> playerColorMap = new HashMap<>();
+
+
 
     private GeneralClientIf client;
 
@@ -229,6 +234,10 @@ public class AppContext implements GameListener {
 
     public String getPreviousController() {
         return previousController;
+    }
+
+    public String getPlayerColor(int playerId) {
+        return playerColorMap.getOrDefault(playerId, "BLACK");
     }
 
     public void returnToPreviousView() {
@@ -537,9 +546,17 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void cabinColorSelected(String color) {
+    public void cabinColorSelected(int playerId, String color) {
         Platform.runLater(() -> {
-            this.selectedCabinColor = color;
+
+            if (playerId == this.playerId) {
+                this.selectedCabinColor = color;
+            }
+
+            if (playerId != this.playerId) {
+                playerColorMap.put(playerId, color);
+            }
+
             for (LobbyListener listener : lobbyListeners) {
                 listener.cabinColorSelected(color);
             }

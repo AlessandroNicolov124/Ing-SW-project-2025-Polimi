@@ -563,8 +563,9 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         }
 
         comp.saveOriginalState();
-
+        
         showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
+        return;
         
     }
 
@@ -572,20 +573,21 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void selectCabinColor(String color, int playerId) throws Exception {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
-            showUpdate(new CabinColorSelectionResponse(false, "Match not found"));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Match not found", color));
             return;
         }
         String existing = match.getPlayerCabinColor(playerId);
         if (existing != null) {
-            showUpdate(new CabinColorSelectionResponse(false, "Color already selected " + existing));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already selected: " + existing, color));
             return;
         }
         if (match.isColorTaken(color)) {
-            showUpdate(new CabinColorSelectionResponse(false, "Color already taken by another player"));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already taken by another player", color));
             return;
         }
         match.setPlayerCabinColor(playerId, color);
-        showUpdate(new CabinColorSelectionResponse(true, color));
+        //client.showUpdate(new CabinColorSelectionResponse(true, color));
+        lobbyManager.multicastToMatch(match.getMatchId(),new CabinColorSelectionResponse(playerId, true, "Cabin color selected successfully", color));
     }
 
     @Override

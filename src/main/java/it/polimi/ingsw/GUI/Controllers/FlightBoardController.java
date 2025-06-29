@@ -6,15 +6,13 @@ import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.Player;
-import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.messages.RotationType;
+
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
@@ -24,6 +22,7 @@ import javafx.scene.text.Text;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,7 +34,7 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     private Button PickCard;
 
     private List<Circle> positionCircles = new ArrayList<>();
-    private Map <Integer, Integer> playerIdPosMapCurrent;
+    private Map<Integer, Integer> playerIdPosMapCurrent = new HashMap<Integer, Integer>();
 
     private static final float ELLIPSE_CENTER_X = 521.0f;
     private static final float ELLIPSE_CENTER_Y = 318.0f;
@@ -181,6 +180,17 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
 
         int myPos = playerIdPosMapCurrent.get(context.getPlayerId());
         positionCircles.get(myPos).setFill(Color.web( context.getSelectedCabinColor() , 0.7));
+
+        for (Map.Entry<Integer, Integer> entry : playerIdPosMapCurrent.entrySet()) {
+            int playerId = entry.getKey();
+            int position = entry.getValue();
+
+            if (playerId != context.getPlayerId()) {
+                String color = context.getPlayerColor(playerId);
+                positionCircles.get(position).setFill(Color.web(color, 0.7));
+            }
+        }
+
 
     }
 

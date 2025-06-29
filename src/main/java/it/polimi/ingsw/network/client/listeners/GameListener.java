@@ -75,7 +75,7 @@ public interface GameListener {
     void componentPicked(int playerId, Component component, boolean success, String message);
     void componentPickFailed(String errorMessage);
 
-    void cabinColorSelected(String color);
+    void cabinColorSelected(int playerId, String color);
     void cabinColorSelectionFailed(String errorMsg);
     
     void flightPreparationStart(UUID matchId);
