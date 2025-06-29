@@ -51,7 +51,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     // Visual elements tracking
     private ImageView selectedImageView = null;
     private Position selectedPosition = null;
-    //private ImageView imageViewToBeRemoved = null;
     private Rectangle selectedHighlight = null;
     private final Map<Position, ImageView> cellViews = new HashMap<>();
     private final Map<Position, Component> shipComponents = new HashMap<>();
@@ -440,7 +439,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                 //Position p = calculateGridPosition(selectedImageView.getX(),selectedImageView.getY());
                 if(selectedPosition.getY() == 0)
                 {
-                    if(selectedPosition.getX() == GRID_COLS - 2) {
+                    if(selectedPosition.getX() == (GRID_COLS - 2)) {
                         currentComponent = StashedComponents.get(0);
                         if (currentComponent  != null) {
                             StashedComponents.set(0, null);
@@ -448,7 +447,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
                             gameComponentPicked(currentComponent);
                         }
                     }
-                    else if(selectedPosition.getX() >= GRID_COLS - 1) {
+                    else if(selectedPosition.getX() == (GRID_COLS - 1)) {
                         currentComponent = StashedComponents.get(1);
                         if(currentComponent != null) {
                             StashedComponents.set(1, null);
@@ -582,7 +581,7 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
     }
 
     private boolean isDropPositionSthasingArea(Position pos) {
-        return ((pos.getY() == 0 && pos.getX() == GRID_COLS - 1) || (pos.getY() == 0 && pos.getX() == GRID_COLS - 2));
+        return ((pos.getY() == 0 && pos.getX() == (GRID_COLS - 1)) || (pos.getY() == 0 && pos.getX() == (GRID_COLS - 2)));
     }
 
     private void selectImageView(ImageView imageView) {
