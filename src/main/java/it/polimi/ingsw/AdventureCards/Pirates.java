@@ -294,6 +294,17 @@ public class Pirates extends AdventureCard {
         }
     }
 
+    public int getPirateStrength() {
+        return pirateStrength;
+    }
+    public int getRewardCredits() {
+        return rewardCredits;
+    }
+    public int getFlightDaysCost() {
+        return flightDaysCost;
+    }
+
+
     /**
      * Inner class to represent a pirate cannon
      */

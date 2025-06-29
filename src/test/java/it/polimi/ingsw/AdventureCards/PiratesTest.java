@@ -61,25 +61,35 @@ public class PiratesTest {
 
     @Test
     void testFightPiratesRewardAndPenalty() {
+        int initialCreditsWinner = gameModel.getCredits(winner);
+        int initialCreditsLoser = gameModel.getCredits(loser);
+        int initialPositionWinner = gameModel.getFlightBoard().getPosition(winner);
+        int initialPositionLoser = gameModel.getFlightBoard().getPosition(loser);
         pirates.fightPirates(gameModel);
 
+        int expectedPositionWinner = initialPositionWinner - pirates.getFlightDaysCost();
+        if(expectedPositionWinner < 0) {
+            expectedPositionWinner +=24;
+        }
         // Winner: ha credits e viene spostato indietro
-        assertEquals(4, gameModel.getCredits(winner), "Il vincitore deve ricevere 4 crediti");
-        assertEquals(0, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 2");
+        assertEquals(initialCreditsWinner + pirates.getRewardCredits(), gameModel.getCredits(winner), "Il vincitore deve ricevere 4 crediti");
+        assertEquals(expectedPositionWinner, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 2");
         // Loser: non riceve crediti, posizione invariata
-        assertEquals(0, gameModel.getCredits(loser), "Il perdente non deve ricevere crediti");
-        assertEquals(2, gameModel.getFlightBoard().getPosition(loser), "Il perdente non deve essere spostato");
+        assertEquals(initialCreditsLoser, gameModel.getCredits(loser), "Il perdente non deve ricevere crediti");
+        assertEquals(initialPositionLoser, gameModel.getFlightBoard().getPosition(loser), "Il perdente non deve essere spostato");
     }
 
     @Test
     void testFightPiratesRefuseReward() {
+        int initialPositionWinner = gameModel.getFlightBoard().getPosition(winner);
+        int initialCreditsWinner = gameModel.getCredits(winner);
         // Simula la vittoria ma rifiuta la ricompensa
         pirates.fightPiratesFor(winner); // pirates sconfitti
         pirates.offerReward(winner, gameModel, false); // rifiuta la ricompensa
 
         // Winner: non riceve crediti e non viene spostato
-        assertEquals(0, gameModel.getCredits(winner), "Il vincitore che rifiuta la ricompensa non deve ricevere crediti");
-        assertEquals(1, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
+        assertEquals(initialCreditsWinner, gameModel.getCredits(winner), "Il vincitore che rifiuta la ricompensa non deve ricevere crediti");
+        assertEquals(initialPositionWinner, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
     }
 
     @Test
@@ -103,13 +113,24 @@ public class PiratesTest {
         Player winner2 = new Player(1, "winner2", true, ship1);
         gameModel.addPlayer(winner2);
         gameModel.setCredits(winner2, 0);
-        gameModel.getFlightBoard().setInitialPosition(winner2, 4);
+        gameModel.getFlightBoard().setInitialPosition(winner2, 3);
 
+        int initialPositionWinner = gameModel.getFlightBoard().getPosition(winner);
+        int initialPositionWinner2 = gameModel.getFlightBoard().getPosition(winner2);
+        int initialCreditsWinner = gameModel.getCredits(winner);
+        int initialCreditsWinner2 = gameModel.getCredits(winner2);
+        int initialPositionLoser = gameModel.getFlightBoard().getPosition(loser);
+        int initialCreditsLoser = gameModel.getCredits(loser);
         pirates.fightPirates(gameModel);
-        assertEquals(0, gameModel.getCredits(loser), "Il loser non deve ricevere crediti");
-        assertEquals(4, gameModel.getCredits(winner2), "Il vincitore deve ricevere 4 crediti");
-        assertEquals(3, gameModel.getFlightBoard().getPosition(winner2), "Il vincitore deve essere spostato indietro di 2");
-        assertEquals(1, gameModel.getFlightBoard().getPosition(winner), "Il winner deve rimanere nella sua posizione");
-        assertEquals(0, gameModel.getCredits(winner), "Il winner non può ricevere crediti");
+        int expectedPositionWinner2 = initialPositionWinner2 - pirates.getFlightDaysCost();
+        if(expectedPositionWinner2 < 0) {
+            expectedPositionWinner2 +=24;
+        }
+        assertEquals(initialCreditsLoser, gameModel.getCredits(loser), "Il loser non deve ricevere crediti");
+        assertEquals(initialPositionLoser, gameModel.getFlightBoard().getPosition(loser), "Il loser non deve essere spostato");
+        assertEquals(initialCreditsWinner2+ pirates.getRewardCredits(), gameModel.getCredits(winner2), "Il vincitore deve ricevere 4 crediti");
+        assertEquals(expectedPositionWinner2, gameModel.getFlightBoard().getPosition(winner2), "Il vincitore deve essere spostato indietro di 2");
+        assertEquals(initialPositionWinner, gameModel.getFlightBoard().getPosition(winner), "Il winner deve rimanere nella sua posizione");
+        assertEquals(initialCreditsWinner, gameModel.getCredits(winner), "Il winner non può ricevere crediti");
     }
 }
