@@ -4,8 +4,11 @@ import java.io.*;
 import java.net.Socket;
 import java.util.UUID;
 
+import it.polimi.ingsw.GameController;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
+import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
@@ -19,13 +22,7 @@ import it.polimi.ingsw.network.messages.lobby.GetMatchesRequest;
 import it.polimi.ingsw.network.messages.lobby.JoinMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.StartMatchRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentRequest;
-import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.*;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
@@ -270,6 +267,17 @@ public class SocketClient implements Runnable, GeneralClientIf {
     public void readyForAdventurePhase(UUID matchId, int playerId) throws Exception {
         synchronized (out) {
             out.writeObject(new ReadyForAdventurePhaseRequest(matchId, playerId));
+            out.flush();
+        }
+    }
+
+    @Override
+    public void sendTimeExpiredNotification(String playerName) throws Exception {
+        if (playerName == null || playerName.isEmpty()) {
+            throw new IllegalArgumentException("No name for player");
+        }
+        synchronized (out) {
+            out.writeObject(new ExpiringTimeRequest(playerName));
             out.flush();
         }
     }

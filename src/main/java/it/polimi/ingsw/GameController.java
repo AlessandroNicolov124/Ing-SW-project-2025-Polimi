@@ -49,6 +49,13 @@ public class  GameController {
         System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + player.getId() + ") added to game");
     }
 
+    public void applyTimePenaltyForShipBuilding(Player player)
+    {
+        // decide ho to give penalties
+        gameModel.setCredits(player, -1);
+
+    }
+
     /** set the player credits */
     public void setCredits(Player player, int credits){
         gameModel.setCredits(player, credits);

@@ -62,4 +62,6 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void readyForAdventurePhase(UUID matchId, int playerId) throws Exception;
 
+    void sendTimeExpiredNotification(String PlayerName) throws Exception;
+
 }

@@ -161,6 +161,12 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         server.getPlayerShip(playerName, this);
     }
 
+
+    @Override
+    public void sendTimeExpiredNotification(String playerName) throws Exception {
+        server.expiredTimeForShipBuilding(playerName);
+    }
+
     @Override
     public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws RemoteException {
         server.addTokenToComponent(playerName, position, tokenType, this);

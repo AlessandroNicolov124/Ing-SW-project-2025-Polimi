@@ -22,6 +22,7 @@ public class ShipBuildingHandler {
     private final Random random = new Random();
     private Component currentComponent = null;
     private boolean waitingForServerResponse = false;
+    private List<Component> stashedComponents = new ArrayList<>();
 
 
     public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer, GalaxyTruckerTUI parentTUI) {
@@ -39,10 +40,12 @@ public class ShipBuildingHandler {
         console.printMessage("===================");
     }
 
+    // Method to redisplay the ship building menu after async operations
     public void refreshMenuDisplay() {
         if (!waitingForServerResponse) {
             console.printMessage("\n--- Menu Refreshed ---");
         }
+        printShipBuildingMenu(currentComponent != null);
     }
 
     // Method to set the current component from async response
@@ -61,6 +64,8 @@ public class ShipBuildingHandler {
         
         // Display the initial ship
         displayShip();
+
+        boolean buildingDone = false;
 
         // First element is always the starting cabin
         currentComponent = createCabin(true);
@@ -94,9 +99,8 @@ public class ShipBuildingHandler {
                 }
             }
         }
-        
-    }
-
+          
+    
 
     private void handleUserChoice(String choice) {
         switch (choice) {
@@ -350,6 +354,7 @@ public class ShipBuildingHandler {
         console.printMessage("Q  - Quit ship building (temporary)");
         console.printMessage("DS - Display Ship again");
         console.printMessage("DC - Display Current component again");
+        console.printMessage("DEBUGSKIP - Force proceed (skip validation)"); // New debug option
         console.printMessage("---------------------------");
         console.printMessage("Enter your choice:");
     }
@@ -358,6 +363,8 @@ public class ShipBuildingHandler {
         console.printMessage("--- Place Component ---");
         
         Position pos;
+
+        // Se è una cabina iniziale, usa la posizione iniziale
         if (component instanceof Cabin cabin && cabin.isStartingCabin()) {
             pos = currentPlayer.getShip().getStartingPosition();
             console.printMessage("Placing starting cabin at default position: (" + pos.getX() + "," + pos.getY() + ")");
