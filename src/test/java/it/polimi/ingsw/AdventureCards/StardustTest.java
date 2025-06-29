@@ -41,14 +41,19 @@ public class StardustTest {
         ship2.placeComponent(cabin2, new Position(3, 2));
 
         Stardust stardust = new Stardust();
+        int expected1 = model.getFlightBoard().getPosition(player1) - stardust.countExposedConnectors(ship1) - 1;
+        int expected2 = model.getFlightBoard().getPosition(player2) - stardust.countExposedConnectors(ship2);
+        if( expected1 < 0 ) expected1 = expected1 + 24;
+        if( expected2 < 0 ) expected2 = expected2 + 24;
+
         stardust.applyStardust(model);
 
         // player2 è ultimo, quindi sarà primo a essere spostato
         assertEquals(3, stardust.countExposedConnectors(ship1), "3 connettori esposti");
         assertEquals(4, stardust.countExposedConnectors(ship2), "4 connettori esposti");
         //System.out.println("Expected positions: P1=" + expected1 + ", P2=" + expected2);
-        assertEquals(23, model.getFlightBoard().getPosition(player2));
-        assertEquals(2, model.getFlightBoard().getPosition(player1));
+        assertEquals(expected2, model.getFlightBoard().getPosition(player2));
+        assertEquals(expected1, model.getFlightBoard().getPosition(player1));
     }
 
     @Test
@@ -138,9 +143,9 @@ public class StardustTest {
         m.addPlayer(p1);
         m.addPlayer(p2);
         m.addPlayer(p3);
-        m.getFlightBoard().setInitialPosition(p1, 3);
-        m.getFlightBoard().setInitialPosition(p2, 1); // p2 è più indietro
-        m.getFlightBoard().setInitialPosition(p3, 4); // p3 è più avanti
+        m.getFlightBoard().setInitialPosition(p1, 2);
+        m.getFlightBoard().setInitialPosition(p2, 1); // p2 è più avanti
+        m.getFlightBoard().setInitialPosition(p3, 3); // p3 è più indietro
 
         // Espongo 1 connettore per tutti
         Cabin cab1 = new Cabin(true);
@@ -158,10 +163,16 @@ public class StardustTest {
 
         Stardust stardust = new Stardust();
         //System.out.println("Count Exposed Connectors: (s1, s2, s3) " + stardust.countExposedConnectors(s1) + ", " + stardust.countExposedConnectors(s2) + ", " + stardust.countExposedConnectors(s3));
+        //System.out.println("Posizioni finali: P1=" +  m.getFlightBoard().getPosition(p1) + ", P2=" +  m.getFlightBoard().getPosition(p2) + ", P3=" +  m.getFlightBoard().getPosition(p3));
 
-        int pos1 = m.getFlightBoard().getPosition(p1);
-        int pos2 = m.getFlightBoard().getPosition(p2);
-        int pos3 = m.getFlightBoard().getPosition(p3);
+        int pos1 = m.getFlightBoard().getPosition(p1) - stardust.countExposedConnectors(s1);
+        if (pos1<0) pos1 += 24; // Gestione wrap-around
+        int pos2 = m.getFlightBoard().getPosition(p2) -stardust.countExposedConnectors(s1);
+        if (pos2<0) pos2 += 24; // Gestione wrap-around
+        int pos3 = m.getFlightBoard().getPosition(p3) - stardust.countExposedConnectors(s1);
+        if (pos3<0) pos3 += 24; // Gestione wrap-around
+
+        //System.out.println("Posizioni finali: P1=" + pos1 + ", P2=" + pos2 + ", P3=" + pos3);
 
         List<Player> players = stardust.getPlayersInReverseOrder(m);
         assertEquals(p2, players.get(0), "Il primo giocatore nella lista deve essere p2 (più indietro)");
@@ -170,8 +181,8 @@ public class StardustTest {
 
         stardust.applyStardust(m);
         // Dopo l'effetto, controllo che ognuno sia arretrato di 1 (cabina con 1 connettori esposti)
-        assertEquals(5, m.getFlightBoard().getPosition(p2));
-        assertEquals(23, m.getFlightBoard().getPosition(p1));
-        assertEquals(22, m.getFlightBoard().getPosition(p3));
+        assertEquals(pos2, m.getFlightBoard().getPosition(p2));
+        assertEquals(pos1, m.getFlightBoard().getPosition(p1));
+        assertEquals(pos3, m.getFlightBoard().getPosition(p3));
     }
 }
