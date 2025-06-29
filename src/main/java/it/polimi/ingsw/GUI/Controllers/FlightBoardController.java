@@ -35,6 +35,7 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     private Button PickCard;
 
     private List<Circle> positionCircles = new ArrayList<>();
+    private Map <Integer, Integer> playerIdPosMapCurrent;
 
     private static final float ELLIPSE_CENTER_X = 521.0f;
     private static final float ELLIPSE_CENTER_Y = 318.0f;
@@ -143,15 +144,14 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     }
 
     private double estimateEllipseCircumference() {
-        //double h = Math.pow(ELLIPSE_RADIUS_X - ELLIPSE_RADIUS_Y, 2) / Math.pow(ELLIPSE_RADIUS_X + ELLIPSE_RADIUS_Y, 2);
-        //return Math.PI * (ELLIPSE_RADIUS_X + ry) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+
         return (2 * Math.PI * (Math.sqrt((Math.pow(ELLIPSE_RADIUS_X, 2) + Math.pow(ELLIPSE_RADIUS_Y, 2))/2)) - CORRECTION_ADDENDUM);
     }
 
     @FXML
     public void PickAdventureCardFromSrv() {
 
-        positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
+        //positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
         try {
             context.getClient().pickAdventureCard(context.getPlayerId());
         } catch (Exception e) {
@@ -173,8 +173,21 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         }
     }
 
+    private void updateDisplayedPlayers(){
+        for (Circle c: positionCircles)
+        {
+            c.setFill(Color.web("transparent", 0.4));
+        }
+
+        int myPos = playerIdPosMapCurrent.get(context.getPlayerId());
+        positionCircles.get(myPos).setFill(Color.web( context.getSelectedCabinColor() , 0.7));
+
+    }
+
     @Override
     public void adventureCardPicketFromsrv(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
-
+        playerIdPosMapCurrent = updatedPositions;
+        ShowInfoDialogWindow("Adventure Card", "Leader picked an adventure card", adventureCard.getDescription());
+        updateDisplayedPlayers();
     }
 }

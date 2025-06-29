@@ -806,7 +806,9 @@ public class AppContext implements GameListener {
     public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         Platform.runLater(() -> {
             try {
-                showInfoMessage("Adventure card", message);
+                for (FlightBoardListener listener : flightBoardListeners) {
+                    listener.adventureCardPicketFromsrv(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions);
+                }
             } catch (Exception e) {
                 showErrorDialog("Error Picking card", e.getMessage());
             }
