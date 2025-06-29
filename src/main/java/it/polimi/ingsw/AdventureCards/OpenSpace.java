@@ -64,7 +64,7 @@ public class OpenSpace extends AdventureCard {
             double engineStrength = calculateEngineStrength(player);
             
             // Move player forward on flight board
-            gameModel.updatePosition(player, (int) engineStrength);
+            gameModel.updatePosition(player, (int) -engineStrength);
 
             //una volta usati li scarico
             player.getShip().dischargeAllActiveDoubleEngine();
@@ -96,13 +96,6 @@ public class OpenSpace extends AdventureCard {
      * @return Total engine strength
      */
     private int calculateEngineStrength(Player player) {
-        int strength = player.getShip().getComponents().keySet().stream()
-                .mapToInt(component -> switch(component){
-                    case Engine c -> c.getEffectivePower();
-                    default -> 0;
-                })
-                .sum();
-        
-        return strength;
+        return player.getShip().calculateEnginePower();
     }
 }

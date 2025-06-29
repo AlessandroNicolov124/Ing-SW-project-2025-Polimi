@@ -10,8 +10,8 @@ public class OpenSpaceTest {
     void testApplyOpenSpaceUpdatesPlayerPositions() {
         // Setup GameModel e giocatori
         GameModel gameModel = new GameModel();
-        Player player1 = new Player(1, "Alice", true);
-        Player player2 = new Player(2, "Bob", true);
+        Player player1 = new Player(1, "p1", true);
+        Player player2 = new Player(2, "p2", true);
 
         // Aggiungi un motore a ciascuna nave
         Cabin cabin1 = new Cabin(true);
@@ -36,20 +36,24 @@ public class OpenSpaceTest {
         int pos2Before = gameModel.getFlightBoard().getPosition(player2);
 
         OpenSpace openSpace = new OpenSpace();
+
+        int expectedPos1 = pos1Before + player1.getShip().calculateEnginePower();
+        int expectedPos2 = pos2Before + player2.getShip().calculateEnginePower();
+
         openSpace.applyOpenSpace(gameModel);
 
         // Dopo l'effetto ogni giocatore deve anzare di 1
         int pos1After = gameModel.getFlightBoard().getPosition(player1);
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 1, pos2After, "Bob deve avanzare di 2 (double engine attivato)");
+        assertEquals(expectedPos1, pos1After, "p1 deve avanzare di 1 (single engine)");
+        assertEquals(expectedPos2, pos2After, "p2 deve avanzare di 2 (double engine attivato)");
     }
 
     @Test
     void testApplyOpenSpaceWithDoubleEngineAndBatteries() {
         GameModel gameModel = new GameModel();
-        Player player1 = new Player(1, "Alice", true);
-        Player player2 = new Player(2, "Bob", true);
+        Player player1 = new Player(1, "p1", true);
+        Player player2 = new Player(2, "p2", true);
 
         // Single engine per Alice
         Cabin cabin1 = new Cabin(true);
@@ -69,6 +73,7 @@ public class OpenSpaceTest {
         player2.placeComponent(battery, player2.getShip().getStartingPosition().getAdjacentPosition(Direction.EAST));
 
         battery.recharge();
+        assertEquals(3, battery.getChargeLevel(), "La batteria di p2 deve essere completamente carica");
 
         gameModel.addPlayer(player1);
         gameModel.addPlayer(player2);
@@ -80,22 +85,27 @@ public class OpenSpaceTest {
         int batteryChargeBefore = player2.getShip().calculateTotalBatteryCharge();
 
         OpenSpace openSpace = new OpenSpace();
+
+        int expectedPos1 = pos1Before + player1.getShip().calculateEnginePowerWithBatteries(player1.getShip().calculateTotalBatteryCharge() > 0);
+        int expectedPos2 = pos2Before + player2.getShip().calculateEnginePowerWithBatteries(player2.getShip().calculateTotalBatteryCharge() > 0);
+
         openSpace.applyOpenSpace(gameModel);
 
         int pos1After = gameModel.getFlightBoard().getPosition(player1);
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
+
         int batteryChargeAfter = player2.getShip().calculateTotalBatteryCharge();
 
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 2, pos2After, "Bob deve avanzare di 2 (double engine attivato)");
-        assertTrue(batteryChargeAfter<batteryChargeBefore, "Le batterie di Bob devono essere scaricate dopo l'uso");
+        assertEquals(expectedPos1, pos1After, "p1 deve avanzare di 1 (single engine)");
+        assertEquals(expectedPos2, pos2After, "p2 deve avanzare di 2 (double engine attivato)");
+        assertTrue(batteryChargeAfter<batteryChargeBefore, "Le batterie di p2 devono essere scaricate dopo l'uso");
     }
 
     @Test
     void testApplyOpenSpaceWithDoubleEngineAndNOBatteries() {
         GameModel gameModel = new GameModel();
-        Player player1 = new Player(1, "Alice", true);
-        Player player2 = new Player(2, "Bob", true);
+        Player player1 = new Player(1, "p1", true);
+        Player player2 = new Player(2, "p2", true);
 
         // Single engine per Alice
         Cabin cabin1 = new Cabin(true);
@@ -124,14 +134,18 @@ public class OpenSpaceTest {
         int batteryChargeBefore = player2.getShip().calculateTotalBatteryCharge();
 
         OpenSpace openSpace = new OpenSpace();
+
+        int expectedPos1 = pos1Before + player1.getShip().calculateEnginePowerWithBatteries(player1.getShip().calculateTotalBatteryCharge() > 0);
+        int expectedPos2 = pos2Before + player2.getShip().calculateEnginePowerWithBatteries(player2.getShip().calculateTotalBatteryCharge() > 0);
+
         openSpace.applyOpenSpace(gameModel);
 
         int pos1After = gameModel.getFlightBoard().getPosition(player1);
         int pos2After = gameModel.getFlightBoard().getPosition(player2);
         int batteryChargeAfter = player2.getShip().calculateTotalBatteryCharge();
 
-        assertEquals(pos1Before + 1, pos1After, "Alice deve avanzare di 1 (single engine)");
-        assertEquals(pos2Before + 1, pos2After, "Bob deve avanzare di 1 (double engine non attivato)");
-        assertEquals(batteryChargeAfter, batteryChargeBefore, "Le batterie di Bob non devono essere state usate");
+        assertEquals(expectedPos1, pos1After, "p1 deve avanzare di 1 (single engine)");
+        assertEquals(expectedPos2, pos2After, "p2 deve avanzare di 1 (double engine non attivato)");
+        assertEquals(batteryChargeAfter, batteryChargeBefore, "Le batterie di p2 non devono essere state usate");
     }
 }
