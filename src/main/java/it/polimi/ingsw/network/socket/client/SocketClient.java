@@ -13,6 +13,7 @@ import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.network.messages.flight.ReadyForAdventurePhaseRequest;
 import it.polimi.ingsw.network.messages.flight.ReadyForFlightRequest;
 import it.polimi.ingsw.network.messages.loading.LoadingAckRequest;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyRequest;

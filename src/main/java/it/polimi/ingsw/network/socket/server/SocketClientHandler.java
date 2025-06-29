@@ -15,6 +15,7 @@ import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
 import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.messages.RequestMessage;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerResponse;
@@ -460,13 +461,13 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
-                if (match.allPlayersPositioned()) {
-                    int firstPlayerToAct = match.getFirstPlayerToAct();
-                    lobbyManager.multicastToMatch(match.getMatchId(),
-                        new AdventurePhaseStartResponse(
-                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
 
+                if (match.allPlayersPositioned()) {
+                    match.setMatchState(MatchStates.FLIGHT_PREPARATION);
+                    lobbyManager.multicastToMatch(match.getMatchId(),
+                            new FlightPreparationStartResponse(match.getMatchId(), true, "All players ready – flight preparation begins"));
                 }
+
             }
             
         } else {
