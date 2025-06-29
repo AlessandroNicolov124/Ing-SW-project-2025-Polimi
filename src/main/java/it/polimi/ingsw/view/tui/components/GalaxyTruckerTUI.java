@@ -810,8 +810,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 @Override
                 public void run() {
                     //System.out.println("Timer expired! Notification sent.");
-                    console.printMessage("Time expired, you will get a penalty");
-                    if ("SHIP_BUILDING".equals(state)) {
+                    if (TuiState.SHIP_BUILDING.equals(state)) {
+                        console.printMessage("Time expired, you will get a penalty");
                         try {
                             client.sendTimeExpiredNotification(username);
                         } catch (Exception e) {
@@ -822,10 +822,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 }
             };
 
-            long delay = PENALTY_TIMEOUT;
-            timer.schedule(task, delay);
+            timer.schedule(task, PENALTY_TIMEOUT);
 
-            System.out.println("You are going to have 1:30 minute time at your disposal");
+            console.printMessage("You are going to have 1:30 minute time at your disposal");
 
             this.state = TuiState.SHIP_BUILDING;
         }
