@@ -811,6 +811,7 @@ public class RmiServer extends UnicastRemoteObject
                         match.getPlayerPositions(),
                         match.getFirstPlayerToAct()
                 ));
+                match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
             }
         } else {
             client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));

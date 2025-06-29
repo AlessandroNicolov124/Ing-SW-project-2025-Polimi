@@ -317,7 +317,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
-        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+        if (match.getMatchState() != MatchStates.FLIGHT_IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
                     currentPlayer, null, false, "Match not in progress", -1, null));
