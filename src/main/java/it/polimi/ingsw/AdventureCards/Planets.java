@@ -24,22 +24,252 @@ import java.util.*;
  */
 
 public class Planets extends AdventureCard{
+    
+    /**
+     * Enumeration of different planet card variations
+     */
+    public enum PlanetVariation {
+        // Level 1 Deck Variations
+        LEVEL1_VARIATION_1, // 2 flight days, 3 planets
+        LEVEL1_VARIATION_2, // 3 flight days, 4 planets  
+        LEVEL1_VARIATION_3, // 3 flight days, 2 planets
+        LEVEL1_VARIATION_4, // 1 flight day, 3 planets
+        
+        // Level 2 Deck Variations  
+        LEVEL2_VARIATION_1, // 3 flight days, 3 planets
+        LEVEL2_VARIATION_2, // 4 flight days, 3 planets  
+        LEVEL2_VARIATION_3, // 3 flight days, 3 planets
+        LEVEL2_VARIATION_4  // 2 flight days, 4 planets
+    }
+    
     private List<Planet> planets;
     private int flightDaysCost;
+    private PlanetVariation variation;
     private transient Map<Planet, Player> landedPlayers;
 
     public Planets(){
         super();
-        this.planets = createDefaultPlanets();
-        this.flightDaysCost = 2;
+        this.variation = PlanetVariation.LEVEL1_VARIATION_1; // Default variation
+        initializePlanetVariation(this.variation);
         this.landedPlayers = new HashMap<>();
     }
 
-    public Planets(int copies, int duration, List<Planet> planets, int flightDaysCost) {
+    public Planets(int copies, int duration, PlanetVariation variation) {
         super(copies, duration);
-        this.planets = planets;
-        this.flightDaysCost = flightDaysCost;
+        this.variation = variation;
+        initializePlanetVariation(variation);
         this.landedPlayers = new HashMap<>();
+    }
+
+    /**
+     * Initialize planets and flight day cost based on the specified variation
+     */
+    private void initializePlanetVariation(PlanetVariation variation) {
+        switch (variation) {
+            // Level 1 Deck Variations
+            case LEVEL1_VARIATION_1:
+                this.planets = createLevel1Variation1Planets();
+                this.flightDaysCost = 2;
+                break;
+            case LEVEL1_VARIATION_2:
+                this.planets = createLevel1Variation2Planets();
+                this.flightDaysCost = 3;
+                break;
+            case LEVEL1_VARIATION_3:
+                this.planets = createLevel1Variation3Planets();
+                this.flightDaysCost = 3;
+                break;
+            case LEVEL1_VARIATION_4:
+                this.planets = createLevel1Variation4Planets();
+                this.flightDaysCost = 1;
+                break;
+                
+            // Level 2 Deck Variations
+            case LEVEL2_VARIATION_1:
+                this.planets = createLevel2Variation1Planets();
+                this.flightDaysCost = 3;
+                break;
+            case LEVEL2_VARIATION_2:
+                this.planets = createLevel2Variation2Planets();
+                this.flightDaysCost = 4;
+                break;
+            case LEVEL2_VARIATION_3:
+                this.planets = createLevel2Variation3Planets();
+                this.flightDaysCost = 3;
+                break;
+            case LEVEL2_VARIATION_4:
+                this.planets = createLevel2Variation4Planets();
+                this.flightDaysCost = 2;
+                break;
+        }
+    }
+
+    /**
+     * Create planets for Level 1 Variation 1 (2 flight days, 3 planets)
+     */
+    private List<Planet> createLevel1Variation1Planets() {
+        List<Planet> planetsVar1 = new ArrayList<>();
+
+        // Planet 1: Red cargo only
+        List<Cargo> cargo1 = Arrays.asList(new RedCargo(), new RedCargo());
+        planetsVar1.add(new Planet("Red Planet", cargo1));
+
+        // Planet 2: Red and Blue cargo
+        List<Cargo> cargo2 = Arrays.asList(new RedCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar1.add(new Planet("Blue Planet", cargo2));
+
+        // Planet 3: Yellow cargo only
+        List<Cargo> cargo3 = Arrays.asList(new YellowCargo());
+        planetsVar1.add(new Planet("Yellow Planet", cargo3));
+
+        return planetsVar1;
+    }
+
+    /**
+     * Create planets for Level 1 Variation 2 (3 flight days, 4 planets)
+     */
+    private List<Planet> createLevel1Variation2Planets() {
+        List<Planet> planetsVar2 = new ArrayList<>();
+
+        // Planet 1: Red, Green, Blue cargo
+        List<Cargo> cargo1 = Arrays.asList(new RedCargo(), new GreenCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar2.add(new Planet("Green-Orange-Blue Planet", cargo1));
+
+        // Planet 2: Red, Yellow, Blue cargo  
+        List<Cargo> cargo2 = Arrays.asList(new RedCargo(), new YellowCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar2.add(new Planet("Orange-Blue Planet", cargo2));
+
+        // Planet 3: Red and Blue cargo
+        List<Cargo> cargo3 = Arrays.asList(new RedCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar2.add(new Planet("Blue Planet", cargo3));
+
+        // Planet 4: Red and Green cargo
+        List<Cargo> cargo4 = Arrays.asList(new RedCargo(), new GreenCargo());
+        planetsVar2.add(new Planet("Green Planet", cargo4));
+
+        return planetsVar2;
+    }
+
+    /**
+     * Create planets for Level 1 Variation 3 (3 flight days, 2 planets)
+     */
+    private List<Planet> createLevel1Variation3Planets() {
+        List<Planet> planetsVar3 = new ArrayList<>();
+
+        // Planet 1: Yellow, Green, Blue cargo
+        List<Cargo> cargo1 = Arrays.asList(new YellowCargo(), new GreenCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar3.add(new Planet("Yellow-Purple Planet", cargo1));
+
+        // Planet 2: Yellow cargo only
+        List<Cargo> cargo2 = Arrays.asList(new YellowCargo(), new YellowCargo());
+        planetsVar3.add(new Planet("Yellow Planet", cargo2));
+
+        return planetsVar3;
+    }
+
+    /**
+     * Create planets for Level 1 Variation 4 (1 flight day, 3 planets)
+     */
+    private List<Planet> createLevel1Variation4Planets() {
+        List<Planet> planetsVar4 = new ArrayList<>();
+
+        // Planet 1: Green cargo only
+        List<Cargo> cargo1 = Arrays.asList(new GreenCargo(), new GreenCargo());
+        planetsVar4.add(new Planet("Green Planet", cargo1));
+
+        // Planet 2: Yellow cargo only
+        List<Cargo> cargo2 = Arrays.asList(new YellowCargo());
+        planetsVar4.add(new Planet("Yellow Planet", cargo2));
+
+        // Planet 3: Blue cargo only
+        List<Cargo> cargo3 = Arrays.asList(new BlueCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar4.add(new Planet("Blue Planet", cargo3));
+
+        return planetsVar4;
+    }
+
+    /**
+     * Create planets for Level 2 Variation 1 (3 flight days, 2 planets)
+     */
+    private List<Planet> createLevel2Variation1Planets() {
+        List<Planet> planetsVar1 = new ArrayList<>();
+
+        // Planet 1: Red cargo only
+        List<Cargo> cargo1 = Arrays.asList(new RedCargo(), new RedCargo());
+        planetsVar1.add(new Planet("Red Planet", cargo1));
+
+        // Planet 2: Green cargo only
+        List<Cargo> cargo2 = Arrays.asList(new GreenCargo(), new GreenCargo(), new GreenCargo(), new GreenCargo());
+        planetsVar1.add(new Planet("Green Planet", cargo2));
+
+        return planetsVar1;
+    }
+
+    /**
+     * Create planets for Level 2 Variation 2 (4 flight days, 3 planets)
+     */
+    private List<Planet> createLevel2Variation2Planets() {
+        List<Planet> planetsVar2 = new ArrayList<>();
+
+        // Planet 1: Red and Yellow cargo
+        List<Cargo> cargo1 = Arrays.asList(new RedCargo(), new RedCargo(), new RedCargo(), new YellowCargo());
+        planetsVar2.add(new Planet("Red Planet", cargo1));
+
+        // Planet 2: Red and Green cargo
+        List<Cargo> cargo2 = Arrays.asList(new RedCargo(), new RedCargo(), new GreenCargo(), new GreenCargo());
+        planetsVar2.add(new Planet("Green Planet", cargo2));
+
+        // Planet 3: Red and Blue cargo
+        List<Cargo> cargo3 = Arrays.asList(new RedCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar2.add(new Planet("Blue Planet", cargo3));
+
+        return planetsVar2;
+    }
+
+    /**
+     * Create planets for Level 2 Variation 3 (3 flight days, 3 planets)
+     */
+    private List<Planet> createLevel2Variation3Planets() {
+        List<Planet> planetsVar3 = new ArrayList<>();
+
+        // Planet 1: Green cargo only
+        List<Cargo> cargo1 = Arrays.asList(new GreenCargo(), new GreenCargo(), new GreenCargo(), new GreenCargo());
+        planetsVar3.add(new Planet("Green Planet", cargo1));
+
+        // Planet 2: Yellow cargo only
+        List<Cargo> cargo2 = Arrays.asList(new YellowCargo(), new YellowCargo());
+        planetsVar3.add(new Planet("Yellow Planet", cargo2));
+
+        // Planet 3: Blue cargo only
+        List<Cargo> cargo3 = Arrays.asList(new BlueCargo(), new BlueCargo(), new BlueCargo(), new BlueCargo());
+        planetsVar3.add(new Planet("Blue Planet", cargo3));
+
+        return planetsVar3;
+    }
+
+    /**
+     * Create planets for Level 2 Variation 4 (2 flight days, 4 planets)
+     */
+    private List<Planet> createLevel2Variation4Planets() {
+        List<Planet> planetsVar4 = new ArrayList<>();
+
+        // Planet 1: Red and Yellow cargo
+        List<Cargo> cargo1 = Arrays.asList(new RedCargo(), new YellowCargo());
+        planetsVar4.add(new Planet("Red Planet", cargo1));
+
+        // Planet 2: Yellow and Blue cargo
+        List<Cargo> cargo2 = Arrays.asList(new YellowCargo(), new GreenCargo(), new BlueCargo());
+        planetsVar4.add(new Planet("Yellow-Blue Planet", cargo2));
+
+        // Planet 3: Green cargo only
+        List<Cargo> cargo3 = Arrays.asList(new GreenCargo(), new GreenCargo());
+        planetsVar4.add(new Planet("Green Planet", cargo3));
+
+        // Planet 4: Yellow cargo only
+        List<Cargo> cargo4 = Arrays.asList(new YellowCargo());
+        planetsVar4.add(new Planet("Yellow Planet", cargo4));
+
+        return planetsVar4;
     }
 
     public List<Planet> getPlanets() {
@@ -50,36 +280,12 @@ public class Planets extends AdventureCard{
         return flightDaysCost;
     }
 
-    public Map<Planet, Player> getLandedPlayers() {
-        return landedPlayers;
+    public PlanetVariation getVariation() {
+        return variation;
     }
 
-    
-    /**
-     * Create default planets for the card
-     * @return List of default planets
-     */
-    private List<Planet> createDefaultPlanets() {
-        List<Planet> defaultPlanets = new ArrayList<>();
-
-        List<Cargo> defaultCargo1 = new ArrayList<>();
-        defaultCargo1.add(new BlueCargo());
-        defaultCargo1.add(new BlueCargo());
-        defaultCargo1.add(new RedCargo());
-
-        List<Cargo> defaultCargo2 = new ArrayList<>();
-        defaultCargo2.add(new BlueCargo());
-        defaultCargo2.add(new BlueCargo());
-        defaultCargo2.add(new GreenCargo());
-        defaultCargo2.add(new GreenCargo());
-
-        List<Cargo> defaultCargo3 = new ArrayList<>();
-        defaultCargo3.add(new YellowCargo());
-
-        defaultPlanets.add(new Planet("Alpha", defaultCargo1)); // Name and goods count
-        defaultPlanets.add(new Planet("Beta", defaultCargo2));
-        defaultPlanets.add(new Planet("Gamma", defaultCargo3));
-        return defaultPlanets;
+    public Map<Planet, Player> getLandedPlayers() {
+        return landedPlayers;
     }
 
     @Override
@@ -100,7 +306,8 @@ public class Planets extends AdventureCard{
     @Override
     public String getDescription() {
         return "Choose planets to land on and collect goods. Landing costs " + flightDaysCost + " flight days. " +
-               "The leader chooses first, followed by others in order. Only one ship per planet allowed.";
+               "The leader chooses first, followed by others in order. Only one ship per planet allowed. " +
+               "Variation: " + variation + " (" + planets.size() + " planets available)";
     }
     
     /**
@@ -110,6 +317,8 @@ public class Planets extends AdventureCard{
     public void processPlanets(GameModel gameModel) {
         List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
         List<Player> landedPlayersList = new ArrayList<>();
+        
+        System.out.println("[Planets] Processing " + variation + " with " + planets.size() + " planets, cost: " + flightDaysCost + " flight days");
         
         // First phase: players decide whether to land, in leader-first order
         for (Player player : playersInOrder) {
@@ -123,6 +332,10 @@ public class Planets extends AdventureCard{
                 
                 // Load goods on player's ship
                 loadGoods(player, chosenPlanet);
+                System.out.println("[Planets] " + player.getNickName() + " landed on planet " + chosenPlanet.getName() + 
+                                 " and collected " + chosenPlanet.getGoodsToLoad().size() + " cargo units");
+            } else {
+                System.out.println("[Planets] " + player.getNickName() + " chose not to land on any planet");
             }
         }
         
@@ -165,9 +378,28 @@ public class Planets extends AdventureCard{
         }
         
         // TODO This is a placeholder - actual implementation would involve player choice
+        // For now, make players more likely to land on valuable planets
         Random random = new Random();
-        int randomIndex = random.nextInt(availablePlanets.size());
-        return availablePlanets.get(randomIndex);
+        
+        // Players have a 70% chance to land if there are valuable planets available
+        if (random.nextDouble() < 0.7) {
+            // Prefer planets with more valuable cargo (higher total value)
+            availablePlanets.sort((p1, p2) -> {
+                int value1 = p1.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
+                int value2 = p2.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
+                return Integer.compare(value2, value1); // Descending order
+            });
+            
+            // 60% chance to pick the best planet, 40% chance to pick randomly
+            if (random.nextDouble() < 0.6) {
+                return availablePlanets.get(0); // Best planet
+            } else {
+                int randomIndex = random.nextInt(availablePlanets.size());
+                return availablePlanets.get(randomIndex);
+            }
+        }
+        
+        return null; // Player chooses not to land
     }
     
     /**
@@ -178,7 +410,7 @@ public class Planets extends AdventureCard{
     protected void loadGoods(Player player, Planet planet) {
         // Implementation of how goods are tracked
         // placeholder
-        List<Cargo> goodsToLoad = planet.getGoodsToLoad();
+        List<Cargo> goodsToLoad = new ArrayList<>(planet.getGoodsToLoad()); // Create mutable copy
         // Logic to add goods to player's inventory here
 
         // Ordine di priorità: rosso, giallo, verde, blu
@@ -203,6 +435,8 @@ public class Planets extends AdventureCard{
                 .mapToInt(CargoHolds::getAvailableSpace)
                 .sum();
 
+        int loadedCount = 0;
+        
         // Cerca di caricare le merci
         for (Cargo cargo : goodsToLoad) {
             // Se non c'è più spazio, interrompi
@@ -222,11 +456,13 @@ public class Planets extends AdventureCard{
                                 cargoHold.loadCargo(cargo);
                                 loaded = true;
                                 totalAvailableSpace--;
+                                loadedCount++;
                             }
                             break;
                         default:
                             break;
                     }
+                    if (loaded) break;
                 }
 
                 // Se non caricato nelle speciali, prova nelle normali
@@ -236,6 +472,7 @@ public class Planets extends AdventureCard{
                             cargoHold.loadCargo(cargo);
                             loaded = true;
                             totalAvailableSpace--;
+                            loadedCount++;
                             break;
                         }
                     }
@@ -249,6 +486,7 @@ public class Planets extends AdventureCard{
                         cargoHold.loadCargo(cargo);
                         loaded = true;
                         totalAvailableSpace--;
+                        loadedCount++;
                         break;
                     }
                 }
@@ -261,12 +499,26 @@ public class Planets extends AdventureCard{
                             cargoHold.loadCargo(cargo);
                             loaded = true;
                             totalAvailableSpace--;
+                            loadedCount++;
                             break;
                         }
                     }
                 }
             }
         }
+        
+        System.out.println("[Planets] " + player.getNickName() + " loaded " + loadedCount + " out of " + 
+                          goodsToLoad.size() + " available cargo units from planet " + planet.getName());
+    }
+
+    /**
+     * Factory method to create a random planets card variation
+     */
+    public static Planets createRandomVariation() {
+        PlanetVariation[] variations = PlanetVariation.values();
+        Random random = new Random();
+        PlanetVariation randomVariation = variations[random.nextInt(variations.length)];
+        return new Planets(1, 1, randomVariation);
     }
 
     public static class Planet implements java.io.Serializable {
@@ -276,7 +528,7 @@ public class Planets extends AdventureCard{
         
         public Planet(String name, List<Cargo> goodsToLoad) {
             this.name = name;
-            this.goodsToLoad = goodsToLoad;
+            this.goodsToLoad = new ArrayList<>(goodsToLoad); // Make defensive copy
         }
         
         public String getName() {
@@ -284,7 +536,20 @@ public class Planets extends AdventureCard{
         }
         
         public List<Cargo> getGoodsToLoad() {
-            return goodsToLoad;
+            return new ArrayList<>(goodsToLoad); // Return defensive copy
+        }
+        
+        public int getTotalCargoValue() {
+            return goodsToLoad.stream().mapToInt(Cargo::getValue).sum();
+        }
+        
+        public int getCargoCount() {
+            return goodsToLoad.size();
+        }
+        
+        @Override
+        public String toString() {
+            return name + " (cargo: " + getCargoCount() + " units, value: " + getTotalCargoValue() + ")";
         }
     }
 }

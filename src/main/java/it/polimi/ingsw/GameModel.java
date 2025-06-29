@@ -57,7 +57,19 @@ public class GameModel {
 
     private void loadAdventureCardTurn1(){
         System.out.println("[GameModel] Loading adventure cards for turn 1...");
-        deck.add(new Planets());
+        
+        // Add Level 1 planet card variations
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_1)); // 2 flight days, 3 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_2)); // 3 flight days, 4 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_3)); // 3 flight days, 2 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_4)); // 1 flight day, 3 planets
+        
+        // Add Level 2 planet card variations
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_1)); // 2 flight days, 3 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_2)); // 3 flight days, 2 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_3)); // 3 flight days, 2 planets
+        deck.add(new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_4)); // 4 flight days, 3 planets
+        
         //deck.add(new AbandonedStation());
         //deck.add(new AbandonedShip());
         //deck.add(new Smugglers());
@@ -72,7 +84,7 @@ public class GameModel {
         //deck.add(new CombatZone());
 
         System.out.println("[GameModel] Adventure cards loaded. Total cards in deck: " + deck.size());
-        System.out.println("Tutte le carte avventura sono state caricate.");
+        System.out.println("All adventure cards have been loaded");
     }
 
     public Component pickOneComponentCardFromDeck(Player p)
