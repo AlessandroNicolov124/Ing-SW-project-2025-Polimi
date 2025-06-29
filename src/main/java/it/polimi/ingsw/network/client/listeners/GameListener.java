@@ -3,6 +3,7 @@ package it.polimi.ingsw.network.client.listeners;
 
 import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
@@ -95,6 +96,8 @@ public interface GameListener {
     void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage);
 
     void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason);
+
+    void FlightOrderpositionRecieved(UUID matchId, int playerId, List<Player> PlayerIdPosMap, boolean success);
 
     void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message);
     void adventurePhaseReady(UUID matchId, String message);

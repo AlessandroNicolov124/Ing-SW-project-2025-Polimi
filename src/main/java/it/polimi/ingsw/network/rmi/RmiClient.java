@@ -140,6 +140,7 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws RemoteException {
+        server.getStartingFligtOrder(matchId, playerId, this);
     }
 
     @Override

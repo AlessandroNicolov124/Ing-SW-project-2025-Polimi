@@ -813,6 +813,15 @@ public class AppContext implements GameListener {
     }
 
     @Override
+    public void FlightOrderpositionRecieved(UUID matchId, int playerId, List<Player> list, boolean success) {
+        Platform.runLater(() -> {
+            for (FlightBoardListener listener : flightBoardListeners) {
+                listener.flightOrderRecieved(matchId,playerId, list, success);
+            }
+        });
+    }
+
+    @Override
     public void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message) {
         Platform.runLater(() -> {
             System.out.println("Ready for adventure phase");

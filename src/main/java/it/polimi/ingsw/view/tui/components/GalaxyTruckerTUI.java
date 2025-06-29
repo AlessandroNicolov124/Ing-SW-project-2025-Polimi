@@ -1069,6 +1069,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
+    @Override
+    public void FlightOrderpositionRecieved(UUID matchId, int playerId, List<Player> PlayerIdPosMap, boolean success) {
+
+    }
+
     /**
      * Displays detailed information about an adventure card
      */

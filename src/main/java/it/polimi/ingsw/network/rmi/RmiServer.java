@@ -47,6 +47,7 @@ import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
+import it.polimi.ingsw.network.messages.adventure.FlightOrderRespone;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -813,6 +814,26 @@ public class RmiServer extends UnicastRemoteObject
         } else {
             client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));
         }
-    } 
+    }
+
+    @Override
+    public void getStartingFligtOrder(UUID matchId, int playerId, RmiClientIf client) throws RemoteException {
+        List <Player> flightOrder;
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match != null) {
+            GameController ctr = match.getController();
+            if (ctr != null) {
+                flightOrder = ctr.getFlightOrder();
+
+                if (flightOrder != null){
+                    client.showUpdate(new FlightOrderRespone(matchId, playerId, null, true));
+                }
+                else
+                {
+                    //client.showUpdate(new FlightOrderResponse(matchId, playerId, null, false));
+                }
+            }
+        }
+    }
 
 }

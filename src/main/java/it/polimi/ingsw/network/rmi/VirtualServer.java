@@ -64,4 +64,6 @@ public interface VirtualServer extends Remote {
 
     void readyForAdventurePhase(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
 
+    void getStartingFligtOrder(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
+
 }

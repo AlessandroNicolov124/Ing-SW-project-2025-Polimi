@@ -4,6 +4,7 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.network.messages.RotationType;
 import javafx.fxml.FXML;
@@ -23,6 +24,7 @@ import javafx.scene.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class FlightBoardController extends GuiContoller implements FlightBoardListener {
     @FXML
@@ -45,6 +47,7 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         setupBackground();
         drawEllipse();
         drawCircles();
+        initPositions();
     }
 
     private void setupBackground() {
@@ -60,6 +63,14 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
                         )
                 )
         ));
+    }
+
+    private void initPositions() {
+        try {
+            context.getClient().getPlayersOrderForFlightboard(context.getCurrentMatchId(), context.getPlayerId());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void drawEllipse(){
@@ -151,5 +162,13 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     public void setContext(AppContext context) {
         super.setContext(context);
         context.addFlightboardListener(this);
+    }
+
+    @Override
+    public void flightOrderRecieved(UUID matchId, int playerId, List<Player> list, boolean success) {
+        if(matchId == context.getCurrentMatchId() && success)
+        {
+
+        }
     }
 }
