@@ -434,12 +434,12 @@ class CabinTest {
             assertTrue(cabin.canAddAlien(CrewType.BROWN_ALIEN));
 
             BrownAlienCrew brownAlien = new BrownAlienCrew();
-            assertTrue(cabin.addCrew(brownAlien));
-            assertEquals(2, cabin.getCrew().size());
-
-            // Remove human
-            assertTrue(cabin.removeCrew(human));
+            assertFalse(cabin.addCrew(brownAlien)); //non è possibile mischiare alieni e umani
             assertEquals(1, cabin.getCrew().size());
+            cabin.removeCrew(human); // Remove human
+            assertTrue(cabin.addCrew(brownAlien)); // Now add alien
+            assertEquals(1, cabin.getCrew().size());
+
         }
 
         @Test
