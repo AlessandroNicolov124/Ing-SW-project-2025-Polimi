@@ -792,7 +792,14 @@ public class AppContext implements GameListener {
 
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
-
+        Platform.runLater(() -> {
+            try {
+                GUIApp.showFlightBoard();
+            } catch (Exception e) {
+                showErrorDialog("Error during nrew page load", e.getMessage());
+                System.out.println("Error during nrew page load" + e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -832,11 +839,7 @@ public class AppContext implements GameListener {
     @Override
     public void adventurePhaseReady(UUID matchId, String message) {
         Platform.runLater(() -> {
-            try {
-                GUIApp.showFlightBoard();
-            } catch (Exception e) {
-                showErrorDialog("Error Adding Token", e.getMessage());
-            }
+            showInfoMessage("Notification", message);
         });
     }
 

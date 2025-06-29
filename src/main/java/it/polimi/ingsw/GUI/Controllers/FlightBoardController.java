@@ -47,7 +47,6 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         setupBackground();
         drawEllipse();
         drawCircles();
-        initPositions();
     }
 
     private void setupBackground() {
