@@ -36,6 +36,7 @@ import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerShipResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerTokenListResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
@@ -52,6 +53,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.Map;
 
 public class SocketClientHandler implements Runnable, GeneralClientIf {
@@ -729,7 +731,37 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void getPlayerShip(String playerName) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
+        if (match == null) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        // find the player id by player name
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Component, Position> ship = player.getShip().getComponents();
+
+        if (ship.isEmpty()) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "No components in ship"));
+            return;
+        }
+
+        // invert the map in Map<Position, Component>
+        Map<Position, Component> invertedShip = ship.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey
+                ));
+        
+        // send the ship to the client
+        showUpdate(new GetPlayerShipResponse(playerName, invertedShip, true, "Ship retrieved successfully"));
     }
 
     @Override
