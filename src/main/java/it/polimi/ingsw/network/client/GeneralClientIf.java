@@ -1,10 +1,15 @@
 package it.polimi.ingsw.network.client;
 
+import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 
+import java.rmi.RemoteException;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.RotationType;
@@ -47,5 +52,12 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception;
 
+    void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception;
+
+    void getPlayerTokenList(String playerName) throws Exception;
+
+    void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception;
+
+    void getPlayerShip(String playerName) throws Exception;
 
 }

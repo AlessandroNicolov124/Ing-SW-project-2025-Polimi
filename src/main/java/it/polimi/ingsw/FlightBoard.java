@@ -27,7 +27,7 @@ public class FlightBoard {
     }
 
     /**
-     * Aggiunge un giocatore al tabellone di volo nella posizione di default (-1 = non posizionato)
+     * Adds a player to the flight board at the starting position (0)
      *
      * @param player Il giocatore da aggiungere
      */
@@ -39,11 +39,11 @@ public class FlightBoard {
     }
 
     /**
-     * Sets the initial starting position for a player based on their completion order.
-     * Position mapping: 1st finisher → position 6, 2nd → position 3, 3rd → position 1, 4th → position 0
+     * Sets the initial position for a player on the flight board.
+     * The position must be between 1 and 4 (inclusive) and not occupied.
      *
-     * @param player The player to position
-     * @param finishOrder The order in which the player finished ship building (1-4)
+     * @param player The player choosing the position.
+     * @param finishOrder The chosen position (1-4).
      * @return true if the position was successfully set, false otherwise.
      */
     public boolean setInitialPosition(Player player, int finishOrder) {
@@ -331,6 +331,7 @@ public class FlightBoard {
             return null;
         }
 
+
         Player bestPlayer = null;
         int bestPosition = Integer.MAX_VALUE;
 
@@ -349,7 +350,9 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the last player (player with the highest position number = worst position)
+     * Gets the last player who is still on the board (not at position 0)
+     *
+     * @return The last player, or null if no players are active
      */
     public Player getLastPlayer() {
         if (positions.isEmpty()) {

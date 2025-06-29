@@ -2,6 +2,10 @@ package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.Cabin;
 
+/**
+ * Represents a crew of humans in the game.
+ * Humans can live in any cabin as they wear spacesuits.
+ */
 public class HumanCrew extends Crew {
 
     public HumanCrew() {
@@ -14,8 +18,4 @@ public class HumanCrew extends Crew {
         return true;
     }
 
-//    @Override
-//    public void applyAbility(ShipBuilder ship) {
-//
-//    }
 }

@@ -33,13 +33,13 @@ class PlayerTest {
         @Override
         protected void resolveEvent(Player p) {
             // Simulate resolving the event
-            if (p != null) {
-                effect();
-            }
+//            if (p != null) {
+//                effect();
+//            }
         }
 
         @Override
-        public void effect() { effectCalled = true; }
+        public void effect(GameModel gameModel) { effectCalled = true; }
     }
 
     @Test
@@ -128,7 +128,7 @@ class PlayerTest {
         player = new Player(1, "TestPlayer", true, testShip);
         Position testPosition = new Position(3, 2);
         testShip.placeComponent(testComponent, testPosition);
-        boolean result = player.removeComponent(testComponent);
+        boolean result = player.removeComponentAt(testPosition);
         assertTrue(result);
         assertFalse(testShip.isPositionOccupied(testPosition));
     }
@@ -136,7 +136,7 @@ class PlayerTest {
     @Test
     void testRemoveComponent_Failure() {
         player = new Player(1, "TestPlayer", true, testShip);
-        boolean result = player.removeComponent(testComponent);
+        boolean result = player.removeComponentAt(new Position(0, 0));
         assertFalse(result);
     }
 

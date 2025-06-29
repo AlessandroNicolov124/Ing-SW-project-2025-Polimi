@@ -5,6 +5,10 @@ import it.polimi.ingsw.Components.Component;
 
 import java.io.Serializable;
 
+/** this class represents a player in the game.
+ * It contains the player's ID, nickname, active status, ship, and the card they picked.
+ * It also provides methods to manage the player's ship and actions during the game.
+ */
 public class Player implements Serializable {
     private int id;
     private String nickName;
@@ -66,6 +70,12 @@ public class Player implements Serializable {
 
     }
 
+    /**
+     * This method allows the player to pick a card from the adventure deck.
+     * It assigns the picked card to the player and applies its effect.
+     *
+     * @param card The adventure card to be picked by the player.
+     */
     public void pickCard(AdventureCard card) {
         if (card != null) {
             this.pickedCard = card; // Assegna la carta pescata al giocatore
@@ -87,10 +97,6 @@ public class Player implements Serializable {
     public boolean removeComponentAt(Position position) {
         return ship.removeComponentAt(position);
     }
-
-    // public boolean removeComponent(Component component) {
-    //     return ship.removeComponent(component);
-    // }
 
     public boolean validateShip() {
         String errors = ship.validateShip();

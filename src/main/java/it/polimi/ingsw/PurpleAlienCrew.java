@@ -3,6 +3,10 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.LifeSupportSystemType;
 
+/**
+ * This class represents a crew of purple aliens in the game.
+ * It extends the Crew class and provides specific functionality for purple alien crews.
+ */
 public class PurpleAlienCrew extends Crew {
 
     public PurpleAlienCrew() {
@@ -15,14 +19,4 @@ public class PurpleAlienCrew extends Crew {
         return cabin.hasConnectedLifeSupport(LifeSupportSystemType.PURPLE);
     }
 
-//    public void applyAbility(ShipBuilder ship) {
-//        // Adds +2 to fire power if ship already has fire power
-//        if (ship.calculateFirePower() > 0) {
-//            //ship.modifyFirePower(getCannonBonus());
-//        }
-//    }
-
-//    public int getCannonBonus(){
-//        return 2;
-//    }
 }

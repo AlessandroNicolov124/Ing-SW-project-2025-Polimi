@@ -5,8 +5,10 @@ import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
+import it.polimi.ingsw.GUI.GameStateUpdateListener.PreparationFlightListener;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
@@ -20,6 +22,7 @@ import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -33,13 +36,17 @@ public class AppContext implements GameListener {
     private int playerId;
     private UUID currentMatchId;
     private String selectedCabinColor;
+    private String previousController;
 
     private GeneralClientIf client;
+
+    private final List<String> playersInMatchList = new ArrayList<>();
 
     private boolean needsRefresh = false;
     private List<GameStateUpdateListener> guiUpdateListeners = new ArrayList<>();
     private List<LobbyListener> lobbyListeners = new ArrayList<>();
     private List<FlightBoardListener> flightBoardListeners = new ArrayList<>();
+    private List<PreparationFlightListener> preparationFlightListeners = new ArrayList<>();
 
     public AppContext() {
         username = "";
@@ -188,6 +195,10 @@ public class AppContext implements GameListener {
         guiUpdateListeners.remove(listener);
     }
 
+    public void addPreparationFlightListener(PreparationFlightListener listener) {
+        preparationFlightListeners.add(listener);
+    }
+
     public boolean needsRefresh() {
         return needsRefresh;
     }
@@ -206,6 +217,40 @@ public class AppContext implements GameListener {
     
     public void setSelectedCabinColor(String selectedCabinColor) {
         this.selectedCabinColor = selectedCabinColor;
+    }
+
+    public List<String> getPlayersInMatchList() {
+        return Collections.unmodifiableList(playersInMatchList);
+    }
+
+    public void setPreviousController(String controllerName) {
+        this.previousController = controllerName;
+    }
+
+    public String getPreviousController() {
+        return previousController;
+    }
+
+    public void returnToPreviousView() {
+        try {
+            GUIApp.returnToPreviousPage();
+        } catch (Exception e) {
+            System.err.println("Failed to return to previous page: " + e.getMessage());
+            try {
+                GUIApp.showFlightPreparation(); // or lobby? boh
+            } catch (Exception fallbackError) {
+                System.err.println("Fallback navigation failed: " + fallbackError.getMessage());
+            }
+        }
+    }
+
+    public void removePreparationFlightListener(PreparationFlightListener listener) {
+        preparationFlightListeners.remove(listener);
+    }
+
+    // Aggiungi un metodo per pulire tutti i listener di un tipo
+    public void clearPreparationFlightListeners() {
+        preparationFlightListeners.clear();
     }
 
     @Override
@@ -248,6 +293,8 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             if (playerId == this.playerId) {         
                 this.currentMatchId = matchId;
+                playersInMatchList.clear();
+                playersInMatchList.add(playerName);
             }
 
             for (LobbyListener l : new ArrayList<>(lobbyListeners)) {
@@ -262,6 +309,9 @@ public class AppContext implements GameListener {
             if (playerName.equals(username)) {          
                 this.currentMatchId = matchId;
             }
+            if (!playersInMatchList.contains(playerName) && matchId.equals(this.currentMatchId)) {
+                playersInMatchList.add(playerName);
+            }
             lobbyListeners.forEach(l -> l.playerJoinedMatch(matchId, playerName));
         });
     }
@@ -275,7 +325,13 @@ public class AppContext implements GameListener {
             if (playerId == this.playerId) {
                 this.currentMatchId = null;
                 this.selectedCabinColor = null;
+                playersInMatchList.clear();
                 System.out.println("[GUI] Local player left match - reset cabin color and match ID");
+            }
+
+            if (playersInMatchList.contains(playerName) && matchId.equals(this.currentMatchId)) {
+                playersInMatchList.remove(playerName);
+                System.out.println("[GUI] Player " + playerName + " removed from playersInMatchList");
             }
             
             for (LobbyListener l : lobbyListeners) {
@@ -324,6 +380,12 @@ public class AppContext implements GameListener {
     public void playersInMatch(UUID matchId, List<String> players, int hostId) {
         Platform.runLater(() -> {
             System.out.println("[GUI] Players in match " + matchId + ": " + players + " (Host ID: " + hostId + ")");
+            
+            playersInMatchList.clear();
+            if (players != null) {
+                playersInMatchList.addAll(players);
+            }
+            
             for (LobbyListener l : lobbyListeners) {
                 l.playersInMatch(matchId, players, hostId);
             }
@@ -423,9 +485,9 @@ public class AppContext implements GameListener {
         Platform.runLater(() -> {
             System.out.println("[GUI] Component rotated - Player: " + playerId + ", Position: " + position + ", Valid: " + isValid);
             
-            for (GameStateUpdateListener l : guiUpdateListeners) {
+            for (GameStateUpdateListener listener : guiUpdateListeners) {
                 try {
-                    l.gameComponentRotated(position, rotationType);
+                    listener.gameComponentRotated(position, rotationType);
                 } catch (Exception e) {
                     System.err.println("Error notifying rotation: " + e.getMessage());
                 }
@@ -734,11 +796,11 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
 
     }
 
-    @Override
+
     public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
         Platform.runLater(() -> {
             System.out.println("Adventure phase complete - Game: " + gameComplete + ", Reason: " + completionReason);
@@ -749,5 +811,50 @@ public class AppContext implements GameListener {
             }
         });
     }
+
+    @Override
+    public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
+        Platform.runLater(() -> {
+            for (PreparationFlightListener listener : preparationFlightListeners) {
+                listener.getPlayerShipResponse(playerName, shipComponents);
+            }
+        });
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage) {
+        Platform.runLater(() -> {
+            for (PreparationFlightListener listener : preparationFlightListeners) {
+                try {
+                    listener.addTokenToComponent(playerName, position, tokenType, success, errorMessage);
+                } catch (Exception e) {
+                    showErrorDialog("Error Adding Token", errorMessage);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens) {
+        Platform.runLater(() -> {
+            for (PreparationFlightListener listener : preparationFlightListeners) {
+                listener.getPlayerTokenList(playerName, tokens);
+            }
+        });
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage) {
+        Platform.runLater(() -> {
+            for (PreparationFlightListener listener : preparationFlightListeners) {
+                if (success) {
+                    listener.removeTokenFromComponent(playerName, position, tokenType, success, errorMessage);
+                } else {
+                    listener.removeTokenFromComponent(playerName, position, tokenType, success, errorMessage);
+                }
+            }
+        });
+    }
+        
 
 }

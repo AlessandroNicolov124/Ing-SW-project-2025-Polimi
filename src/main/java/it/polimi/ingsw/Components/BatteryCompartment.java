@@ -12,10 +12,9 @@ public final class BatteryCompartment extends Component {
     }
 
     @Override
-    public String getComponentString() {
-        String s = this.getClass().getSimpleName().toLowerCase() + "_";
-        s += type.toString().toLowerCase() + "_" + getConnectionsString();
-        return s;
+    protected String calculateComponentString() {
+        String typeStr = (type == BatteryType.DOUBLE) ? "double" : "triple";
+        return "batterycompartment_" + typeStr + "_" + getConnectionsString();
     }
 
     public BatteryCompartment(int maxCapacity, BatteryType type, int chargeLevel) {

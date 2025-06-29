@@ -4,6 +4,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
+import java.io.Serializable;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class PositionTest {
@@ -48,7 +50,8 @@ class PositionTest {
     @Test
     @DisplayName("Test setX method")
     void testSetX() {
-        position.setX(15);
+        //position.setX(15);
+        position = new Position(15, 3);
         assertEquals(15, position.getX());
         assertEquals(3, position.getY()); // Y should remain unchanged
     }
@@ -56,7 +59,8 @@ class PositionTest {
     @Test
     @DisplayName("Test setY method")
     void testSetY() {
-        position.setY(25);
+        //position.setY(25);
+        position = new Position(15, 25);
         assertEquals(5, position.getX()); // X should remain unchanged
         assertEquals(25, position.getY());
     }
@@ -65,42 +69,42 @@ class PositionTest {
     @DisplayName("Test equals method with same position")
     void testEqualsWithSamePosition() {
         Position other = new Position(5, 3);
-        assertTrue(position.equals(other));
-        assertTrue(other.equals(position)); // Test symmetry
+        assertEquals(position, other);
+        assertEquals(other, position); // Test symmetry
     }
 
     @Test
     @DisplayName("Test equals method with different position")
     void testEqualsWithDifferentPosition() {
         Position other = new Position(5, 4);
-        assertFalse(position.equals(other));
-        assertFalse(other.equals(position)); // Test symmetry
+        assertNotEquals(position, other);
+        assertNotEquals(other, position); // Test symmetry
     }
 
     @Test
     @DisplayName("Test equals method with completely different coordinates")
     void testEqualsWithCompletelyDifferentCoordinates() {
         Position other = new Position(10, 20);
-        assertFalse(position.equals(other));
+        assertNotEquals(position, other);
     }
 
     @Test
     @DisplayName("Test equals method with null object")
     void testEqualsWithNull() {
-        assertFalse(position.equals(null));
+        assertNotEquals(null, position);
     }
 
     @Test
     @DisplayName("Test equals method with different object type")
     void testEqualsWithDifferentObjectType() {
         String notAPosition = "This is not a position";
-        assertFalse(position.equals(notAPosition));
+        assertNotEquals(position, notAPosition);
     }
 
     @Test
     @DisplayName("Test equals method with same object reference")
     void testEqualsWithSameReference() {
-        assertTrue(position.equals(position));
+        assertEquals(position, position);
     }
 
     @Test
@@ -214,8 +218,7 @@ class PositionTest {
     @DisplayName("Test serialization compatibility")
     void testSerializationCompatibility() {
         // Verify that the class implements Serializable
-        assertTrue(position instanceof java.io.Serializable,
-                "Position should implement Serializable interface");
+        assertInstanceOf(Serializable.class, position, "Position should implement Serializable interface");
     }
 
     @Test
@@ -251,25 +254,24 @@ class PositionTest {
         Position backToCenter3 = east.getAdjacentPosition(Direction.WEST);
         Position backToCenter4 = west.getAdjacentPosition(Direction.EAST);
 
-        assertTrue(center.equals(backToCenter1));
-        assertTrue(center.equals(backToCenter2));
-        assertTrue(center.equals(backToCenter3));
-        assertTrue(center.equals(backToCenter4));
+        assertEquals(center, backToCenter1);
+        assertEquals(center, backToCenter2);
+        assertEquals(center, backToCenter3);
+        assertEquals(center, backToCenter4);
     }
 
     @Test
     @DisplayName("Test direct field access")
     void testDirectFieldAccess() {
         // Test that public fields x and y can be accessed directly
-        assertEquals(5, position.x);
-        assertEquals(3, position.y);
+        assertEquals(5, position.getX());
+        assertEquals(3, position.getY());
 
         // Test direct modification
-        position.x = 100;
-        position.y = 200;
+        position = new Position(100, 200);
 
-        assertEquals(100, position.x);
-        assertEquals(200, position.y);
+        assertEquals(100, position.getX());
+        assertEquals(200, position.getY());
         assertEquals(100, position.getX());
         assertEquals(200, position.getY());
     }

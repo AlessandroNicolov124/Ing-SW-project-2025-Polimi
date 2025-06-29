@@ -343,17 +343,6 @@ public class ShipBuildingHandler {
             case StructuralModule sm -> "SM";
             default -> "??";
         };
-//        if (component instanceof Cabin) return "C";
-//        if (component instanceof SingleEngine) return "E";
-//        if (component instanceof DoubleEngine) return "E"; // Could be E2
-//        if (component instanceof SingleCannon) return "S"; // S for single cannon
-//        if (component instanceof DoubleCannon) return "D"; // D for double cannon
-//        if (component instanceof CargoHolds) return "H"; // H for holds
-//        if (component instanceof BatteryCompartment) return "B";
-//        if (component instanceof ShieldGenerator) return "G";
-//        if (component instanceof LifeSupportSystem) return "L";
-//        if (component instanceof StructuralModule) return "X"; // For structural
-//        return "?"; // Unknown
     }
 
 

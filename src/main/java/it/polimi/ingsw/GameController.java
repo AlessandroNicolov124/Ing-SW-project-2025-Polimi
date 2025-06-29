@@ -6,14 +6,18 @@ import it.polimi.ingsw.Components.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * GameController class that manages the game logic and interactions between the model and view.
+ * It handles player management, game state transitions, and component placements.
+ */
 public class  GameController {
     private GameModel gameModel;
-    private GameView gameView;
 
     public GameController() {
         gameModel = new GameModel();
     }
 
+    /** checks if a player is already in the game */
     private boolean isPlayerThere(Player player) {
         return gameModel.getPlayers().contains(player);
     }
@@ -35,11 +39,17 @@ public class  GameController {
     }
 
     //TODO Consider instatiating a new player and returning it..
+    /**
+     * Adds a player to the game model and logs the action.
+     *
+     * @param player The player to be added.
+     */
     public void addPlayer(Player player){
         gameModel.addPlayer(player);
         System.out.println("[GameController] Player " + player.getNickName() + " (ID: " + player.getId() + ") added to game");
     }
 
+    /** set the player credits */
     public void setCredits(Player player, int credits){
         gameModel.setCredits(player, credits);
     }
@@ -69,31 +79,51 @@ public class  GameController {
         return null;
     }
 
+    /**
+     * Picks a component card from the deck for the specified player.
+     *
+     * @param p The player who will receive the component card.
+     * @return The picked component card.
+     */
     public Component getCompFromDeck(Player p){
         return gameModel.pickOneComponentCardFromDeck(p);
     }
 
+    /**
+     * Adds a component to the player's ship at the specified position.
+     *
+     * @param player The player placing the component.
+     * @param component The component to be placed.
+     * @param pos The position where the component will be placed.
+     * @return true if the component was successfully added, false otherwise.
+     */
     public boolean addComponentForPlayer(Player player, Component component, Position pos) {
         if (isPlayerThere(player)) {
-            return player.placeComponent(component, pos);
-        }
-        return false; // Player not found or other issue
-    }
-
-    public boolean removeComponentAt(Player player, Position position) {
-        if (isPlayerThere(player)) {
-            return player.removeComponentAt(position);
+            boolean result = player.placeComponent(component, pos);
+            
+            if (result) {
+                player.getShip().updateAllLifeSupportConnections();
+                System.out.println("[GameController] Updated life support connections after placing " + component.getClass().getSimpleName());
+            }
+            
+            return result;
         }
         return false;
     }
 
-    // public boolean removeComponentForPlayer(Player player, Component component) {
-
-    //     if (isPlayerThere(player)) {
-    //         return player.removeComponent(component);
-    //     }
-    //     return false;
-    // }
+    public boolean removeComponentAt(Player player, Position position) {
+        if (isPlayerThere(player)) {
+            boolean result = player.getShip().removeComponentAt(position);
+            
+            if (result) {
+                player.getShip().updateAllLifeSupportConnections();
+                System.out.println("[GameController] Updated life support connections after removing component at " + position);
+            }
+            
+            return result;
+        }
+        return false;
+    }
 
     public void pickCardForPlayer(Player player) {
         if (isPlayerThere(player)) {
@@ -401,6 +431,7 @@ public class  GameController {
         return componentToRotate;
     }
 
+
     public void rotateComponentOppositeForPlayer(Player player, Component componentToRotate) {
         if (isPlayerThere(player)) {
             ShipBuilder ship = player.getShip();
@@ -413,11 +444,9 @@ public class  GameController {
 
     public void updateView(){}
 
-
-    // Metodi di supporto
-
-
-
+    /**
+     * Prints the current status of the flight board, showing each player's position.
+     */
     void printBoardStatus() {
         List<Player> players = gameModel.getFlightBoard().getPlayersInFlightOrder();
         for (Player player : players) {
@@ -427,7 +456,8 @@ public class  GameController {
     }
 
     /**
-     * Stampa lo stato delle navicelle
+     * Prints the current status of each player's ship, showing components and their positions.
+     * This method iterates through all players and their ship components.
      */
     void printShipStatus() {
         List<Player> players = gameModel.getFlightBoard().getPlayersInFlightOrder();
@@ -441,5 +471,139 @@ public class  GameController {
 
     }
 
+    public void addTokenToComponent(Player player, Position position, TokenType tokenType) {
+
+        if (!isPlayerThere(player)) {
+            return;
+        }
+
+        ShipBuilder ship = player.getShip();
+        if (ship == null) {
+            System.out.println("[GameController] Ship not found for player " + player.getNickName());
+            return;
+        }
+
+        Component comp = ship.getComponentAt(position);
+        if (comp == null) {
+            System.out.println("[GameController] No component at " + position);
+            return;
+        }
+
+        switch (tokenType) {
+            case HUMAN -> {
+                switch (comp) {
+                    case Cabin cabin -> {
+                        boolean ok = ship.addCrewToCabin(new HumanCrew(), cabin);
+                        if (!ok) {
+                            throw new IllegalStateException("Cannot add another human to cabin " + position);
+                        }
+                    }
+                    default -> throw new IllegalStateException("Humans can be placed only on a cabin");
+                }
+            }
+
+            /* ---------- BATTERIE ---------- */
+            case BATTERY -> {
+                switch (comp) {
+                    case BatteryCompartment batteryCompartment -> {
+                        if (batteryCompartment.getChargeLevel() >= batteryCompartment.getMaxCapacity()){
+                            throw new IllegalStateException("Battery compartment at " + position + " is already full");
+                        }
+                        batteryCompartment.recharge(1);
+                    }
+                    default -> throw new IllegalStateException("Battery tokens can be placed only on a BatteryCompartment");
+                }
+            }
+
+            /* ---------- ALIENI ---------- */
+            case PURPLE_ALIEN, BROWN_ALIEN -> {
+                switch (comp) {
+                    case Cabin cabin -> {
+                        Crew alien = (tokenType == TokenType.PURPLE_ALIEN)
+                                    ? new PurpleAlienCrew()
+                                    : new BrownAlienCrew();
+
+                        boolean ok = ship.addCrewToCabin(alien, cabin);
+                        if (!ok){
+                            throw new IllegalStateException("Rules forbid alien here");
+                        }
+                    }
+                    default -> throw new IllegalStateException("Aliens can be placed only on a cabin");
+                }
+            }
+
+            /* ---------- GOOD BLOCKS (cargo) ---------- */
+            case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK,  YELLOW_GOOD_BLOCK -> {
+
+                switch (comp) {
+                    case CargoHolds cargoHold -> {
+                        Cargo cargo = switch (tokenType) {
+                            case BLUE_GOOD_BLOCK   -> new BlueCargo();
+                            case RED_GOOD_BLOCK    -> new RedCargo();
+                            case GREEN_GOOD_BLOCK  -> new GreenCargo();
+                            case YELLOW_GOOD_BLOCK -> new YellowCargo();
+                            default -> throw new IllegalStateException("Unexpected cargo token " + tokenType);
+                        };
+
+                        cargoHold.loadCargo(cargo);
+                    }
+
+                    default -> throw new IllegalStateException("Cargo tokens can be placed only on CargoHolds");
+                }
+            }
+ 
+
+            default -> throw new IllegalArgumentException("Unsupported token: " + tokenType);
+        }
+
+        ship.addToken(position, tokenType);
+    }
+    
+
+    public void removeTokenFromComponent(int playerId, Position position) {
+        
+        Player player = getPlayerById(playerId);
+
+        if (!isPlayerThere(player)) {   
+            return;
+        }
+
+        ShipBuilder ship = player.getShip();
+
+        if (ship == null) {
+            System.out.println("[GameController] Ship not found for player " + player.getNickName());
+            return;
+        }
+
+        Component comp = ship.getComponentAt(position);
+        if (comp == null) {
+            System.out.println("[GameController] No component at " + position);
+            return;
+        }
+
+        ship.removeToken(position);
+
+        switch (comp) {
+            case Cabin cabin -> {
+                if (cabin.getCrew() instanceof HumanCrew) {
+                    ship.removeHumans(1);
+                } else if (cabin.getCrew() instanceof PurpleAlienCrew || cabin.getCrew() instanceof BrownAlienCrew) {
+                    ship.removeAliens(1);
+                } else {
+                    System.out.println("[GameController] No crew to remove from cabin at " + position);
+                }
+            }
+            case BatteryCompartment batteryCompartment -> {
+                batteryCompartment.discharge(1);
+            }
+            // case CargoHolds cargoHold -> {
+            //     cargoHold.unloadCargo(cargo);
+            // }
+            default -> throw new IllegalStateException("Tokens can be removed only from a Cabin, BatteryCompartment or CargoHolds");
+        }
+
+    }
+
+    
 
 }

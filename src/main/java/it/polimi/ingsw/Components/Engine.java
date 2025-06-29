@@ -2,7 +2,6 @@ package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
 
-import java.util.stream.Collectors;
 
 public abstract sealed class Engine extends Component permits SingleEngine, DoubleEngine {
     protected int power;
@@ -45,6 +44,13 @@ public abstract sealed class Engine extends Component permits SingleEngine, Doub
     }
 
     public abstract int getEffectivePower();
+
+    @Override
+    protected String calculateComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString();
+        return s;
+    }
 
 
 }

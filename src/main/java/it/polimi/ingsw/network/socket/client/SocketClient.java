@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.UUID;
 
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
@@ -226,6 +227,26 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception{
+
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName) throws Exception {
+
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+
+    }
+
+    @Override
+    public void getPlayerShip(String playerName) throws Exception {
 
     }
 

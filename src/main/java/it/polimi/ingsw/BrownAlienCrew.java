@@ -3,6 +3,10 @@ package it.polimi.ingsw;
 import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.LifeSupportSystemType;
 
+/**
+ * Represents a Brown Alien Crew in the game.
+ * This crew can only live in cabins with a brown life support system connected.
+ */
 public class BrownAlienCrew extends Crew {
 
     public BrownAlienCrew() {
@@ -15,16 +19,4 @@ public class BrownAlienCrew extends Crew {
         return cabin.hasConnectedLifeSupport(LifeSupportSystemType.BROWN);
     }
 
-//    @Override
-//    public void applyAbility(ShipBuilder ship) {
-//    // Adds +2 to engine power if ship already has engine power
-////        if (ship.getEnginePower() > 0) {
-////            ship.modifyEnginePower(getEngineBonus());
-////        }
-//    }
-
-
-//    public int getEngineBonus(){
-//        return 2;
-//    }
 }

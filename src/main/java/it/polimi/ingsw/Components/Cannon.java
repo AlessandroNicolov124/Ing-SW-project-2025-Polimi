@@ -4,7 +4,7 @@ import it.polimi.ingsw.*;
 
 public sealed abstract class Cannon extends Component permits SingleCannon, DoubleCannon {
 
-    //la direzione di fuoco del cannone corrisponde alla direzione del componente
+    //Fire direction Matches component direction
     protected int firePower;
     protected int energyConsumption;
 
@@ -15,15 +15,15 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
     }
 
     /**
-     * Verifica se un cannone può sparare nella direzione specificata.
-     * Un cannone può sparare solo in una direzione dove non ha connettori
-     * o dove ha un connettore di tipo nullo (NullConnectorType).
+     * Tests whether a cannon can fire in the specified direction.
+     * A cannon can only fire in a direction where it has no connector
+     * or where it has a NullConnectorType connector.
      *
      * @param firingDirection La direzione in cui si vuole sparare
      * @return true se il cannone può sparare nella direzione specificata, false altrimenti
      */
     public boolean validateFiringDirection(Direction firingDirection) {
-        // Ottieni il connettore nella direzione specificata
+        // Obtaining connector in a give direction
         Connector connector = getConnectorByDirection(firingDirection);
 
         // Se non esiste un connettore in quella direzione, è possibile sparare
@@ -51,6 +51,13 @@ public sealed abstract class Cannon extends Component permits SingleCannon, Doub
     public abstract boolean fire();
 
     public abstract double getEffectivePower();
+
+    @Override
+    protected String calculateComponentString() {
+        String s = this.getClass().getSimpleName().toLowerCase() + "_";
+        s += getConnectionsString();
+        return s;
+    }
 
 }
 

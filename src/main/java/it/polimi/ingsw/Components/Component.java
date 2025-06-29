@@ -9,11 +9,16 @@ public sealed abstract class Component implements Serializable permits BatteryCo
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
     protected boolean damaged; // Stato del componente (danneggiato o no)
+    protected String originalComponentString;
 
     public Component() {
         this.connections = new ArrayList<>();
         damaged = false;
         componentDirection = Direction.NORTH;
+    }
+
+    public void saveOriginalState() {
+        this.originalComponentString = getComponentString();
     }
 
     public void deleteConnection(){
@@ -210,7 +215,16 @@ public sealed abstract class Component implements Serializable permits BatteryCo
         connections.add(new Connector(Direction.WEST, w));
     }
 
-    public abstract String getComponentString();
+    // Metodo pubblico che usa l'originale se disponibile
+    public String getComponentString() {
+        if (originalComponentString != null) {
+            return originalComponentString;
+        }
+        return calculateComponentString();
+    }
+    
+    // Metodo astratto che le sottoclassi devono implementare
+    protected abstract String calculateComponentString();
 
     public String getConnectionsString(){
         StringBuilder sb = new StringBuilder();

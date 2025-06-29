@@ -14,6 +14,7 @@ import java.util.Collections;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.network.client.listeners.GameListener;
@@ -951,11 +952,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
-        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn, null);
-    }
-
-    @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
             if (success && adventureCard != null) {
@@ -1076,6 +1072,26 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             case 4: return "(4th place)";
             default: return "(" + rank + "th place)";
         }
+    }
+
+    @Override
+    public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
+        
+    }
+
+    @Override
+    public void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage) {
+
+    }
+
+    @Override
+    public void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens) {
+
+    }
+
+    @Override
+    public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage) {
+
     }
 
     @Override

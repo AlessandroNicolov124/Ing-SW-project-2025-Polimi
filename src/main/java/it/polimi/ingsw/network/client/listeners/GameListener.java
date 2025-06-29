@@ -1,12 +1,16 @@
 package it.polimi.ingsw.network.client.listeners;
 
 
+import it.polimi.ingsw.Components.Cargo;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.TokenType;
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface GameListener {
@@ -79,21 +83,16 @@ public interface GameListener {
     void playerReadyForFlight(UUID matchId, int playerId, String playerName, boolean shipValid);
     void playerReadyForFlightFailed(String errorMessage);
 
-    void adventurePhaseStarted(java.util.UUID matchId, java.util.Map<Integer, Integer> playerPositions, int firstPlayerToAct);
-    void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
-    void adventurePhaseComplete(java.util.UUID matchId, boolean gameComplete, String completionReason);
+    void adventurePhaseStarted(java.util.UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct);
+    void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions );
 
-    /**
-     * Called when an adventure card is picked and positions may have changed
-     * @param playerId The player who picked the card
-     * @param adventureCard The adventure card that was picked
-     * @param success Whether the card pick was successful
-     * @param message Any message associated with the pick
-     * @param nextPlayerTurn Which player should pick next
-     * @param updatedPositions Current positions after card effects (may be null)
-     */
-    default void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, java.util.Map<Integer, Integer> updatedPositions) {
-        // Default implementation calls the old method for backward compatibility
-        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn);
-    }
+    void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents);
+
+    void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage);
+    
+    void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens);
+
+    void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage);
+
+    void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason);
 }

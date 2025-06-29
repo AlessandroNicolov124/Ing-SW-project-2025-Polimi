@@ -7,6 +7,10 @@ import java.util.*;
 import java.io.*;
 import java.nio.file.*;
 
+/**
+ * Represents the game model containing the flight board, players, adventure cards, and game state.
+ * This class manages the game logic, player turns, and interactions with the flight board.
+ */
 public class GameModel {
     private FlightBoard flightBoard;
     private int turnNumber;
@@ -18,6 +22,11 @@ public class GameModel {
     private Queue<Component> startingCabinDeck;
     private final Random random;
 
+    /**
+     * Adds a player to the game model and updates the flight board.
+     *
+     * @param player The player to be added.
+     */
     public void addPlayer(Player player) {
         players.add(player);
         flightBoard.addPlayer(player);
@@ -38,7 +47,12 @@ public class GameModel {
         loadAdventureCardTurn1();
     }
 
-    // Metodo per pescare una carta dall'avventura
+    /**
+     * Picks an adventure card for the specified player from the deck.
+     * If the deck is empty, the player receives null.
+     *
+     * @param player The player who will pick a card.
+     */
     public void pickAdventureCardForPlayer(Player player) {
         System.out.println("[GameModel] Adventure deck size before pick: " + deck.size());
         if (!deck.isEmpty()) {
@@ -55,6 +69,11 @@ public class GameModel {
         //return null; // Nessuna carta disponibile
     }
 
+
+    /**
+     * Loads the adventure cards for the first turn.
+     * This method initializes the adventure deck with specific cards for the first turn.
+     */
     private void loadAdventureCardTurn1(){
         System.out.println("[GameModel] Loading adventure cards for turn 1...");
         deck.add(new Planets());
@@ -75,6 +94,12 @@ public class GameModel {
         System.out.println("Tutte le carte avventura sono state caricate.");
     }
 
+    /**
+     * Picks a random adventure card from the deck.
+     * If the deck is empty, returns null.
+     *
+     * @return A random adventure card or null if the deck is empty.
+     */
     public Component pickOneComponentCardFromDeck(Player p)
     {
         Component c = null;
@@ -212,6 +237,10 @@ public class GameModel {
         return true;
     }
 
+    /**
+     * Starts the game by adding all players to the flight board and initializing adventure cards.
+     * This method is called when the game is ready to begin.
+     */
     public void startGame() {
         System.out.println("[GameModel] Starting game with turn number: " + turnNumber);
         // Aggiungi tutti i giocatori al FlightBoard
@@ -269,7 +298,11 @@ public class GameModel {
         System.out.println("Nuova posizine " + currentPlayer.getNickName() + ": " + position);
     }
 
-    //il gioco è completato quando o è rimasto un solo giocatore oppure tutte le carte avventura sono state risolte
+    /** Checks if the flight is complete.
+     * The flight is considered complete if there is only one active player left or if the adventure deck is empty.
+     *
+     * @return true if the flight is complete, false otherwise.
+     */
     public boolean isFlightComplete() {
         if(players.stream().filter(p -> p.isActive()).count()==1 || getAdventureDeck().isEmpty()){
             return true;
@@ -282,6 +315,12 @@ public class GameModel {
         return turnNumber;
     }
 
+
+    /**
+     * Initializes the component deck with default components.
+     * This method creates a set of components that will be used in the game.
+     * It can be modified to load from a file or use a different configuration.
+     */
     private void initializeComponentDeckDefault() {
         // Questa è una semplice implementazione. Potrebbe essere necessario bilanciarla
         // in base alle regole del gioco e alla rarità dei componenti.
@@ -314,9 +353,21 @@ public class GameModel {
         componentDeck = new LinkedList<>(allComponents);
     }
 
+    /**
+     * Initializes the component deck from a file.
+     * This method reads components from a specified file and populates the component deck.
+     * If the file is not found or an error occurs, it falls back to default initialization.
+     */
     private void initializeComponentDeck() {
         initializeComponentDeckFromFile("component_deck.txt");
     }
+    /**
+     * Initializes the component deck from a specified file.
+     * This method reads components from the file and populates the component deck.
+     * If the file is not found or an error occurs, it falls back to default initialization.
+     *
+     * @param filename The name of the file containing component definitions.
+     */
     private void initializeComponentDeckFromFile(String filename) {
         List<Component> allComponents = new ArrayList<>();
         List<Component> startingCabins = new ArrayList<>();
@@ -405,7 +456,15 @@ public class GameModel {
         }
     }
 
-    // Factory method per creare componenti con caratteristiche e connettori specifici
+    /**
+     * Creates a component based on the specified type and characteristics.
+     * This method handles the creation of various components with their specific characteristics and connectors.
+     *
+     * @param componentType The type of component to create (e.g., "cabin", "singleengine", etc.).
+     * @param characteristics An array of characteristics for the component.
+     * @param connectors A string representing the connectors (e.g., "NESO").
+     * @return The created Component or null if the type is unknown or invalid.
+     */
     private Component createComponentWithCharacteristics(String componentType, String[] characteristics, String connectors) {
         Component component = null;
 
@@ -496,12 +555,21 @@ public class GameModel {
                 System.err.println("Connettori non validi per " + componentType + ": " + connectors);
                 return null;
             }
+
+            component.saveOriginalState();
         }
 
         return component;
     }
 
-    // Valida i connettori per componenti con regole speciali
+    /**
+     * Validates the connectors of a component based on its type.
+     * This method checks if the connectors are valid according to the component's specific rules.
+     *
+     * @param component The component to validate.
+     * @param componentType The type of the component (e.g., "singleengine", "doublecannon", etc.).
+     * @return true if the connectors are valid, false otherwise.
+     */
     private boolean validateComponentConnectors(Component component, String componentType) {
         return switch (componentType) {
             case "singleengine", "doubleengine" -> switch (component) {
@@ -518,6 +586,13 @@ public class GameModel {
         };
     }
 
+    /**
+     * Parses the cargo size from a string
+     * This method converts a string representation of cargo size into the corresponding CargoHoldsSize enum.
+     * If the size is unknown, it defaults to DOUBLE.
+     * @param sizeStr The string representation of the cargo size (e.g., "single", "double", "triple").
+     * @return The corresponding CargoHoldsSize enum value.
+     */
     private CargoHoldsSize parseCargoSize(String sizeStr) {
         switch (sizeStr.toLowerCase()) {
             case "single":
@@ -532,7 +607,14 @@ public class GameModel {
         }
     }
 
-    // Parser per il tipo di batteria
+    /**
+     * Parses the battery type from a string.
+     * This method converts a string representation of battery type into the corresponding BatteryType enum.
+     * If the type is unknown, it defaults to DOUBLE.
+     *
+     * @param typeStr The string representation of the battery type (e.g., "double", "triple").
+     * @return The corresponding BatteryType enum value.
+     */
     private BatteryType parseBatteryType(String typeStr) {
         switch (typeStr.toLowerCase()) {
             case "double":
@@ -545,7 +627,14 @@ public class GameModel {
         }
     }
 
-    // Parser per il tipo di life support system
+    /**
+     * Parses the life support system type from a string.
+     * This method converts a string representation of life support type into the corresponding LifeSupportSystemType enum.
+     * If the type is unknown, it defaults to BROWN.
+     *
+     * @param typeStr The string representation of the life support type (e.g., "brown", "purple").
+     * @return The corresponding LifeSupportSystemType enum value.
+     */
     private LifeSupportSystemType parseLifeSupportType(String typeStr) {
         switch (typeStr.toLowerCase()) {
             case "brown":
@@ -558,7 +647,14 @@ public class GameModel {
         }
     }
 
-    // Converte il carattere in ConnectorType
+    /**
+     * Parses the connector type from a character.
+     * This method converts a character representation of a connector type into the corresponding ConnectorType.
+     * If the type is unknown, it defaults to NullConnectorType.
+     *
+     * @param connectorChar The character representing the connector type (e.g., 'S', 'D', 'U', 'N').
+     * @return The corresponding ConnectorType.
+     */
     private ConnectorType parseConnectorType(char connectorChar) {
         switch (connectorChar) {
             case 'S':
@@ -581,7 +677,16 @@ public class GameModel {
         if(!isStarting){
             // Inizializza i connettori in modo casuale o predefinito
             initializeRandomConnectors(cabin);
+        } else {
+            cabin.initializeConnectors(
+                new UniversalConnectorType(),
+                new UniversalConnectorType(),
+                new UniversalConnectorType(),
+                new UniversalConnectorType()
+            );
         }
+
+        cabin.saveOriginalState();
         return cabin;
     }
 
@@ -592,6 +697,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
+
+        engine.saveOriginalState();
         return engine;
     }
 
@@ -602,6 +709,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             engine.ensureConnector(Direction.SOUTH, new NullConnectorType());
         }
+
+        engine.saveOriginalState();
         return engine;
     }
 
@@ -613,6 +722,8 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
+
+        cannon.saveOriginalState();
         return cannon;
     }
 
@@ -624,28 +735,38 @@ public class GameModel {
             //System.out.println("   CONNETTORI NON VALIDI!");
             cannon.ensureConnector(Direction.NORTH, new NullConnectorType());
         }
+
+        cannon.saveOriginalState();
         return cannon;
     }
 
     private CargoHolds createNormalDoubleCargoHolds() {
         CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.DOUBLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
     private CargoHolds createNormalTripleCargoHolds() {
         CargoHolds cargoHold = new NormalCargoHolds(CargoHoldsSize.TRIPLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
 
     private CargoHolds createSpecialDoubleCargoHolds() {
         CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
     private CargoHolds createSpecialSingleCargoHolds() {
         CargoHolds cargoHold = new SpecialCargoHolds(CargoHoldsSize.SINGLE);
         initializeRandomConnectors(cargoHold);
+
+        cargoHold.saveOriginalState();
         return cargoHold;
     }
 
@@ -662,29 +783,39 @@ public class GameModel {
         BatteryCompartment battery = new BatteryCompartment(maxC, randomType,0);
 
         initializeRandomConnectors(battery);
+
+        battery.saveOriginalState();
         return battery;
     }
 
     private ShieldGenerator createShieldGenerator() {
         ShieldGenerator shield = new ShieldGenerator();
         initializeRandomConnectors(shield);
+
+        shield.saveOriginalState();
         return shield;
     }
 
     private LifeSupportSystem createPurpleLifeSupportSystem() {
         LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.PURPLE);
         initializeRandomConnectors(lifeSupportSystem);
+
+        lifeSupportSystem.saveOriginalState();
         return lifeSupportSystem;
     }
     private LifeSupportSystem createBrownLifeSupportSystem() {
         LifeSupportSystem lifeSupportSystem = new LifeSupportSystem(LifeSupportSystemType.BROWN);
         initializeRandomConnectors(lifeSupportSystem);
+
+        lifeSupportSystem.saveOriginalState();
         return lifeSupportSystem;
     }
 
     private StructuralModule createStructuralModule() {
         StructuralModule structuralModule = new StructuralModule();
         initializeRandomConnectors(structuralModule);
+
+        structuralModule.saveOriginalState();
         return structuralModule;
     }
 

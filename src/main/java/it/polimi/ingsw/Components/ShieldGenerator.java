@@ -19,7 +19,7 @@ public final class ShieldGenerator extends Component {
     }
 
     @Override
-    public String getComponentString() {
+    protected String calculateComponentString() {
         String s = this.getClass().getSimpleName().toLowerCase() + "_";
         s += getConnectionsString();
         return s;
