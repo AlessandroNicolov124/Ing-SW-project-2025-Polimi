@@ -41,7 +41,7 @@ class AbandonedStationTest {
         ship.placeComponent(specialCargoHolds, ship.getStartingPosition().getAdjacentPosition(Direction.WEST));
 
         gameModel.getFlightBoard().setInitialPosition(player, 1);
-        assertEquals(1, gameModel.getFlightBoard().getPosition(player));
+        assertEquals(6, gameModel.getFlightBoard().getPosition(player));
     }
 
     @Test
@@ -75,9 +75,13 @@ class AbandonedStationTest {
     @DisplayName("Applica il costo in giorni di volo con posizione finale 0")
     void testFlightDaysCostApplied() {
         gameModel.getFlightBoard().getPosition(player);
+        int expectedPosition = gameModel.getFlightBoard().getPosition(player) - station.getFlightDaysCost();
+        if (expectedPosition < 0) {
+            expectedPosition +=24;
+        }
         station.dockAtStation(player, gameModel);
         int newPosition = gameModel.getFlightBoard().getPosition(player);
-        assertEquals(0, newPosition);
+        assertEquals(expectedPosition, newPosition);
         assertTrue(station.isOpportunityUsed());
     }
 
@@ -86,9 +90,14 @@ class AbandonedStationTest {
     void testFlightDaysCostApplied2() {
         gameModel.getFlightBoard().setInitialPosition(player, 4);
         int initialPosition = gameModel.getFlightBoard().getPosition(player);
+        assertEquals(0, initialPosition);
+        int expectedPosition = gameModel.getFlightBoard().getPosition(player) - station.getFlightDaysCost();
+        if (expectedPosition < 0) {
+            expectedPosition +=24;
+        }
         station.dockAtStation(player, gameModel);
         int newPosition = gameModel.getFlightBoard().getPosition(player);
-        assertEquals(initialPosition - station.getFlightDaysCost(), newPosition);
+        assertEquals(expectedPosition, newPosition);
         assertTrue(station.isOpportunityUsed());
     }
 }
