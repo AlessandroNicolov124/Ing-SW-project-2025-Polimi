@@ -327,7 +327,11 @@ public class FlightPreparationController extends GuiContoller implements Prepara
     }
 
     @FXML private void startGamePhase() {
-        // TODO: implement
+        try {
+            context.getClient().readyForAdventurePhase(context.getCurrentMatchId(), context.getPlayerId());
+        } catch (Exception e) {
+            showErrorDialog("Error", "Failed to load player ship: " + e.getMessage());
+        }
     }
 
     @Override

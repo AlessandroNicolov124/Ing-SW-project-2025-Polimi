@@ -419,9 +419,7 @@ public class RmiServer extends UnicastRemoteObject
                             isValidRotation = true;
                             break;
                     }
-                    
-                    Component rotatedComponent = player.getShip().getComponentAt(position);
-                    
+
                     System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
                     
                     client.showUpdate(new RotateComponentResponse(
@@ -433,9 +431,6 @@ public class RmiServer extends UnicastRemoteObject
                         "Component rotated successfully"
                     ));
                 }
-                
-                System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
-                client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, isValidRotation, true, "Component rotated successfully"));
             }
         } else {
             System.out.println("[ServerRMI] Match not found or not in progress for player " + playerId);

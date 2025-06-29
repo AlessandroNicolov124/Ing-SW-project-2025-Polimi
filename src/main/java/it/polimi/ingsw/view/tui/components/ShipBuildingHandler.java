@@ -61,7 +61,7 @@ public class ShipBuildingHandler {
 
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
-        
+
         // Display the initial ship
         displayShip();
 
@@ -71,14 +71,13 @@ public class ShipBuildingHandler {
         currentComponent = createCabin(true);
         console.printMessage("Placing starting cabin...");
         handlePlaceComponent(currentComponent);
-        
+
         // After placing the starting cabin, automatically pick the first component
         console.printMessage("Picking first component...");
         handlePickComponent();
-        
-        boolean buildingDone = false;
+
         while (!buildingDone && shouldContinueBuilding()) {
-            
+
             // Only show menu if not waiting for server response
             if (!waitingForServerResponse) {
                 if (currentComponent != null) {
@@ -99,6 +98,8 @@ public class ShipBuildingHandler {
                 }
             }
         }
+    }
+
           
     
 

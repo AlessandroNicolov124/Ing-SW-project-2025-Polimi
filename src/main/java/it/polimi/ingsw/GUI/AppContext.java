@@ -813,6 +813,25 @@ public class AppContext implements GameListener {
     }
 
     @Override
+    public void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message) {
+        Platform.runLater(() -> {
+            System.out.println("Ready for adventure phase");
+            showInfoMessage("Notification","Ready for adventure! Waiting for other players");
+        });
+    }
+
+    @Override
+    public void adventurePhaseReady(UUID matchId, String message) {
+        Platform.runLater(() -> {
+            try {
+                GUIApp.showFlightBoard();
+            } catch (Exception e) {
+                showErrorDialog("Error Adding Token", e.getMessage());
+            }
+        });
+    }
+
+    @Override
     public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
         Platform.runLater(() -> {
             for (PreparationFlightListener listener : preparationFlightListeners) {

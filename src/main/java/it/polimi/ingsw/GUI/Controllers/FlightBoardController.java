@@ -86,8 +86,6 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         double x,y;
         double angleOffset = -Math.toRadians(STARTING_ANGLE);
         double angle = angleOffset;
-//        double x = ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(angle);
-//        double y = ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(angle);
 
         for (int i = 0; i < numCircles; i++) {
             // Calculate the angle for each circle. We subtract to go counter-clockwise.
