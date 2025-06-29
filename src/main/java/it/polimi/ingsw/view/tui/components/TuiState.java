@@ -9,6 +9,8 @@ public enum TuiState {
     CONNECTING,           // create client
     WAIT_PLAYER_READY,    // Wait for player to be ready
     SHIP_BUILDING,        // Added for ship building phase
+    PREPARATION_FLIGHT,     // Preparation flight phase
+    WAIT_ALL_SHIPS_READY, // Wait for all players to finish preparation flight
     CHOOSE_START_POSITION, // New state for choosing starting position
     WAIT_FOR_ALL_PLAYERS_POSITIONED, // New state for waiting after this player chose position
     ADVENTURE_PHASE,      // Pick adventure cards in position order

@@ -8,6 +8,7 @@ import java.util.concurrent.TimeoutException;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.ShipBuilder;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
@@ -41,6 +42,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private CompletableFuture<Player> playerCreationFuture;
     private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
     private final int PENALTY_TIMEOUT = 10000;
+
+    private PreparationFlightHandler preparationFlightHandler;
+    private UUID currentMatchId;
 
 
     public GalaxyTruckerTUI()
@@ -78,6 +82,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 case LOADING              -> handleLoadingMatchState();
 /*                 case WAIT_PLAYER_READY    -> handlePlayerReady(); */
                 case SHIP_BUILDING        -> handleShipBuildingState();
+                case PREPARATION_FLIGHT -> handlePreparationFlightState();
                 case WAIT_FOR_ALL_PLAYERS_POSITIONED -> handleWaitForAllPlayersPositionedState();
                 case ADVENTURE_PHASE      -> handleAdventurePhaseState();
                 case RUNNING              -> handleRunningState();
@@ -256,23 +261,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             state = TuiState.ASK_USERNAME;
             return;
         }
-        // Create a new ship building handler (either first time or after validation failure)
-        activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer, this);
-        activeShipBuildingHandler.manageShipBuilding();
-        activeShipBuildingHandler = null;
-
-        console.printMessage("Ship building phase completed.");
         
-        // If we're still in SHIP_BUILDING state after handler completes (e.g., due to DEBUGSKIP),
-        // provide a fallback transition to waiting state for debugging
-        if (state == TuiState.SHIP_BUILDING) {
-            console.printMessage("[DEBUG] Ship building ended without validation. Transitioning to waiting state...");
-            console.printMessage("[DEBUG] Note: Position assignment may happen when validation response arrives.");
-            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        // Create handler only once
+        if (activeShipBuildingHandler == null) {
+            activeShipBuildingHandler = new ShipBuildingHandler(console, client, this.currentPlayer, this);
         }
         
-        // Normal state transitions are handled by the server's position assignment system
-        // via shipValidated() and positionAssigned() callbacks
+        // Run ship building synchronously - it will handle user input and server callbacks
+        activeShipBuildingHandler.manageShipBuilding();
+        
+        // Clean up when done
+        activeShipBuildingHandler = null;
+        console.printMessage("Ship building phase completed.");
     }
 
     private void handleWaitForAllPlayersPositionedState() {
@@ -395,6 +395,22 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
         }
     }
+
+    private void handlePreparationFlightState() {
+        if (this.currentPlayer == null) {
+            console.printError("Cannot start preparation phase: current player not set.");
+            state = TuiState.ASK_USERNAME;
+            return;
+        }
+        
+        preparationFlightHandler = new PreparationFlightHandler(client, console, currentPlayer);
+        
+        preparationFlightHandler.managePreparationFlight();
+        
+        console.printMessage("Preparation phase completed!");
+        state = TuiState.ADVENTURE_PHASE;
+    }
+
 
     private void handleRunningState() {
         while (true) {
@@ -586,19 +602,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (currentPlayer != null && currentPlayer.getShip() != null) {
                 boolean placed = currentPlayer.getShip().placeComponent(component, position);
-                // Note: Success message is handled by PlaceComponentResponse
-                // Only update the ship model here, display refresh will be called separately
-                if (!placed) {
-                    console.printError("✗ Failed to place component " + component.getClass().getSimpleName() + 
-                                     " at (" + position.getX() + "," + position.getY() + ") locally");
+                if (placed) {
+                    console.printMessage("✓ Component " + component.getClass().getSimpleName() + 
+                                    " placed at (" + position.getX() + "," + position.getY() + ")");
+                } else {
+                    console.printError("✗ Failed to place component locally");
                 }
-            } else {
-                console.printError("✗ Cannot place component: player or ship not available");
             }
             
-            // Show menu again after component placement if we're in ship building mode
+            // Refresh display and clear current component
             if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
-                activeShipBuildingHandler.refreshMenuDisplay();
+                activeShipBuildingHandler.componentPlacedSuccessfully();
+                activeShipBuildingHandler.refreshDisplay();
             }
         }
     }
@@ -615,13 +630,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 Component removed = currentPlayer.getShip().getComponentAt(position);
                 if (removed != null) {
                     currentPlayer.getShip().removeComponent(removed);
-                    console.printMessage("Component removed from (" + position.getX() + "," + position.getY() + ")");
+                    console.printMessage("✓ Component removed from (" + position.getX() + "," + position.getY() + ")");
                 }
             }
             
-            // Show menu again after component removal if we're in ship building mode
             if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
-                activeShipBuildingHandler.refreshMenuDisplay();
+                activeShipBuildingHandler.refreshDisplay();
             }
         }
     }
@@ -633,8 +647,25 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void componentRotated(int playerId, Position position, RotationType rotationType, boolean isValid) {
+        if (!isValid || currentPlayer == null || currentPlayer.getId() != playerId) 
+            return;
 
+        ShipBuilder ship = currentPlayer.getShip();
+        Component c = ship.getComponentAt(position);
+        if (c != null) {
+            switch (rotationType) {
+                case CLOCKWISE -> ship.rotateComponentOfShipClockwise(c);
+                case ANTI_CLOCKWISE -> ship.rotateComponentOfShipCounterClockwise(c);
+                case OPPOSITE -> ship.rotateComponentOpposite(c);
+            }
+            console.printMessage("✓ Component at (" + position.getX() + "," + position.getY() + ") rotated " + rotationType);
+            
+            if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
+                activeShipBuildingHandler.refreshDisplay();
+            }
+        }
     }
+
 
     @Override
     public void componentRotatedFailed(String errorMessage) {
@@ -653,22 +684,46 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         synchronized (displayMutex) {
             if (isValid) {
                 console.printMessage("✓ " + message);
-                console.printMessage("✓ Ship building complete! Requesting position assignment...");
-                // Immediately transition away from ship building to stop the ship building handler
+                console.printMessage("✓ Ship validation successful! Moving to flight preparation...");
+                // Transition to flight preparation instead of waiting for positions
                 if (state == TuiState.SHIP_BUILDING) {
-                    state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-                    console.printMessage("Once all players complete validation, the adventure phase will begin.");
+                    state = TuiState.PREPARATION_FLIGHT;
                 }
-                // Position assignment will be handled by positionAssigned() callback
             } else {
-                console.printError("✗ " + message);
-                console.printMessage("Returning to ship building - please fix the issues and try again...");
-                // Always return to ship building state on validation failure
-                state = TuiState.SHIP_BUILDING;
-                // Clear the active handler so it gets recreated in the main loop
-                activeShipBuildingHandler = null;
+                console.printError("✗ Ship validation failed: " + message);
+                console.printMessage("Please fix the issues and try validating again...");
+                // Stay in ship building state and refresh the handler
+                if (activeShipBuildingHandler != null) {
+                    activeShipBuildingHandler.refreshMenuDisplay();
+                }
             }
         }
+    }
+
+    @Override
+    public void componentPicked(int playerId, Component component, boolean success, String message) {
+        synchronized (displayMutex) {
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                if (success && component != null) {
+                    console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
+                    if (activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.setCurrentComponent(component);
+                        activeShipBuildingHandler.displayCurrentComponent();
+                        activeShipBuildingHandler.refreshMenuDisplay();
+                    }
+                } else {
+                    console.printError("✗ " + message);
+                    if (activeShipBuildingHandler != null) {
+                        activeShipBuildingHandler.refreshMenuDisplay();
+                    }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void componentPickFailed(String errorMessage) {
+
     }
 
     @Override
@@ -843,36 +898,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 //    }
 
     @Override
-    public void componentPicked(int playerId, Component component, boolean success, String message) {
-        synchronized (displayMutex) {
-            // Check if this response is for the current player
-            if (currentPlayer != null && currentPlayer.getId() == playerId) {
-                if (success && component != null) {
-                    console.printMessage("✓ Component picked: " + component.getClass().getSimpleName());
-                    // Pass the component to the ship building handler if it's active
-                    if (activeShipBuildingHandler != null) {
-                        if (activeShipBuildingHandler.getCurrentComponent() == null) {
-                            activeShipBuildingHandler.setCurrentComponent(component);
-                            activeShipBuildingHandler.refreshMenuDisplay();
-                        }
-                    }
-                } else {
-                    console.printError("✗ " + message);
-                    if (activeShipBuildingHandler != null) {
-                        activeShipBuildingHandler.refreshMenuDisplay();
-                    }
-                }
-            }
-            // Ignore responses for other players
-        }
-    }
-
-    @Override
-    public void componentPickFailed(String errorMessage) {
-
-    }
-
-    @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
             if (success && adventureCard != null) {
@@ -996,23 +1021,35 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
-        
-    }
-
-    @Override
     public void addTokenToComponent(String playerName, Position position, TokenType tokenType, Boolean success, String errorMessage) {
-
+        if (preparationFlightHandler != null && playerName.equals(currentPlayer.getNickName())) {
+            preparationFlightHandler.tokenPlaced(position, tokenType, success);
+        }
     }
 
     @Override
     public void getPlayerTokenList(String playerName, Map<Position, List<TokenType>> tokens) {
-
+        if (preparationFlightHandler != null && playerName.equals(currentPlayer.getNickName())) {
+            preparationFlightHandler.updateTokens(tokens);
+        }
     }
 
     @Override
     public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage) {
+        if (preparationFlightHandler != null && playerName.equals(currentPlayer.getNickName())) {
+            preparationFlightHandler.tokenRemoved(position, tokenType, success);
+        }
+    }
 
+    @Override
+    public void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents) {
+        if (preparationFlightHandler != null) {
+            if (playerName.equals(currentPlayer.getNickName())) {
+                preparationFlightHandler.updateShipComponents(shipComponents);
+            } else {
+                preparationFlightHandler.displayOtherPlayerShip(playerName, shipComponents);
+            }
+        }
     }
 
     @Override
@@ -1030,6 +1067,11 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 state = TuiState.RUNNING;
             }
         }
+    }
+
+    @Override
+    public void FlightOrderpositionRecieved(UUID matchId, int playerId, List<Player> PlayerIdPosMap, boolean success) {
+
     }
 
     /**
@@ -1101,7 +1143,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void cabinColorSelected(String color) {
+    public void cabinColorSelected(int playerId, String color) {
 
     }
 
@@ -1112,8 +1154,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void flightPreparationStart(UUID matchId) {
-
-    }
+        synchronized (displayMutex) {
+            console.printMessage("\n=== FLIGHT PREPARATION PHASE ===");
+            this.currentMatchId = matchId;          // salva l’ID della partita
+            this.state = TuiState.PREPARATION_FLIGHT;
+        }
+    } 
 
     @Override
     public void flightPreparationStartFailed(String errorMessage) {
@@ -1195,6 +1241,18 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             case 4: return "4th";
             default: return rank + "th";
         }
+    }
+
+    @Override
+    public void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'playerReadyForAdventurePhase'");
+    }
+
+    @Override
+    public void adventurePhaseReady(UUID matchId, String message) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'adventurePhaseReady'");
     }
 
 }

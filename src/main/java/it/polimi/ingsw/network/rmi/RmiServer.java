@@ -38,6 +38,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
+import it.polimi.ingsw.network.messages.flight.ReadyForAdventurePhaseResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
@@ -46,6 +47,7 @@ import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
+import it.polimi.ingsw.network.messages.adventure.FlightOrderRespone;
 
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
@@ -326,7 +328,6 @@ public class RmiServer extends UnicastRemoteObject
             return null;
         }
 
-        // SALVA LO STATO ORIGINALE QUI!
         comp.saveOriginalState();
         
         client.showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
@@ -418,9 +419,7 @@ public class RmiServer extends UnicastRemoteObject
                             isValidRotation = true;
                             break;
                     }
-                    
-                    Component rotatedComponent = player.getShip().getComponentAt(position);
-                    
+
                     System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
                     
                     client.showUpdate(new RotateComponentResponse(
@@ -432,9 +431,6 @@ public class RmiServer extends UnicastRemoteObject
                         "Component rotated successfully"
                     ));
                 }
-                
-                System.out.println("[ServerRMI] Rotated component at " + position + " " + rotationType + ": " + isValidRotation);
-                client.showUpdate(new RotateComponentResponse(playerId, position, rotationType, isValidRotation, true, "Component rotated successfully"));
             }
         } else {
             System.out.println("[ServerRMI] Match not found or not in progress for player " + playerId);
@@ -446,20 +442,21 @@ public class RmiServer extends UnicastRemoteObject
     public void selectCabinColor(String color, int playerId, RmiClientIf client) throws RemoteException {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Match not found"));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Match not found", color));
             return;
         }
         String existing = match.getPlayerCabinColor(playerId);
         if (existing != null) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Color already selected " + existing));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already selected: " + existing, color));
             return;
         }
         if (match.isColorTaken(color)) {
-            client.showUpdate(new CabinColorSelectionResponse(false, "Color already taken by another player"));
+            client.showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already taken by another player", color));
             return;
         }
         match.setPlayerCabinColor(playerId, color);
-        client.showUpdate(new CabinColorSelectionResponse(true, color));
+        //client.showUpdate(new CabinColorSelectionResponse(true, color));
+        lobbyManager.multicastToMatch(match.getMatchId(),new CabinColorSelectionResponse(playerId, true, "Cabin color selected successfully", color));
     }
 
     @Override
@@ -470,7 +467,7 @@ public class RmiServer extends UnicastRemoteObject
             //broadcastAdventureCardErrorToAllClients(playerId, "Match not found");
             return;
         }
-        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+        if (match.getMatchState() != MatchStates.FLIGHT_IN_PROGRESS) {
             System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
             //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
             return;
@@ -494,7 +491,7 @@ public class RmiServer extends UnicastRemoteObject
         }
         // Pick adventure card using the controller
         controller.pickCardForPlayer(player);
-        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
@@ -575,12 +572,13 @@ public class RmiServer extends UnicastRemoteObject
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
+
                 if (match.allPlayersPositioned()) {
-                    int firstPlayerToAct = match.getFirstPlayerToAct();
+                    match.setMatchState(MatchStates.FLIGHT_PREPARATION);
                     lobbyManager.multicastToMatch(match.getMatchId(),
-                        new AdventurePhaseStartResponse(
-                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+                            new FlightPreparationStartResponse(match.getMatchId(), true, "All players ready – flight preparation begins"));
                 }
+
             }
             
         } else {
@@ -784,6 +782,59 @@ public class RmiServer extends UnicastRemoteObject
             
         } catch (Exception e) {
             client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Error: " + e.getMessage()));
+        }
+    }
+
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId, RmiClientIf client) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Match not found"));
+            return;
+        }
+
+        Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player not found"));
+            return;
+        }
+
+        boolean isReady = match.setPlayerReadyForAdventure(playerId, true);
+        
+        if (isReady) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
+            
+            // Check if all players are ready
+            if (match.allPlayersReadyForAdventure()) {
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
+                        matchId,
+                        match.getPlayerPositions(),
+                        match.getFirstPlayerToAct()
+                ));
+                match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
+            }
+        } else {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));
+        }
+    }
+
+    @Override
+    public void getStartingFligtOrder(UUID matchId, int playerId, RmiClientIf client) throws RemoteException {
+        List <Player> flightOrder;
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match != null) {
+            GameController ctr = match.getController();
+            if (ctr != null) {
+                flightOrder = ctr.getFlightOrder();
+
+                if (flightOrder != null){
+                    client.showUpdate(new FlightOrderRespone(matchId, playerId, null, true));
+                }
+                else
+                {
+                    //client.showUpdate(new FlightOrderResponse(matchId, playerId, null, false));
+                }
+            }
         }
     }
 

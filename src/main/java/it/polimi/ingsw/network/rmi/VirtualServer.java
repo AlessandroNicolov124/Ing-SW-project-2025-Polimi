@@ -62,4 +62,8 @@ public interface VirtualServer extends Remote {
 
     void expiredTimeForShipBuilding(String playerName) throws RemoteException;
 
+    void readyForAdventurePhase(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
+
+    void getStartingFligtOrder(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
+
 }

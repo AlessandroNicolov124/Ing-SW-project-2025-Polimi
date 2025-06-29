@@ -38,6 +38,9 @@ public class GameMatch {
     private List<Integer> shipValidationOrder = new ArrayList<>();
     private Map<Integer, Long> validationTimestamps = new HashMap<>();
 
+    private Map<Integer, Boolean> playersReadyForAdventure = new HashMap<>();
+
+
     private Difficulty difficulty;
 
     public GameMatch(UUID matchId, String matchName, int hostId, String hostName, Difficulty difficulty) {
@@ -307,6 +310,31 @@ public class GameMatch {
 
         return removed;
     }
+
+    public boolean setPlayerReadyForAdventure(int playerId, boolean ready) {
+        return playersReadyForAdventure.put(playerId, ready);
+    }
+
+    public boolean allPlayersReadyForAdventure() {
+        if (playersReadyForAdventure.isEmpty()) {
+            return false;
+        }
+        
+        for (Player player : players) {
+            if (player.isActive()) {
+                Boolean isReady = playersReadyForAdventure.get(player.getId());
+                if (isReady == null || !isReady) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public Map<Integer, Boolean> getPlayersReadyForAdventure() {
+        return playersReadyForAdventure;
+    }
+
 
     // Control match state
     public synchronized void startMatch() {

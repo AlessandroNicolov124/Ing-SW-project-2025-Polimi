@@ -1,9 +1,13 @@
 package it.polimi.ingsw.network.socket.server;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.Crew;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.ShipBuilder;
+import it.polimi.ingsw.Components.BatteryCompartment;
+import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
@@ -11,6 +15,7 @@ import it.polimi.ingsw.network.GameMatch;
 import it.polimi.ingsw.network.LobbyManager;
 import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.GeneralClientIf;
+import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.messages.RequestMessage;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.lobby.AddPlayerResponse;
@@ -24,14 +29,19 @@ import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
+import it.polimi.ingsw.network.messages.flight.ReadyForAdventurePhaseResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerShipResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerTokenListResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveTokenFromComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
@@ -44,6 +54,7 @@ import java.net.Socket;
 import java.rmi.RemoteException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.util.Map;
 
 public class SocketClientHandler implements Runnable, GeneralClientIf {
@@ -307,7 +318,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
-        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+        if (match.getMatchState() != MatchStates.FLIGHT_IN_PROGRESS) {
             System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
             showUpdate(new PickAdventureCardResponse(
                     currentPlayer, null, false, "Match not in progress", -1, null));
@@ -450,12 +461,13 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
+
                 if (match.allPlayersPositioned()) {
-                    int firstPlayerToAct = match.getFirstPlayerToAct();
+                    match.setMatchState(MatchStates.FLIGHT_PREPARATION);
                     lobbyManager.multicastToMatch(match.getMatchId(),
-                        new AdventurePhaseStartResponse(
-                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+                            new FlightPreparationStartResponse(match.getMatchId(), true, "All players ready – flight preparation begins"));
                 }
+
             }
             
         } else {
@@ -550,7 +562,10 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
+        comp.saveOriginalState();
+        
         showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
+        return;
         
     }
 
@@ -558,20 +573,21 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     public void selectCabinColor(String color, int playerId) throws Exception {
         GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
-            showUpdate(new CabinColorSelectionResponse(false, "Match not found"));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Match not found", color));
             return;
         }
         String existing = match.getPlayerCabinColor(playerId);
         if (existing != null) {
-            showUpdate(new CabinColorSelectionResponse(false, "Color already selected " + existing));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already selected: " + existing, color));
             return;
         }
         if (match.isColorTaken(color)) {
-            showUpdate(new CabinColorSelectionResponse(false, "Color already taken by another player"));
+            showUpdate(new CabinColorSelectionResponse(playerId, false, "Cabin color already taken by another player", color));
             return;
         }
         match.setPlayerCabinColor(playerId, color);
-        showUpdate(new CabinColorSelectionResponse(true, color));
+        //client.showUpdate(new CabinColorSelectionResponse(true, color));
+        lobbyManager.multicastToMatch(match.getMatchId(),new CabinColorSelectionResponse(playerId, true, "Cabin color selected successfully", color));
     }
 
     @Override
@@ -615,22 +631,177 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
 
+        GameController controller = match.getController();
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new AddTokenToComponentResponse( playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        if (!player.getShip().checkPlacingToken(position)) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Cannot place token at this position"));
+            return;
+        }
+
+        try {
+            controller.addTokenToComponent(player, position, tokenType);
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, true, "Token added successfully"));
+        } catch (Exception e) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Error adding token: " + e.getMessage()));
+        }
     }
 
     @Override
     public void getPlayerTokenList(String playerName) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
+        if (match == null) {
+            showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Position, List<TokenType>> tokens = player.getShip().getTokens();
+        
+        showUpdate(new GetPlayerTokenListResponse(playerName, tokens, true, "Token list retrieved successfully"));
     }
 
     @Override
     public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
 
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(match.getPlayerByName(playerName).getId());
+
+        if (player == null) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        try {
+            ShipBuilder ship = player.getShip();
+            Component comp = ship.getComponentAt(position);
+            
+            if (comp == null) {
+                showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "No component at position"));
+                return;
+            }
+
+            switch (tokenType) {
+                case HUMAN, BROWN_ALIEN, PURPLE_ALIEN -> {
+                    if (comp instanceof Cabin cabin && !cabin.getCrew().isEmpty()) {
+                        Crew lastCrew = cabin.getCrew().get(cabin.getCrew().size() - 1);
+                        ship.removeCrewFromCabin(lastCrew, cabin);
+                    }
+                }
+                case BATTERY -> {
+                    if (comp instanceof BatteryCompartment battery && battery.getChargeLevel() > 0) {
+                        battery.discharge(1);
+                    }
+                }
+                // case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK, YELLOW_GOOD_BLOCK -> {
+                //     if (comp instanceof CargoHolds cargoHold && !cargoHold.getCargos().isEmpty()) {
+                //         cargoHold.removeCargo();
+                //     }
+                // }
+                default -> throw new IllegalArgumentException("Unexpected value: " + tokenType);
+            }
+            
+            ship.removeToken(position);
+            
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, true, "Token removed successfully"));
+            
+        } catch (Exception e) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Error: " + e.getMessage()));
+        }
     }
 
     @Override
     public void getPlayerShip(String playerName) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
+        if (match == null) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        // find the player id by player name
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Component, Position> ship = player.getShip().getComponents();
+
+        if (ship.isEmpty()) {
+            showUpdate(new GetPlayerShipResponse(playerName, null, false, "No components in ship"));
+            return;
+        }
+
+        // invert the map in Map<Position, Component>
+        Map<Position, Component> invertedShip = ship.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getValue,
+                        Map.Entry::getKey
+                ));
+        
+        // send the ship to the client
+        showUpdate(new GetPlayerShipResponse(playerName, invertedShip, true, "Ship retrieved successfully"));
+    }
+
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId) throws Exception {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Match not found"));
+            return;
+        }
+
+        Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player not found"));
+            return;
+        }
+
+        boolean isReady = match.setPlayerReadyForAdventure(playerId, true);
+        
+        if (isReady) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
+            
+            // Check if all players are ready
+            if (match.allPlayersReadyForAdventure()) {
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
+                        matchId,
+                        match.getPlayerPositions(),
+                        match.getFirstPlayerToAct()
+                ));
+
+                match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
+            }
+        } else {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));
+        }
     }
 
     @Override

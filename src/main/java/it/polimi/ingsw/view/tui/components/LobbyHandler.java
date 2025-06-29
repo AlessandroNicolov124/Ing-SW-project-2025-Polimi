@@ -51,6 +51,10 @@ public class LobbyHandler {
         return playerId;
     }
 
+    public List<String> getPlayersInCurrentMatch() {
+        return new ArrayList<>(playersInCurrentMatch);
+    }
+
     public void tick() {
         if (dirty.getAndSet(false)) {
             showLobbyMenu();

@@ -99,6 +99,24 @@ public abstract class GuiContoller {
         });
     }
 
+    protected void ShowInfoDialogWindow(String Title, String Header, String Message) {
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle(Title);
+            alert.setHeaderText(Header);
+
+            TextArea textArea = new TextArea(Message);
+            textArea.setEditable(false);
+            textArea.setWrapText(true);
+            textArea.setMaxWidth(Double.MAX_VALUE);
+            textArea.setMaxHeight(Double.MAX_VALUE);
+
+            alert.getDialogPane().setContent(textArea);
+            alert.showAndWait();
+        });
+    }
+
+
 
     protected String showPlayerSelectionDialog() {
         List<String> players = new ArrayList<>(context.getPlayersInMatchList());

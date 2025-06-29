@@ -1,18 +1,18 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
-import it.polimi.ingsw.Position;
-import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.Player;
+
 import javafx.fxml.FXML;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Ellipse;
@@ -22,7 +22,10 @@ import javafx.scene.text.Text;
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class FlightBoardController extends GuiContoller implements FlightBoardListener {
     @FXML
@@ -31,6 +34,7 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     private Button PickCard;
 
     private List<Circle> positionCircles = new ArrayList<>();
+    private Map<Integer, Integer> playerIdPosMapCurrent = new HashMap<Integer, Integer>();
 
     private static final float ELLIPSE_CENTER_X = 521.0f;
     private static final float ELLIPSE_CENTER_Y = 318.0f;
@@ -62,6 +66,14 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         ));
     }
 
+    private void initPositions() {
+        try {
+            context.getClient().getPlayersOrderForFlightboard(context.getCurrentMatchId(), context.getPlayerId());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void drawEllipse(){
         Ellipse ellipse = new Ellipse();
         ellipse.setCenterX(ELLIPSE_CENTER_X); // Center X of the pane
@@ -86,8 +98,6 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         double x,y;
         double angleOffset = -Math.toRadians(STARTING_ANGLE);
         double angle = angleOffset;
-//        double x = ELLIPSE_CENTER_X + ELLIPSE_RADIUS_X * Math.cos(angle);
-//        double y = ELLIPSE_CENTER_Y + ELLIPSE_RADIUS_Y * Math.sin(angle);
 
         for (int i = 0; i < numCircles; i++) {
             // Calculate the angle for each circle. We subtract to go counter-clockwise.
@@ -133,15 +143,14 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     }
 
     private double estimateEllipseCircumference() {
-        //double h = Math.pow(ELLIPSE_RADIUS_X - ELLIPSE_RADIUS_Y, 2) / Math.pow(ELLIPSE_RADIUS_X + ELLIPSE_RADIUS_Y, 2);
-        //return Math.PI * (ELLIPSE_RADIUS_X + ry) * (1 + (3 * h) / (10 + Math.sqrt(4 - 3 * h)));
+
         return (2 * Math.PI * (Math.sqrt((Math.pow(ELLIPSE_RADIUS_X, 2) + Math.pow(ELLIPSE_RADIUS_Y, 2))/2)) - CORRECTION_ADDENDUM);
     }
 
     @FXML
     public void PickAdventureCardFromSrv() {
 
-        positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
+        //positionCircles.get(5).setFill(Color.web("BLUE", 0.7));
         try {
             context.getClient().pickAdventureCard(context.getPlayerId());
         } catch (Exception e) {
@@ -153,5 +162,42 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
     public void setContext(AppContext context) {
         super.setContext(context);
         context.addFlightboardListener(this);
+    }
+
+    @Override
+    public void flightOrderRecieved(UUID matchId, int playerId, List<Player> list, boolean success) {
+        if(matchId == context.getCurrentMatchId() && success)
+        {
+
+        }
+    }
+
+    private void updateDisplayedPlayers(){
+        for (Circle c: positionCircles)
+        {
+            c.setFill(Color.web("transparent", 0.4));
+        }
+
+        int myPos = playerIdPosMapCurrent.get(context.getPlayerId());
+        positionCircles.get(myPos).setFill(Color.web( context.getSelectedCabinColor() , 0.7));
+
+        for (Map.Entry<Integer, Integer> entry : playerIdPosMapCurrent.entrySet()) {
+            int playerId = entry.getKey();
+            int position = entry.getValue();
+
+            if (playerId != context.getPlayerId()) {
+                String color = context.getPlayerColor(playerId);
+                positionCircles.get(position).setFill(Color.web(color, 0.7));
+            }
+        }
+
+
+    }
+
+    @Override
+    public void adventureCardPicketFromsrv(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
+        playerIdPosMapCurrent = updatedPositions;
+        ShowInfoDialogWindow("Adventure Card", "Leader picked an adventure card", adventureCard.getDescription());
+        updateDisplayedPlayers();
     }
 }
