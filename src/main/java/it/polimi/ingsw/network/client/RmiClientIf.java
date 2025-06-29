@@ -1,5 +1,3 @@
-
-
 package it.polimi.ingsw.network.client;
 
 import java.rmi.Remote;
@@ -65,4 +63,6 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     @Override
     void readyForFlight(UUID matchId, int playerId) throws RemoteException;
 
+    @Override
+    void selectPlanet(int playerId, int planetIndex) throws RemoteException;
 }

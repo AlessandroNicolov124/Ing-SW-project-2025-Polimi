@@ -17,6 +17,8 @@ import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 import it.polimi.ingsw.network.messages.RotationType;
+import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.AdventureCards.Planets;
 
 
 public class GalaxyTruckerTUI implements Runnable, GameListener {
@@ -766,7 +768,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
+    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
             if (activeAdventurePhaseHandler != null) {
                 activeAdventurePhaseHandler.handleAdventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions);
@@ -831,6 +833,37 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             
             // Transition to adventure phase
             state = TuiState.ADVENTURE_PHASE;
+        }
+    }
+
+    @Override
+    public void planetChoiceRequested(UUID matchId, List<Planets.Planet> availablePlanets, int flightDaysCost, int currentPlayerId, String currentPlayerName) {
+        synchronized (displayMutex) {
+            if (activeAdventurePhaseHandler != null) {
+                activeAdventurePhaseHandler.handlePlanetChoiceRequested(matchId, availablePlanets, flightDaysCost, currentPlayerId, currentPlayerName);
+            } else {
+                console.printError("Adventure phase handler not available to process planet choice request");
+            }
+        }
+    }
+
+    @Override
+    public void planetSelected(int playerId, String playerName, int planetIndex, String planetName, boolean success, String message) {
+        synchronized (displayMutex) {
+            if (activeAdventurePhaseHandler != null) {
+                activeAdventurePhaseHandler.handlePlanetSelected(playerId, playerName, planetIndex, planetName, success, message);
+            } else {
+                // Handle planet selection directly if no adventure phase handler
+                if (success) {
+                    if (planetIndex >= 0) {
+                        console.printMessage("✓ " + playerName + " selected planet: " + planetName);
+                    } else {
+                        console.printMessage("✓ " + playerName + " chose not to land on any planet");
+                    }
+                } else {
+                    console.printError("✗ Planet selection failed for " + playerName + ": " + message);
+                }
+            }
         }
     }
 

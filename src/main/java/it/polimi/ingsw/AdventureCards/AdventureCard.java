@@ -95,6 +95,16 @@ public abstract class AdventureCard implements Serializable{
         return this.getClass().getSimpleName();
     }
 
+    /**
+     * Checks if this adventure card is a Planets card that requires interactive planet selection.
+     * To be overridden by Planets card implementation.
+     * 
+     * @return true if this is a Planets card, false otherwise
+     */
+    public boolean isPlanetsCard() {
+        return false;
+    }
+
 }
 
 

@@ -4,6 +4,8 @@ import it.polimi.ingsw.Components.*;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.GameModel;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Planets
@@ -26,6 +28,32 @@ import java.util.*;
 public class Planets extends AdventureCard{
     
     /**
+     * Interface for handling planet selection callbacks
+     */
+    public interface PlanetSelectionCallback {
+        /**
+         * Request a planet selection from a player
+         * @param player The player making the selection
+         * @param availablePlanets List of available planets
+         * @param flightDaysCost Cost in flight days for landing
+         */
+        void requestPlanetSelection(Player player, List<Planet> availablePlanets, int flightDaysCost);
+        
+        /**
+         * Check if all players have made their selections
+         * @return true if all selections are complete
+         */
+        boolean allSelectionsComplete();
+        
+        /**
+         * Get the selection made by a specific player
+         * @param player The player whose selection to get
+         * @return Planet selected by the player, or null if no selection made
+         */
+        Planet getPlayerSelection(Player player);
+    }
+    
+    /**
      * Enumeration of different planet card variations
      */
     public enum PlanetVariation {
@@ -46,12 +74,15 @@ public class Planets extends AdventureCard{
     private int flightDaysCost;
     private PlanetVariation variation;
     private transient Map<Planet, Player> landedPlayers;
+    private transient Map<Player, Planet> playerSelections;
+    private transient PlanetSelectionCallback selectionCallback;
 
     public Planets(){
         super();
         this.variation = PlanetVariation.LEVEL1_VARIATION_1; // Default variation
         initializePlanetVariation(this.variation);
         this.landedPlayers = new HashMap<>();
+        this.playerSelections = new HashMap<>();
     }
 
     public Planets(int copies, int duration, PlanetVariation variation) {
@@ -59,6 +90,61 @@ public class Planets extends AdventureCard{
         this.variation = variation;
         initializePlanetVariation(variation);
         this.landedPlayers = new HashMap<>();
+        this.playerSelections = new HashMap<>();
+    }
+
+    /**
+     * Set the callback for handling planet selections
+     */
+    public void setSelectionCallback(PlanetSelectionCallback callback) {
+        this.selectionCallback = callback;
+    }
+
+    /**
+     * Handle a player's planet selection
+     * @param player The player making the selection
+     * @param planetIndex Index of the chosen planet (-1 if no planet chosen)
+     * @return true if selection was valid and processed
+     */
+    public boolean handlePlayerSelection(Player player, int planetIndex) {
+        if (planetIndex == -1) {
+            // Player chooses not to land
+            playerSelections.put(player, null);
+            System.out.println("[Planets] " + player.getNickName() + " chose not to land on any planet");
+            return true;
+        }
+        
+        if (planetIndex < 0 || planetIndex >= planets.size()) {
+            System.out.println("[Planets] Invalid planet index " + planetIndex + " for player " + player.getNickName());
+            return false;
+        }
+        
+        Planet chosenPlanet = planets.get(planetIndex);
+        
+        // Check if planet is already taken
+        if (landedPlayers.containsKey(chosenPlanet)) {
+            System.out.println("[Planets] Planet " + chosenPlanet.getName() + " is already occupied");
+            return false;
+        }
+        
+        // Record the selection
+        playerSelections.put(player, chosenPlanet);
+        landedPlayers.put(chosenPlanet, player);
+        
+        System.out.println("[Planets] " + player.getNickName() + " selected planet: " + chosenPlanet.getName());
+        return true;
+    }
+
+    /**
+     * Get the name of a planet by its index
+     * @param planetIndex Index of the planet
+     * @return Name of the planet, or null if index is invalid
+     */
+    public String getPlanetNameByIndex(int planetIndex) {
+        if (planetIndex < 0 || planetIndex >= planets.size()) {
+            return null;
+        }
+        return planets.get(planetIndex).getName();
     }
 
     /**
@@ -300,6 +386,13 @@ public class Planets extends AdventureCard{
 
     @Override
     public void effect(GameModel gameModel){
+        // Set up the card for interactive selection
+        // The actual processPlanets call will be triggered by the server after setting up the callback
+        System.out.println("[Planets] " + variation + " card drawn - preparing for interactive planet selection");
+        
+        // For now, fall back to the existing processPlanets method
+        // In a full implementation, this would be handled by the server triggering 
+        // interactive selection through the network layer
         processPlanets(gameModel);
     }
 
@@ -309,28 +402,81 @@ public class Planets extends AdventureCard{
                "The leader chooses first, followed by others in order. Only one ship per planet allowed. " +
                "Variation: " + variation + " (" + planets.size() + " planets available)";
     }
+
+    @Override
+    public boolean isPlanetsCard() {
+        return true;
+    }
     
     /**
-     * Allow players to land on planets in order
+     * Allow players to land on planets in order - now supports interactive selection
      * @param gameModel The current game state
      */
     public void processPlanets(GameModel gameModel) {
         List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
-        List<Player> landedPlayersList = new ArrayList<>();
         
         System.out.println("[Planets] Processing " + variation + " with " + planets.size() + " planets, cost: " + flightDaysCost + " flight days");
         
-        // First phase: players decide whether to land, in leader-first order
+        // Clear previous selections
+        playerSelections.clear();
+        landedPlayers.clear();
+        
+        // If we have a callback, use interactive selection
+        if (selectionCallback != null) {
+            // Request selections from all players in order
+            for (Player player : playersInOrder) {
+                List<Planet> availablePlanets = getAvailablePlanets();
+                if (!availablePlanets.isEmpty()) {
+                    selectionCallback.requestPlanetSelection(player, availablePlanets, flightDaysCost);
+                }
+            }
+            
+            // Wait for all selections to be made (this would be handled by the server/controller)
+            // The actual waiting and processing would be handled by the game controller
+            
+        } else {
+            // Fallback to random selection for testing/non-interactive mode
+            processRandomSelections(playersInOrder);
+        }
+        
+        // Process the results once all selections are made
+        processLandingResults(gameModel, playersInOrder);
+    }
+    
+    /**
+     * Get currently available planets (not yet taken)
+     */
+    public List<Planet> getAvailablePlanets() {
+        List<Planet> available = new ArrayList<>();
+        for (Planet planet : planets) {
+            if (!landedPlayers.containsKey(planet)) {
+                available.add(planet);
+            }
+        }
+        return available;
+    }
+    
+    /**
+     * Complete the planet selection process and apply all results
+     * This method should be called when all players have made their selections
+     */
+    public void completePlanetSelection(GameModel gameModel) {
+        List<Player> playersInOrder = gameModel.getFlightBoard().getPlayersInFlightOrder();
+        processLandingResults(gameModel, playersInOrder);
+    }
+    
+    /**
+     * Process landing results after all players have made selections
+     */
+    private void processLandingResults(GameModel gameModel, List<Player> playersInOrder) {
+        List<Player> landedPlayersList = new ArrayList<>();
+        
+        // Process all player selections
         for (Player player : playersInOrder) {
-            // Player chooses whether to land and on which planet
-            Planet chosenPlanet = choosePlanet(player, landedPlayersList);
+            Planet chosenPlanet = playerSelections.get(player);
             
             if (chosenPlanet != null) {
-                // Player decided to land
-                landedPlayers.put(chosenPlanet, player);
                 landedPlayersList.add(player);
-                
-                // Load goods on player's ship
                 loadGoods(player, chosenPlanet);
                 System.out.println("[Planets] " + player.getNickName() + " landed on planet " + chosenPlanet.getName() + 
                                  " and collected " + chosenPlanet.getGoodsToLoad().size() + " cargo units");
@@ -344,7 +490,7 @@ public class Planets extends AdventureCard{
             int pos1 = gameModel.getFlightBoard().getPosition(p1);
             int pos2 = gameModel.getFlightBoard().getPosition(p2);
 
-            // Ordina dal più indietro al più avanti (ordine crescente delle posizioni)
+            // Sort from farthest back to front (ascending order of positions)
             return Integer.compare(pos1, pos2);
         });
         
@@ -356,50 +502,42 @@ public class Planets extends AdventureCard{
     }
     
     /**
-     * Let a player choose a planet to land on
-     * @param player The player who is choosing
-     * @param landedPlayers List of players who have already landed
-     * @return The chosen planet, or null if player doesn't want to land
+     * Fallback method for random planet selection (used when no callback is set)
      */
-    private Planet choosePlanet(Player player, List<Player> landedPlayers) {
-        // This would need to implement player choice logic
-        // For now, return a random available planet
-        
-        List<Planet> availablePlanets = new ArrayList<>();
-        
-        for (Planet planet : planets) {
-            if (!this.landedPlayers.containsKey(planet)) {
-                availablePlanets.add(planet);
-            }
-        }
-        
-        if (availablePlanets.isEmpty()) {
-            return null; // No planets available
-        }
-        
-        // TODO This is a placeholder - actual implementation would involve player choice
-        // For now, make players more likely to land on valuable planets
+    private void processRandomSelections(List<Player> playersInOrder) {
         Random random = new Random();
         
-        // Players have a 70% chance to land if there are valuable planets available
-        if (random.nextDouble() < 0.7) {
-            // Prefer planets with more valuable cargo (higher total value)
-            availablePlanets.sort((p1, p2) -> {
-                int value1 = p1.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
-                int value2 = p2.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
-                return Integer.compare(value2, value1); // Descending order
-            });
+        for (Player player : playersInOrder) {
+            List<Planet> availablePlanets = getAvailablePlanets();
             
-            // 60% chance to pick the best planet, 40% chance to pick randomly
-            if (random.nextDouble() < 0.6) {
-                return availablePlanets.get(0); // Best planet
+            if (availablePlanets.isEmpty()) {
+                playerSelections.put(player, null);
+                continue;
+            }
+            
+            // 70% chance to land if there are available planets
+            if (random.nextDouble() < 0.7) {
+                // Sort by value and prefer better planets
+                availablePlanets.sort((p1, p2) -> {
+                    int value1 = p1.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
+                    int value2 = p2.getGoodsToLoad().stream().mapToInt(Cargo::getValue).sum();
+                    return Integer.compare(value2, value1); // Descending order
+                });
+                
+                Planet chosenPlanet;
+                if (random.nextDouble() < 0.6) {
+                    chosenPlanet = availablePlanets.get(0); // Best planet
+                } else {
+                    int randomIndex = random.nextInt(availablePlanets.size());
+                    chosenPlanet = availablePlanets.get(randomIndex);
+                }
+                
+                playerSelections.put(player, chosenPlanet);
+                landedPlayers.put(chosenPlanet, player);
             } else {
-                int randomIndex = random.nextInt(availablePlanets.size());
-                return availablePlanets.get(randomIndex);
+                playerSelections.put(player, null);
             }
         }
-        
-        return null; // Player chooses not to land
     }
     
     /**
@@ -408,12 +546,9 @@ public class Planets extends AdventureCard{
      * @param planet The planet providing goods
      */
     protected void loadGoods(Player player, Planet planet) {
-        // Implementation of how goods are tracked
-        // placeholder
         List<Cargo> goodsToLoad = new ArrayList<>(planet.getGoodsToLoad()); // Create mutable copy
-        // Logic to add goods to player's inventory here
 
-        // Ordine di priorità: rosso, giallo, verde, blu
+        // Priority order: red, yellow, green, blue
         Comparator<Cargo> cargoComparator = Comparator
                 .comparing((Cargo cargo) -> {
                     switch(cargo) {
@@ -425,30 +560,31 @@ public class Planets extends AdventureCard{
                     }
                 })
                 .thenComparing(Cargo::getValue, Comparator.reverseOrder());
-        // Ordina le merci disponibili
+        
+        // Sort available goods
         Collections.sort(goodsToLoad, cargoComparator);
 
-        // stive del giocatore
+        // Player's cargo holds
         List<CargoHolds> playerCargoHolds = player.getShip().getCargoHolds();
-        // Calcola lo spazio totale disponibile
+        // Calculate total available space
         int totalAvailableSpace = playerCargoHolds.stream()
                 .mapToInt(CargoHolds::getAvailableSpace)
                 .sum();
 
         int loadedCount = 0;
         
-        // Cerca di caricare le merci
+        // Try to load goods
         for (Cargo cargo : goodsToLoad) {
-            // Se non c'è più spazio, interrompi
+            // If no more space, break
             if (totalAvailableSpace <= 0) {
                 break;
             }
 
             boolean loaded = false;
 
-            // Gestione speciale per i rossi
+            // Special handling for red cargo
             if (cargo.isRed()) {
-                // Prova prima nelle stive speciali rosse
+                // First try special red cargo holds
                 for (CargoHolds cargoHold : playerCargoHolds) {
                     switch (cargoHold) {
                         case SpecialCargoHolds c:
@@ -465,7 +601,7 @@ public class Planets extends AdventureCard{
                     if (loaded) break;
                 }
 
-                // Se non caricato nelle speciali, prova nelle normali
+                // If not loaded in special holds, try normal holds
                 if (!loaded) {
                     for (CargoHolds cargoHold : playerCargoHolds) {
                         if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
@@ -478,9 +614,9 @@ public class Planets extends AdventureCard{
                     }
                 }
             }
-            // Per tutti gli altri colori
+            // For all other colors
             else {
-                // Prova a caricare nelle stive che possono contenere quel tipo di merce
+                // Try to load in appropriate cargo holds
                 for (CargoHolds cargoHold : playerCargoHolds) {
                     if (!cargoHold.isFull() && cargoHold.canContainCargo(cargo)) {
                         cargoHold.loadCargo(cargo);
@@ -491,8 +627,7 @@ public class Planets extends AdventureCard{
                     }
                 }
 
-                // Se non caricato nelle stive appropriate,
-                // carica in qualsiasi stiva disponibile
+                // If not loaded in appropriate holds, load in any available hold
                 if (!loaded) {
                     for (CargoHolds cargoHold : playerCargoHolds) {
                         if (!cargoHold.isFull()) {

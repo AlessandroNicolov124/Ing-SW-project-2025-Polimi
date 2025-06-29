@@ -206,8 +206,10 @@ public class FlightBoard {
     }
 
     /**
-     * Gets players in flight order (best position to worst position)
-     * @return List of players ordered by position (position 0 first, position 23 last)
+     * Gets players in flight order (leader first, then others in order)
+     * Used for adventure card picking, planet selection, and determining turn order
+     * The leader (highest position number) chooses first, then others follow
+     * @return List of players ordered by position (highest position first = leader first)
      */
     public List<Player> getPlayersInFlightOrder() {
         List<Player> sortedPlayers = new ArrayList<>();
@@ -221,11 +223,12 @@ public class FlightBoard {
             }
         }
         
-        // Sort by position: lower position numbers = better positions = earlier in list
+        // Sort by position: higher position numbers = better positions = leader first
+        // Leader (highest position) chooses first in adventure cards and planet selection
         sortedPlayers.sort((p1, p2) -> {
             Integer pos1 = positions.get(p1);
             Integer pos2 = positions.get(p2);
-            return pos1.compareTo(pos2); // Ascending order (0, 1, 2, ... 23)
+            return pos2.compareTo(pos1); // Descending order (23, 22, 21, ... 0)
         });
         
         return sortedPlayers;
@@ -323,8 +326,9 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the player with the best flight position (lowest position number)
-     * This is used for determining final rankings and winners
+     * Gets the player with the best race position (lowest position number)
+     * This is used for determining final rankings and winners in the flight race
+     * Note: This is different from adventure card picking where highest position = leader
      */
     public Player getBestPositionPlayer() {
         if (positions.isEmpty()) {
@@ -339,6 +343,7 @@ public class FlightBoard {
             int position = entry.getValue();
             
             // Only consider active, positioned players
+            // Best race position = lowest position number (closer to finish line)
             if (player.isActive() && position != -1 && position < bestPosition) {
                 bestPosition = position;
                 bestPlayer = player;
@@ -349,7 +354,8 @@ public class FlightBoard {
     }
 
     /**
-     * Gets the last player (player with the highest position number = worst position)
+     * Gets the player furthest behind in the race (highest position number)
+     * Note: This is the same player who leads adventure card picking
      */
     public Player getLastPlayer() {
         if (positions.isEmpty()) {
@@ -364,6 +370,7 @@ public class FlightBoard {
             int position = entry.getValue();
             
             // Only consider active, positioned players
+            // Highest position number = furthest behind in race = adventure card leader
             if (player.isActive() && position != -1 && position > worstPosition) {
                 worstPosition = position;
                 lastPlayer = player;

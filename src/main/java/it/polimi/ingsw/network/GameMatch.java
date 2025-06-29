@@ -38,6 +38,13 @@ public class GameMatch {
     private List<Integer> shipValidationOrder = new ArrayList<>();
     private Map<Integer, Long> validationTimestamps = new HashMap<>();
 
+    // Planet selection state management
+    private boolean planetSelectionActive = false;
+    private it.polimi.ingsw.AdventureCards.Planets activePlanetsCard = null;
+    private List<Integer> planetSelectionOrder = new ArrayList<>();
+    private int currentPlanetSelectionIndex = 0;
+    private Map<Integer, Integer> planetSelections = new HashMap<>(); // playerId -> planetIndex (-1 = skip)
+
     private Difficulty difficulty;
 
     public GameMatch(UUID matchId, String matchName, int hostId, String hostName, Difficulty difficulty) {
@@ -493,6 +500,174 @@ public class GameMatch {
         }
         
         return bestPlayerId;
+    }
+
+    /**
+     * Start planet selection phase for a Planets card
+     * @param planetsCard The Planets card that was drawn
+     * @return true if planet selection was started successfully
+     */
+    public synchronized boolean startPlanetSelection(it.polimi.ingsw.AdventureCards.Planets planetsCard) {
+        if (planetSelectionActive) {
+            System.out.println("[GameMatch " + matchId + "] Planet selection already active");
+            return false;
+        }
+        
+        // Get players in flight order (leader first)
+        List<Player> playersInOrder = getPlayersInFlightOrder();
+        if (playersInOrder.isEmpty()) {
+            System.out.println("[GameMatch " + matchId + "] No players available for planet selection");
+            return false;
+        }
+        
+        // Initialize planet selection state
+        planetSelectionActive = true;
+        activePlanetsCard = planetsCard;
+        planetSelectionOrder.clear();
+        currentPlanetSelectionIndex = 0;
+        planetSelections.clear();
+        
+        // Build selection order (leader first, then others in flight order)
+        for (Player player : playersInOrder) {
+            planetSelectionOrder.add(player.getId());
+        }
+        
+        System.out.println("[GameMatch " + matchId + "] Started planet selection with " + 
+                          planetSelectionOrder.size() + " players");
+        return true;
+    }
+    
+    /**
+     * Get the current player who should make a planet selection
+     * @return Player ID of current selector, or -1 if no selection active
+     */
+    public synchronized int getCurrentPlanetSelector() {
+        if (!planetSelectionActive || currentPlanetSelectionIndex >= planetSelectionOrder.size()) {
+            return -1;
+        }
+        return planetSelectionOrder.get(currentPlanetSelectionIndex);
+    }
+    
+    /**
+     * Record a planet selection and advance to next player
+     * @param playerId The player making the selection
+     * @param planetIndex The selected planet index (-1 = skip)
+     * @return true if selection was recorded successfully
+     */
+    public synchronized boolean recordPlanetSelection(int playerId, int planetIndex) {
+        if (!planetSelectionActive) {
+            System.out.println("[GameMatch " + matchId + "] No planet selection active");
+            return false;
+        }
+        
+        int expectedPlayerId = getCurrentPlanetSelector();
+        if (playerId != expectedPlayerId) {
+            System.out.println("[GameMatch " + matchId + "] Player " + playerId + 
+                              " cannot select planet, expected player " + expectedPlayerId);
+            return false;
+        }
+        
+        // Record the selection
+        planetSelections.put(playerId, planetIndex);
+        
+        // If a planet was selected (not skipped), mark it as taken in the Planets card
+        if (planetIndex >= 0 && activePlanetsCard != null) {
+            boolean success = activePlanetsCard.handlePlayerSelection(getPlayerById(playerId), planetIndex);
+            if (!success) {
+                System.out.println("[GameMatch " + matchId + "] Failed to record planet selection for player " + playerId);
+                return false;
+            }
+        } else if (planetIndex == -1 && activePlanetsCard != null) {
+            // Player chose to skip
+            activePlanetsCard.handlePlayerSelection(getPlayerById(playerId), -1);
+        }
+        
+        // Move to next player
+        currentPlanetSelectionIndex++;
+        
+        System.out.println("[GameMatch " + matchId + "] Player " + playerId + 
+                          " selected planet " + planetIndex + " (index " + currentPlanetSelectionIndex + 
+                          "/" + planetSelectionOrder.size() + ")");
+        return true;
+    }
+    
+    /**
+     * Check if planet selection phase is complete
+     * @return true if all players have made their selections
+     */
+    public synchronized boolean isPlanetSelectionComplete() {
+        return planetSelectionActive && currentPlanetSelectionIndex >= planetSelectionOrder.size();
+    }
+    
+    /**
+     * Get the next player in planet selection order
+     * @return Player ID of next selector, or -1 if no more players
+     */
+    public synchronized int getNextPlanetSelector() {
+        if (!planetSelectionActive || currentPlanetSelectionIndex >= planetSelectionOrder.size()) {
+            return -1;
+        }
+        return planetSelectionOrder.get(currentPlanetSelectionIndex);
+    }
+    
+    /**
+     * End planet selection phase and apply results
+     * @return true if planet selection was ended successfully
+     */
+    public synchronized boolean endPlanetSelection() {
+        if (!planetSelectionActive) {
+            return false;
+        }
+        
+        planetSelectionActive = false;
+        
+        // Apply planet selection results through the Planets card
+        if (activePlanetsCard != null && controller != null) {
+            // The Planets card will handle the cargo loading and flight day costs
+            // based on the selections that were recorded
+            System.out.println("[GameMatch " + matchId + "] Applying planet selection results");
+            
+            // Complete the planet selection process
+            activePlanetsCard.completePlanetSelection(controller.getGameModel());
+        }
+        
+        activePlanetsCard = null;
+        planetSelectionOrder.clear();
+        currentPlanetSelectionIndex = 0;
+        planetSelections.clear();
+        
+        System.out.println("[GameMatch " + matchId + "] Planet selection phase ended");
+        return true;
+    }
+    
+    /**
+     * Get available planets for selection
+     * @return List of available planets, or empty list if no selection active
+     */
+    public synchronized List<it.polimi.ingsw.AdventureCards.Planets.Planet> getAvailablePlanets() {
+        if (!planetSelectionActive || activePlanetsCard == null) {
+            return new ArrayList<>();
+        }
+        return activePlanetsCard.getAvailablePlanets();
+    }
+    
+    /**
+     * Get the flight days cost for the current planet selection
+     * @return Flight days cost, or 0 if no selection active
+     */
+    public synchronized int getPlanetSelectionFlightDaysCost() {
+        if (!planetSelectionActive || activePlanetsCard == null) {
+            return 0;
+        }
+        return activePlanetsCard.getFlightDaysCost();
+    }
+    
+    /**
+     * Check if planet selection is currently active
+     * @return true if planet selection is in progress
+     */
+    public synchronized boolean isPlanetSelectionActive() {
+        return planetSelectionActive;
     }
 
     // TODO: implement something to retrieve match statistics or results 

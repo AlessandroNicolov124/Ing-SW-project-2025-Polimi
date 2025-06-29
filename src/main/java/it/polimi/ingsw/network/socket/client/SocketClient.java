@@ -25,6 +25,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.ValidateShipRequest;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardRequest;
+import it.polimi.ingsw.network.messages.adventure.PlanetSelectionRequest;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.Position;
 
@@ -229,4 +230,15 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     }
 
+    @Override
+    public void selectPlanet(int playerId, int planetIndex) throws Exception {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
+        }
+        
+        synchronized (out) {
+            out.writeObject(new PlanetSelectionRequest(playerId, planetIndex));
+            out.flush();
+        }
+    }
 }

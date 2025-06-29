@@ -2,12 +2,14 @@ package it.polimi.ingsw.network.client.listeners;
 
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.AdventureCards.Planets;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.Position;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public interface GameListener {
@@ -93,4 +95,25 @@ public interface GameListener {
      * @param updatedPositions Current positions after card effects (may be null)
      */
     void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, java.util.Map<Integer, Integer> updatedPositions);
+
+    /**
+     * Called when a Planets card is drawn and players need to choose planets
+     * @param matchId The match ID
+     * @param availablePlanets List of available planets to choose from
+     * @param flightDaysCost Cost in flight days for landing on a planet
+     * @param currentPlayerId ID of the player who should choose next
+     * @param currentPlayerName Name of the player who should choose next
+     */
+    void planetChoiceRequested(UUID matchId, List<Planets.Planet> availablePlanets, int flightDaysCost, int currentPlayerId, String currentPlayerName);
+
+    /**
+     * Called when a player selects a planet
+     * @param playerId The player who made the selection
+     * @param playerName Name of the player
+     * @param planetIndex Index of the chosen planet (-1 if no planet chosen)
+     * @param planetName Name of the chosen planet (null if no planet chosen)
+     * @param success Whether the selection was successful
+     * @param message Any message associated with the selection
+     */
+    void planetSelected(int playerId, String playerName, int planetIndex, String planetName, boolean success, String message);
 }

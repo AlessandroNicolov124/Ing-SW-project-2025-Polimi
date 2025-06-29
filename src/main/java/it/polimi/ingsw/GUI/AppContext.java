@@ -750,4 +750,27 @@ public class AppContext implements GameListener {
 
     }
 
+    @Override
+    public void planetChoiceRequested(UUID matchId, List<it.polimi.ingsw.AdventureCards.Planets.Planet> availablePlanets, int flightDaysCost, int currentPlayerId, String currentPlayerName) {
+        Platform.runLater(() -> {
+            System.out.println("Planet choice requested for player: " + currentPlayerName);
+            // TODO: Implement GUI planet selection interface
+            showInfoMessage("Planet Selection", currentPlayerName + " needs to choose a planet (cost: " + flightDaysCost + " flight days)");
+        });
+    }
+
+    @Override
+    public void planetSelected(int playerId, String playerName, int planetIndex, String planetName, boolean success, String message) {
+        Platform.runLater(() -> {
+            if (success) {
+                if (planetIndex >= 0) {
+                    showInfoMessage("Planet Selection", playerName + " selected planet: " + planetName);
+                } else {
+                    showInfoMessage("Planet Selection", playerName + " chose not to land on any planet");
+                }
+            } else {
+                showErrorMessage("Planet Selection Failed", message);
+            }
+        });
+    }
 }

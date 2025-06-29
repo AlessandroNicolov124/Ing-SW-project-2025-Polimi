@@ -153,4 +153,16 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         }
     }
 
+    @Override
+    public void selectPlanet(int playerId, int planetIndex) throws RemoteException {
+        if (playerId <= 0) {
+            throw new IllegalArgumentException("Invalid player ID: " + playerId);
+        }
+        
+        try {
+            server.selectPlanet(playerId, planetIndex, this);
+        } catch (RemoteException e) {
+            throw new RemoteException("Error selecting planet", e);
+        }
+    }
 }

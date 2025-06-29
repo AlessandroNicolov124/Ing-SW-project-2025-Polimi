@@ -1,14 +1,19 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.AdventureCards.Planets;
 import it.polimi.ingsw.Components.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public class  GameController {
     private GameModel gameModel;
     private GameView gameView;
+    
+    // Track current planets card for interactive selection
+    private Planets currentPlanetsCard;
 
     public GameController() {
         gameModel = new GameModel();
@@ -114,8 +119,21 @@ public class  GameController {
 
         System.out.println("[GameController] Applying effect for adventure card: " + adventureCard.getClass().getSimpleName());
         
-        // Use polymorphism - each card implements its own effect method
-        adventureCard.effect(gameModel);
+        // Special handling for Planets cards - set up for interactive selection
+        if (adventureCard.isPlanetsCard()) {
+            Planets planetsCard = (Planets) adventureCard;
+            setCurrentPlanetsCard(planetsCard);
+            
+            // Set up callback for interactive selection
+            planetsCard.setSelectionCallback(new PlanetsSelectionCallbackImpl(planetsCard));
+            
+            System.out.println("[GameController] Planets card set up for interactive selection");
+            // Note: The server will handle triggering the interactive selection phase
+            // through the network layer by sending PlanetChoiceRequest messages
+        } else {
+            // Use polymorphism for other cards - each card implements its own effect method
+            adventureCard.effect(gameModel);
+        }
     }
 
     /**
@@ -413,6 +431,13 @@ public class  GameController {
 
     public void updateView(){}
 
+    /**
+     * Get the current game model
+     * @return The game model instance
+     */
+    public GameModel getGameModel() {
+        return gameModel;
+    }
 
     // Metodi di supporto
 
@@ -438,8 +463,105 @@ public class  GameController {
                 System.out.println(components.get(component).toString() + " : " + component.getClass().getSimpleName());
             }
         }
-
     }
 
+    /**
+     * Handle a player's planet selection during a Planets card
+     * @param playerId The player making the selection
+     * @param planetIndex Index of the chosen planet (-1 if no planet chosen)
+     * @return true if selection was valid and processed
+     */
+    public boolean handlePlanetSelection(int playerId, int planetIndex) {
+        Player player = getPlayerById(playerId);
+        if (player == null) {
+            System.out.println("[GameController] Player not found for planet selection: " + playerId);
+            return false;
+        }
+        
+        if (currentPlanetsCard == null) {
+            System.out.println("[GameController] No active Planets card for selection");
+            return false;
+        }
+        
+        return currentPlanetsCard.handlePlayerSelection(player, planetIndex);
+    }
 
+    /**
+     * Get the name of a planet by its index from the current Planets card
+     * @param planetIndex Index of the planet
+     * @return Name of the planet, or null if index is invalid or no active Planets card
+     */
+    public String getPlanetNameByIndex(int planetIndex) {
+        if (currentPlanetsCard == null) {
+            return null;
+        }
+        
+        return currentPlanetsCard.getPlanetNameByIndex(planetIndex);
+    }
+
+    /**
+     * Set the current Planets card for interactive selection
+     * This is called when a Planets card is drawn and needs player interaction
+     * @param planetsCard The Planets card requiring player choices
+     */
+    public void setCurrentPlanetsCard(Planets planetsCard) {
+        this.currentPlanetsCard = planetsCard;
+    }
+
+    /**
+     * Clear the current Planets card (called when selection phase is complete)
+     */
+    public void clearCurrentPlanetsCard() {
+        this.currentPlanetsCard = null;
+    }
+
+    /**
+     * Get the current Planets card if one is active
+     * @return The current Planets card, or null if none is active
+     */
+    public Planets getCurrentPlanetsCard() {
+        return currentPlanetsCard;
+    }
+
+    /**
+     * Implementation of PlanetSelectionCallback for server-side handling
+     */
+    private class PlanetsSelectionCallbackImpl implements Planets.PlanetSelectionCallback {
+        private final Planets planetsCard;
+        private final Map<Player, Boolean> playerSelectionStatus = new HashMap<>();
+        
+        public PlanetsSelectionCallbackImpl(Planets planetsCard) {
+            this.planetsCard = planetsCard;
+            // Initialize all players as not having made selections
+            for (Player player : gameModel.getPlayers()) {
+                playerSelectionStatus.put(player, false);
+            }
+        }
+        
+        @Override
+        public void requestPlanetSelection(Player player, List<Planets.Planet> availablePlanets, int flightDaysCost) {
+            // This would trigger the server to send a PlanetChoiceRequest to the specific player
+            // For now, just log the request
+            System.out.println("[GameController] Requesting planet selection from " + player.getNickName());
+        }
+        
+        @Override
+        public boolean allSelectionsComplete() {
+            return playerSelectionStatus.values().stream().allMatch(Boolean::booleanValue);
+        }
+        
+        @Override
+        public Planets.Planet getPlayerSelection(Player player) {
+            // This would return the player's selection once made
+            // Implementation would depend on how selections are stored
+            return null; // Placeholder
+        }
+        
+        /**
+         * Mark a player as having completed their selection
+         */
+        public void markPlayerSelectionComplete(Player player) {
+            playerSelectionStatus.put(player, true);
+        }
+    }
 }

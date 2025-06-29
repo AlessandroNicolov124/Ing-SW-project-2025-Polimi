@@ -47,5 +47,11 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception;
 
-
+    /**
+     * Select a planet to land on during a Planets adventure card
+     * @param playerId The player making the selection
+     * @param planetIndex Index of the chosen planet (-1 if no planet chosen)
+     * @throws Exception if there's an error sending the request
+     */
+    void selectPlanet(int playerId, int planetIndex) throws Exception;
 }

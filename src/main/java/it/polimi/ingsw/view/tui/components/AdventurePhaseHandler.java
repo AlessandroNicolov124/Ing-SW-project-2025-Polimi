@@ -3,6 +3,7 @@ package it.polimi.ingsw.view.tui.components;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.network.client.GeneralClientIf;
 import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.AdventureCards.Planets;
 
 import java.util.*;
 
@@ -15,6 +16,13 @@ public class AdventurePhaseHandler {
     
     private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
     private boolean isActive = false;
+    
+    // Planet selection state
+    private boolean waitingForPlanetSelection = false;
+    private List<Planets.Planet> currentAvailablePlanets = null;
+    private int currentFlightDaysCost = 0;
+    private int currentSelectingPlayerId = -1;
+    private String currentSelectingPlayerName = "";
     
     public AdventurePhaseHandler(ConsoleManager console, GeneralClientIf client, Player currentPlayer, GalaxyTruckerTUI parentTUI) {
         this.console = console;
@@ -97,6 +105,40 @@ public class AdventurePhaseHandler {
      * Execute a command during adventure phase
      */
     private boolean executeCommand(String cmd) {
+        // Handle planet selection commands
+        if (waitingForPlanetSelection && (currentPlayer != null && currentPlayer.getId() == currentSelectingPlayerId)) {
+            if (cmd.matches("\\d+")) {
+                // Player entered a planet number
+                try {
+                    int planetIndex = Integer.parseInt(cmd) - 1; // Convert from 1-based to 0-based index
+                    if (planetIndex >= 0 && planetIndex < currentAvailablePlanets.size()) {
+                        try {
+                            client.selectPlanet(currentPlayer.getId(), planetIndex);
+                            console.printMessage("Planet selection sent. Waiting for confirmation...");
+                            return true;
+                        } catch (Exception e) {
+                            console.printError("Error sending planet selection: " + e.getMessage());
+                        }
+                    } else {
+                        console.printMessage("Invalid planet number. Please choose 1-" + currentAvailablePlanets.size() + " or 'skip' to not land.");
+                    }
+                } catch (NumberFormatException e) {
+                    console.printMessage("Invalid input. Please enter a number.");
+                }
+                return true;
+            } else if (cmd.equals("skip") || cmd.equals("none") || cmd.equals("0")) {
+                // Player chooses not to land
+                try {
+                    client.selectPlanet(currentPlayer.getId(), -1);
+                    console.printMessage("Chose not to land. Waiting for confirmation...");
+                } catch (Exception e) {
+                    console.printError("Error sending planet selection: " + e.getMessage());
+                }
+                return true;
+            }
+        }
+        
+        // Regular adventure phase commands
         switch (cmd) {
             case "pick":
                 // Try to pick an adventure card (only leader can)
@@ -118,7 +160,11 @@ public class AdventurePhaseHandler {
                 isActive = false;
                 return false; // Signal to exit
             default:
-                console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
+                if (!waitingForPlanetSelection) {
+                    console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
+                } else {
+                    console.printMessage("Invalid planet selection. Type 'help' for available commands.");
+                }
                 break;
         }
         return true; // Continue
@@ -130,7 +176,17 @@ public class AdventurePhaseHandler {
     private void showStatus() {
         if (currentPlayer != null) {
             console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
-            console.printMessage("Game state: Adventure Phase - only leader can pick cards");
+            
+            if (waitingForPlanetSelection) {
+                console.printMessage("Game state: Waiting for planet selection");
+                console.printMessage("Current player choosing: " + currentSelectingPlayerName);
+                if (currentPlayer.getId() == currentSelectingPlayerId) {
+                    console.printMessage("It's your turn to choose a planet!");
+                    displayPlanetOptions();
+                }
+            } else {
+                console.printMessage("Game state: Adventure Phase - only leader can pick cards");
+            }
         }
     }
     
@@ -138,11 +194,20 @@ public class AdventurePhaseHandler {
      * Show available commands
      */
     private void showHelp() {
-        console.printMessage("Available commands:");
-        console.printMessage("  pick   - Pick an adventure card (only if you are the leader)");
-        console.printMessage("  status - Show current game status");
-        console.printMessage("  help   - Show this help message");
-        console.printMessage("  quit   - Exit the game");
+        if (waitingForPlanetSelection && (currentPlayer != null && currentPlayer.getId() == currentSelectingPlayerId)) {
+            console.printMessage("Planet Selection Commands:");
+            console.printMessage("  1-" + currentAvailablePlanets.size() + " - Select planet by number");
+            console.printMessage("  skip   - Don't land on any planet");
+            console.printMessage("  status - Show current planet options");
+            console.printMessage("  help   - Show this help message");
+            console.printMessage("  quit   - Exit the game");
+        } else {
+            console.printMessage("Available commands:");
+            console.printMessage("  pick   - Pick an adventure card (only if you are the leader)");
+            console.printMessage("  status - Show current game status");
+            console.printMessage("  help   - Show this help message");
+            console.printMessage("  quit   - Exit the game");
+        }
     }
     
     /**
@@ -378,5 +443,90 @@ public class AdventurePhaseHandler {
      */
     public void deactivate() {
         isActive = false;
+    }
+
+    /**
+     * Handle planet choice request
+     */
+    public void handlePlanetChoiceRequested(UUID matchId, List<Planets.Planet> availablePlanets, int flightDaysCost, int currentPlayerId, String currentPlayerName) {
+        this.waitingForPlanetSelection = true;
+        this.currentAvailablePlanets = new ArrayList<>(availablePlanets);
+        this.currentFlightDaysCost = flightDaysCost;
+        this.currentSelectingPlayerId = currentPlayerId;
+        this.currentSelectingPlayerName = currentPlayerName;
+        
+        console.printMessage("\n=== PLANET SELECTION PHASE ===");
+        console.printMessage("A Planets card has been drawn!");
+        console.printMessage("Flight days cost: " + flightDaysCost);
+        console.printMessage("Current player choosing: " + currentPlayerName);
+        
+        if (currentPlayer != null && currentPlayer.getId() == currentPlayerId) {
+            console.printMessage("\n*** IT'S YOUR TURN TO CHOOSE A PLANET! ***");
+            displayPlanetOptions();
+            console.printMessage("\nEnter the number of the planet you want (1-" + availablePlanets.size() + ") or 'skip' to not land:");
+        } else {
+            console.printMessage("\nWaiting for " + currentPlayerName + " to make their selection...");
+        }
+    }
+    
+    /**
+     * Handle planet selection result
+     */
+    public void handlePlanetSelected(int playerId, String playerName, int planetIndex, String planetName, boolean success, String message) {
+        if (success) {
+            if (planetIndex >= 0) {
+                console.printMessage("✓ " + playerName + " selected planet: " + planetName);
+                
+                // Remove selected planet from available list if it was taken
+                if (currentAvailablePlanets != null) {
+                    currentAvailablePlanets.removeIf(planet -> planet.getName().equals(planetName));
+                }
+            } else {
+                console.printMessage("✓ " + playerName + " chose not to land on any planet");
+            }
+            
+            // Check if this was our selection
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                waitingForPlanetSelection = false;
+                console.printMessage("Your selection has been confirmed.");
+            }
+        } else {
+            console.printError("✗ Planet selection failed for " + playerName + ": " + message);
+            
+            // If it was our failed selection, keep waiting for a valid choice
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                console.printMessage("Please try selecting a planet again:");
+                displayPlanetOptions();
+            }
+        }
+    }
+    
+    /**
+     * Display the current planet options to the player
+     */
+    private void displayPlanetOptions() {
+        if (currentAvailablePlanets == null || currentAvailablePlanets.isEmpty()) {
+            console.printMessage("No planets available for selection.");
+            return;
+        }
+        
+        console.printMessage("\n╔══════════════════════════════════════════════════════════════════════╗");
+        console.printMessage("║                        AVAILABLE PLANETS                            ║");
+        console.printMessage("║                     Cost: " + String.format("%-2d", currentFlightDaysCost) + " flight days                               ║");
+        console.printMessage("╠══════════════════════════════════════════════════════════════════════╣");
+        
+        for (int i = 0; i < currentAvailablePlanets.size(); i++) {
+            Planets.Planet planet = currentAvailablePlanets.get(i);
+            String planetInfo = (i + 1) + ". " + planet.getName() + 
+                              " (Cargo: " + planet.getCargoCount() + 
+                              " units, Value: " + planet.getTotalCargoValue() + ")";
+            console.printMessage("║ " + String.format("%-68s", planetInfo) + " ║");
+        }
+        
+        console.printMessage("║                                                                      ║");
+        console.printMessage("║ Options:                                                             ║");
+        console.printMessage("║   • Enter planet number (1-" + String.format("%-2d", currentAvailablePlanets.size()) + ") to land and collect cargo      ║");
+        console.printMessage("║   • Type 'skip' to not land on any planet                           ║");
+        console.printMessage("╚══════════════════════════════════════════════════════════════════════╝");
     }
 } 

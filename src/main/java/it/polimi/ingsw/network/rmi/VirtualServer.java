@@ -1,9 +1,14 @@
 package it.polimi.ingsw.network.rmi;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.GameController;
+import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.network.Difficulty;
 import it.polimi.ingsw.network.GameMatch;
+import it.polimi.ingsw.network.LobbyManager;
+import it.polimi.ingsw.network.MatchStates;
 import it.polimi.ingsw.network.client.RmiClientIf;
 import it.polimi.ingsw.network.messages.RotationType;
 
@@ -38,7 +43,7 @@ public interface VirtualServer extends Remote {
 
     boolean leaveMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
-    boolean startMatch(UUID matchId, int playerId, String username, RmiClientIf client) throws RemoteException;
+    boolean startMatch(UUID matchId, int playerId, String playerName, RmiClientIf client) throws RemoteException;
 
     boolean loadingAck(UUID matchId, RmiClientIf client) throws RemoteException;
 
@@ -48,6 +53,15 @@ public interface VirtualServer extends Remote {
     
     void pickAdventureCard(int playerId, RmiClientIf client) throws RemoteException;
     void readyForFlight(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
+
+    /**
+     * Select a planet to land on during a Planets adventure card
+     * @param playerId The player making the selection
+     * @param planetIndex Index of the chosen planet (-1 if no planet chosen)
+     * @param client The client making the request
+     * @throws RemoteException if there's an RMI communication error
+     */
+    void selectPlanet(int playerId, int planetIndex, RmiClientIf client) throws RemoteException;
 
     //void getPlayerOrderFromsrv();
 

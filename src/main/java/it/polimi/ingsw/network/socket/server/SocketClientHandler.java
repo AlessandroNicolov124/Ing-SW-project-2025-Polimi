@@ -36,7 +36,10 @@ import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseStartResponse;
 import it.polimi.ingsw.network.messages.adventure.AdventurePhaseCompleteResponse;
+import it.polimi.ingsw.network.messages.adventure.PlanetSelectionResponse;
+import it.polimi.ingsw.network.messages.adventure.PlanetChoiceRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
+import it.polimi.ingsw.AdventureCards.Planets;
 
 import java.io.*;
 import java.net.Socket;
@@ -341,6 +344,13 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (success && adventureCard != null) {
             System.out.println("[ServerSocket] Applying adventure card effect: " + adventureCard.getClass().getSimpleName());
             controller.applyAdventureCardEffect(adventureCard);
+            
+            // Special handling for Planets cards - trigger interactive selection
+            if (adventureCard.isPlanetsCard()) {
+                Planets planetsCard = (Planets) adventureCard;
+                triggerPlanetSelection(match, planetsCard);
+                return; // Don't send normal response yet, wait for planet selections to complete
+            }
         }
 
         System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
@@ -388,6 +398,55 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         lobbyManager.multicastToMatch(match.getMatchId(),
                 new PickAdventureCardResponse(
                         currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
+    }
+
+    /**
+     * Trigger interactive planet selection for a Planets card
+     * @param match The game match
+     * @param planetsCard The Planets card requiring player selections
+     */
+    private void triggerPlanetSelection(GameMatch match, Planets planetsCard) {
+        System.out.println("[ServerSocket] Starting sequential planet selection");
+        
+        // Start planet selection phase in the match
+        boolean started = match.startPlanetSelection(planetsCard);
+        if (!started) {
+            System.out.println("[ServerSocket] Failed to start planet selection");
+            return;
+        }
+        
+        // Get the first player to choose (leader)
+        int firstPlayerId = match.getCurrentPlanetSelector();
+        if (firstPlayerId == -1) {
+            System.out.println("[ServerSocket] No players available for planet selection");
+            return;
+        }
+        
+        Player firstPlayer = match.getPlayerById(firstPlayerId);
+        if (firstPlayer == null) {
+            System.out.println("[ServerSocket] First player not found for planet selection");
+            return;
+        }
+        
+        List<Planets.Planet> availablePlanets = match.getAvailablePlanets();
+        int flightDaysCost = match.getPlanetSelectionFlightDaysCost();
+        
+        System.out.println("[ServerSocket] Starting planet selection with " + firstPlayer.getNickName() + 
+                          " (" + availablePlanets.size() + " planets available)");
+        
+        // Send planet choice request to all players, indicating who should choose first
+        try {
+            lobbyManager.multicastToMatch(match.getMatchId(), 
+                new PlanetChoiceRequest(
+                    match.getMatchId(), 
+                    availablePlanets, 
+                    flightDaysCost, 
+                    firstPlayer.getId(), 
+                    firstPlayer.getNickName()));
+        } catch (Exception e) {
+            System.err.println("[ServerSocket] Error sending planet choice request: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -612,5 +671,93 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     }
 
+    @Override
+    public void selectPlanet(int playerId, int planetIndex) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
+        if (match == null) {
+            showUpdate(new PlanetSelectionResponse(
+                playerId, "", planetIndex, null, false, "Match not found"));
+            return;
+        }
 
+        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+            showUpdate(new PlanetSelectionResponse(
+                playerId, "", planetIndex, null, false, "Match not in progress"));
+            return;
+        }
+
+        if (!match.isPlanetSelectionActive()) {
+            showUpdate(new PlanetSelectionResponse(
+                playerId, "", planetIndex, null, false, "No planet selection currently active"));
+            return;
+        }
+
+        Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            showUpdate(new PlanetSelectionResponse(
+                playerId, "", planetIndex, null, false, "Player not found"));
+            return;
+        }
+
+        // Check if it's this player's turn to select
+        int currentSelector = match.getCurrentPlanetSelector();
+        if (playerId != currentSelector) {
+            showUpdate(new PlanetSelectionResponse(
+                playerId, "", planetIndex, null, false, "Not your turn to select a planet"));
+            return;
+        }
+
+        // Record the planet selection
+        boolean success = match.recordPlanetSelection(playerId, planetIndex);
+        String planetName = null;
+        
+        if (success && planetIndex >= 0) {
+            // Get planet name from the current Planets card
+            GameController controller = match.getController();
+            planetName = controller.getPlanetNameByIndex(planetIndex);
+        }
+        
+        String message = success ? 
+            (planetIndex >= 0 ? "Selected planet: " + planetName : "Chose not to land") :
+            "Invalid planet selection";
+
+        // Broadcast to all players in the match
+        lobbyManager.multicastToMatch(match.getMatchId(), 
+            new PlanetSelectionResponse(playerId, player.getNickName(), planetIndex, planetName, success, message));
+
+        // Check if all players have made their selections
+        if (success && match.isPlanetSelectionComplete()) {
+            // End planet selection and apply results
+            match.endPlanetSelection();
+            
+            // Send adventure phase completion to continue normal card picking
+            GameController controller = match.getController();
+            Map<Integer, Integer> updatedPositions = controller.getCurrentPlayerPositions();
+            
+            lobbyManager.multicastToMatch(match.getMatchId(),
+                new PickAdventureCardResponse(
+                    playerId, controller.getCurrentPlanetsCard(), true, 
+                    "Planet selection complete - all players have made their choices", 
+                    -1, updatedPositions));
+        } else if (success) {
+            // Move to next player
+            int nextSelector = match.getNextPlanetSelector();
+            if (nextSelector != -1) {
+                Player nextPlayer = match.getPlayerById(nextSelector);
+                if (nextPlayer != null) {
+                    List<Planets.Planet> availablePlanets = match.getAvailablePlanets();
+                    int flightDaysCost = match.getPlanetSelectionFlightDaysCost();
+                    
+                    // Send choice request to next player
+                    lobbyManager.multicastToMatch(match.getMatchId(), 
+                        new PlanetChoiceRequest(
+                            match.getMatchId(), 
+                            availablePlanets, 
+                            flightDaysCost, 
+                            nextSelector, 
+                            nextPlayer.getNickName()));
+                }
+            }
+        }
+    }
 }
