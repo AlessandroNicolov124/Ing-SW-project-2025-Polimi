@@ -22,6 +22,8 @@ public class ShipBuildingHandler {
     private final Random random = new Random();
     private Component currentComponent = null;
 
+    private List<Component> stashedComponents = new ArrayList<>();
+
 
     public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer, GalaxyTruckerTUI parentTUI) {
         this.console = console;
@@ -76,13 +78,7 @@ public class ShipBuildingHandler {
             if (currentComponent == null) {
                 try {
                     simpleClient.pickComponentCard(currentPlayer.getId());
-//                    if (pickedComponent != null) {
-//                        currentComponent = pickedComponent;
-//                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-//                        displayComponent(currentComponent);
-                    //} else {
-                        //console.printMessage("\nRequesting component from server...");
-                    //}
+
                 } catch (Exception e) {
                     console.printError("Error picking component: " + e.getMessage());
                     continue;
@@ -162,6 +158,46 @@ public class ShipBuildingHandler {
                         buildingDone = true;
                     }
                     break;
+                case "stash":
+                    if (currentComponent != null) {
+                        if (stashedComponents.size()<2)
+                        {
+                            stashedComponents.add(currentComponent);
+                            currentComponent = null;
+                        }
+                    }
+                    else
+                    {
+                        console.printError("Pick a component before stashing");
+                    }
+                    break;
+                case "showstash":
+                    if (!stashedComponents.isEmpty()) {
+                        for(Component comp : stashedComponents) {
+                            displayComponent(comp);
+                        }
+                    }
+                    else {
+                        console.printError("No stashed components");
+                    }
+                    break;
+                case "unstash":
+                    if (currentComponent != null) {
+                        if (stashedComponents.isEmpty()) {
+                            console.printError("Impossible to unstash component");
+                        }
+                        else {
+                            currentComponent = stashedComponents.removeFirst();
+                            console.printMessage("Unstashed component: " + currentComponent.getClass().getSimpleName());
+                        }
+                    }
+                    else
+                    {
+                        console.printError("Place current componet before unstashing");
+                    }
+
+                    break;
+
                 case "q": // Quit ship building
                     console.printMessage("Exiting ship building...");
                     buildingDone = true;
@@ -361,6 +397,9 @@ public class ShipBuildingHandler {
         console.printMessage("Q  - Quit ship building (temporary)");
         console.printMessage("DS - Display Ship again");
         console.printMessage("DC - Display Current component again");
+        console.printMessage("STASH - stash current component");
+        console.printMessage("SHOWSTASH - show stashed components");
+        console.printMessage("UNSTASH - unstash component");
         console.printMessage("DEBUGSKIP - Force proceed (skip validation)"); // New debug option
         console.printMessage("---------------------------");
         console.printMessage("Enter your choice: ");

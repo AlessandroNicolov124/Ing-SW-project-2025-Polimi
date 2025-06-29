@@ -1,15 +1,10 @@
 package it.polimi.ingsw.view.tui.components;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -45,6 +40,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private CompletableFuture<Player> playerCreationFuture;
     private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
+    private final int PENALTY_TIMEOUT = 10000;
 
 
     public GalaxyTruckerTUI()
@@ -254,24 +250,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         localReady = false;
      }
 
-/*     public void handlePlayerReady() {
-        try {
-            console.AskAreYouReadyQuestion();
-            String readyAnswer = console.readCommand().trim().toLowerCase();
-
-            if ("yes".equals(readyAnswer)) {
-
-                console.printMessage("You are marked as ready. Waiting for game to start...");
-                state = TuiState.SHIP_BUILDING;
-            } else {
-                console.printMessage("Okay, not marking as ready yet.");
-            }
-        } catch (Exception e) {
-            console.printError("Error setting player ready: " + e.getMessage());
-            state = TuiState.ASK_NET;
-        }
-    } */
-
     private void handleShipBuildingState() {
         if (this.currentPlayer == null) {
             console.printError("Cannot start ship building: current player not set.");
@@ -296,85 +274,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         // Normal state transitions are handled by the server's position assignment system
         // via shipValidated() and positionAssigned() callbacks
     }
-
-//     private void handleChooseStartPositionState() {
-//         if (this.currentPlayer == null) {
-//             console.printError("Cannot choose starting position: current player not set.");
-//             state = TuiState.ASK_USERNAME;
-//             return;
-//         }
-
-//         console.printMessage("\n=== Choose Your Starting Position ===");
-
-//         try {
-//             // Request available positions from server 
-//             if (socketClient != null) {
-//                 socketClient.requestAvailablePositions();
-//                 console.printMessage("Requesting available positions from server...");
-//             } else {
-//                 // Fall back to local positions if no socket client
-//                 //availablePositions = client.getAvailableStartingPositions();
-//                 showAvailablePositions(availablePositions);
-//             }
-//         } catch (IOException e) {
-//             console.printError("Error requesting available positions: " + e.getMessage());
-//             state = TuiState.TERMINATED;
-//             return;
-//         }
-
-//         boolean positionChosen = false;
-//         while (!positionChosen) {
-//             if (availablePositions == null || availablePositions.isEmpty()) {
-//                 console.printMessage("Waiting for server to provide available positions...");
-//                 try {
-//                     Thread.sleep(1000);
-//                 } catch (InterruptedException e) {
-//                     Thread.currentThread().interrupt();
-//                 }
-//                 continue;
-//             }
-
-//             String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
-
-//             try {
-//                 int chosenPosition = Integer.parseInt(input);
-                
-//                 // Validate position selection - use local data when connected to server, controller when offline
-// //                boolean isValid = (socketClient != null) ?
-// //                    availablePositions.contains(chosenPosition) :
-//                     //client.isPositionSelectionValid(chosenPosition);
-                    
-//                 if (!true) {
-//                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
-//                     continue;
-//                 }
-
-//                 try {
-//                     if (socketClient != null) {
-//                         socketClient.selectPosition(chosenPosition);
-//                         console.printMessage("Position request sent to server. Waiting for confirmation...");
-//                         // The response will be handled by notifyPositionResponse
-//                         positionChosen = true;
-//                         // Don't transition state yet - wait for server confirmation
-//                     } else {
-//                         //TODO implemet corretly using client
-//                         // Fall back to local controller if no socket client
-//                         /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
-//                             positionChosen = true;
-//                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
-//                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-//                         } else {
-//                             console.printError("Failed to set position. It might be taken or invalid. Please try again.");
-//                         }*/
-//                     }
-//                 } catch (Exception e) {
-//                     console.printError("Error selecting position: " + e.getMessage());
-//                 }
-//             } catch (NumberFormatException e) {
-//                 console.printError("Invalid input. Please enter a number.");
-//             }
-//         }
-//     }
 
     private void handleWaitForAllPlayersPositionedState() {
         console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
@@ -904,7 +803,29 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            
+
+            Timer timer = new Timer(); // Create a new timer
+
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    //System.out.println("Timer expired! Notification sent.");
+                    if (TuiState.SHIP_BUILDING.equals(state)) {
+                        console.printMessage("Time expired, you will get a penalty");
+                        try {
+                            client.sendTimeExpiredNotification(username);
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+
+                }
+            };
+
+            timer.schedule(task, PENALTY_TIMEOUT);
+
+            console.printMessage("You are going to have 1:30 minute time at your disposal");
+
             this.state = TuiState.SHIP_BUILDING;
         }
     }
