@@ -27,14 +27,7 @@ public class MeteorSwarmTest {
         meteorSwarm = new MeteorSwarm(1, 1, new ArrayList<>(meteors));
 
         ship = new ShipBuilder(7, 5);
-        player = new Player(1, "TestPlayer", true, ship);
-
-        gameModel = new GameModel();
-        gameModel.addPlayer(player);
-        gameModel.setCredits(player, 10);
-
         ship.placeComponent(new Cabin(true), ship.getStartingPosition());
-
         Cabin cabin2 = new Cabin(false);
         Cabin cabin3 = new Cabin(false);
         Cabin cabin4 = new Cabin(false);
@@ -45,8 +38,14 @@ public class MeteorSwarmTest {
         ship.placeComponent(cabin3, ship.getStartingPosition().getAdjacentPosition(Direction.SOUTH));
         ship.placeComponent(cabin4, ship.getStartingPosition().getAdjacentPosition(Direction.WEST));
 
-        gameModel.getFlightBoard().setInitialPosition(player, 4);
-        assertEquals(4, gameModel.getFlightBoard().getPosition(player));
+        player = new Player(1, "TestPlayer", true, ship);
+
+        gameModel = new GameModel();
+        gameModel.addPlayer(player);
+        gameModel.setCredits(player, 10);
+        gameModel.getFlightBoard().setInitialPosition(player, 1);
+
+        assertEquals(6, gameModel.getFlightBoard().getPosition(player));
     }
 
     @Test
