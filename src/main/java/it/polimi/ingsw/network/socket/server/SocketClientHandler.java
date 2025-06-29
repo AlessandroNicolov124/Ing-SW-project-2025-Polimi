@@ -465,6 +465,7 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
                     lobbyManager.multicastToMatch(match.getMatchId(),
                         new AdventurePhaseStartResponse(
                             match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+
                 }
             }
             
@@ -790,6 +791,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
                         match.getPlayerPositions(),
                         match.getFirstPlayerToAct()
                 ));
+
+                match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
             }
         } else {
             showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));

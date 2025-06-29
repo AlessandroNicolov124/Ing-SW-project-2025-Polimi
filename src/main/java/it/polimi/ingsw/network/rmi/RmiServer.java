@@ -572,12 +572,13 @@ public class RmiServer extends UnicastRemoteObject
                         playerId, player.getNickName(), assignedPosition, true, positionMessage));
                 
                 // Check if all players have been positioned and start adventure phase
+
                 if (match.allPlayersPositioned()) {
-                    int firstPlayerToAct = match.getFirstPlayerToAct();
+                    match.setMatchState(MatchStates.FLIGHT_PREPARATION);
                     lobbyManager.multicastToMatch(match.getMatchId(),
-                        new AdventurePhaseStartResponse(
-                            match.getMatchId(), match.getPlayerPositions(), firstPlayerToAct));
+                            new FlightPreparationStartResponse(match.getMatchId(), true, "All players ready – flight preparation begins"));
                 }
+
             }
             
         } else {
