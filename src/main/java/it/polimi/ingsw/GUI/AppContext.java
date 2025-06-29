@@ -804,7 +804,13 @@ public class AppContext implements GameListener {
 
     @Override
     public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
-
+        Platform.runLater(() -> {
+            try {
+                showInfoMessage("Adventure card", message);
+            } catch (Exception e) {
+                showErrorDialog("Error Picking card", e.getMessage());
+            }
+        });
     }
 
 

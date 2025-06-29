@@ -1,5 +1,6 @@
 package it.polimi.ingsw.GUI.Controllers;
 
+import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.GUI.AppContext;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
@@ -24,6 +25,7 @@ import javafx.scene.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class FlightBoardController extends GuiContoller implements FlightBoardListener {
@@ -169,5 +171,10 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
         {
 
         }
+    }
+
+    @Override
+    public void adventureCardPicketFromsrv(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
+
     }
 }
