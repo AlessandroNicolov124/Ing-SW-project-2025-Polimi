@@ -36,7 +36,7 @@ public class Planets extends AdventureCard{
         LEVEL1_VARIATION_4, // 1 flight day, 3 planets
         
         // Level 2 Deck Variations  
-        LEVEL2_VARIATION_1, // 3 flight days, 3 planets
+        LEVEL2_VARIATION_1, // 3 flight days, 2 planets
         LEVEL2_VARIATION_2, // 4 flight days, 3 planets  
         LEVEL2_VARIATION_3, // 3 flight days, 3 planets
         LEVEL2_VARIATION_4  // 2 flight days, 4 planets

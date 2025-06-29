@@ -79,18 +79,18 @@ class PlanetsTest {
         Planets planets = new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_1);
         
         assertEquals(Planets.PlanetVariation.LEVEL2_VARIATION_1, planets.getVariation());
-        assertEquals(2, planets.getFlightDaysCost());
-        assertEquals(3, planets.getPlanets().size());
+        assertEquals(3, planets.getFlightDaysCost());
+        assertEquals(2, planets.getPlanets().size());
     }
 
     @Test
-    @DisplayName("Level 2 Variation 4 should have highest flight day cost")
+    @DisplayName("Level 2 Variation 4 should have 4 planets")
     void testLevel2Variation4() {
         Planets planets = new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_4);
         
         assertEquals(Planets.PlanetVariation.LEVEL2_VARIATION_4, planets.getVariation());
-        assertEquals(4, planets.getFlightDaysCost()); // Highest cost
-        assertEquals(3, planets.getPlanets().size());
+        assertEquals(2, planets.getFlightDaysCost()); 
+        assertEquals(4, planets.getPlanets().size()); // Only Level 2 variation with 4 planets
     }
 
     @Test
@@ -134,9 +134,9 @@ class PlanetsTest {
         Planets planets = new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_2);
         String description = planets.getDescription();
         
-        assertTrue(description.contains("3 flight days")); // Level 2 Variation 2 cost
+        assertTrue(description.contains("4 flight days")); // Level 2 Variation 2 cost
         assertTrue(description.contains("LEVEL2_VARIATION_2"));
-        assertTrue(description.contains("2 planets")); // Level 2 Variation 2 has 2 planets
+        assertTrue(description.contains("3 planets")); // Level 2 Variation 2 has 3 planets
     }
 
     @Test
@@ -153,17 +153,17 @@ class PlanetsTest {
     void testVariationDifferences() {
         Planets level1Var1 = new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_1);
         Planets level1Var4 = new Planets(1, 1, Planets.PlanetVariation.LEVEL1_VARIATION_4);
-        Planets level2Var4 = new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_4);
+        Planets level2Var2 = new Planets(1, 1, Planets.PlanetVariation.LEVEL2_VARIATION_2);
         
         // Different flight day costs
         assertEquals(2, level1Var1.getFlightDaysCost());
         assertEquals(1, level1Var4.getFlightDaysCost()); // Lowest
-        assertEquals(4, level2Var4.getFlightDaysCost()); // Highest
+        assertEquals(4, level2Var2.getFlightDaysCost()); // Highest
         
         // All should have planets
         assertTrue(level1Var1.getPlanets().size() >= 2);
         assertTrue(level1Var4.getPlanets().size() >= 2);
-        assertTrue(level2Var4.getPlanets().size() >= 2);
+        assertTrue(level2Var2.getPlanets().size() >= 2);
     }
 
     @Test
