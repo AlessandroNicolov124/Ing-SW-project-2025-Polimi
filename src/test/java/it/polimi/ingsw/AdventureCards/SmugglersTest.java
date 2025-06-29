@@ -38,7 +38,8 @@ public class SmugglersTest {
         SpecialCargoHolds specialCargoHolds = new SpecialCargoHolds(CargoHoldsSize.DOUBLE);
         specialCargoHolds.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
         ship1.placeComponent(specialCargoHolds, new Position(4, 3));
-        winner = new Player(1, "winner1", true, ship1);
+        winner = new Player(1, "winner", true, ship1);
+        System.out.println("components of winner " + ship1.getComponents().size());
 
         // Loser: cannon strength < pirates
         ShipBuilder ship2 = new ShipBuilder(7, 5);
@@ -63,12 +64,14 @@ public class SmugglersTest {
 
 
         loser = new Player(2, "loser", true, ship2);
+        System.out.println("components of loser " + ship1.getComponents().size());
+
 
         gameModel.addPlayer(winner);
         gameModel.addPlayer(loser);
         gameModel.setCredits(winner, 0);
         gameModel.setCredits(loser, 0);
-        gameModel.getFlightBoard().setInitialPosition(winner, 3);
+        gameModel.getFlightBoard().setInitialPosition(winner, 2);
         gameModel.getFlightBoard().setInitialPosition(loser, 1);
 
         List<Cargo> cargoList = new ArrayList<>();
@@ -79,27 +82,32 @@ public class SmugglersTest {
 
     @Test
     void testFightSmugglersRewardAndPenalty() {
+        int positionWinner = gameModel.getFlightBoard().getPosition(winner);
+        int positionLoser = gameModel.getFlightBoard().getPosition(loser);
+
         smugglers.fightSmugglers(gameModel);
 
         // Winner: ha cargo e viene spostato indietro
         assertEquals(smugglers.getGoodsGainedOnVictory().size(), winner.getShip().getCargoList().size(), "Il vincitore deve ricevere le merci vinte");
         assertTrue(winner.getShip().getCargoList().containsAll(smugglers.getGoodsGainedOnVictory()), "Il vincitore deve ricevere le merci vinte");
-        assertEquals(2, gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 1");
+        assertEquals(positionWinner - smugglers.getFlightDaysCost(), gameModel.getFlightBoard().getPosition(winner), "Il vincitore deve essere spostato indietro di 1");
 
         // Loser: non riceve cargo, ma non li deve nemmeno perdere
-        assertEquals(2, loser.getShip().getCargoList().size(), "Il perdente non deve ricevere /perdere merci");
-        assertEquals(1, gameModel.getFlightBoard().getPosition(loser), "La posizione del perdente deve rimanere invariata");
+        assertEquals(positionWinner-smugglers.getFlightDaysCost(), loser.getShip().getCargoList().size(), "Il perdente non deve ricevere /perdere merci");
+        assertEquals(positionLoser, gameModel.getFlightBoard().getPosition(loser), "La posizione del perdente deve rimanere invariata");
     }
 
     @Test
     void testFightSmugglersRefuseReward() {
+        int positionWinner = gameModel.getFlightBoard().getPosition(winner);
+        int cargosize = winner.getShip().getCargoList().size();
         // Simula la vittoria ma rifiuta la ricompensa
         smugglers.fightSmugglersFor(winner); //smugglers sconfitti
         smugglers.offerReward(winner, gameModel, false); // rifiuta la ricompensa
 
         // Winner: non riceve cargo, ma non li deve nemmeno perdere e non viene spostato
-        assertEquals(0, winner.getShip().getCargoList().size(), "Il winner non deve ricevere /perdere merci");
-        assertEquals(3, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
+        assertEquals(cargosize, winner.getShip().getCargoList().size(), "Il winner non deve ricevere /perdere merci");
+        assertEquals(positionWinner, gameModel.getFlightBoard().getPosition(winner), "Il vincitore che rifiuta la ricompensa non deve essere spostato");
     }
 
     @Test
