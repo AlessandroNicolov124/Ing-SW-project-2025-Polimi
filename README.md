@@ -131,5 +131,3 @@ Regole complete, TUI, GUI, RMI, Socket, principali funzionalità avanzate.
 
 Il progetto Galaxy Trucker ha permesso di affrontare tutte le principali sfide dell’ingegneria del software: progettazione di sistemi distribuiti, implementazione di interfacce utente, gestione della persistenza e della comunicazione di rete.  
 L’adozione di pattern consolidati e la cura nella qualità del codice hanno garantito un sistema robusto, manutenibile e conforme alle specifiche.  
-L’architettura modulare consente inoltre di estendere facilmente il sistema con nuove funzionalità e modalità di gioco.
-
