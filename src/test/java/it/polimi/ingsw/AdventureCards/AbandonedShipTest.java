@@ -28,6 +28,7 @@ class AbandonedShipTest {
         gameModel = new GameModel();
         gameModel.addPlayer(player);
         gameModel.setCredits(player, 10);
+        gameModel.getFlightBoard().setInitialPosition(player, 1);
 
         Cabin c = new Cabin(true);
         ship.placeComponent(c, ship.getStartingPosition());
