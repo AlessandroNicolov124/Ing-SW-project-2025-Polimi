@@ -312,7 +312,8 @@ public class GameMatch {
     }
 
     public boolean setPlayerReadyForAdventure(int playerId, boolean ready) {
-        return playersReadyForAdventure.put(playerId, ready);
+        playersReadyForAdventure.put(playerId, ready);
+        return true; // Return true to indicate the operation was successful
     }
 
     public boolean allPlayersReadyForAdventure() {
@@ -468,6 +469,14 @@ public class GameMatch {
      * @return Map of player ID to assigned position
      */
     public Map<Integer, Integer> getPlayerPositions() {
+        // Return actual flight board positions from controller if available
+        if (controller != null) {
+            Map<Integer, Integer> flightBoardPositions = controller.getCurrentPlayerPositions();
+            if (flightBoardPositions != null && !flightBoardPositions.isEmpty()) {
+                return flightBoardPositions;
+            }
+        }
+        // Fallback to completion order positions if flight board not available
         return new ConcurrentHashMap<>(playerPositions);
     }
 
@@ -511,6 +520,24 @@ public class GameMatch {
             Player cardPicker = controller.getAdventureCardPicker();
             if (cardPicker != null) {
                 return cardPicker.getId();
+            }
+            
+            // If no specific card picker, find the leading player from flight board positions
+            Map<Integer, Integer> flightBoardPositions = controller.getCurrentPlayerPositions();
+            if (flightBoardPositions != null && !flightBoardPositions.isEmpty()) {
+                // Find player with highest flight board position (best position)
+                int bestPosition = Integer.MIN_VALUE;
+                int leadingPlayerId = -1;
+                
+                for (Map.Entry<Integer, Integer> entry : flightBoardPositions.entrySet()) {
+                    int position = entry.getValue();
+                    if (position > bestPosition) {
+                        bestPosition = position;
+                        leadingPlayerId = entry.getKey();
+                    }
+                }
+                
+                return leadingPlayerId;
             }
         }
         

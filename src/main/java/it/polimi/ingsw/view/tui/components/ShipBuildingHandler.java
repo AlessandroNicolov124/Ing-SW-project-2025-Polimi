@@ -22,6 +22,7 @@ public class ShipBuildingHandler {
     private final Random random = new Random();
     private Component currentComponent = null;
     private boolean waitingForServerResponse = false;
+    private boolean needsDisplayRefresh = false; // Flag to indicate display needs refresh
     private List<Component> stashedComponents = new ArrayList<>();
 
 
@@ -42,10 +43,20 @@ public class ShipBuildingHandler {
 
     // Method to redisplay the ship building menu after async operations
     public void refreshMenuDisplay() {
-        if (!waitingForServerResponse) {
-            console.printMessage("\n--- Menu Refreshed ---");
-        }
+        // Reset waiting state to allow new input
+        waitingForServerResponse = false;
+        console.printMessage("\n--- Menu Refreshed ---");
         printShipBuildingMenu(currentComponent != null);
+    }
+
+    // Method to reset waiting state when server operations complete or fail
+    public void resetWaitingState() {
+        waitingForServerResponse = false;
+    }
+
+    // Method to request display refresh on next loop iteration
+    public void requestDisplayRefresh() {
+        needsDisplayRefresh = true;
     }
 
     // Method to set the current component from async response
@@ -80,6 +91,12 @@ public class ShipBuildingHandler {
 
             // Only show menu if not waiting for server response
             if (!waitingForServerResponse) {
+                // Handle display refresh first if needed
+                if (needsDisplayRefresh) {
+                    refreshDisplay();
+                    needsDisplayRefresh = false;
+                }
+                
                 if (currentComponent != null) {
                     printShipBuildingMenu(true);
                 } else {
@@ -145,7 +162,7 @@ public class ShipBuildingHandler {
                 handleValidateAndFinish();
                 break;
             case "ds": // Display ship
-                displayShip();
+                refreshDisplay();
                 break;
             case "dc": // Display current component
                 if (currentComponent != null) {
@@ -156,6 +173,15 @@ public class ShipBuildingHandler {
                 break;
             case "q": // Quit
                 console.printMessage("Exiting ship building...");
+                return;
+            case "debugskip": // Debug option to skip validation
+                console.printMessage("[DEBUG] Skipping validation and proceeding to next phase...");
+                console.printMessage("[DEBUG] Warning: This may cause issues if ship is not actually valid!");
+                // Force transition by calling parent TUI methods directly
+                if (parentTUI != null) {
+                    // Simulate successful validation to proceed
+                    parentTUI.shipValidated(true, "DEBUG: Validation skipped by user");
+                }
                 return;
             default:
                 console.printError("Invalid choice. Please try again.");
@@ -548,6 +574,7 @@ public class ShipBuildingHandler {
     public void componentPlacedSuccessfully() {
         currentComponent = null;
         waitingForServerResponse = false;
+        needsDisplayRefresh = true; // Set flag to refresh display on next loop
         console.printMessage("Component placed successfully!");
     }
 
