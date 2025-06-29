@@ -792,7 +792,14 @@ public class AppContext implements GameListener {
 
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
-
+        Platform.runLater(() -> {
+            try {
+                GUIApp.showFlightBoard();
+            } catch (Exception e) {
+                showErrorDialog("Error during nrew page load", e.getMessage());
+                System.out.println("Error during nrew page load" + e.getMessage());
+            }
+        });
     }
 
     @Override
@@ -809,6 +816,30 @@ public class AppContext implements GameListener {
             if (gameComplete) {
                 showInfoMessage("Game Over", "The game has ended! " + completionReason);
             }
+        });
+    }
+
+    @Override
+    public void FlightOrderpositionRecieved(UUID matchId, int playerId, List<Player> list, boolean success) {
+        Platform.runLater(() -> {
+            for (FlightBoardListener listener : flightBoardListeners) {
+                listener.flightOrderRecieved(matchId,playerId, list, success);
+            }
+        });
+    }
+
+    @Override
+    public void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message) {
+        Platform.runLater(() -> {
+            System.out.println("Ready for adventure phase");
+            showInfoMessage("Notification","Ready for adventure! Waiting for other players");
+        });
+    }
+
+    @Override
+    public void adventurePhaseReady(UUID matchId, String message) {
+        Platform.runLater(() -> {
+            showInfoMessage("Notification", message);
         });
     }
 

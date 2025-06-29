@@ -140,14 +140,11 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
 
     @Override
     public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws RemoteException {
+        server.getStartingFligtOrder(matchId, playerId, this);
     }
 
     @Override
     public void pickAdventureCard(int currentPlayer) throws RemoteException {
-//        if (localPlayer == null) {
-//            throw new IllegalStateException("Cannot pick adventure card: local player not set");
-//        }
-        
         try {
             server.pickAdventureCard(currentPlayer, this);
         } catch (RemoteException e) {
@@ -180,6 +177,11 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
     @Override
     public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws RemoteException {
         server.removeTokenFromComponent(playerName, position, tokenType, this);
+    }
+
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId) throws RemoteException {
+        server.readyForAdventurePhase(matchId, playerId, this);
     }
 
 }

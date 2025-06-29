@@ -81,4 +81,7 @@ public interface RmiClientIf extends GeneralClientIf, Remote {
     @Override
     void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws RemoteException;
 
+    @Override
+    void readyForAdventurePhase(UUID matchId, int playerId) throws RemoteException;
+
 }

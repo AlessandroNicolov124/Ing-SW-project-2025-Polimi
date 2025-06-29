@@ -513,7 +513,6 @@ public class ShipBuilderController extends GuiContoller implements GameStateUpda
             statusLabel.setText("Select a component on the ship first");
             return;
         }
-
         Position componentPosition = null;
         for (Map.Entry<Position, ImageView> entry : cellViews.entrySet()) {
             if (entry.getValue() == selectedImageView) {

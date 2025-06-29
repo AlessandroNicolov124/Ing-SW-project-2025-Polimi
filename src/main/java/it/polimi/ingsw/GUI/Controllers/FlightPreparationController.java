@@ -327,7 +327,11 @@ public class FlightPreparationController extends GuiContoller implements Prepara
     }
 
     @FXML private void startGamePhase() {
-        // TODO: implement
+        try {
+            context.getClient().readyForAdventurePhase(context.getCurrentMatchId(), context.getPlayerId());
+        } catch (Exception e) {
+            showErrorDialog("Error", "Failed to load player ship: " + e.getMessage());
+        }
     }
 
     @Override
@@ -416,17 +420,25 @@ public class FlightPreparationController extends GuiContoller implements Prepara
     public void setContext(AppContext ctx) {
         this.context = ctx;
         ctx.addPreparationFlightListener(this);
-        
-        new Thread(() -> {
-            try {
-                context.getClient().getPlayerShip(context.getUsername());
-                Thread.sleep(500);
-                context.getClient().getPlayerTokenList(context.getUsername());
-            } catch (Exception e) {
-                Platform.runLater(() ->
+
+        try {
+        context.getClient().getPlayerShip(context.getUsername());
+
+        context.getClient().getPlayerTokenList(context.getUsername());
+        } catch (Exception e) {
+            Platform.runLater(() ->
                     showErrorDialog("Error fetching ship", e.getMessage()));
-            }
-        }).start();
+        }
+//        new Thread(() -> {
+//            try {
+//                context.getClient().getPlayerShip(context.getUsername());
+//                Thread.sleep(500);
+//                context.getClient().getPlayerTokenList(context.getUsername());
+//            } catch (Exception e) {
+//                Platform.runLater(() ->
+//                    showErrorDialog("Error fetching ship", e.getMessage()));
+//            }
+//        }).start();
     }
 
     private String getComponentImgPath(Component c) {
