@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 import it.polimi.ingsw.Direction;
+import it.polimi.ingsw.network.messages.RotationType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,7 +30,10 @@ public class ShieldGeneratorTest {
     public void testDefaultConstruction() {
         assertFalse(shieldGenerator.isCharged());
         assertEquals(1, shieldGenerator.getEnergyConsumption());
-        assertTrue(shieldGenerator.getProtectedDirections().isEmpty());
+        assertFalse(shieldGenerator.getProtectedDirections().isEmpty());
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.NORTH)); // Default protected direction
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.EAST)); // Default protected direction
+        assertEquals(2, shieldGenerator.getProtectedDirections().size()); // Default protected directions count
         assertFalse(shieldGenerator.isDamaged()); // Inherited from Component
     }
     // ===== PROTECTED DIRECTIONS TESTS =====
@@ -38,6 +42,7 @@ public class ShieldGeneratorTest {
     @EnumSource(Direction.class)
     @DisplayName("Should be able to add all Direction types to protected directions")
     public void testAddDirection(Direction direction) {
+        shieldGenerator.getProtectedDirections().clear(); // Clear before test to avoid duplicates
         shieldGenerator.add(direction);
         assertTrue(shieldGenerator.getProtectedDirections().contains(direction));
         assertEquals(1, shieldGenerator.getProtectedDirections().size());
@@ -46,41 +51,39 @@ public class ShieldGeneratorTest {
     @Test
     @DisplayName("Should be able to add multiple directions")
     public void testAddMultipleDirections() {
+        shieldGenerator.getProtectedDirections().clear(); // Clear before test to avoid duplicates
         shieldGenerator.add(Direction.NORTH);
         shieldGenerator.add(Direction.SOUTH);
         shieldGenerator.add(Direction.EAST);
 
         List<Direction> protectedDirections = shieldGenerator.getProtectedDirections();
-        assertEquals(3, protectedDirections.size());
+        assertEquals(2, protectedDirections.size());
         assertTrue(protectedDirections.contains(Direction.NORTH));
-        assertTrue(protectedDirections.contains(Direction.SOUTH));
+        assertFalse(protectedDirections.contains(Direction.SOUTH));
         assertTrue(protectedDirections.contains(Direction.EAST));
     }
 
     @Test
     @DisplayName("Should be able to remove direction from protected directions")
     public void testRemoveDirection() {
-        shieldGenerator.add(Direction.NORTH);
-        shieldGenerator.add(Direction.SOUTH);
-
         assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.NORTH));
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.EAST));
 
         shieldGenerator.remove(Direction.NORTH);
 
         assertFalse(shieldGenerator.getProtectedDirections().contains(Direction.NORTH));
-        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.SOUTH));
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.EAST));
         assertEquals(1, shieldGenerator.getProtectedDirections().size());
     }
 
     @Test
     @DisplayName("Remove should handle non-existent direction gracefully")
     public void testRemoveNonExistentDirection() {
-        shieldGenerator.add(Direction.NORTH);
-        assertEquals(1, shieldGenerator.getProtectedDirections().size());
+        assertEquals(2, shieldGenerator.getProtectedDirections().size());
 
         shieldGenerator.remove(Direction.SOUTH); // Not in the list
 
-        assertEquals(1, shieldGenerator.getProtectedDirections().size());
+        assertEquals(2, shieldGenerator.getProtectedDirections().size());
         assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.NORTH));
     }
 
@@ -267,10 +270,30 @@ public class ShieldGeneratorTest {
     @DisplayName("Protected directions list should be modifiable")
     public void testProtectedDirectionsListModifiable() {
         List<Direction> directions = shieldGenerator.getProtectedDirections();
-        assertTrue(directions.isEmpty());
+        assertTrue(!directions.isEmpty());
 
         shieldGenerator.add(Direction.NORTH);
-        assertEquals(1, directions.size());
+        assertEquals(2, directions.size());
         assertTrue(directions.contains(Direction.NORTH));
+    }
+
+    @Test
+    @DisplayName("Should rotate protected directions correctly")
+    public void testRotateProtectedDirections() {
+        shieldGenerator.rotateProtectedDirections(RotationType.CLOCKWISE);
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.EAST));
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.SOUTH));
+        assertFalse(shieldGenerator.getProtectedDirections().contains(Direction.NORTH));
+
+        shieldGenerator=new ShieldGenerator(); // Reset for next test
+        shieldGenerator.rotateProtectedDirections(RotationType.ANTI_CLOCKWISE);
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.NORTH));
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.WEST));
+        assertFalse(shieldGenerator.getProtectedDirections().contains(Direction.SOUTH));
+
+        shieldGenerator=new ShieldGenerator(); // Reset for next test
+        shieldGenerator.rotateProtectedDirections(RotationType.OPPOSITE);
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.SOUTH));
+        assertTrue(shieldGenerator.getProtectedDirections().contains(Direction.WEST));
     }
 }

@@ -1,6 +1,7 @@
 package it.polimi.ingsw;
 
 import it.polimi.ingsw.Components.*;
+import it.polimi.ingsw.network.messages.RotationType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -149,6 +150,14 @@ public class ShipBuilder {
     }
 
 
+    /**
+     * Remove a component from the ship at a specific position.
+     * If the component is the starting cabin, it cannot be removed.
+     * If the position is not occupied by any component, it returns false.
+     *
+     * @param position The position where the component should be removed
+     * @return true if the component was successfully removed, false otherwise
+     */
     public boolean removeComponentAt(Position position) {
         Component componentToRemove = null;
         for (Map.Entry<Component, Position> entry : components.entrySet()) {
@@ -202,6 +211,13 @@ public class ShipBuilder {
         return true;
     }
 
+    /** Get the neighboring position in the specified direction.
+     * This method calculates the neighboring position based on the given direction.
+     *
+     * @param pos       The current position
+     * @param direction The direction to get the neighbor position
+     * @return The neighboring position in the specified direction
+     */
     private Position getNeighborPosition(Position pos, Direction direction) {
         switch (direction) {
             case NORTH:
@@ -217,6 +233,15 @@ public class ShipBuilder {
         }
     }
 
+    /** Check if two components are connected in the specified direction.
+     * This method checks if the connectors of the two components are compatible
+     * and if they are not null.
+     *
+     * @param component1 The first component
+     * @param component2 The second component
+     * @param directionFromComponent1 The direction from the first component to the second
+     * @return true if the components are connected, false otherwise
+     */
     private boolean areComponentsConnected(Component component1, Component component2, Direction directionFromComponent1) {
         Connector connector1 = component1.getConnectorByDirection(directionFromComponent1);
         Connector connector2 = component2.getConnectorByDirection(directionFromComponent1.getOpposite());
@@ -233,6 +258,13 @@ public class ShipBuilder {
         return connector1.isCompatibleWith(connector2);
     }
 
+    /** Validate the ship's components and connections.
+     * This method checks if the ship has a starting cabin, at least one functional engine,
+     * at least one functional cannon, and if all components are connected.
+     * It also checks if cannons and engines have clear firing paths.
+     *
+     * @return null if the ship is valid, otherwise a string describing the validation error
+     */
     public String validateShip() {
         if (components.isEmpty()) {
             return "The ship has no components!";
@@ -514,6 +546,10 @@ public class ShipBuilder {
         }
     }
 
+    /** Update all life support connections in the ship.
+     * This method iterates through all components, clears existing life support connections
+     * for cabins, and updates them based on the life support systems present in the ship.
+     */
     public void updateAllLifeSupportConnections() {
         System.out.println("[ShipBuilder] Updating all life support connections...");
         
@@ -993,6 +1029,9 @@ public class ShipBuilder {
             }
             
             updateAllLifeSupportConnections();
+            if(shipComponent instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.CLOCKWISE);
+            }
         }
     }
 
@@ -1005,6 +1044,10 @@ public class ShipBuilder {
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getClockwise();
                 connector.setDirection(newConnectorDirection);
+            }
+
+            if(component instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.CLOCKWISE);
             }
         }
         return component;
@@ -1024,6 +1067,10 @@ public class ShipBuilder {
                 Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
                 connector.setDirection(newConnectorDirection);
             }
+
+            if(shipComponent instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.ANTI_CLOCKWISE);
+            }
         }
         updateAllLifeSupportConnections();
     }
@@ -1037,6 +1084,10 @@ public class ShipBuilder {
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getCounterClockwise();
                 connector.setDirection(newConnectorDirection);
+            }
+
+            if(component instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.CLOCKWISE);
             }
         }
         return component;
@@ -1056,6 +1107,10 @@ public class ShipBuilder {
                 Direction newConnectorDirection = connector.getDirection().getOpposite();
                 connector.setDirection(newConnectorDirection);
             }
+
+            if(shipComponent instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.OPPOSITE);
+            }
         }
         updateAllLifeSupportConnections();
     }
@@ -1069,6 +1124,10 @@ public class ShipBuilder {
             for (Connector connector : connectors) {
                 Direction newConnectorDirection = connector.getDirection().getOpposite();
                 connector.setDirection(newConnectorDirection);
+            }
+
+            if(component instanceof ShieldGenerator shield) {
+                shield.rotateProtectedDirections(RotationType.CLOCKWISE);
             }
         }
         return component;

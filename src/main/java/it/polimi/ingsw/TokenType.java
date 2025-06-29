@@ -2,6 +2,10 @@ package it.polimi.ingsw;
 
 import javafx.scene.paint.Color;
 
+/**
+ * Enum representing different types of tokens in the game.
+ * Each token type is associated with a specific color.
+ */
 public enum TokenType {
 
     HUMAN(Color.WHITE),
