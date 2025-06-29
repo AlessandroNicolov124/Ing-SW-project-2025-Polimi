@@ -308,8 +308,30 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     case "help":
                         console.printMessage("Available commands:");
                         console.printMessage("  status    - Show current game status");
+                        console.printMessage("  ready     - Send ready signal to server (manual)");
                         console.printMessage("  debugskip - [DEBUG] Skip waiting and proceed to adventure phase");
                         console.printMessage("  quit      - Exit the game");
+                        break;
+                    case "ready":
+                        console.printMessage("Sending ready signal to server...");
+                        try {
+                            UUID matchId = (currentMatchId != null) ? currentMatchId : 
+                                          (lobbyHandler != null ? lobbyHandler.getCurrentMatchId() : null);
+                            
+                            if (matchId == null) {
+                                console.printError("Error: No match ID available! Cannot send ready signal.");
+                                console.printMessage("Debug info:");
+                                console.printMessage("  currentMatchId: " + currentMatchId);
+                                console.printMessage("  lobbyHandler.getCurrentMatchId(): " + 
+                                    (lobbyHandler != null ? lobbyHandler.getCurrentMatchId() : "null (no lobbyHandler)"));
+                            } else {
+                                console.printMessage("Debug: Using Match ID: " + matchId + ", Player ID: " + currentPlayer.getId());
+                                client.readyForAdventurePhase(matchId, currentPlayer.getId());
+                                console.printMessage("Ready signal sent!");
+                            }
+                        } catch (Exception e) {
+                            console.printError("Error sending ready signal: " + e.getMessage());
+                        }
                         break;
                     case "debugskip":
                         console.printMessage("[DEBUG] Skipping position assignment wait. Proceeding to adventure phase...");
@@ -451,9 +473,30 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         preparationFlightHandler.managePreparationFlight();
         
         console.printMessage("Preparation phase completed!");
-        console.printMessage("Waiting for adventure phase to start...");
-        // Don't automatically transition - wait for adventurePhaseStarted callback
-        state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        console.printMessage("Notifying server that you are ready for adventure phase...");
+        
+        // Notify server that this player is ready for adventure phase
+        try {
+            UUID matchId = (currentMatchId != null) ? currentMatchId : 
+                          (lobbyHandler != null ? lobbyHandler.getCurrentMatchId() : null);
+            
+            if (matchId == null) {
+                console.printError("Error: No match ID available!");
+                console.printMessage("Debug info:");
+                console.printMessage("  currentMatchId: " + currentMatchId);
+                console.printMessage("  lobbyHandler.getCurrentMatchId(): " + 
+                    (lobbyHandler != null ? lobbyHandler.getCurrentMatchId() : "null (no lobbyHandler)"));
+                console.printMessage("Please try using the 'ready' command manually from the waiting screen.");
+            } else {
+                console.printMessage("Debug: Sending readiness with Match ID: " + matchId + ", Player ID: " + currentPlayer.getId());
+                client.readyForAdventurePhase(matchId, currentPlayer.getId());
+                console.printMessage("Server notified. Waiting for other players...");
+            }
+            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        } catch (Exception e) {
+            console.printError("Error notifying server of readiness: " + e.getMessage());
+            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
+        }
     }
 
 
@@ -895,6 +938,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void shipBuildingStart(UUID matchId, int readyPlayers) {
         synchronized (displayMutex) {
+            // Ensure currentMatchId is set
+            this.currentMatchId = matchId;
+            console.printMessage("Debug: Set currentMatchId to " + matchId + " in shipBuildingStart");
+            
             lobbyHandler.shipBuildingStartCallback(matchId, readyPlayers);
             
             // Add a small delay to allow any pending console output to complete
@@ -1319,14 +1366,27 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'playerReadyForAdventurePhase'");
+        synchronized (displayMutex) {
+            if (currentPlayer != null && currentPlayer.getId() == playerId) {
+                if (success) {
+                    console.printMessage("✓ " + message);
+                    console.printMessage("You are now ready for the adventure phase!");
+                } else {
+                    console.printError("✗ Failed to mark as ready: " + message);
+                }
+            } else {
+                // Another player became ready
+                console.printMessage("Player " + playerId + " is ready for adventure phase.");
+            }
+        }
     }
 
     @Override
     public void adventurePhaseReady(UUID matchId, String message) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'adventurePhaseReady'");
+        synchronized (displayMutex) {
+            console.printMessage(message);
+            console.printMessage("All players are ready! Adventure phase starting soon...");
+        }
     }
 
 }
