@@ -425,10 +425,10 @@ public class CombatZone extends AdventureCard {
     protected ShieldGenerator canDefendWithShield(Player player, Direction direction) {
         // Check if player has a shield that can protect against this direction and position
         List<ShieldGenerator> shields = player.getShip().getShieldsProtecting(direction);
-
+        System.out.println("Shields available for defense: " + shields.size());
         if (!shields.isEmpty() && player.getShip().calculateTotalBatteryCharge() > 0) {
             // Player has shield(s) and batteries - ask if they want to defend
-
+            System.out.println(player.getNickName() + " has shields available for defense against " + direction + " attack.");
             // TODO UI scelta del giocatore su uso delle batterie
             ShieldGenerator count = null;
             for(ShieldGenerator shield : shields){

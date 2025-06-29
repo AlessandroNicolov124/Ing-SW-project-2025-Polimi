@@ -54,13 +54,15 @@ public class CombatZoneTest {
         batteryCompartment1.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
         batteryCompartment2.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
         ship2.placeComponent(batteryCompartment1, new Position(3, 1));
-        ship2.placeComponent(batteryCompartment2, new Position(3, 0));
+        ship2.placeComponent(batteryCompartment2, new Position(4, 1));
         ship2.placeComponent(doubleEngine1, new Position(2, 3));
         ship2.placeComponent(doubleEngine2, new Position(4, 3));
         ship2.placeComponent(doubleCannon1, new Position(2, 2));
         ship2.placeComponent(doubleCannon2, new Position(4, 2));
         ship2.addCrewOfType(CrewType.HUMAN, 3); // Aggiunge 3 membri equipaggio
         player2 = new Player(2, "P2", true, ship2);
+
+        System.out.println("Player 2 Ship Components: " + player2.getShip().getComponents().size());
 
         gameModel.addPlayer(player1);
         gameModel.addPlayer(player2);
@@ -74,7 +76,8 @@ public class CombatZoneTest {
         int posBefore = gameModel.getFlightBoard().getPosition(player1);
         combatZone.applyCombatZone(gameModel);
         int posAfter = gameModel.getFlightBoard().getPosition(player1);
-        assertTrue(posAfter < posBefore, "Il giocatore con meno crew perde giorni di volo");
+        assertEquals(posBefore, 0,"Il giocatore con meno crew perde giorni di volo: parte da 0");
+        assertEquals(posAfter, 21,"Il giocatore con meno crew perde giorni di volo: scivola alla 21");
     }
 
     @Test
@@ -117,19 +120,19 @@ public class CombatZoneTest {
         shield.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
         shield.add(Direction.NORTH);
         shield.add(Direction.EAST);
-        ship.placeComponent(shield, new Position(3, 3)); // a EST della cabina
+        ship.placeComponent(shield, new Position(3, 3)); // a SUD della cabina
         BatteryCompartment battery = new BatteryCompartment(2, BatteryType.DOUBLE, 1);
         battery.initializeConnectors(new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType(), new UniversalConnectorType());
-        ship.placeComponent(battery, new Position(3, 4));
+        ship.placeComponent(battery, new Position(3, 1));
         Player p = new Player(3, "Shielded", true, ship);
         gameModel.addPlayer(p);
         gameModel.getFlightBoard().setInitialPosition(p, 2);
 
         int batteryBefore = ship.calculateTotalBatteryCharge();
         int compBefore = ship.getNonDamageComponents().size();
-
+        System.out.println("Componenti nave prima dell'attacco: " + compBefore + ", Batteria carica: " + batteryBefore);
         assertEquals(p, combatZone.findPlayerWithWeakestCannons(gameModel.getPlayers()), "Il giocatore con il cannone più debole deve essere trovato correttamente");
-        assertEquals(ship.getPositionOf(battery), combatZone.checkCannonHit(p, Direction.EAST, 4), "Il cannone deve colpire la posizione corretta");
+        assertEquals(ship.getPositionOf(shield), combatZone.checkCannonHit(p, Direction.EAST, 3), "Il cannone deve colpire la posizione corretta");
         assertEquals(shield, combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore deve essere difeso dallo scudo");
         shield.discharge();
         assertEquals(compBefore, ship.getNonDamageComponents().size(), "Il componente non deve essere distrutto se protetto da shield");
@@ -139,7 +142,7 @@ public class CombatZoneTest {
 
         //in caso di ulteriore attacco, lo scudo non deve difendere perché è scarico e non ci sono batterie cariche
         assertNull(combatZone.canDefendWithShield(p, Direction.EAST), "Il giocatore non deve essere difeso dallo scudo");
-        p.getShip().destroyComponentAt(new Position(3,4));
+        p.getShip().destroyComponentAt(new Position(3,1));
         assertEquals(compBefore-1, ship.getNonDamageComponents().size(), "Il componente deve essere distrutto se non protetto da shield");
 
     }

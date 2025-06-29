@@ -85,7 +85,7 @@ public class ShipBuilder {
         }
 
         if (!isPositionValid(position)) {
-            System.out.println("Position not valid on board");
+            System.out.println(position +" not valid on board for: "+ component.getClass().getSimpleName());
             return false;
         }
 
