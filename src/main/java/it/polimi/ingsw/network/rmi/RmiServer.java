@@ -38,6 +38,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
+import it.polimi.ingsw.network.messages.flight.ReadyForAdventurePhaseResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
@@ -773,5 +774,37 @@ public class RmiServer extends UnicastRemoteObject
             client.showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Error: " + e.getMessage()));
         }
     }
+
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId, RmiClientIf client) throws RemoteException {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Match not found"));
+            return;
+        }
+
+        Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player not found"));
+            return;
+        }
+
+        boolean isReady = match.setPlayerReadyForAdventure(playerId, true);
+        
+        if (isReady) {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
+            
+            // Check if all players are ready
+            if (match.allPlayersReadyForAdventure()) {
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
+                        matchId,
+                        match.getPlayerPositions(),
+                        match.getFirstPlayerToAct()
+                ));
+            }
+        } else {
+            client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));
+        }
+    } 
 
 }

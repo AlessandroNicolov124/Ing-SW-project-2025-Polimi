@@ -95,4 +95,7 @@ public interface GameListener {
     void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, boolean success, String errorMessage);
 
     void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason);
+
+    void playerReadyForAdventurePhase(UUID matchId, int playerId, boolean success, String message);
+    void adventurePhaseReady(UUID matchId, String message);
 }

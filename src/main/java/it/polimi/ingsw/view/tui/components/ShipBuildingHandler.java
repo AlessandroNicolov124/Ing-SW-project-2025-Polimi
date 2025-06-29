@@ -21,6 +21,7 @@ public class ShipBuildingHandler {
 
     private final Random random = new Random();
     private Component currentComponent = null;
+    private boolean waitingForServerResponse = false;
 
 
     public ShipBuildingHandler(ConsoleManager console, GeneralClientIf simpleClient, Player currentPlayer, GalaxyTruckerTUI parentTUI) {
@@ -38,18 +39,16 @@ public class ShipBuildingHandler {
         console.printMessage("===================");
     }
 
-    // Method to redisplay the ship building menu after async operations
     public void refreshMenuDisplay() {
-        if (currentComponent != null) {
-            console.printMessage("Current component: " + currentComponent.getClass().getSimpleName());
-            displayComponent(currentComponent);
+        if (!waitingForServerResponse) {
+            console.printMessage("\n--- Menu Refreshed ---");
         }
-        printShipBuildingMenu(currentComponent != null);
     }
 
     // Method to set the current component from async response
     public void setCurrentComponent(Component component) {
         this.currentComponent = component;
+        waitingForServerResponse = false;
     }
 
     // Method to check if we should continue ship building
@@ -59,155 +58,144 @@ public class ShipBuildingHandler {
 
     public void manageShipBuilding() {
         console.printMessage("=== Ship Building Phase ===");
-        console.printMessage("Generating random component deck...");
-
-        // Display the initial empty ship
+        
+        // Display the initial ship
         displayShip();
-
-        boolean buildingDone = false;
 
         // First element is always the starting cabin
         currentComponent = createCabin(true);
-        displayComponent(currentComponent);
+        console.printMessage("Placing starting cabin...");
         handlePlaceComponent(currentComponent);
-        currentComponent = null;
-
+        
+        // After placing the starting cabin, automatically pick the first component
+        console.printMessage("Picking first component...");
+        handlePickComponent();
+        
+        boolean buildingDone = false;
         while (!buildingDone && shouldContinueBuilding()) {
-            if (currentComponent == null) {
-                try {
-                    simpleClient.pickComponentCard(currentPlayer.getId());
-//                    if (pickedComponent != null) {
-//                        currentComponent = pickedComponent;
-//                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-//                        displayComponent(currentComponent);
-                    //} else {
-                        //console.printMessage("\nRequesting component from server...");
-                    //}
-                } catch (Exception e) {
-                    console.printError("Error picking component: " + e.getMessage());
-                    continue;
+            
+            // Only show menu if not waiting for server response
+            if (!waitingForServerResponse) {
+                if (currentComponent != null) {
+                    printShipBuildingMenu(true);
+                } else {
+                    printShipBuildingMenu(false);
                 }
-            }
 
-            if (currentComponent != null) {
-                printShipBuildingMenu(true);
+                String choice = console.readCommand().trim().toLowerCase();
+                handleUserChoice(choice);
             } else {
-                printShipBuildingMenu(false);
-            }
-
-            String choice = console.readCommand().trim().toLowerCase();
-
-            switch (choice) {
-                case "p": // Place component
-                    if (currentComponent != null) {
-                        handlePlaceComponent(currentComponent);
-                        // Don't null the component yet - wait for server response
-                    } else {
-                        console.printError("No component available to place!");
-                    }
+                // Wait a bit for server response
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                     break;
-                case "r": // Remove component from ship
-                    handleRemoveComponent();
-                    break;
-                case "tc": // Rotate CURRENT (held) component
-                    if (currentComponent != null) {
-                        currentComponent = handleRotateHeldComponent(currentComponent);
-                        displayComponent(currentComponent);
-                    } else {
-                        console.printError("No current component to rotate!");
-                    }
-                    break;
-                case "ts": // Rotate component ON SHIP
-                    handleRotateComponentOnShip();
-                    break;
-                case "s": // Skip current component
-                    if (currentComponent != null) {
-                        console.printMessage("Skipping " + currentComponent.getClass().getSimpleName());
-                        currentComponent = null;
-                        displayShip();
-                    } else {
-                        console.printError("No component to skip!");
-                    }
-                    break;
-                case "ds": // Display ship manually
-                    displayShip();
-                    break;
-                case "dc": // Display current component manually
-                    if (currentComponent != null) {
-                        displayComponent(currentComponent);
-                    } else {
-                        console.printMessage("No current component to display.");
-                    }
-                    break;
-                case "pick": // Manually pick a component
-                    if (currentComponent == null) {
-                        try {
-                            simpleClient.pickComponentCard(currentPlayer.getId());
-//                            if (pickedComponent != null) {
-//                                currentComponent = pickedComponent;
-//                                console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-//                                displayComponent(currentComponent);
-//                            } else {
-//                                console.printMessage("\nComponent request sent to server...");
-//                            }
-                        } catch (Exception e) {
-                            console.printError("Error picking component: " + e.getMessage());
-                        }
-                    } else {
-                        console.printMessage("You already have a component: " + currentComponent.getClass().getSimpleName());
-                    }
-                    break;
-                case "v": // Validate and finish
-                    if (handleValidateAndFinish()) {
-                        buildingDone = true;
-                    }
-                    break;
-                case "q": // Quit ship building
-                    console.printMessage("Exiting ship building...");
-                    buildingDone = true;
-                    break;
-                case "debugskip": // DEBUG: Force skip
-                    console.printMessage("[DEBUG] Forcing skip of ship validation and triggering position assignment...");
-                    // Send a validation request anyway to trigger the position assignment mechanism
-                    try {
-                        simpleClient.validateShip(currentPlayer.getId());
-                        console.printMessage("[DEBUG] Validation request sent for position assignment. Ship may be invalid but position will be assigned.");
-                    } catch (Exception e) {
-                        console.printError("[DEBUG] Error sending validation request: " + e.getMessage());
-                        console.printMessage("[DEBUG] Falling back to manual state transition...");
-                        // Fallback: trigger position assignment directly via TUI state change
-                        console.printMessage("[DEBUG] Moving to position assignment wait state...");
-                    }
-                    buildingDone = true;
-                    break;
-                default:
-                    console.printError("Invalid choice. Please try again.");
-                    break;
+                }
             }
         }
         
-        // Check if we exited due to state change (ship validation succeeded)
-        if (!shouldContinueBuilding() && !buildingDone) {
-            console.printMessage("✓ Ship validation completed! Transitioning to next phase...");
+    }
+
+
+    private void handleUserChoice(String choice) {
+        switch (choice) {
+            case "p": // Place component
+                if (currentComponent != null) {
+                    handlePlaceComponent(currentComponent);
+                } else {
+                    console.printError("No component available to place!");
+                }
+                break;
+            case "r": // Remove component from ship
+                handleRemoveComponent();
+                break;
+            case "tc": // Rotate CURRENT (held) component
+                if (currentComponent != null) {
+                    currentComponent = handleRotateHeldComponent(currentComponent);
+                    displayComponent(currentComponent);
+                } else {
+                    console.printError("No current component to rotate!");
+                }
+                break;
+            case "ts": // Rotate component ON SHIP
+                handleRotateComponentOnShip();
+                break;
+            case "s": // Skip current component
+                if (currentComponent != null) {
+                    console.printMessage("Skipping " + currentComponent.getClass().getSimpleName());
+                    currentComponent = null;
+                } else {
+                    console.printError("No component to skip!");
+                }
+                break;
+            case "pick": // Pick a component
+                if (currentComponent == null) {
+                    handlePickComponent();
+                } else {
+                    console.printMessage("You already have a component: " + currentComponent.getClass().getSimpleName());
+                }
+                break;
+            case "v": // Validate and finish
+                handleValidateAndFinish();
+                break;
+            case "ds": // Display ship
+                displayShip();
+                break;
+            case "dc": // Display current component
+                if (currentComponent != null) {
+                    displayComponent(currentComponent);
+                } else {
+                    console.printMessage("No current component to display.");
+                }
+                break;
+            case "q": // Quit
+                console.printMessage("Exiting ship building...");
+                return;
+            default:
+                console.printError("Invalid choice. Please try again.");
+                break;
+        }
+    }
+
+    private void handlePickComponent() {
+        waitingForServerResponse = true;
+        try {
+            simpleClient.pickComponentCard(currentPlayer.getId());
+            console.printMessage("Requesting component from server...");
+        } catch (Exception e) {
+            console.printError("Error picking component: " + e.getMessage());
+            waitingForServerResponse = false;
+        }
+    }   
+    
+    public void displayCurrentComponent() {
+        if (currentComponent != null) {
+            console.printMessage("\nCurrent component: " + currentComponent.getClass().getSimpleName());
+            displayComponent(currentComponent);
         }
     }
 
     private void displayComponent(Component currentComponent) {
-        // Create a grid
+        console.printMessage("\n--- Current Component: " + currentComponent.getClass().getSimpleName() + " ---");
+        
+        // Create a 3x3 grid to display the component
         String[][] grid = new String[3][3];
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                grid[i][j] = "    "; // Empty slot
+                grid[i][j] = "    "; // 4 spaces for alignment
             }
         }
-        grid[1][1] = "[" + getComponentSymbol(currentComponent) + "]";
-        grid[1][0] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.WEST))  + "]";
-        grid[1][2] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.EAST))  + "]";
-        grid[2][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.SOUTH))  + "]";
-        grid[0][1] = "[" + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.NORTH))  + "]";
-
-
-        // Print grid
+        
+        // Place component symbol in center
+        grid[1][1] = " " + getComponentSymbol(currentComponent) + " ";
+        
+        // Add connectors around the component
+        grid[0][1] = " " + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.NORTH)) + " ";
+        grid[1][2] = " " + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.EAST)) + " ";
+        grid[2][1] = " " + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.SOUTH)) + " ";
+        grid[1][0] = " " + getConnectionSymbol(currentComponent.getConnectorByDirection(Direction.WEST)) + " ";
+        
         console.printMessage("--------------------");
         for (int i = 0; i < 3; i++) {
             StringBuilder rowStr = new StringBuilder();
@@ -353,6 +341,7 @@ public class ShipBuildingHandler {
             console.printMessage("TC - Rotate current component (clockwise)");
             console.printMessage("S  - Skip current component (draw next)");
         } else {
+            console.printMessage("PICK - Pick a new component from deck");
             console.printMessage("No component to place/rotate. Draw one or manage ship.");
         }
         console.printMessage("R  - Remove component from ship");
@@ -361,24 +350,19 @@ public class ShipBuildingHandler {
         console.printMessage("Q  - Quit ship building (temporary)");
         console.printMessage("DS - Display Ship again");
         console.printMessage("DC - Display Current component again");
-        console.printMessage("DEBUGSKIP - Force proceed (skip validation)"); // New debug option
         console.printMessage("---------------------------");
-        console.printMessage("Enter your choice: ");
+        console.printMessage("Enter your choice:");
     }
 
     private void handlePlaceComponent(Component component) {
         console.printMessage("--- Place Component ---");
-        // 1. Ask for component type
-        //String typeStr = console.askQuestion("Enter component type (e.g., Cabin, SingleEngine, DoubleCannon):");
-
-        // 2. Ask for position
-        int x = -1, y = -1;
+        
         Position pos;
-
-        // Se è una cabina iniziale, usa la posizione iniziale
         if (component instanceof Cabin cabin && cabin.isStartingCabin()) {
             pos = currentPlayer.getShip().getStartingPosition();
-        }else{
+            console.printMessage("Placing starting cabin at default position: (" + pos.getX() + "," + pos.getY() + ")");
+        } else {
+            int x, y;
             try {
                 x = Integer.parseInt(console.askQuestion("Enter X coordinate:"));
                 y = Integer.parseInt(console.askQuestion("Enter Y coordinate:"));
@@ -389,20 +373,14 @@ public class ShipBuildingHandler {
             }
         }
 
-        // 4. Call network client to send message
+        waitingForServerResponse = true;
         try {
-             console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
-             simpleClient.placeComponent(component, pos, currentPlayer.getId());
-             // Note: The actual success/failure message will come asynchronously
-             // via the PlaceComponentResponse handled by simpleClient's run loop.
-             // The ship display will be updated when the response arrives.
-        } catch (IllegalStateException e) {
+            console.printMessage("Placement request sent for " + component.getClass().getSimpleName() + 
+                               " at (" + pos.getX() + "," + pos.getY() + "). Waiting for server confirmation...");
+            simpleClient.placeComponent(component, pos, currentPlayer.getId());
+        } catch (Exception e) {
             console.printError("Error sending placement request: " + e.getMessage());
-            // Optionally, allow the user to retry or handle the error
-            // handlePlaceComponent(component); // Example: Retry automatically (use with caution)
-        }
-        catch (Exception e) {
-            console.printError("Error sending placement request: " + e.getMessage());
+            waitingForServerResponse = false;
         }
     }
 
@@ -518,22 +496,16 @@ public class ShipBuildingHandler {
     }
 
     private boolean handleValidateAndFinish() {
-        console.printMessage("Sending validation request to server...");
+        console.printMessage("Validating ship...");
+        waitingForServerResponse = true;
         try {
             simpleClient.validateShip(currentPlayer.getId());
             console.printMessage("Validation request sent. Waiting for server response...");
-            // Return true to exit the ship building loop - validation result will be handled
-            // asynchronously when the server response arrives via ShipValidationResponse
-            return true; // Exit ship building loop, server will handle validation result
-        } catch (IOException e) {
-            console.printError("Error sending validation request: " + e.getMessage());
-            return false; // Building not done.
-        } catch (IllegalStateException e) {
-            console.printError("Error sending validation request: " + e.getMessage());
-            return false; // Building not done.
+            return true;
         } catch (Exception e) {
             console.printError("Error sending validation request: " + e.getMessage());
-            return false; // Building not done.
+            waitingForServerResponse = false;
+            return false;
         }
     }
 
@@ -567,6 +539,8 @@ public class ShipBuildingHandler {
 
     public void componentPlacedSuccessfully() {
         currentComponent = null;
+        waitingForServerResponse = false;
+        console.printMessage("Component placed successfully!");
     }
 
     public Component getCurrentComponent() {

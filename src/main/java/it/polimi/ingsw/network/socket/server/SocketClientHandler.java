@@ -1,9 +1,13 @@
 package it.polimi.ingsw.network.socket.server;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
+import it.polimi.ingsw.Crew;
 import it.polimi.ingsw.GameController;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
+import it.polimi.ingsw.ShipBuilder;
+import it.polimi.ingsw.Components.BatteryCompartment;
+import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.Component;
 import it.polimi.ingsw.TokenType;
 import it.polimi.ingsw.network.Difficulty;
@@ -24,14 +28,18 @@ import it.polimi.ingsw.network.messages.lobby.UpdateHostResponse;
 import it.polimi.ingsw.network.messages.RotationType;
 import it.polimi.ingsw.network.messages.flight.FlightPreparationStartResponse;
 import it.polimi.ingsw.network.messages.flight.PlayerReadyForFlightResponse;
+import it.polimi.ingsw.network.messages.flight.ReadyForAdventurePhaseResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingAckResponse;
 import it.polimi.ingsw.network.messages.loading.LoadingStatusResponse;
 import it.polimi.ingsw.network.messages.loading.PlayerReadyResponse;
 import it.polimi.ingsw.network.messages.loading.ShipBuildingStartResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.GetPlayerTokenListResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentResponse;
+import it.polimi.ingsw.network.messages.shipbuilding.RemoveTokenFromComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.RotateComponentResponse;
 import it.polimi.ingsw.network.messages.shipbuilding.ShipValidationResponse;
 import it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse;
@@ -615,22 +623,145 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
 
+        GameController controller = match.getController();
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new AddTokenToComponentResponse( playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        if (!player.getShip().checkPlacingToken(position)) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Cannot place token at this position"));
+            return;
+        }
+
+        try {
+            controller.addTokenToComponent(player, position, tokenType);
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, true, "Token added successfully"));
+        } catch (Exception e) {
+            showUpdate(new AddTokenToComponentResponse(playerName, position, tokenType, false, "Error adding token: " + e.getMessage()));
+        }
     }
 
     @Override
     public void getPlayerTokenList(String playerName) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
+        if (match == null) {
+            showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Match not found for player: " + playerName));
+            return;
+        }
+
+        Player player = match.getPlayerByName(playerName);
+
+        if (player == null) {
+            showUpdate(new GetPlayerTokenListResponse(playerName, null, false, "Player not found: " + playerName));
+            return;
+        }
+
+        Map<Position, List<TokenType>> tokens = player.getShip().getTokens();
+        
+        showUpdate(new GetPlayerTokenListResponse(playerName, tokens, true, "Token list retrieved successfully"));
     }
 
     @Override
     public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
+        
+        if (match == null) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Match not found"));
+            return;
+        }
 
+        GameController controller = match.getController();
+        Player player = controller.getPlayerById(match.getPlayerByName(playerName).getId());
+
+        if (player == null) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Player not found"));
+            return;
+        }
+
+        try {
+            ShipBuilder ship = player.getShip();
+            Component comp = ship.getComponentAt(position);
+            
+            if (comp == null) {
+                showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "No component at position"));
+                return;
+            }
+
+            switch (tokenType) {
+                case HUMAN, BROWN_ALIEN, PURPLE_ALIEN -> {
+                    if (comp instanceof Cabin cabin && !cabin.getCrew().isEmpty()) {
+                        Crew lastCrew = cabin.getCrew().get(cabin.getCrew().size() - 1);
+                        ship.removeCrewFromCabin(lastCrew, cabin);
+                    }
+                }
+                case BATTERY -> {
+                    if (comp instanceof BatteryCompartment battery && battery.getChargeLevel() > 0) {
+                        battery.discharge(1);
+                    }
+                }
+                // case GREEN_GOOD_BLOCK, RED_GOOD_BLOCK, BLUE_GOOD_BLOCK, YELLOW_GOOD_BLOCK -> {
+                //     if (comp instanceof CargoHolds cargoHold && !cargoHold.getCargos().isEmpty()) {
+                //         cargoHold.removeCargo();
+                //     }
+                // }
+                default -> throw new IllegalArgumentException("Unexpected value: " + tokenType);
+            }
+            
+            ship.removeToken(position);
+            
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, true, "Token removed successfully"));
+            
+        } catch (Exception e) {
+            showUpdate(new RemoveTokenFromComponentResponse(playerName, position, tokenType, false, "Error: " + e.getMessage()));
+        }
     }
 
     @Override
     public void getPlayerShip(String playerName) throws Exception {
 
+    }
+
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId) throws Exception {
+        GameMatch match = lobbyManager.findMatchById(matchId);
+        if (match == null) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Match not found"));
+            return;
+        }
+
+        Player player = match.getPlayerById(playerId);
+        if (player == null) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player not found"));
+            return;
+        }
+
+        boolean isReady = match.setPlayerReadyForAdventure(playerId, true);
+        
+        if (isReady) {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
+            
+            // Check if all players are ready
+            if (match.allPlayersReadyForAdventure()) {
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
+                        matchId,
+                        match.getPlayerPositions(),
+                        match.getFirstPlayerToAct()
+                ));
+            }
+        } else {
+            showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, false, "Player already ready or match not in adventure phase"));
+        }
     }
 
 

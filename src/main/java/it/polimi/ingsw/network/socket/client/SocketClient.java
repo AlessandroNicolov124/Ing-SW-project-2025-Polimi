@@ -20,6 +20,7 @@ import it.polimi.ingsw.network.messages.lobby.JoinMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.LeaveMatchRequest;
 import it.polimi.ingsw.network.messages.lobby.StartMatchRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.PlaceComponentRequest;
+import it.polimi.ingsw.network.messages.shipbuilding.AddTokenToComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.CabinColorSelectionRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.PickComponentRequest;
 import it.polimi.ingsw.network.messages.shipbuilding.RemoveComponentRequest;
@@ -227,27 +228,50 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     @Override
     public void getPlayersOrderForFlightboard(UUID matchId, int playerId) throws Exception{
-
+        synchronized (out) {
+            out.writeObject(new ReadyForFlightRequest(matchId, playerId));
+            out.flush();
+        }
     }
 
     @Override
     public void addTokenToComponent(String playerName, Position position, TokenType tokenType) throws Exception {
-
+        synchronized (out) {
+            out.writeObject(new AddTokenToComponentRequest(playerName, position, tokenType));
+            out.flush();
+        }
     }
 
     @Override
     public void getPlayerTokenList(String playerName) throws Exception {
-
+        synchronized (out) {
+            out.writeObject(new GetPlayerTokenListRequest(playerName));
+            out.flush();
+        }
     }
 
     @Override
     public void removeTokenFromComponent(String playerName, Position position, TokenType tokenType) throws Exception {
-
+        synchronized (out) {
+            out.writeObject(new RemoveTokenFromComponentRequest(playerName, position, tokenType));
+            out.flush();
+        }
     }
 
     @Override
     public void getPlayerShip(String playerName) throws Exception {
+        synchronized (out) {
+            out.writeObject(new GetPlayerShipRequest(playerName));
+            out.flush();
+        }
+    }
 
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId) throws Exception {
+        synchronized (out) {
+            out.writeObject(new ReadyForAdventurePhaseRequest(matchId, playerId));
+            out.flush();
+        }
     }
 
 }

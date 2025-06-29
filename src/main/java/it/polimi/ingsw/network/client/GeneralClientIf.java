@@ -60,4 +60,6 @@ public interface GeneralClientIf extends AutoCloseable {
 
     void getPlayerShip(String playerName) throws Exception;
 
+    void readyForAdventurePhase(UUID matchId, int playerId) throws Exception;
+
 }

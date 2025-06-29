@@ -5,7 +5,8 @@ public enum MatchStates {
     LOADING,
     IN_PROGRESS,
     SHIP_VALIDATION,      
-    FLIGHT_PREPARATION,   
+    FLIGHT_PREPARATION, 
+    WAIT_ALL_SHIPS_READY,  
     FLIGHT_IN_PROGRESS,
     FINISHED
 }

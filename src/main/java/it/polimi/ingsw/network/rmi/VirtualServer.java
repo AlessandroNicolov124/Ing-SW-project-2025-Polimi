@@ -60,4 +60,5 @@ public interface VirtualServer extends Remote {
 
     void removeTokenFromComponent(String playerName, Position position, TokenType tokenType, RmiClientIf client) throws RemoteException;
 
+    void readyForAdventurePhase(UUID matchId, int playerId, RmiClientIf client) throws RemoteException;
 }

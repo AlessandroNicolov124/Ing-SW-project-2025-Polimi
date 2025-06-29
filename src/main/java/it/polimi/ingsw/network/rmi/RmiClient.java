@@ -176,4 +176,9 @@ public class RmiClient extends UnicastRemoteObject implements RmiClientIf {
         server.removeTokenFromComponent(playerName, position, tokenType, this);
     }
 
+    @Override
+    public void readyForAdventurePhase(UUID matchId, int playerId) throws RemoteException {
+        server.readyForAdventurePhase(matchId, playerId, this);
+    }
+
 }
