@@ -12,24 +12,16 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.10.2</junit.version>
+    <javafx.version>21.0.7</javafx.version>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-controls</artifactId>
-      <version>23.0.2</version>
-    </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-fxml</artifactId>
-      <version>23.0.2</version>
-    </dependency>
     <dependency>
       <groupId>org.controlsfx</groupId>
       <artifactId>controlsfx</artifactId>
       <version>11.2.1</version>
     </dependency>
+
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
@@ -42,16 +34,10 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>org.jetbrains</groupId>
-          <artifactId>annotations</artifactId>
-          <version>24.1.0</version>
-          <scope>compile</scope>
-      </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
-      <artifactId>junit-jupiter</artifactId>
-      <version>5.9.2</version>
+      <artifactId>junit-jupiter-params</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -60,16 +46,26 @@
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <source>21</source>
+          <target>21</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
         <version>3.2.4</version>
         <executions>
+          <!-- TUI -->
           <execution>
             <id>TUI</id>
             <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
+            <goals><goal>shade</goal></goals>
             <configuration>
+              <finalName>GalaxyTrucker-TUI</finalName>
               <transformers>
                 <finalName>GalaxyTrucker-TUI</finalName>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -78,28 +74,28 @@
               </transformers>
             </configuration>
           </execution>
+          <!-- GUI -->
           <execution>
             <id>GUI</id>
             <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
+            <goals><goal>shade</goal></goals>
             <configuration>
+              <finalName>GalaxyTrucker-GUI</finalName>
               <transformers>
                 <finalName>GalaxyTrucker-GUI</finalName>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>it.polimi.ingsw.GUI.GUIApp</mainClass>
+                  <mainClass>it.polimi.ingsw.GUI.Launcher</mainClass>
                 </transformer>
               </transformers>
             </configuration>
           </execution>
+          <!-- Server -->
           <execution>
             <id>ServerApp</id>
             <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
+            <goals><goal>shade</goal></goals>
             <configuration>
+              <finalName>GalaxyTrucker-Server</finalName>
               <transformers>
                 <finalName>GalaxyTrucker-AppServer</finalName>
                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -110,14 +106,132 @@
           </execution>
         </executions>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>21</source>
-          <target>21</target>
-        </configuration>
-      </plugin>
     </plugins>
   </build>
+
+  <!-- OS-activated profiles for JavaFX with correct classifiers -->
+  <profiles>
+    <!-- macOS / Apple Silicon -->
+    <profile>
+      <id>mac-aarch64</id>
+      <activation>
+        <os>
+          <family>mac</family>
+          <arch>aarch64</arch>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac-aarch64</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac-aarch64</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac-aarch64</classifier>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- macOS / Intel -->
+    <profile>
+      <id>mac-x64</id>
+      <activation>
+        <os>
+          <family>mac</family>
+          <arch>x86_64</arch>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>mac</classifier>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- Linux -->
+    <profile>
+      <id>linux</id>
+      <activation>
+        <os>
+          <family>unix</family>
+          <name>Linux</name>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>linux</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>linux</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>linux</classifier>
+        </dependency>
+      </dependencies>
+    </profile>
+
+    <!-- Windows -->
+    <profile>
+      <id>windows</id>
+      <activation>
+        <os>
+          <family>windows</family>
+        </os>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-graphics</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>win</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-controls</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>win</classifier>
+        </dependency>
+        <dependency>
+          <groupId>org.openjfx</groupId>
+          <artifactId>javafx-fxml</artifactId>
+          <version>${javafx.version}</version>
+          <classifier>win</classifier>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>
