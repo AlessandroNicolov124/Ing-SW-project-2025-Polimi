@@ -467,7 +467,7 @@ public class RmiServer extends UnicastRemoteObject
             //broadcastAdventureCardErrorToAllClients(playerId, "Match not found");
             return;
         }
-        if (match.getMatchState() != MatchStates.IN_PROGRESS) {
+        if (match.getMatchState() != MatchStates.FLIGHT_IN_PROGRESS) {
             System.out.println("[ServerRMI] Match not in progress for player ID: " + playerId);
             //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
             return;
@@ -491,7 +491,7 @@ public class RmiServer extends UnicastRemoteObject
         }
         // Pick adventure card using the controller
         controller.pickCardForPlayer(player);
-        it.polimi.ingsw.AdventureCards.AdventureCard adventureCard = player.getPickedCard();
+        AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
