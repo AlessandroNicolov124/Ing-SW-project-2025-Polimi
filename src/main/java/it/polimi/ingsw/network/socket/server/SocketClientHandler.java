@@ -562,6 +562,8 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             return;
         }
 
+        comp.saveOriginalState();
+
         showUpdate(new PickComponentResponse(playerId, comp, true, "Component picked successfully"));
         
     }
