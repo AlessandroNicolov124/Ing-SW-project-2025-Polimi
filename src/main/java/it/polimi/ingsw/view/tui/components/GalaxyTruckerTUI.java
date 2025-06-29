@@ -45,6 +45,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private PreparationFlightHandler preparationFlightHandler;
     private UUID currentMatchId;
+    private int currentAdventureCardPicker = -1; // ID of player who can currently pick adventure cards
 
 
     public GalaxyTruckerTUI()
@@ -347,15 +348,27 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 // Log or handle unexpected state transition attempt
                 console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
             }
-        } else {
-            console.printMessage("Waiting for more players to be positioned...");
         }
     }
 
     private void handleAdventurePhaseState() {
         console.printMessage("\n=== ADVENTURE CARD PHASE ===");
         console.printMessage("Only the LEADING player (highest position number) can pick adventure cards for everyone");
-        console.printMessage("Wait for the card picker to pick or type 'status' to check current state");
+        
+        // Show who can currently pick cards
+        if (currentAdventureCardPicker != -1) {
+            String pickerName = (currentPlayer != null && currentPlayer.getId() == currentAdventureCardPicker) ? 
+                "You" : "Player " + currentAdventureCardPicker;
+            console.printMessage("Current card picker: " + pickerName);
+            
+            if (currentPlayer != null && currentPlayer.getId() == currentAdventureCardPicker) {
+                console.printMessage(">> You can pick adventure cards! Type 'pick' to draw a card.");
+            } else {
+                console.printMessage(">> Wait for the card picker to pick or type 'status' to check current state");
+            }
+        } else {
+            console.printMessage("Wait for the card picker to pick or type 'status' to check current state");
+        }
         
         while (state == TuiState.ADVENTURE_PHASE) {
             String cmd = console.pollCommand(1000); // Poll with timeout
@@ -364,7 +377,25 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 cmd = cmd.trim().toLowerCase();
                 switch (cmd) {
                     case "pick":
-                        // Try to pick an adventure card (only leader can)
+                        // Validate that current player can pick cards
+                        if (currentPlayer == null) {
+                            console.printError("Current player not set!");
+                            break;
+                        }
+                        
+                        if (currentAdventureCardPicker == -1) {
+                            console.printError("No card picker has been designated yet. Wait for game to determine the leader.");
+                            break;
+                        }
+                        
+                        if (currentPlayer.getId() != currentAdventureCardPicker) {
+                            String actualPickerName = "Player " + currentAdventureCardPicker;
+                            console.printError("Only the leading player can pick cards! Current picker: " + actualPickerName);
+                            console.printMessage("You must wait for " + actualPickerName + " to pick the next card.");
+                            break;
+                        }
+                        
+                        // Current player is authorized to pick cards
                         try {
                             client.pickAdventureCard(currentPlayer.getId());
                             console.printMessage("Adventure card pick request sent. Waiting for response...");
@@ -375,13 +406,25 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     case "status":
                         if (currentPlayer != null) {
                             console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
-                            console.printMessage("Game state: Adventure Phase - only leader can pick cards");
+                            console.printMessage("Game state: Adventure Phase");
+                            if (currentAdventureCardPicker != -1) {
+                                String pickerName = (currentPlayer.getId() == currentAdventureCardPicker) ? 
+                                    "You" : "Player " + currentAdventureCardPicker;
+                                console.printMessage("Current card picker: " + pickerName);
+                                if (currentPlayer.getId() == currentAdventureCardPicker) {
+                                    console.printMessage(">> You can pick adventure cards!");
+                                } else {
+                                    console.printMessage(">> You must wait for the card picker to act.");
+                                }
+                            } else {
+                                console.printMessage("Waiting for card picker to be determined...");
+                            }
                         }
                         break;
                     case "help":
                         console.printMessage("Available commands:");
-                        console.printMessage("  pick   - Pick an adventure card (only if you are the leader)");
-                        console.printMessage("  status - Show current game status");
+                        console.printMessage("  pick   - Pick an adventure card (only if you are the current card picker)");
+                        console.printMessage("  status - Show current game status and who can pick cards");
                         console.printMessage("  quit   - Exit the game");
                         break;
                     case "quit":
@@ -408,7 +451,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         preparationFlightHandler.managePreparationFlight();
         
         console.printMessage("Preparation phase completed!");
-        state = TuiState.ADVENTURE_PHASE;
+        console.printMessage("Waiting for adventure phase to start...");
+        // Don't automatically transition - wait for adventurePhaseStarted callback
+        state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
     }
 
 
@@ -610,10 +655,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 }
             }
             
-            // Refresh display and clear current component
+            // Clear current component and flag for display refresh
             if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
                 activeShipBuildingHandler.componentPlacedSuccessfully();
-                activeShipBuildingHandler.refreshDisplay();
+                // Display refresh will be handled by main loop
             }
         }
     }
@@ -635,7 +680,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             }
             
             if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
-                activeShipBuildingHandler.refreshDisplay();
+                activeShipBuildingHandler.requestDisplayRefresh();
             }
         }
     }
@@ -661,7 +706,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             console.printMessage("✓ Component at (" + position.getX() + "," + position.getY() + ") rotated " + rotationType);
             
             if (state == TuiState.SHIP_BUILDING && activeShipBuildingHandler != null) {
-                activeShipBuildingHandler.refreshDisplay();
+                activeShipBuildingHandler.requestDisplayRefresh();
             }
         }
     }
@@ -709,12 +754,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     if (activeShipBuildingHandler != null) {
                         activeShipBuildingHandler.setCurrentComponent(component);
                         activeShipBuildingHandler.displayCurrentComponent();
-                        activeShipBuildingHandler.refreshMenuDisplay();
+                        // No need to refresh menu display, main loop will handle it
                     }
                 } else {
                     console.printError("✗ " + message);
                     if (activeShipBuildingHandler != null) {
-                        activeShipBuildingHandler.refreshMenuDisplay();
+                        activeShipBuildingHandler.resetWaitingState();
                     }
                 }
             }
@@ -919,15 +964,42 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                     displayPositionUpdates(previousPositions, currentPlayerPositions);
                 }
                 
-                // Check if there are more adventure cards to pick
+                // Update who can pick the next card
                 if (nextPlayerTurn == -2) { // Special value indicating deck is empty or game ended
                     console.printMessage("Adventure card deck is empty. Waiting for game completion notification...");
+                    currentAdventureCardPicker = -1; // No one can pick anymore
+                } else if (nextPlayerTurn != -1 && nextPlayerTurn != currentAdventureCardPicker) {
+                    // The card picker has changed due to position changes
+                    int previousPicker = currentAdventureCardPicker;
+                    currentAdventureCardPicker = nextPlayerTurn;
+                    
+                    String newPickerName = (currentPlayer != null && currentPlayer.getId() == nextPlayerTurn) ? 
+                        "You" : "Player " + nextPlayerTurn;
+                    String previousPickerName = (currentPlayer != null && currentPlayer.getId() == previousPicker) ? 
+                        "You" : "Player " + previousPicker;
+                    
+                    console.printMessage("\n LEADERSHIP CHANGED! ");
+                    console.printMessage("Previous card picker: " + previousPickerName);
+                    console.printMessage("New card picker: " + newPickerName);
+                    
+                    if (currentPlayer != null && currentPlayer.getId() == nextPlayerTurn) {
+                        console.printMessage("✓ You are now the leader! Type 'pick' to draw the next adventure card.");
+                    } else {
+                        console.printMessage("✗ Waiting for " + newPickerName + " to pick the next adventure card...");
+                    }
                 } else {
-                    console.printMessage("Waiting for the new leading player to pick the next adventure card...");
-                    console.printMessage("(The leader may have changed due to card effects)");
+                    // Same player continues picking
+                    String continuingPickerName = (currentPlayer != null && currentPlayer.getId() == currentAdventureCardPicker) ? 
+                        "You" : "Player " + currentAdventureCardPicker;
+                    console.printMessage("Waiting for " + continuingPickerName + " to pick the next adventure card...");
+                    
+                    if (currentPlayer != null && currentPlayer.getId() == currentAdventureCardPicker) {
+                        console.printMessage("✓ You can pick the next card! Type 'pick' to continue.");
+                    }
                 }
             } else {
                 console.printError("✗ Failed to pick adventure card: " + message);
+                // Don't change the card picker on failure
             }
         }
     }
@@ -1179,8 +1251,9 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
         synchronized (displayMutex) {
-            // Initialize position tracking
+            // Initialize position tracking and card picker
             currentPlayerPositions = new HashMap<>(playerPositions);
+            currentAdventureCardPicker = firstPlayerToAct; // Store who can pick cards
             
             console.printMessage("\nALL PLAYERS POSITIONED! Starting Adventure Phase!");
             console.printMessage("=== STARTING POSITIONS (0-23, lower = better for winning) ===");
@@ -1220,9 +1293,10 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             
             // Check if we are the card picker
             if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
-                console.printMessage("\n You are the adventure card picker! Type 'pick' to draw a card for all players.");
+                console.printMessage("\n✓ You are the adventure card picker! Type 'pick' to draw a card for all players.");
             } else {
-                console.printMessage("\n Waiting for " + cardPickerName + " to pick an adventure card...");
+                console.printMessage("\n✗ Waiting for " + cardPickerName + " to pick an adventure card...");
+                console.printMessage("  (You cannot pick cards until you become the leader)");
             }
             
             // Transition to adventure phase
