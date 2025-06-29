@@ -633,5 +633,10 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     }
 
+    @Override
+    public void sendTimeExpiredNotification(String playerName) throws Exception {
+
+    }
+
 
 }

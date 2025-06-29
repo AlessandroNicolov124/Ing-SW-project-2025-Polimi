@@ -250,4 +250,9 @@ public class SocketClient implements Runnable, GeneralClientIf {
 
     }
 
+    @Override
+    public void sendTimeExpiredNotification(String playerName) throws Exception {
+
+    }
+
 }

@@ -78,13 +78,7 @@ public class ShipBuildingHandler {
             if (currentComponent == null) {
                 try {
                     simpleClient.pickComponentCard(currentPlayer.getId());
-//                    if (pickedComponent != null) {
-//                        currentComponent = pickedComponent;
-//                        console.printMessage("\nYou drew: " + currentComponent.getClass().getSimpleName());
-//                        displayComponent(currentComponent);
-                    //} else {
-                        //console.printMessage("\nRequesting component from server...");
-                    //}
+
                 } catch (Exception e) {
                     console.printError("Error picking component: " + e.getMessage());
                     continue;
