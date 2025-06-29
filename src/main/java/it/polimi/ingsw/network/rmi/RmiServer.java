@@ -719,9 +719,9 @@ public class RmiServer extends UnicastRemoteObject
     public void expiredTimeForShipBuilding(String playerName) throws RemoteException{
         GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
-        if (match == null) {
+        if (match != null) {
             GameController ctr = match.getController();
-            if (ctr == null) {
+            if (ctr != null) {
             Player player = match.getPlayerByName(playerName);
             if (player != null) {
                 ctr.applyTimePenaltyForShipBuilding(player);

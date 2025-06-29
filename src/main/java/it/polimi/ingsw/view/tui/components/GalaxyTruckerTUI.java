@@ -40,7 +40,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     private CompletableFuture<Player> playerCreationFuture;
     private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
-    private final int PENALTY_TIMEOUT = 90000;
+    private final int PENALTY_TIMEOUT = 10000;
 
 
     public GalaxyTruckerTUI()
@@ -809,7 +809,8 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    System.out.println("Timer expired! Notification sent.");
+                    //System.out.println("Timer expired! Notification sent.");
+                    console.printMessage("Time expired, you will get a penalty");
                     if ("SHIP_BUILDING".equals(state)) {
                         try {
                             client.sendTimeExpiredNotification(username);
@@ -817,14 +818,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                             throw new RuntimeException(e);
                         }
                     }
-                    System.out.println("Timer expired. State checked.");
+
                 }
             };
 
             long delay = PENALTY_TIMEOUT;
             timer.schedule(task, delay);
 
-            System.out.println("You are going to have 3 minute time at your disposal");
+            System.out.println("You are going to have 1:30 minute time at your disposal");
 
             this.state = TuiState.SHIP_BUILDING;
         }

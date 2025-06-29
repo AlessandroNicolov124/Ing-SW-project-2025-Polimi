@@ -635,7 +635,17 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
 
     @Override
     public void sendTimeExpiredNotification(String playerName) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerName(playerName);
 
+        if (match != null) {
+            GameController ctr = match.getController();
+            if (ctr != null) {
+                Player player = match.getPlayerByName(playerName);
+                if (player != null) {
+                    ctr.applyTimePenaltyForShipBuilding(player);
+                }
+            }
+        }
     }
 
 
