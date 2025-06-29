@@ -90,6 +90,11 @@ public class ShipBuilder {
             return false;
         }
 
+        // Se è il primo componente, deve essere posizionato nella posizione iniziale
+        if (components.isEmpty() && !position.equals(this.startingPosition)) {
+            return false;
+        }
+
         components.put(component, position);
         return true;
     }
