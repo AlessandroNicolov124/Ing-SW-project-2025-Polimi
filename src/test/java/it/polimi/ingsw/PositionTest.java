@@ -61,7 +61,7 @@ class PositionTest {
     void testSetY() {
         //position.setY(25);
         position = new Position(15, 25);
-        assertEquals(5, position.getX()); // X should remain unchanged
+        assertEquals(15, position.getX()); // X should remain unchanged
         assertEquals(25, position.getY());
     }
 

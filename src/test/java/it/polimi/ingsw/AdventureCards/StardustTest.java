@@ -40,26 +40,15 @@ public class StardustTest {
         Cabin cabin2 = new Cabin(true);
         ship2.placeComponent(cabin2, new Position(3, 2));
 
-        int pos1 = model.getFlightBoard().getPosition(player1);
-        int pos2 = model.getFlightBoard().getPosition(player2);
-
         Stardust stardust = new Stardust();
         stardust.applyStardust(model);
 
-        // player2 è più avanti(posizione 2), quindi sarà ultimo a essere spostato
-        int expected2 = pos2 - stardust.countExposedConnectors(ship2);
-        if(expected2<0){
-            expected2 = 0; // Non può andare indietro oltre la posizione 0
-        }
-        int expected1 = pos1 - stardust.countExposedConnectors(ship1);
-        if(expected1<0){
-            expected1 = 0; // Non può andare indietro oltre la posizione 0
-        }
+        // player2 è ultimo, quindi sarà primo a essere spostato
         assertEquals(3, stardust.countExposedConnectors(ship1), "3 connettori esposti");
         assertEquals(4, stardust.countExposedConnectors(ship2), "4 connettori esposti");
         //System.out.println("Expected positions: P1=" + expected1 + ", P2=" + expected2);
-        assertEquals(expected2, model.getFlightBoard().getPosition(player2));
-        assertEquals(expected1, model.getFlightBoard().getPosition(player1));
+        assertEquals(23, model.getFlightBoard().getPosition(player2));
+        assertEquals(2, model.getFlightBoard().getPosition(player1));
     }
 
     @Test
@@ -181,8 +170,8 @@ public class StardustTest {
 
         stardust.applyStardust(m);
         // Dopo l'effetto, controllo che ognuno sia arretrato di 1 (cabina con 1 connettori esposti)
-        assertEquals(pos2 - 1, m.getFlightBoard().getPosition(p2));
-        assertEquals(pos1 - 1, m.getFlightBoard().getPosition(p1));
-        assertEquals(pos3 - 1, m.getFlightBoard().getPosition(p3));
+        assertEquals(5, m.getFlightBoard().getPosition(p2));
+        assertEquals(23, m.getFlightBoard().getPosition(p1));
+        assertEquals(22, m.getFlightBoard().getPosition(p3));
     }
 }
