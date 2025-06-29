@@ -3,12 +3,14 @@ package it.polimi.ingsw.AdventureCards;
 import it.polimi.ingsw.*;
 import it.polimi.ingsw.Components.Cabin;
 import it.polimi.ingsw.Components.Component;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class SabotageTest {
     @Test
+    @DisplayName("Test Sabotage Destroys Component on Smallest Crew: the result depends on the rolldice of the player")
     void testSabotageDestroysComponentOnSmallestCrew() {
         ShipBuilder s1 = new ShipBuilder(7, 5);
         ShipBuilder s2 = new ShipBuilder(7, 5);
