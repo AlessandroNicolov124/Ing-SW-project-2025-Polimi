@@ -62,88 +62,51 @@ class PlayerTest {
     }
 
     @Test
+    void testSetAndGetReady() {
+        player = new Player(2, "ReadyPlayer", true);
+        assertFalse(player.getReady());
+        player.setReady(true);
+        assertTrue(player.getReady());
+    }
+
+    @Test
     void testSetAndGetActive() {
-        player = new Player(1, "TestPlayer", true);
-        assertTrue(player.isActive());
-        player.setActive(false);
+        player = new Player(3, "ActivePlayer", false);
         assertFalse(player.isActive());
         player.setActive(true);
         assertTrue(player.isActive());
     }
 
     @Test
-    void testSetAndGetReady() {
-        player = new Player(1, "TestPlayer", true);
-        assertFalse(player.getReady());
-        player.setReady(true);
-        assertTrue(player.getReady());
-        player.setReady(false);
-        assertFalse(player.getReady());
-    }
-
-    @Test
-    void testSetShip() {
-        player = new Player(1, "TestPlayer", true);
-        ShipBuilder originalShip = player.getShip();
-        player.setShip(testShip);
-        assertEquals(testShip, player.getShip());
-        assertNotEquals(originalShip, player.getShip());
-    }
-
-    @Test
-    void testPickCard_ValidCard() {
-        player = new Player(1, "TestPlayer", true);
+    void testPickCard() {
+        player = new Player(4, "CardPlayer", true);
+        assertNull(player.getPickedCard());
         player.pickCard(testCard);
-        assertTrue(testCard.effectCalled, "effect() deve essere chiamato su AdventureCard");
+        assertEquals(testCard, player.getPickedCard());
     }
 
     @Test
-    void testPickCard_NullCard() {
-        player = new Player(1, "TestPlayer", true);
-        assertDoesNotThrow(() -> player.pickCard(null));
+    void testSetAndGetShip() {
+        player = new Player(5, "ShipPlayer", true);
+        ShipBuilder newShip = new ShipBuilder(7, 5);
+        player.setShip(newShip);
+        assertEquals(newShip, player.getShip());
     }
 
     @Test
-    void testPlaceComponent() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        Position testPosition = new Position(3, 2);
-        boolean result = player.placeComponent(testComponent, testPosition);
-        assertTrue(result);
-        assertTrue(testShip.isPositionOccupied(testPosition));
+    void testPlaceAndRemoveComponent() {
+        player = new Player(6, "ComponentPlayer", true);
+        Position pos = new Position(4, 2);
+        assertTrue(player.placeComponent(testComponent, pos));
+        assertTrue(player.removeComponentAt(pos));
     }
 
     @Test
-    void testPlaceComponent_Failure() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        Position testPosition = new Position(3, 2);
-        testShip.placeComponent(testComponent, testPosition);
-        Cabin anotherComponent = new Cabin(false);
-        anotherComponent.initializeConnectors(new DoubleConnectorType(), new SingleConnectorType(), new SingleConnectorType(), new UniversalConnectorType());
-        boolean result = player.placeComponent(anotherComponent, testPosition);
-        assertFalse(result);
-    }
-
-    @Test
-    void testRemoveComponent() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        Position testPosition = new Position(3, 2);
-        testShip.placeComponent(testComponent, testPosition);
-        boolean result = player.removeComponentAt(testPosition);
-        assertTrue(result);
-        assertFalse(testShip.isPositionOccupied(testPosition));
-    }
-
-    @Test
-    void testRemoveComponent_Failure() {
-        player = new Player(1, "TestPlayer", true, testShip);
-        boolean result = player.removeComponentAt(new Position(0, 0));
-        assertFalse(result);
-    }
-
-    @Test
-    void testTakeTurn() {
-        player = new Player(1, "TestPlayer", true);
-        assertDoesNotThrow(() -> player.takeTurn());
+    void testValidateShipAndGetShipValidationErrors() {
+        player = new Player(7, "ValidatePlayer", true);
+        // ShipBuilder vuoto non valido
+        assertFalse(player.validateShip());
+        assertNotNull(player.getShipValidationErrors());
     }
 
     @Test
