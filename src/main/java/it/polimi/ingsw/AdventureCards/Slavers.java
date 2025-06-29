@@ -80,7 +80,6 @@ public class Slavers extends AdventureCard {
     /**
      * Attempt to fight slavers
      * @param player The player trying to fight
-     * @param gameModel The current game state
      * @return true if slavers were defeated, false if player was defeated
      */
     public boolean fightSlaversFor(Player player) {
@@ -181,6 +180,19 @@ public class Slavers extends AdventureCard {
                 player.getShip().chargeWeapon(cannon);
             }
         }
+    }
+
+    public int getSlaverStrength() {
+        return slaverStrength;
+    }
+    public int getRewardCredits() {
+        return rewardCredits;
+    }
+    public int getFlightDaysCost() {
+        return flightDaysCost;
+    }
+    public int getCrewLoss() {
+        return crewLoss;
     }
 
     public boolean isDefeated() {
