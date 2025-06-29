@@ -84,7 +84,7 @@ public interface GameListener {
     void playerReadyForFlightFailed(String errorMessage);
 
     void adventurePhaseStarted(java.util.UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct);
-    void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn);
+    void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions );
 
     void getPlayerShipResponse(String playerName, Map<Position, Component> shipComponents);
 

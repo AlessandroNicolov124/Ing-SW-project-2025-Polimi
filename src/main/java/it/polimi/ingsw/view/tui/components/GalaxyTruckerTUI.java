@@ -952,11 +952,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
-        adventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn, null);
-    }
-
-    @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
             if (success && adventureCard != null) {

@@ -315,16 +315,6 @@ public class GameModel {
         return turnNumber;
     }
 
-    /**
-     * Updates the position of a player on the flight board.
-     * This method is called when a player moves during their turn.
-     *
-     * @param player The player whose position is to be updated.
-     * @param spaces The number of spaces to move.
-     */
-    public void updatePosition(Player player, int spaces) {
-        flightBoard.updatePosition(player, spaces);
-    }
 
     /**
      * Initializes the component deck with default components.

@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class RmiServer extends UnicastRemoteObject
         implements VirtualServer, Unreferenced, AutoCloseable {
@@ -480,7 +481,7 @@ public class RmiServer extends UnicastRemoteObject
         if (playerId != leadingPlayerId) {
             System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Only the leading player can pick adventure cards", -1));
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1, null));
             return;
         }
 
@@ -513,7 +514,7 @@ public class RmiServer extends UnicastRemoteObject
             // Send the pick response first
             lobbyManager.multicastToMatch(match.getMatchId(),
                     new PickAdventureCardResponse(
-                            playerId, adventureCard, success, message, nextPlayerTurn));
+                            playerId, adventureCard, success, message, nextPlayerTurn, null));
             
             // Then send completion notification
             String completionReason;
@@ -538,7 +539,7 @@ public class RmiServer extends UnicastRemoteObject
         // Send response to all clients in the match
         lobbyManager.multicastToMatch(match.getMatchId(),
                 new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
-                        playerId, adventureCard, success, message, nextPlayerTurn));
+                        playerId, adventureCard, success, message, nextPlayerTurn, null));
     }
 
     @Override

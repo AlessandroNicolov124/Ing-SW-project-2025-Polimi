@@ -796,7 +796,7 @@ public class AppContext implements GameListener {
     }
 
     @Override
-    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn) {
+    public void adventureCardPicked(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
 
     }
 

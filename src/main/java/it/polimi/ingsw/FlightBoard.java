@@ -43,7 +43,7 @@ public class FlightBoard {
      * The position must be between 1 and 4 (inclusive) and not occupied.
      *
      * @param player The player choosing the position.
-     * @param position The chosen position (1-4).
+     * @param finishOrder The chosen position (1-4).
      * @return true if the position was successfully set, false otherwise.
      */
     public boolean setInitialPosition(Player player, int finishOrder) {
@@ -330,7 +330,7 @@ public class FlightBoard {
         if (positions.isEmpty()) {
             return null;
         }
-    }
+
 
         Player bestPlayer = null;
         int bestPosition = Integer.MAX_VALUE;
