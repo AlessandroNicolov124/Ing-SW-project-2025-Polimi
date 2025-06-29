@@ -7,9 +7,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.util.Collections;
 
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
@@ -20,7 +17,6 @@ import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.rmi.RmiClient;
 import it.polimi.ingsw.network.socket.client.SocketClient;
 import it.polimi.ingsw.network.messages.RotationType;
-
 
 
 public class GalaxyTruckerTUI implements Runnable, GameListener {
@@ -38,12 +34,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     private SocketClient socketClient;
     private Player currentPlayer;
     private ShipBuildingHandler activeShipBuildingHandler;
+    private AdventurePhaseHandler activeAdventurePhaseHandler;
     private LobbyHandler lobbyHandler;
     private List<Integer> availablePositions;
     private boolean localReady = false;
 
     private CompletableFuture<Player> playerCreationFuture;
-    private Map<Integer, Integer> currentPlayerPositions = new HashMap<>();
 
 
     public GalaxyTruckerTUI()
@@ -253,24 +249,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         localReady = false;
      }
 
-/*     public void handlePlayerReady() {
-        try {
-            console.AskAreYouReadyQuestion();
-            String readyAnswer = console.readCommand().trim().toLowerCase();
-
-            if ("yes".equals(readyAnswer)) {
-
-                console.printMessage("You are marked as ready. Waiting for game to start...");
-                state = TuiState.SHIP_BUILDING;
-            } else {
-                console.printMessage("Okay, not marking as ready yet.");
-            }
-        } catch (Exception e) {
-            console.printError("Error setting player ready: " + e.getMessage());
-            state = TuiState.ASK_NET;
-        }
-    } */
-
     private void handleShipBuildingState() {
         if (this.currentPlayer == null) {
             console.printError("Cannot start ship building: current player not set.");
@@ -296,84 +274,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         // via shipValidated() and positionAssigned() callbacks
     }
 
-//     private void handleChooseStartPositionState() {
-//         if (this.currentPlayer == null) {
-//             console.printError("Cannot choose starting position: current player not set.");
-//             state = TuiState.ASK_USERNAME;
-//             return;
-//         }
-
-//         console.printMessage("\n=== Choose Your Starting Position ===");
-
-//         try {
-//             // Request available positions from server 
-//             if (socketClient != null) {
-//                 socketClient.requestAvailablePositions();
-//                 console.printMessage("Requesting available positions from server...");
-//             } else {
-//                 // Fall back to local positions if no socket client
-//                 //availablePositions = client.getAvailableStartingPositions();
-//                 showAvailablePositions(availablePositions);
-//             }
-//         } catch (IOException e) {
-//             console.printError("Error requesting available positions: " + e.getMessage());
-//             state = TuiState.TERMINATED;
-//             return;
-//         }
-
-//         boolean positionChosen = false;
-//         while (!positionChosen) {
-//             if (availablePositions == null || availablePositions.isEmpty()) {
-//                 console.printMessage("Waiting for server to provide available positions...");
-//                 try {
-//                     Thread.sleep(1000);
-//                 } catch (InterruptedException e) {
-//                     Thread.currentThread().interrupt();
-//                 }
-//                 continue;
-//             }
-
-//             String input = console.askQuestion("Enter your desired starting position " + availablePositions + ": ");
-
-//             try {
-//                 int chosenPosition = Integer.parseInt(input);
-                
-//                 // Validate position selection - use local data when connected to server, controller when offline
-// //                boolean isValid = (socketClient != null) ?
-// //                    availablePositions.contains(chosenPosition) :
-//                     //client.isPositionSelectionValid(chosenPosition);
-                    
-//                 if (!true) {
-//                     console.printError("Position " + chosenPosition + " is not available. Please choose from: " + availablePositions);
-//                     continue;
-//                 }
-
-//                 try {
-//                     if (socketClient != null) {
-//                         socketClient.selectPosition(chosenPosition);
-//                         console.printMessage("Position request sent to server. Waiting for confirmation...");
-//                         // The response will be handled by notifyPositionResponse
-//                         positionChosen = true;
-//                         // Don't transition state yet - wait for server confirmation
-//                     } else {
-//                         //TODO implemet corretly using client
-//                         // Fall back to local controller if no socket client
-//                         /*if (controller.handlePlayerPositionSelection(this.currentPlayer, chosenPosition)) {
-//                             positionChosen = true;
-//                             console.printMessage("Position " + chosenPosition + " selected. Waiting for other players...");
-//                             state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-//                         } else {
-//                             console.printError("Failed to set position. It might be taken or invalid. Please try again.");
-//                         }*/
-//                     }
-//                 } catch (Exception e) {
-//                     console.printError("Error selecting position: " + e.getMessage());
-//                 }
-//             } catch (NumberFormatException e) {
-//                 console.printError("Invalid input. Please enter a number.");
-//             }
-//         }
-//     }
 
     private void handleWaitForAllPlayersPositionedState() {
         console.printMessage("\n=== WAITING FOR ALL PLAYERS ===");
@@ -436,8 +336,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
      */
     public synchronized void proceedToRunningState() {
         // When connected to server, trust the server's signal that all players are positioned
-        // When offline, use controller to check if game can proceed
-        //boolean canProceed = (socketClient != null) ? true : controller.canProceedToRunningState();
         
         if (true) {
             if (this.state == TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED) {
@@ -447,52 +345,21 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
                 // Log or handle unexpected state transition attempt
                 console.printError("Tried to proceed to running state from an unexpected state: " + this.state);
             }
-        } else {
-            console.printMessage("Waiting for more players to be positioned...");
         }
     }
 
     private void handleAdventurePhaseState() {
-        console.printMessage("\n=== ADVENTURE CARD PHASE ===");
-        console.printMessage("Only the LEADING player (highest position number) can pick adventure cards for everyone");
-        console.printMessage("Wait for the card picker to pick or type 'status' to check current state");
+        if (activeAdventurePhaseHandler == null) {
+            console.printError("Adventure phase handler not initialized!");
+            state = TuiState.TERMINATED;
+            return;
+        }
         
-        while (state == TuiState.ADVENTURE_PHASE) {
-            String cmd = console.pollCommand(1000); // Poll with timeout
-            
-            if (cmd != null) {
-                cmd = cmd.trim().toLowerCase();
-                switch (cmd) {
-                    case "pick":
-                        // Try to pick an adventure card (only leader can)
-                        try {
-                            client.pickAdventureCard(currentPlayer.getId());
-                            console.printMessage("Adventure card pick request sent. Waiting for response...");
-                        } catch (Exception e) {
-                            console.printError("Error picking adventure card: " + e.getMessage());
-                        }
-                        break;
-                    case "status":
-                        if (currentPlayer != null) {
-                            console.printMessage("Player: " + currentPlayer.getNickName() + " (ID: " + currentPlayer.getId() + ")");
-                            console.printMessage("Game state: Adventure Phase - only leader can pick cards");
-                        }
-                        break;
-                    case "help":
-                        console.printMessage("Available commands:");
-                        console.printMessage("  pick   - Pick an adventure card (only if you are the leader)");
-                        console.printMessage("  status - Show current game status");
-                        console.printMessage("  quit   - Exit the game");
-                        break;
-                    case "quit":
-                        console.printMessage("Exiting game...");
-                        state = TuiState.TERMINATED;
-                        return;
-                    default:
-                        console.printMessage("Unknown command: " + cmd + ". Type 'help' for available commands.");
-                        break;
-                }
-            }
+        activeAdventurePhaseHandler.handleAdventurePhase();
+        
+        // Check if the handler was deactivated due to quit command
+        if (!activeAdventurePhaseHandler.isActive()) {
+            state = TuiState.TERMINATED;
         }
     }
 
@@ -596,36 +463,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
         }
     }
 
-
-    /**
-     * Called by PositionResponseMessage to handle position selection response
-     */
-    // public void triggerPositionSelectionRefresh() {
-    //     if (state == TuiState.CHOOSE_START_POSITION) {
-    //         // If we're still in position selection state, the selection failed
-    //         if (socketClient != null) {
-    //             try {
-    //                 socketClient.requestAvailablePositions();
-    //             } catch (IOException e) {
-    //                 console.printError("Error refreshing available positions: " + e.getMessage());
-    //             }
-    //         }
-    //     }
-
-        // Check if we can now proceed to the next state
-        // When connected to server, this method is typically called after successful position selection
-        // When offline, use controller logic to check
-        //boolean canProceedToNext = (socketClient != null) ?
-            //true : // Server will handle state transitions
-            //(controller.canProceedToRunningState() && state == TuiState.CHOOSE_START_POSITION);
-
-
-//        if (canProceedToNext && state == TuiState.CHOOSE_START_POSITION) {
-//            console.printMessage("Position selected. Waiting for other players...");
-//            state = TuiState.WAIT_FOR_ALL_PLAYERS_POSITIONED;
-
-//    }
-
     /**
      * Called by network messages to update available positions display
      */
@@ -638,30 +475,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
             console.printMessage("Available positions: " + positions);
         }
     }
-    
-    /**
-     * Called by PositionUpdateMessage to update a player's position
-     */
-//     public void updatePlayerPosition(int playerId, int position) {
-//         console.printMessage("Player ID " + playerId + " has selected position " + position);
-        
-//         // When connected to server, check if we're the last player to select a position
-//         if (socketClient != null) {
-//             try {
-//                 socketClient.requestAvailablePositions();
-//             } catch (IOException e) {
-//                 console.printError("Error checking remaining positions: " + e.getMessage());
-//             }
-//         } else {
-//             // Offline mode - use controller to update position
-//             //boolean success = controller.updatePlayerPosition(playerId, position);
-            
-// //            if (!success) {
-// //                console.printError("Failed to update position for player ID " + playerId);
-//             //}
-//         }
-//     }
-    
+
     /**
      * Display a message in the console
      */
@@ -679,6 +493,14 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
      */
     public boolean isInShipBuildingState() {
         return state == TuiState.SHIP_BUILDING;
+    }
+
+    /**
+     * Check if TUI is currently in adventure phase state
+     * Used by AdventurePhaseHandler to know when to exit
+     */
+    public boolean isInAdventurePhaseState() {
+        return state == TuiState.ADVENTURE_PHASE;
     }
 
     @Override
@@ -913,13 +735,6 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     }
 
-
-
-//    public void showAvailablePositions(List<Integer> positions) {
-//        // TODO Auto-generated method stub
-//        throw new UnsupportedOperationException("Unimplemented method 'showAvailablePositions'");
-//    }
-
     @Override
     public void componentPicked(int playerId, Component component, boolean success, String message) {
         synchronized (displayMutex) {
@@ -953,209 +768,28 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void adventureCardPicked(int playerId, it.polimi.ingsw.AdventureCards.AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
         synchronized (displayMutex) {
-            if (success && adventureCard != null) {
-                // Find player name for display
-                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
-                    "You" : "Player " + playerId;
-                
-                console.printMessage("✓ The leading player " + playerName + " picked adventure card: " + adventureCard.getName());
-                
-                // Show detailed card information for everyone
-                displayAdventureCard(adventureCard);
-                // Note: The actual card effect is applied on the server side
-                console.printMessage("Adventure card effects have been applied to the game state.");
-                
-                // Display updated positions if provided
-                if (updatedPositions != null && !updatedPositions.isEmpty()) {
-                    Map<Integer, Integer> previousPositions = new HashMap<>(currentPlayerPositions);
-                    currentPlayerPositions = new HashMap<>(updatedPositions); // Make a defensive copy
-                    displayPositionUpdates(previousPositions, currentPlayerPositions);
-                }
-                
-                // Check if there are more adventure cards to pick
-                if (nextPlayerTurn == -2) { // Special value indicating deck is empty or game ended
-                    console.printMessage("Adventure card deck is empty. Waiting for game completion notification...");
-                } else {
-                    console.printMessage("Waiting for the new leading player to pick the next adventure card...");
-                    console.printMessage("(The leader may have changed due to card effects)");
-                }
+            if (activeAdventurePhaseHandler != null) {
+                activeAdventurePhaseHandler.handleAdventureCardPicked(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions);
             } else {
-                console.printError("✗ Failed to pick adventure card: " + message);
+                console.printError("Adventure phase handler not available to process card pick response");
             }
-        }
-    }
-
-    /**
-     * Display position changes after adventure card effects
-     */
-    private void displayPositionUpdates(Map<Integer, Integer> previousPositions, Map<Integer, Integer> currentPositions) {
-        console.printMessage("\n=== FLIGHT BOARD POSITIONS (0-23, higher = better) ===");
-        
-        // Track if any position actually changed
-        boolean hasChanges = false;
-        List<String> changeDetails = new ArrayList<>();
-        
-        // Find all players and their positions
-        Map<Integer, String> playerNames = new HashMap<>(); // position -> player names at that position
-        for (Map.Entry<Integer, Integer> entry : currentPositions.entrySet()) {
-            int playerId = entry.getKey();
-            int position = entry.getValue();
-            
-            String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
-                "You" : "Player " + playerId;
-            
-            // Check if position changed
-            Integer previousPos = previousPositions.get(playerId);
-            if (previousPos != null && !previousPos.equals(position)) {
-                hasChanges = true;
-                if (position > previousPos) {
-                    // Higher position number = better position = moved forward
-                    int improvement = position - previousPos;
-                    playerName += " (↑" + improvement + ")";
-                    changeDetails.add(playerName.replace(" (↑" + improvement + ")", "") + " moved forward " + improvement + " positions");
-                } else {
-                    // Lower position number = worse position = moved backward
-                    int decline = previousPos - position;
-                    playerName += " (↓" + decline + ")";
-                    changeDetails.add(playerName.replace(" (↓" + decline + ")", "") + " moved backward " + decline + " positions");
-                }
-            } else if (previousPos == null) {
-                // Player wasn't tracked before - this shouldn't happen during adventure phase
-                changeDetails.add(playerName + " position tracking started");
-            }
-            
-            playerNames.put(position, playerNames.getOrDefault(position, "") + 
-                (playerNames.containsKey(position) ? ", " : "") + playerName);
-        }
-        
-        // Display positions from best to worst (highest to lowest position numbers)
-        List<Integer> sortedPositions = new ArrayList<>(playerNames.keySet());
-        sortedPositions.sort(Collections.reverseOrder()); // Descending order (23, 22, 21, ... 0)
-        
-        // Create rank based on the sorted order
-        int rank = 1;
-        for (int position : sortedPositions) {
-            String playersAtPosition = playerNames.get(position);
-            String positionLabel = getPositionLabel(rank);
-            console.printMessage("Position " + position + " " + positionLabel + ": " + playersAtPosition);
-            rank++;
-        }
-        
-        // Show position changes summary
-        if (hasChanges) {
-            console.printMessage("\nPosition changes from this card:");
-            for (String change : changeDetails) {
-                console.printMessage("  • " + change);
-            }
-        } else {
-            // Check if positions are identical
-            boolean identicalMaps = previousPositions.equals(currentPositions);
-            if (identicalMaps) {
-                console.printMessage("(No position changes from this card)");
-            } else {
-                console.printMessage("(Position data updated but no player movements detected)");
-            }
-        }
-        
-        console.printMessage("================================================\n");
-    }
-
-    /**
-     * Get a descriptive label for a rank
-     */
-    private String getPositionLabel(int rank) {
-        switch (rank) {
-            case 1: return "(1st place)";
-            case 2: return "(2nd place)";
-            case 3: return "(3rd place)";
-            case 4: return "(4th place)";
-            default: return "(" + rank + "th place)";
         }
     }
 
     @Override
     public void adventurePhaseComplete(UUID matchId, boolean gameComplete, String completionReason) {
         synchronized (displayMutex) {
-            console.printMessage("\n=== ADVENTURE PHASE COMPLETE ===");
-            console.printMessage("Reason: " + completionReason);
+            if (activeAdventurePhaseHandler != null) {
+                activeAdventurePhaseHandler.handlePhaseComplete(gameComplete, completionReason);
+                activeAdventurePhaseHandler = null; // Clear the handler
+            }
             
             if (gameComplete) {
-                console.printMessage(" GAME OVER! ");
-                console.printMessage("Final results will be calculated...");
                 state = TuiState.GAME_ENDED;
             } else {
-                console.printMessage("Adventure phase finished. Proceeding to main game...");
                 state = TuiState.RUNNING;
             }
         }
-    }
-
-    /**
-     * Displays detailed information about an adventure card
-     */
-    private void displayAdventureCard(it.polimi.ingsw.AdventureCards.AdventureCard adventureCard) {
-        console.printMessage("\n╔══════════════════════════════════════════════════════════════════════╗");
-        console.printMessage("║                        ADVENTURE CARD DRAWN                         ║");
-        console.printMessage("╠══════════════════════════════════════════════════════════════════════╣");
-        console.printMessage("║ Card Name: " + String.format("%-55s", adventureCard.getName()) + " ║");
-        console.printMessage("║                                                                      ║");
-
-        // Split description into multiple lines if it's too long
-        String description = adventureCard.getDescription();
-        String[] descriptionLines = wrapText(description, 68);
-        console.printMessage("║ Description:                                                         ║");
-        for (String line : descriptionLines) {
-            console.printMessage("║ " + String.format("%-68s", line) + " ║");
-        }
-
-        console.printMessage("║                                                                      ║");
-
-        // Show additional properties if available
-        if (adventureCard.getDuration() > 1) {
-            console.printMessage("║ Duration: " + String.format("%-59s", adventureCard.getDuration() + " rounds") + " ║");
-        }
-        if (adventureCard.getCost() > 0) {
-            console.printMessage("║ Cost: " + String.format("%-63s", adventureCard.getCost() + " credits") + " ║");
-        }
-
-        console.printMessage("╚══════════════════════════════════════════════════════════════════════╝");
-        console.printMessage("");
-    }
-
-    /**
-     * Wraps text to fit within specified width
-     */
-    private String[] wrapText(String text, int maxWidth) {
-        if (text.length() <= maxWidth) {
-            return new String[]{text};
-        }
-
-        java.util.List<String> lines = new java.util.ArrayList<>();
-        String[] words = text.split(" ");
-        StringBuilder currentLine = new StringBuilder();
-
-        for (String word : words) {
-            if (currentLine.length() + word.length() + 1 <= maxWidth) {
-                if (currentLine.length() > 0) {
-                    currentLine.append(" ");
-                }
-                currentLine.append(word);
-            } else {
-                if (currentLine.length() > 0) {
-                    lines.add(currentLine.toString());
-                    currentLine = new StringBuilder(word);
-                } else {
-                    // Word is longer than maxWidth, just add it anyway
-                    lines.add(word);
-                }
-            }
-        }
-
-        if (currentLine.length() > 0) {
-            lines.add(currentLine.toString());
-        }
-
-        return lines.toArray(new String[0]);
     }
 
     @Override
@@ -1191,67 +825,12 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
     @Override
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
         synchronized (displayMutex) {
-            // Initialize position tracking
-            currentPlayerPositions = new HashMap<>(playerPositions);
-            
-            console.printMessage("\nALL PLAYERS POSITIONED! Starting Adventure Phase!");
-            console.printMessage("=== STARTING POSITIONS (0-23, lower = better for winning) ===");
-            
-            // Sort players by position (best to worst for flight race)
-            List<Map.Entry<Integer, Integer>> sortedEntries = new ArrayList<>(playerPositions.entrySet());
-            sortedEntries.sort(Map.Entry.comparingByValue()); // Sort by position value (ascending)
-            
-            // Display flight race standings
-            int rank = 1;
-            for (Map.Entry<Integer, Integer> entry : sortedEntries) {
-                int playerId = entry.getKey();
-                int position = entry.getValue();
-                String playerName = (currentPlayer != null && currentPlayer.getId() == playerId) ? 
-                    "You" : "Player " + playerId;
-                
-                String rankStr = getRankString(rank);
-                console.printMessage(rankStr + " in flight race (pos " + position + "): " + playerName);
-                rank++;
-            }
-            
-            // Show who picks adventure cards (player with highest position number = best flight position)
-            String cardPickerName = (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) ? 
-                "You" : "Player " + firstPlayerToAct;
-            
-            // Find the position of the card picker
-            int cardPickerPosition = playerPositions.getOrDefault(firstPlayerToAct, -1);
-            
-            console.printMessage("\n ADVENTURE CARD PICKER: " + cardPickerName + " (position " + cardPickerPosition + ")");
-            
-            console.printMessage("\n=============================================");
-            console.printMessage("ADVENTURE CARD RULES:");
-            console.printMessage("• LEADING player (highest position number) picks cards!");
-            console.printMessage("• Flight day costs move you to LOWER position numbers (worse positions)");
-            console.printMessage("• Multiple players losing flight days move in reverse order");
-            console.printMessage("• Players cannot overlap - if a position is occupied, move to next available position");
-            
-            // Check if we are the card picker
-            if (currentPlayer != null && currentPlayer.getId() == firstPlayerToAct) {
-                console.printMessage("\n You are the adventure card picker! Type 'pick' to draw a card for all players.");
-            } else {
-                console.printMessage("\n Waiting for " + cardPickerName + " to pick an adventure card...");
-            }
+            // Initialize adventure phase handler
+            activeAdventurePhaseHandler = new AdventurePhaseHandler(console, client, currentPlayer, this);
+            activeAdventurePhaseHandler.initializePhase(playerPositions, firstPlayerToAct);
             
             // Transition to adventure phase
             state = TuiState.ADVENTURE_PHASE;
-        }
-    }
-
-    /**
-     * Convert rank number to ordinal string
-     */
-    private String getRankString(int rank) {
-        switch (rank) {
-            case 1: return "1st";
-            case 2: return "2nd";
-            case 3: return "3rd";
-            case 4: return "4th";
-            default: return rank + "th";
         }
     }
 
