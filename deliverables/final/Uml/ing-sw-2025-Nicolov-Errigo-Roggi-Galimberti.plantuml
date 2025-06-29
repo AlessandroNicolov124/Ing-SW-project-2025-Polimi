@@ -1,0 +1,301 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class AbandonedShip
+class AbandonedShipTest
+class AbandonedStation
+class AbandonedStationTest
+class AddPlayerRequest
+class AddPlayerResponse
+class AddTokenToComponentRequest
+class AddTokenToComponentResponse
+class AdventureCard
+class AdventurePhaseCompleteResponse
+class AdventurePhaseStartResponse
+class App
+class AppContext
+class BatteryCompartment
+class BatteryCompartmentTest
+enum BatteryType << enumeration >>
+class BigMeteorSwarm
+class BigMeteorSwarmTest
+class BlueCargo
+class BrownAlienCrew
+class Cabin
+class CabinColorSelectionRequest
+class CabinColorSelectionResponse
+class CabinTest
+class Cannon
+class CannonTest
+class Cargo
+class CargoHolds
+enum CargoHoldsSize << enumeration >>
+class CargoTest
+class CombatZone
+class CombatZoneTest
+interface CommonMessage << interface >>
+class Component
+class Connector
+class ConnectorTest
+class ConnectorType
+class ConsoleManager
+class CreateMatchRequest
+class CreateMatchResponse
+class Crew
+class CrewTest
+enum CrewType << enumeration >>
+enum Difficulty << enumeration >>
+enum Direction << enumeration >>
+class DirectionTest
+class DoubleCannon
+class DoubleConnectorType
+class DoubleEngine
+class Engine
+class EngineTest
+class Epidemic
+class EpidemicTest
+class ExpiringTimeRequest
+class FlightBoard
+class FlightBoardController
+interface FlightBoardListener << interface >>
+class FlightOrderRespone
+class FlightPreparationController
+class FlightPreparationStartResponse
+class GUIApp
+class GalaxyTruckerClient
+class GalaxyTruckerTUI
+class GameController
+interface GameListener << interface >>
+class GameMatch
+class GameModel
+interface GameStateUpdateListener << interface >>
+class GameView
+interface GeneralClientIf << interface >>
+class GeneralServer
+class GetMatchesRequest
+class GetMatchesResponse
+class GetPlayerShipRequest
+class GetPlayerShipResponse
+class GetPlayerTokenListRequest
+class GetPlayerTokenListResponse
+class GreenCargo
+class GuiContoller
+class HumanCrew
+class JoinMatchRequest
+class JoinMatchResponse
+class Launcher
+class LeaveMatchRequest
+class LeaveMatchResponse
+class LifeSupportSystem
+class LifeSupportSystemTest
+enum LifeSupportSystemType << enumeration >>
+class LoadingAckRequest
+class LoadingAckResponse
+class LoadingStatusResponse
+class LobbyController
+class LobbyHandler
+interface LobbyListener << interface >>
+interface LobbyManager << interface >>
+class LoginController
+class MatchRowDisplay
+enum MatchStates << enumeration >>
+class MeteorSwarm
+class MeteorSwarmTest
+class NormalCargoHolds
+class NormalCargoHoldsTest
+class NullConnectorType
+class OpenSpace
+class OpenSpaceTest
+class PickAdventureCardRequest
+class PickAdventureCardResponse
+class PickComponentRequest
+class PickComponentResponse
+class Pirates
+class PiratesTest
+class PlaceComponentRequest
+class PlaceComponentResponse
+class Planets
+class PlanetsTest
+class Player
+class PlayerReadyForFlightResponse
+class PlayerReadyRequest
+class PlayerReadyResponse
+class PlayerShipController
+class PlayerTest
+class PlayersInMatchResponse
+class Position
+class PositionAssignmentResponse
+class PositionTest
+class PreparationFlightHandler
+interface PreparationFlightListener << interface >>
+class PurpleAlienCrew
+class ReadyForAdventurePhaseRequest
+class ReadyForAdventurePhaseResponse
+class ReadyForFlightRequest
+class ReadyForFlightResponse
+class RedCargo
+class RemoveComponentRequest
+class RemoveComponentResponse
+class RemoveTokenFromComponentRequest
+class RemoveTokenFromComponentResponse
+interface RequestMessage << interface >>
+interface ResponseMessage << interface >>
+class RmiClient
+interface RmiClientIf << interface >>
+class RmiServer
+class RotateComponentRequest
+class RotateComponentResponse
+enum RotationType << enumeration >>
+class Sabotage
+class SabotageTest
+class ShieldGenerator
+class ShieldGeneratorTest
+class ShipBuilder
+class ShipBuilderController
+class ShipBuilderTest
+class ShipBuildingHandler
+class ShipBuildingStartResponse
+class ShipValidationResponse
+class SingleCannon
+class SingleConnectorType
+class SingleEngine
+class Slavers
+class SlaversTest
+class Smugglers
+class SmugglersTest
+class SocketClient
+class SocketClientHandler
+class SocketServer
+class SpecialCargoHolds
+class SpecialCargoHoldsTest
+class Stardust
+class StardustTest
+class StartMatchRequest
+class StartMatchResponse
+class StructuralModule
+class StructuralModuleTest
+enum TokenType << enumeration >>
+enum TuiState << enumeration >>
+class UniversalConnectorType
+class UpdateHostResponse
+class ValidateShipRequest
+interface VirtualServer << interface >>
+interface VirtualServer << interface >>
+class YellowCargo
+
+AbandonedShip                     -[#000082,plain]-^  AdventureCard                    
+AbandonedStation                  -[#000082,plain]-^  AdventureCard                    
+AddPlayerRequest                  -[#008200,dashed]-^  RequestMessage                   
+AddPlayerResponse                 -[#008200,dashed]-^  ResponseMessage                  
+AddTokenToComponentRequest        -[#008200,dashed]-^  RequestMessage                   
+AddTokenToComponentResponse       -[#008200,dashed]-^  ResponseMessage                  
+AdventurePhaseCompleteResponse    -[#008200,dashed]-^  ResponseMessage                  
+AdventurePhaseStartResponse       -[#008200,dashed]-^  ResponseMessage                  
+AppContext                        -[#008200,dashed]-^  GameListener                     
+BatteryCompartment                -[#000082,plain]-^  Component                        
+BigMeteorSwarm                    -[#000082,plain]-^  AdventureCard                    
+BlueCargo                         -[#000082,plain]-^  Cargo                            
+BrownAlienCrew                    -[#000082,plain]-^  Crew                             
+Cabin                             -[#000082,plain]-^  Component                        
+CabinColorSelectionRequest        -[#008200,dashed]-^  RequestMessage                   
+CabinColorSelectionResponse       -[#008200,dashed]-^  ResponseMessage                  
+Cannon                            -[#000082,plain]-^  Component                        
+CargoHolds                        -[#000082,plain]-^  Component                        
+CombatZone                        -[#000082,plain]-^  AdventureCard                    
+CreateMatchRequest                -[#008200,dashed]-^  RequestMessage                   
+CreateMatchResponse               -[#008200,dashed]-^  ResponseMessage                  
+DoubleCannon                      -[#000082,plain]-^  Cannon                           
+DoubleConnectorType               -[#000082,plain]-^  ConnectorType                    
+DoubleEngine                      -[#000082,plain]-^  Engine                           
+Engine                            -[#000082,plain]-^  Component                        
+Epidemic                          -[#000082,plain]-^  AdventureCard                    
+ExpiringTimeRequest               -[#008200,dashed]-^  RequestMessage                   
+FlightBoardController             -[#008200,dashed]-^  FlightBoardListener              
+FlightBoardController             -[#000082,plain]-^  GuiContoller                     
+FlightOrderRespone                -[#008200,dashed]-^  ResponseMessage                  
+FlightPreparationController       -[#000082,plain]-^  GuiContoller                     
+FlightPreparationController       -[#008200,dashed]-^  PreparationFlightListener        
+FlightPreparationStartResponse    -[#008200,dashed]-^  ResponseMessage                  
+GalaxyTruckerTUI                  -[#008200,dashed]-^  GameListener                     
+GeneralServer                     -[#008200,dashed]-^  LobbyManager                     
+GetMatchesRequest                 -[#008200,dashed]-^  RequestMessage                   
+GetMatchesResponse                -[#008200,dashed]-^  ResponseMessage                  
+GetPlayerShipRequest              -[#008200,dashed]-^  RequestMessage                   
+GetPlayerShipResponse             -[#008200,dashed]-^  ResponseMessage                  
+GetPlayerTokenListRequest         -[#008200,dashed]-^  RequestMessage                   
+GetPlayerTokenListResponse        -[#008200,dashed]-^  ResponseMessage                  
+GreenCargo                        -[#000082,plain]-^  Cargo                            
+HumanCrew                         -[#000082,plain]-^  Crew                             
+JoinMatchRequest                  -[#008200,dashed]-^  RequestMessage                   
+JoinMatchResponse                 -[#008200,dashed]-^  ResponseMessage                  
+LeaveMatchRequest                 -[#008200,dashed]-^  RequestMessage                   
+LeaveMatchResponse                -[#008200,dashed]-^  ResponseMessage                  
+LifeSupportSystem                 -[#000082,plain]-^  Component                        
+LoadingAckRequest                 -[#008200,dashed]-^  RequestMessage                   
+LoadingAckResponse                -[#008200,dashed]-^  ResponseMessage                  
+LoadingStatusResponse             -[#008200,dashed]-^  ResponseMessage                  
+LobbyController                   -[#000082,plain]-^  GuiContoller                     
+LobbyController                   -[#008200,dashed]-^  LobbyListener                    
+LoginController                   -[#000082,plain]-^  GuiContoller                     
+MeteorSwarm                       -[#000082,plain]-^  AdventureCard                    
+NormalCargoHolds                  -[#000082,plain]-^  CargoHolds                       
+NullConnectorType                 -[#000082,plain]-^  ConnectorType                    
+OpenSpace                         -[#000082,plain]-^  AdventureCard                    
+PickAdventureCardRequest          -[#008200,dashed]-^  RequestMessage                   
+PickAdventureCardResponse         -[#008200,dashed]-^  ResponseMessage                  
+PickComponentRequest              -[#008200,dashed]-^  RequestMessage                   
+PickComponentResponse             -[#008200,dashed]-^  ResponseMessage                  
+Pirates                           -[#000082,plain]-^  AdventureCard                    
+PlaceComponentRequest             -[#008200,dashed]-^  RequestMessage                   
+PlaceComponentResponse            -[#008200,dashed]-^  ResponseMessage                  
+Planets                           -[#000082,plain]-^  AdventureCard                    
+PlayerReadyForFlightResponse      -[#008200,dashed]-^  ResponseMessage                  
+PlayerReadyRequest                -[#008200,dashed]-^  RequestMessage                   
+PlayerReadyResponse               -[#008200,dashed]-^  ResponseMessage                  
+PlayerShipController              -[#000082,plain]-^  GuiContoller                     
+PlayerShipController              -[#008200,dashed]-^  PreparationFlightListener        
+PlayersInMatchResponse            -[#008200,dashed]-^  ResponseMessage                  
+PositionAssignmentResponse        -[#008200,dashed]-^  ResponseMessage                  
+PurpleAlienCrew                   -[#000082,plain]-^  Crew                             
+ReadyForAdventurePhaseRequest     -[#008200,dashed]-^  RequestMessage                   
+ReadyForAdventurePhaseResponse    -[#008200,dashed]-^  ResponseMessage                  
+ReadyForFlightRequest             -[#008200,dashed]-^  RequestMessage                   
+ReadyForFlightResponse            -[#008200,dashed]-^  ResponseMessage                  
+RedCargo                          -[#000082,plain]-^  Cargo                            
+RemoveComponentRequest            -[#008200,dashed]-^  RequestMessage                   
+RemoveComponentResponse           -[#008200,dashed]-^  ResponseMessage                  
+RemoveTokenFromComponentRequest   -[#008200,dashed]-^  RequestMessage                   
+RemoveTokenFromComponentResponse  -[#008200,dashed]-^  ResponseMessage                  
+RequestMessage                    -[#008200,plain]-^  CommonMessage                    
+ResponseMessage                   -[#008200,plain]-^  CommonMessage                    
+RmiClient                         -[#008200,dashed]-^  RmiClientIf                      
+RmiClientIf                       -[#008200,plain]-^  GeneralClientIf                  
+RmiServer                         -[#008200,dashed]-^  VirtualServer                    
+RotateComponentRequest            -[#008200,dashed]-^  RequestMessage                   
+RotateComponentResponse           -[#008200,dashed]-^  ResponseMessage                  
+Sabotage                          -[#000082,plain]-^  AdventureCard                    
+ShieldGenerator                   -[#000082,plain]-^  Component                        
+ShipBuilderController             -[#008200,dashed]-^  GameStateUpdateListener          
+ShipBuilderController             -[#000082,plain]-^  GuiContoller                     
+ShipBuildingStartResponse         -[#008200,dashed]-^  ResponseMessage                  
+ShipValidationResponse            -[#008200,dashed]-^  ResponseMessage                  
+SingleCannon                      -[#000082,plain]-^  Cannon                           
+SingleConnectorType               -[#000082,plain]-^  ConnectorType                    
+SingleEngine                      -[#000082,plain]-^  Engine                           
+Slavers                           -[#000082,plain]-^  AdventureCard                    
+Smugglers                         -[#000082,plain]-^  AdventureCard                    
+SocketClient                      -[#008200,dashed]-^  GeneralClientIf                  
+SocketClientHandler               -[#008200,dashed]-^  GeneralClientIf                  
+SpecialCargoHolds                 -[#000082,plain]-^  CargoHolds                       
+Stardust                          -[#000082,plain]-^  AdventureCard                    
+StartMatchRequest                 -[#008200,dashed]-^  RequestMessage                   
+StartMatchResponse                -[#008200,dashed]-^  ResponseMessage                  
+StructuralModule                  -[#000082,plain]-^  Component                        
+UniversalConnectorType            -[#000082,plain]-^  ConnectorType                    
+UpdateHostResponse                -[#008200,dashed]-^  ResponseMessage                  
+ValidateShipRequest               -[#008200,dashed]-^  RequestMessage                   
+YellowCargo                       -[#000082,plain]-^  Cargo                            
+@enduml
