@@ -473,17 +473,15 @@ public class GameMatch {
      * @return Map of player ID to assigned position
      */
     public Map<Integer, Integer> getPlayerPositions() {
-        if (controller != null && matchState == MatchStates.FLIGHT_IN_PROGRESS) {
+        // Return actual flight board positions from controller if available
+        if (controller != null) {
             Map<Integer, Integer> flightBoardPositions = controller.getCurrentPlayerPositions();
             if (flightBoardPositions != null && !flightBoardPositions.isEmpty()) {
-                System.out.println("[GameMatch] Returning current flight board positions: " + flightBoardPositions);
-                return new HashMap<>(flightBoardPositions);
+                return flightBoardPositions;
             }
         }
-        
-        // Fallback to stored positions if flight not in progress
-        System.out.println("[GameMatch] Returning stored positions: " + playerPositions);
-        return new HashMap<>(playerPositions);
+        // Fallback to completion order positions if flight board not available
+        return new ConcurrentHashMap<>(playerPositions);
     }
 
     /**
