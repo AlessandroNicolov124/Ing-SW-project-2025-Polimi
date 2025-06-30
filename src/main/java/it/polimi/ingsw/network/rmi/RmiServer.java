@@ -53,6 +53,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.rmi.server.Unreferenced;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -186,9 +187,18 @@ public class RmiServer extends UnicastRemoteObject
             System.out.println("[ServerRMI] Player " + playerName + " joined match: " + matchId);
             
             lobbyManager.multicastToMatchExceptOne(matchId, new JoinMatchResponse(matchId, playerName, true, "Player joined successfully"), client);
+            
             List<String> names = match.getPlayers().stream().map(Player::getNickName).toList();
             Player host = match.getHostPlayer();
-            client.showUpdate(new PlayersInMatchResponse(matchId, names, host.getId(), true, "Players in match retrieved successfully"));
+            
+            Map<String, Integer> takenColors = new HashMap<>();
+            Map<Integer, String> allPlayerColors = match.getAllPlayerColors();
+            for (Map.Entry<Integer, String> entry : allPlayerColors.entrySet()) {
+                takenColors.put(entry.getValue(), entry.getKey());
+            }
+            
+            client.showUpdate(new PlayersInMatchResponse(matchId, names, host.getId(), takenColors, true, "Players in match retrieved successfully"));
+                
         } else {
             System.out.println("[ServerRMI] Player " + playerName + " failed to join match: " + matchId);
             client.showUpdate(new JoinMatchResponse(matchId, playerName, false, "Failed to join match"));
@@ -475,10 +485,11 @@ public class RmiServer extends UnicastRemoteObject
 
         // Only the leading player (position 1) can pick adventure cards
         int leadingPlayerId = match.getFirstPlayerToAct();
+        Map<Integer,Integer> positions = match.getPlayerPositions();
         if (playerId != leadingPlayerId) {
             System.out.println("[ServerRMI] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
             client.showUpdate(new PickAdventureCardResponse(
-                    playerId, null, false, "Only the leading player can pick adventure cards", -1, null));
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1, positions));
             return;
         }
 
@@ -495,6 +506,15 @@ public class RmiServer extends UnicastRemoteObject
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
+        if (success && adventureCard != null) {
+            System.out.println("[ServerRMI] Applying adventure card effect: " + adventureCard.getClass().getSimpleName());
+            controller.applyAdventureCardEffect(adventureCard);
+        }
+
+        // Get updated positions after card effects have been applied
+        Map<Integer, Integer> updatedPositions = match.getPlayerPositions();
+        System.out.println("[ServerRMI] Updated positions after card effects: " + updatedPositions);
+
         // Determine next player's turn
         int nextPlayerTurn = match.getNextPlayerTurnForAdventure(playerId);
 
@@ -503,15 +523,15 @@ public class RmiServer extends UnicastRemoteObject
 
         // Check if there are more adventure cards or if the game is complete
         nextPlayerTurn = -1; // Default: adventure phase continues
-        
+
         if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
             // Adventure deck is empty or game is complete
             nextPlayerTurn = -2; // Special value indicating deck is empty
             
-            // Send the pick response first
+            // Send the pick response first with updated positions
             lobbyManager.multicastToMatch(match.getMatchId(),
                     new PickAdventureCardResponse(
-                            playerId, adventureCard, success, message, nextPlayerTurn, null));
+                            playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
             
             // Then send completion notification
             String completionReason;
@@ -531,12 +551,11 @@ public class RmiServer extends UnicastRemoteObject
             // More cards available - find new leader after effects have been applied
             int newLeaderId = match.getFirstPlayerToAct();
             System.out.println("[ServerRMI] New leading player for next adventure card: " + newLeaderId);
+            nextPlayerTurn = newLeaderId; // Set the actual next player instead of -1
         }
 
-        // Send response to all clients in the match
-        lobbyManager.multicastToMatch(match.getMatchId(),
-                new it.polimi.ingsw.network.messages.adventure.PickAdventureCardResponse(
-                        playerId, adventureCard, success, message, nextPlayerTurn, null));
+        // Send response to all clients in the match with updated positions
+        lobbyManager.multicastToMatch(match.getMatchId(), new PickAdventureCardResponse(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
     }
 
     @Override
@@ -614,6 +633,10 @@ public class RmiServer extends UnicastRemoteObject
             return;
         }
 
+        if (match.getMatchState() != MatchStates.FLIGHT_PREPARATION) {
+            return;
+        }
+
         match.setPlayerReadyForFlight(playerId, true);
         
         lobbyManager.multicastToMatch(matchId, new PlayerReadyForFlightResponse(matchId, playerId, player.getNickName(), true, true, "Player " + player.getNickName() + " is ready for flight"));
@@ -622,6 +645,7 @@ public class RmiServer extends UnicastRemoteObject
             match.setMatchState(MatchStates.FLIGHT_PREPARATION);
             lobbyManager.multicastToMatch(matchId, new FlightPreparationStartResponse(matchId, true, "All players ready – flight preparation begins"));
         }
+
     }
 
     @Override
@@ -804,13 +828,15 @@ public class RmiServer extends UnicastRemoteObject
         if (isReady) {
             client.showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
             
-            // Check if all players are ready
             if (match.allPlayersReadyForAdventure()) {
-                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
-                        matchId,
-                        match.getPlayerPositions(),
-                        match.getFirstPlayerToAct()
-                ));
+                Map<Integer, Integer> currentPositions = match.getPlayerPositions();
+                int firstPlayer = match.getFirstPlayerToAct();
+                
+                System.out.println("[Server] Starting adventure phase with positions: " + currentPositions);
+                System.out.println("[Server] First player to act: " + firstPlayer);
+                
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(matchId, currentPositions, firstPlayer));
+                
                 match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
             }
         } else {

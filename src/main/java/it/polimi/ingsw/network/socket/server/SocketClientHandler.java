@@ -52,6 +52,7 @@ import it.polimi.ingsw.network.messages.shipbuilding.PositionAssignmentResponse;
 import java.io.*;
 import java.net.Socket;
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -166,25 +167,32 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     }
 
     @Override
-    public void joinMatch(UUID matchId, int playerId, String username) throws Exception {
-        boolean success = lobbyManager.joinMatch(matchId, playerId, username);
+    public void joinMatch(UUID matchId, int playerId, String playerName) throws Exception {
+        boolean success = lobbyManager.joinMatch(matchId, playerId, playerName);
         if (success) {
             lobbyManager.addClientToMatch(matchId, this);
-            
-
             GameMatch match = lobbyManager.findMatchById(matchId);
 
-            System.out.println("[ServerSocket] Player " + username + " joined match: " + matchId);
+            System.out.println("[ServerSocket] Player " + playerName + " joined match: " + matchId);
             
-            lobbyManager.multicastToMatchExceptOne(matchId, new JoinMatchResponse(matchId, username, true, "Player joined successfully"), this);
+            lobbyManager.multicastToMatchExceptOne(matchId, new JoinMatchResponse(matchId, playerName, true, "Player joined successfully"), this);
+            
             List<String> names = match.getPlayers().stream().map(Player::getNickName).toList();
             Player host = match.getHostPlayer();
-            showUpdate(new PlayersInMatchResponse(matchId, names, host.getId(), true, "Players in match retrieved successfully"));
+            
+            Map<String, Integer> takenColors = new HashMap<>();
+            Map<Integer, String> allPlayerColors = match.getAllPlayerColors();
+            for (Map.Entry<Integer, String> entry : allPlayerColors.entrySet()) {
+                takenColors.put(entry.getValue(), entry.getKey());
+            }
+            
+            showUpdate(new PlayersInMatchResponse(matchId, names, host.getId(), takenColors, true, "Players in match retrieved successfully"));
+                
         } else {
-            System.out.println("[ServerSocket] Player " + username + " failed to join match: " + matchId);
-            showUpdate(new JoinMatchResponse(matchId, username, false, "Failed to join match"));
+            System.out.println("[ServerSocket] Player " + playerName + " failed to join match: " + matchId);
+            showUpdate(new JoinMatchResponse(matchId, playerName, false, "Failed to join match"));
         }
-
+        return;
     }
 
     @Override
@@ -302,79 +310,67 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
     }
 
     @Override
-    public void pickAdventureCard(int currentPlayer) throws Exception {
-        if (currentPlayer == -1) {
-            System.out.println("[ServerSocket] No player ID set for client handler");
-            showUpdate(new PickAdventureCardResponse(
-                    -1, null, false, "No player ID set", -1, null));
-            return;
-        }
-
-        GameMatch match = lobbyManager.findMatchByPlayerId(currentPlayer);
+    public void pickAdventureCard(int playerId) throws Exception {
+        GameMatch match = lobbyManager.findMatchByPlayerId(playerId);
         if (match == null) {
-            System.out.println("[ServerSocket] Match not found for player ID: " + currentPlayer);
-            showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not found", -1, null));
+            System.out.println("[SerServerSocketverRMI] Match not found for player ID: " + playerId);
+            //broadcastAdventureCardErrorToAllClients(playerId, "Match not found");
             return;
         }
-
         if (match.getMatchState() != MatchStates.FLIGHT_IN_PROGRESS) {
-            System.out.println("[ServerSocket] Match not in progress for player ID: " + currentPlayer);
-            showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Match not in progress", -1, null));
+            System.out.println("[ServerSocket] Match not in progress for player ID: " + playerId);
+            //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Match not in progress");
             return;
         }
 
-        // Only the leading player (highest position) can pick adventure cards
+        // Only the leading player (position 1) can pick adventure cards
         int leadingPlayerId = match.getFirstPlayerToAct();
-        if (currentPlayer != leadingPlayerId) {
-            System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + currentPlayer + " is not the leader (ID: " + leadingPlayerId + ")");
+        Map<Integer,Integer> positions = match.getPlayerPositions();
+        if (playerId != leadingPlayerId) {
+            System.out.println("[ServerSocket] Only the leading player can pick adventure cards. Player ID: " + playerId + " is not the leader (ID: " + leadingPlayerId + ")");
             showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Only the leading player can pick adventure cards", -1, null));
+                    playerId, null, false, "Only the leading player can pick adventure cards", -1, positions));
             return;
         }
 
         GameController controller = match.getController();
-        Player player = controller.getPlayerById(currentPlayer);
+        Player player = controller.getPlayerById(playerId);
         if (player == null) {
-            System.out.println("[ServerSocket] Player not found with ID: " + currentPlayer);
-            showUpdate(new PickAdventureCardResponse(
-                    currentPlayer, null, false, "Player not found", -1, null));
+            System.out.println("[ServerSocket] Player not found with ID: " + playerId);
+            //broadcastAdventureCardErrorToMatch(match.getMatchId(), playerId, "Player not found");
             return;
         }
-
-        // Pick adventure card using the controller - only for the leading player
+        // Pick adventure card using the controller
         controller.pickCardForPlayer(player);
         AdventureCard adventureCard = player.getPickedCard();
         String message = adventureCard != null ? adventureCard.getName() : "No more adventure cards available";
         boolean success = adventureCard != null;
 
-        // Apply the adventure card effect to the game state
         if (success && adventureCard != null) {
             System.out.println("[ServerSocket] Applying adventure card effect: " + adventureCard.getClass().getSimpleName());
             controller.applyAdventureCardEffect(adventureCard);
         }
 
-        System.out.println("[ServerSocket] Adventure card pick by leading player " + currentPlayer + ": " +
+        // Get updated positions after card effects have been applied
+        Map<Integer, Integer> updatedPositions = match.getPlayerPositions();
+        System.out.println("[ServerSocket] Updated positions after card effects: " + updatedPositions);
+
+        // Determine next player's turn
+        int nextPlayerTurn = match.getNextPlayerTurnForAdventure(playerId);
+
+        System.out.println("[ServerSocket] Adventure card pick for player " + playerId + ": " +
                 (adventureCard != null ? adventureCard.getClass().getSimpleName() : "null"));
 
-        // Get updated player positions after card effects
-        Map<Integer, Integer> updatedPositions = null;
-        if (success && adventureCard != null) {
-            updatedPositions = controller.getCurrentPlayerPositions();
-        }
-
         // Check if there are more adventure cards or if the game is complete
-        int nextPlayerTurn = -1; // Default: adventure phase continues
-        
+        nextPlayerTurn = -1; // Default: adventure phase continues
+
         if (!controller.hasMoreAdventureCards() || controller.isFlightComplete()) {
             // Adventure deck is empty or game is complete
             nextPlayerTurn = -2; // Special value indicating deck is empty
             
-            // Send the pick response first
+            // Send the pick response first with updated positions
             lobbyManager.multicastToMatch(match.getMatchId(),
-                    new PickAdventureCardResponse(
-                            currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
+                    new PickAdventureCardResponse(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
             
             // Then send completion notification
             String completionReason;
@@ -387,19 +383,17 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
             }
             
             lobbyManager.multicastToMatch(match.getMatchId(),
-                    new AdventurePhaseCompleteResponse(
-                            match.getMatchId(), gameComplete, completionReason));
+                    new AdventurePhaseCompleteResponse(match.getMatchId(), gameComplete, completionReason));
             return;
         } else {
             // More cards available - find new leader after effects have been applied
             int newLeaderId = match.getFirstPlayerToAct();
             System.out.println("[ServerSocket] New leading player for next adventure card: " + newLeaderId);
+            nextPlayerTurn = newLeaderId; // Set the actual next player instead of -1
         }
 
-        // Send response to all clients in the match
-        lobbyManager.multicastToMatch(match.getMatchId(),
-                new PickAdventureCardResponse(
-                        currentPlayer, adventureCard, success, message, nextPlayerTurn, updatedPositions));
+        // Send response to all clients in the match with updated positions
+        lobbyManager.multicastToMatch(match.getMatchId(), new PickAdventureCardResponse(playerId, adventureCard, success, message, nextPlayerTurn, updatedPositions));
     }
 
     @Override
@@ -789,14 +783,15 @@ public class SocketClientHandler implements Runnable, GeneralClientIf {
         if (isReady) {
             showUpdate(new ReadyForAdventurePhaseResponse(matchId, playerId, true, "Player is ready for adventure phase"));
             
-            // Check if all players are ready
             if (match.allPlayersReadyForAdventure()) {
-                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(
-                        matchId,
-                        match.getPlayerPositions(),
-                        match.getFirstPlayerToAct()
-                ));
-
+                Map<Integer, Integer> currentPositions = match.getPlayerPositions();
+                int firstPlayer = match.getFirstPlayerToAct();
+                
+                System.out.println("[Server] Starting adventure phase with positions: " + currentPositions);
+                System.out.println("[Server] First player to act: " + firstPlayer);
+                
+                lobbyManager.multicastToMatch(matchId, new AdventurePhaseStartResponse(matchId, currentPositions, firstPlayer));
+                
                 match.setMatchState(MatchStates.FLIGHT_IN_PROGRESS);
             }
         } else {

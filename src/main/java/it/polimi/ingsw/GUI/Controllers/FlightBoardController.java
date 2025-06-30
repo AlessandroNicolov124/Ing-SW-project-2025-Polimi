@@ -196,8 +196,20 @@ public class FlightBoardController extends GuiContoller implements FlightBoardLi
 
     @Override
     public void adventureCardPicketFromsrv(int playerId, AdventureCard adventureCard, boolean success, String message, int nextPlayerTurn, Map<Integer, Integer> updatedPositions) {
-        playerIdPosMapCurrent = updatedPositions;
-        ShowInfoDialogWindow("Adventure Card", "Leader picked an adventure card", adventureCard.getDescription());
+        if (playerId == -1 && updatedPositions != null) {
+            playerIdPosMapCurrent = new HashMap<>(updatedPositions);
+            updateDisplayedPlayers();
+            
+            if (nextPlayerTurn == context.getPlayerId()) {
+                PickCard.setDisable(false);
+            }
+            return;
+        }
+        
+        if (updatedPositions != null) {
+            playerIdPosMapCurrent = updatedPositions;
+        }
+        ShowInfoDialogWindow("Adventure Card", "Leader picked an adventure card", adventureCard != null ? adventureCard.getDescription() : message);
         updateDisplayedPlayers();
     }
 }
