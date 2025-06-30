@@ -23,6 +23,7 @@ public class LobbyHandler {
     private int readyPlayers;
     private final AtomicBoolean dirty = new AtomicBoolean(true);
     private final Set<UUID> handledCreations = new HashSet<>();
+    private String chosenColor;
 
     public LobbyHandler(ConsoleManager console, GeneralClientIf simpleClient, int playerId, String username) {
         this.console = console;
@@ -75,7 +76,8 @@ public class LobbyHandler {
             console.printMessage("1. Leave match");
             console.printMessage("2. Refresh menu");
             console.printMessage("3. Start match (requires at least 2 players)");
-            console.printMessage("4. quit. Exit application");
+            console.printMessage("4. Choose cabin color (if not already chosen)");
+            console.printMessage("5. quit. Exit application");
         }
         console.printMessage("Enter command: ");
     }
@@ -127,6 +129,9 @@ public class LobbyHandler {
                 } else {
                     console.printError("Only the host can start the match.");
                 }
+                break;
+            case "4":
+                chooseColor();
                 break;
             case "quit":
                 if (currentMatchId != null) {
@@ -199,6 +204,21 @@ public class LobbyHandler {
         } catch (Exception e) {
             console.printError("Error joining match: " + e.getMessage());
         }
+    }
+
+    private void chooseColor() throws Exception {
+        if (currentMatchId == null) {
+            console.printError("You are not in a match. Cannot choose color.");
+            return;
+        }
+        
+        String color = console.askQuestion("Choose your cabin color (e.g., RED, BLUE, GREEN, YELLOW):");
+        if (color == null || color.trim().isEmpty()) {
+            console.printError("Color cannot be empty.");
+            return;
+        }
+        
+        simpleClient.selectCabinColor(color, playerId);
     }
 
     private void leaveMatch() throws Exception {
@@ -329,6 +349,22 @@ public class LobbyHandler {
             return;
         }
         
+    }
+
+    public void cabinColorSelectedCallback(int playerId, String color) {
+        if (currentMatchId == null) {
+            console.printError("You are not in a match. Cannot select color.");
+            return;
+        }
+        
+        if (this.playerId == playerId) {
+            this.chosenColor = color;
+            console.printMessage("You have selected the cabin color: " + color);
+        } else {
+            console.printMessage("Player " + playerId + " has selected the cabin color: " + color);
+        }
+
+        dirty.set(true);
     }
 
     public void playerReadyCallback(UUID matchId, int readyPlayers, int totalPlayers /*, String username */) {

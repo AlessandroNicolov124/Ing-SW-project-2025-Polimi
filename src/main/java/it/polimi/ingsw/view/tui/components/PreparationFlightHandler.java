@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 
+import it.polimi.ingsw.Direction;
 import it.polimi.ingsw.Player;
 import it.polimi.ingsw.Position;
 import it.polimi.ingsw.TokenType;
@@ -31,12 +32,9 @@ public class PreparationFlightHandler {
         console.printMessage("\n=== FLIGHT PREPARATION PHASE ===");
         console.printMessage("Loading your ship...");
         
-        // Load ship data
         try {
             client.getPlayerShip(currentPlayer.getNickName());
-            Thread.sleep(1000);
             client.getPlayerTokenList(currentPlayer.getNickName());
-            Thread.sleep(1000);
         } catch (Exception e) {
             console.printError("Error loading data: " + e.getMessage());
         }
@@ -44,9 +42,7 @@ public class PreparationFlightHandler {
         while (continuePreparation) {
             displayShip();
             showMenu();
-            
-            String choice = console.readCommand().trim();
-            
+            String choice = console.readCommand().trim().toLowerCase();
             switch (choice) {
                 case "1": placeHuman(); break;
                 case "2": placePurpleAlien(); break;
@@ -55,7 +51,7 @@ public class PreparationFlightHandler {
                 case "5": removeToken(); break;
                 case "6": seeOtherPlayerShip(); break;
                 case "7": readyToFly(); break;
-                case "d": displayShip(); break;
+                case "d": break;
                 case "q": 
                     console.printMessage("Exiting preparation...");
                     continuePreparation = false;
@@ -81,44 +77,83 @@ public class PreparationFlightHandler {
     }
 
     private void displayShip() {
-        console.printMessage("\n--- Your Ship ---");
-        
-        if (shipComponents.isEmpty()) {
-            console.printMessage("No ship data loaded yet.");
-            return;
-        }
+        synchronized (console) {
+            console.printMessage("\n--- Your Ship ---");
+            int width  = 7;
+            int height = 5;
+            int gh = height * 3, gw = width * 3;
+            String[][] grid = new String[gh][gw];
+            for (int i = 0; i < gh; i++)
+                for (int j = 0; j < gw; j++)
+                    grid[i][j] = "    ";
 
-        // Simple grid display
-        for (int y = 0; y < 5; y++) {
-            StringBuilder row = new StringBuilder();
-            for (int x = 0; x < 7; x++) {
-                Position pos = new Position(x, y);
-                Component comp = shipComponents.get(pos);
-                
-                if (comp != null) {
-                    String symbol = getComponentSymbol(comp);
-                    List<TokenType> posTokens = tokens.get(pos);
-                    
-                    if (posTokens != null && !posTokens.isEmpty()) {
-                        // Show component with token count
-                        row.append("[" + symbol + ":" + posTokens.size() + "] ");
-                    } else {
-                        row.append("[" + symbol + "]  ");
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    Position pos = new Position(x, y);
+                    Component comp = shipComponents.get(pos);
+                    int by = y * 3, bx = x * 3;
+                    if (comp != null) {
+                        grid[by+1][bx+1] = "[" + getComponentSymbol(comp) + "]";
+                        for (Direction d : Direction.values()) {
+                            Connector conn = comp.getConnectorByDirection(d);
+                            if (conn != null && !(conn.getConnectorType() instanceof NullConnectorType)) {
+                                String sym = "[" + getConnectionSymbol(conn) + "]";
+                                switch (d) {
+                                    case NORTH -> grid[by  ][bx+1] = sym;
+                                    case SOUTH -> grid[by+2][bx+1] = sym;
+                                    case EAST  -> grid[by+1][bx+2] = sym;
+                                    case WEST  -> grid[by+1][bx  ] = sym;
+                                }
+                            }
+                        }
                     }
-                } else {
-                    row.append("     ");
+                    // verifica token e se presente sovrascrive centro
+                    List<TokenType> cellTokens = tokens.get(pos);
+                    if (cellTokens != null && !cellTokens.isEmpty()) {
+                        grid[by+1][bx+1] = "[" + getTokenSymbol(cellTokens.get(0)) + "]";
+                    }
                 }
             }
-            console.printMessage(row.toString());
-        }
-        
-        // Show token details
-        console.printMessage("\nTokens placed:");
-        for (Map.Entry<Position, List<TokenType>> entry : tokens.entrySet()) {
-            if (!entry.getValue().isEmpty()) {
-                Position pos = entry.getKey();
-                console.printMessage("  (" + pos.getX() + "," + pos.getY() + "): " + entry.getValue());
+
+            // intestazione X
+            StringBuilder hdr = new StringBuilder("      ");
+            for (int x = 0; x < width; x++) hdr.append("     ").append(x).append("     ");
+            console.printMessage(hdr.toString());
+
+            // stampa righe con etichetta Y solo sulla riga centrale di ogni cella
+            for (int i = 0; i < gh; i++) {
+                StringBuilder row = new StringBuilder();
+                if (i % 3 == 1) row.append("Y:").append(i/3).append("   ");
+                else           row.append("      ");
+                for (int j = 0; j < gw; j++) row.append(grid[i][j]);
+                console.printMessage(row.toString());
             }
+            console.printMessage("------------------------------------");
+        }
+    }
+
+    private String getConnectionSymbol(Connector connector) {
+        if (connector == null) {
+            return "  "; // Empty for no connector
+        }
+
+        return switch (connector.getConnectorType()) {
+            case SingleConnectorType s -> "S-";
+            case DoubleConnectorType d -> "D=";
+            case UniversalConnectorType u -> "U≡";
+            case NullConnectorType n -> "  ";
+            default -> "??";
+        };
+    }
+
+
+    private String getTokenSymbol(TokenType t) {
+        switch (t) {
+            case HUMAN: return "H";
+            case PURPLE_ALIEN: return "P";
+            case BROWN_ALIEN: return "B";
+            case BATTERY: return "E";
+            default: return "?";
         }
     }
 
@@ -280,13 +315,11 @@ public class PreparationFlightHandler {
 
     public void displayOtherPlayerShip(String playerName, Map<Position, Component> otherShip) {
         console.printMessage("\n=== " + playerName + "'s Ship ===");
-        
         for (int y = 0; y < 5; y++) {
             StringBuilder row = new StringBuilder();
             for (int x = 0; x < 7; x++) {
                 Position pos = new Position(x, y);
                 Component comp = otherShip.get(pos);
-                
                 if (comp != null) {
                     row.append("[" + getComponentSymbol(comp) + "] ");
                 } else {
@@ -295,8 +328,8 @@ public class PreparationFlightHandler {
             }
             console.printMessage(row.toString());
         }
-        
         console.printMessage("\nPress Enter to continue...");
         console.readCommand();
     }
+
 }
