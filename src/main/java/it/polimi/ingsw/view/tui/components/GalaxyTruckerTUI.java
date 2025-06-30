@@ -1263,7 +1263,7 @@ public class GalaxyTruckerTUI implements Runnable, GameListener {
 
     @Override
     public void cabinColorSelected(int playerId, String color) {
-
+        lobbyHandler.cabinColorSelectedCallback(playerId, color);
     }
 
     @Override
