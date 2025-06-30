@@ -2,6 +2,7 @@ package it.polimi.ingsw.GUI;
 
 import it.polimi.ingsw.AdventureCards.AdventureCard;
 import it.polimi.ingsw.Components.Component;
+import it.polimi.ingsw.GUI.Controllers.FlightBoardController;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.FlightBoardListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.GameStateUpdateListener;
 import it.polimi.ingsw.GUI.GameStateUpdateListener.LobbyListener;
@@ -548,13 +549,12 @@ public class AppContext implements GameListener {
     @Override
     public void cabinColorSelected(int playerId, String color) {
         Platform.runLater(() -> {
-
+            System.out.println("[AppContext] Cabin color selected - Player: " + playerId + ", Color: " + color);
+            
+            playerColorMap.put(playerId, color);
+            
             if (playerId == this.playerId) {
                 this.selectedCabinColor = color;
-            }
-
-            if (playerId != this.playerId) {
-                playerColorMap.put(playerId, color);
             }
 
             for (LobbyListener listener : lobbyListeners) {
@@ -811,10 +811,25 @@ public class AppContext implements GameListener {
     public void adventurePhaseStarted(UUID matchId, Map<Integer, Integer> playerPositions, int firstPlayerToAct) {
         Platform.runLater(() -> {
             try {
+                Map<Integer, Integer> positions = new HashMap<>(playerPositions);
                 GUIApp.showFlightBoard();
+                
+                Platform.runLater(() -> {
+                    for (FlightBoardListener listener : flightBoardListeners) {
+                        // only to load the positions
+                        listener.adventureCardPicketFromsrv(
+                            -1, // dummy playerId 
+                            null, 
+                            true, 
+                            "Adventure phase started", 
+                            firstPlayerToAct, 
+                            positions
+                        );
+                    }
+                });
             } catch (Exception e) {
-                showErrorDialog("Error during nrew page load", e.getMessage());
-                System.out.println("Error during nrew page load" + e.getMessage());
+                showErrorDialog("Error during page load", e.getMessage());
+                System.out.println("Error during page load" + e.getMessage());
             }
         });
     }

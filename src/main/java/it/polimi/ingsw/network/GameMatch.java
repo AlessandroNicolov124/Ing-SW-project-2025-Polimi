@@ -204,6 +204,10 @@ public class GameMatch {
     public String getPlayerCabinColor(int playerId) {
         return playerCabinColors.get(playerId);
     }
+
+    public Map<Integer, String> getAllPlayerColors() {
+        return new HashMap<>(playerCabinColors);
+    }
     
     public boolean isColorTaken(String color) {
         return !availableColors.contains(color);
@@ -469,15 +473,17 @@ public class GameMatch {
      * @return Map of player ID to assigned position
      */
     public Map<Integer, Integer> getPlayerPositions() {
-        // Return actual flight board positions from controller if available
-        if (controller != null) {
+        if (controller != null && matchState == MatchStates.FLIGHT_IN_PROGRESS) {
             Map<Integer, Integer> flightBoardPositions = controller.getCurrentPlayerPositions();
             if (flightBoardPositions != null && !flightBoardPositions.isEmpty()) {
-                return flightBoardPositions;
+                System.out.println("[GameMatch] Returning current flight board positions: " + flightBoardPositions);
+                return new HashMap<>(flightBoardPositions);
             }
         }
-        // Fallback to completion order positions if flight board not available
-        return new ConcurrentHashMap<>(playerPositions);
+        
+        // Fallback to stored positions if flight not in progress
+        System.out.println("[GameMatch] Returning stored positions: " + playerPositions);
+        return new HashMap<>(playerPositions);
     }
 
     /**
