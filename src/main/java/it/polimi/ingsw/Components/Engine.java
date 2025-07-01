@@ -4,6 +4,7 @@ import it.polimi.ingsw.Direction;
 
 
 public abstract sealed class Engine extends Component permits SingleEngine, DoubleEngine {
+    private static final long serialVersionUID = 1L;
     protected int power;
     protected int energyConsumption;
 

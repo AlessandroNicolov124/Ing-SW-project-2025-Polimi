@@ -8,6 +8,7 @@ import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 
 public class GetPlayerShipResponse implements ResponseMessage {
+    private static final long serialVersionUID = 1L;
     private final String playerName;
     private final Map<Position, Component> ship;
     private final boolean success;

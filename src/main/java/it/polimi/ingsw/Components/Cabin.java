@@ -6,6 +6,7 @@ import java.util.*;
 
 // Classe Cabin
 public final class Cabin extends Component {
+    private static final long serialVersionUID = 1L;
     private List<Crew> crew;
     private boolean isStartingCabin;
     private Set<LifeSupportSystemType> connectedLifeSupports;

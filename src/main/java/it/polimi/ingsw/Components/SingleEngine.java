@@ -3,6 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.Direction;
 
 public final class SingleEngine extends Engine {
+    private static final long serialVersionUID = 1L;
 
     public SingleEngine() {
         super(1, 0);

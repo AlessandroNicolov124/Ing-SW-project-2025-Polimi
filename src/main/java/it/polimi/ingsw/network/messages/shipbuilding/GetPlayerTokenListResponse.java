@@ -9,6 +9,7 @@ import it.polimi.ingsw.network.client.listeners.GameListener;
 import it.polimi.ingsw.network.messages.ResponseMessage;
 
 public class GetPlayerTokenListResponse implements ResponseMessage {
+    private static final long serialVersionUID = 1L;
     private final String playerName;
     private final Map<Position, List<TokenType>> tokens;
     private final boolean success;

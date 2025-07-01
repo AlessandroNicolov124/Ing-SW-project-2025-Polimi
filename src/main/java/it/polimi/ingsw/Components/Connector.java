@@ -4,6 +4,7 @@ import it.polimi.ingsw.Direction;
 import java.io.Serializable;
 
 public class Connector implements Serializable {
+    private static final long serialVersionUID = 1L;
     private Direction direction;
     private ConnectorType connectorType;
 

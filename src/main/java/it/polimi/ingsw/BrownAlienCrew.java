@@ -8,6 +8,7 @@ import it.polimi.ingsw.Components.LifeSupportSystemType;
  * This crew can only live in cabins with a brown life support system connected.
  */
 public class BrownAlienCrew extends Crew {
+    private static final long serialVersionUID = 1L;
 
     public BrownAlienCrew() {
         super(CrewType.BROWN_ALIEN);

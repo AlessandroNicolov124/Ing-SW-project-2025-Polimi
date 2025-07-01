@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public sealed abstract class Component implements Serializable permits BatteryCompartment, Cabin, Cannon, CargoHolds, Engine, LifeSupportSystem, ShieldGenerator, StructuralModule {
+    private static final long serialVersionUID = 1L;
     protected List<Connector> connections; // Lista di connessioni
     protected Direction componentDirection; // Direzione del componente
     protected boolean damaged; // Stato del componente (danneggiato o no)

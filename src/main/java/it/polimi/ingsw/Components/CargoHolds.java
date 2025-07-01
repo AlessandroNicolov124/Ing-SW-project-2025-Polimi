@@ -3,6 +3,7 @@ package it.polimi.ingsw.Components;
 import java.util.*;
 
 public sealed abstract class CargoHolds extends Component permits NormalCargoHolds, SpecialCargoHolds {
+    private static final long serialVersionUID = 1L;
 
     private int capacity;
     protected CargoHoldsSize size;

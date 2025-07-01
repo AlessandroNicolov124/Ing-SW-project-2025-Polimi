@@ -5,6 +5,7 @@ import it.polimi.ingsw.network.socket.server.SocketClientHandler;
 
 public class ExpiringTimeRequest implements RequestMessage {
     private final String playerName;
+    private static final long serialVersionUID = 1L;
 
     public ExpiringTimeRequest(String playerName) {
         this.playerName = playerName;

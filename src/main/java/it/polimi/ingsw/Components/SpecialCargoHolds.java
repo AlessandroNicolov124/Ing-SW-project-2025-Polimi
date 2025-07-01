@@ -1,6 +1,7 @@
 package it.polimi.ingsw.Components;
 
 public final class SpecialCargoHolds extends CargoHolds {
+    private static final long serialVersionUID = 1L;
 
     public SpecialCargoHolds(CargoHoldsSize size) {
         super();

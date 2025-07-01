@@ -6,7 +6,8 @@ import it.polimi.ingsw.Components.*;
 
 // Base class for all crew members
 public abstract class Crew implements Serializable{
-    protected CrewType type; 
+    private static final long serialVersionUID = 1L;
+    protected CrewType type;
 
     public Crew(CrewType crewType) {
         this.type = crewType;

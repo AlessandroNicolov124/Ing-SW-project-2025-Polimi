@@ -9,6 +9,7 @@ import it.polimi.ingsw.Components.LifeSupportSystemType;
  */
 public class PurpleAlienCrew extends Crew {
 
+    private static final long serialVersionUID = 1L;
     public PurpleAlienCrew() {
         super(CrewType.PURPLE_ALIEN);
     }

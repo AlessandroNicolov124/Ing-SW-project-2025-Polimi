@@ -7,6 +7,7 @@ import it.polimi.ingsw.network.messages.ResponseMessage;
 import it.polimi.ingsw.network.messages.RotationType;
 
 public class RotateComponentResponse implements ResponseMessage {
+    private static final long serialVersionUID = 1L;
     private final int playerId;
     private final Position position;
     private final RotationType rotationType;

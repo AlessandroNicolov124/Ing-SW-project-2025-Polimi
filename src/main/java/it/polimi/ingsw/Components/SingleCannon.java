@@ -6,6 +6,7 @@ public final class SingleCannon extends Cannon {
     public SingleCannon() {
         super(1,0);
     }
+    private static final long serialVersionUID = 1L;
 
     @Override
     protected String calculateComponentString() {

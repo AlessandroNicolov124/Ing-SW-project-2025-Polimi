@@ -10,6 +10,7 @@ import java.io.Serializable;
  * It also provides methods to manage the player's ship and actions during the game.
  */
 public class Player implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int id;
     private String nickName;
     private boolean active;

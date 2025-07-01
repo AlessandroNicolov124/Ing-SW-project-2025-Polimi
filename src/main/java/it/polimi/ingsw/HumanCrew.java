@@ -7,6 +7,7 @@ import it.polimi.ingsw.Components.Cabin;
  * Humans can live in any cabin as they wear spacesuits.
  */
 public class HumanCrew extends Crew {
+    private static final long serialVersionUID = 1L;
 
     public HumanCrew() {
         super(CrewType.HUMAN);

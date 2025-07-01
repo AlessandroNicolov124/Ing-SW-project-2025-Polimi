@@ -8,6 +8,7 @@ import java.util.Objects;
  * It contains x and y coordinates and provides methods to manipulate and compare positions.
  */
 public class Position implements Serializable {
+    private static final long serialVersionUID = 1L;
 
     private final int x;
     private final int y;

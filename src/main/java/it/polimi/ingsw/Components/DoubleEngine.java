@@ -3,6 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.Direction;
 
 public final class DoubleEngine extends Engine {
+    private static final long serialVersionUID = 1L;
 
     private boolean isCharged; // Stato di carica
 

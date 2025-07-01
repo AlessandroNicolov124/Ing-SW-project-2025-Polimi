@@ -3,6 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 
 public sealed abstract class Cannon extends Component permits SingleCannon, DoubleCannon {
+    private static final long serialVersionUID = 1L;
 
     //Fire direction Matches component direction
     protected int firePower;

@@ -4,6 +4,7 @@ import it.polimi.ingsw.Direction;
 
 public final class DoubleCannon extends Cannon {
     private boolean isCharged; // Stato di carica del cannone
+    private static final long serialVersionUID = 1L;
 
     public DoubleCannon() {
         super(2, 1);

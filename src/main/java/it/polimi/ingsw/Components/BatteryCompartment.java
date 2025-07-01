@@ -3,6 +3,7 @@ package it.polimi.ingsw.Components;
 import it.polimi.ingsw.*;
 
 public final class BatteryCompartment extends Component {
+    private static final long serialVersionUID = 1L;
     private int maxCapacity; // numero di batterie
     private BatteryType type;
     private int chargeLevel; // carica

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class ShieldGenerator extends Component {
+    private static final long serialVersionUID = 1L;
 
     private boolean isCharged; // Stato di carica
     private int energyConsumption;
