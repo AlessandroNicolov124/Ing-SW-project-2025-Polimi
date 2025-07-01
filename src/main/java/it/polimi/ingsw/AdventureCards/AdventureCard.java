@@ -8,6 +8,7 @@ import it.polimi.ingsw.GameModel;
 import it.polimi.ingsw.Player;
 
 public abstract class AdventureCard implements Serializable{
+    private static final long serialVersionUID = 1L;
     private int copies;
     private int duration;
     private int cost;

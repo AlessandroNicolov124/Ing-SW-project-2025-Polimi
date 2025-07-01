@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
  */
 
 public class MeteorSwarm extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private List<Meteor> meteors;
     private Random random;
 

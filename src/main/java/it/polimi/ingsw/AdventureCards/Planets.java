@@ -24,6 +24,7 @@ import java.util.*;
  */
 
 public class Planets extends AdventureCard{
+    private static final long serialVersionUID = 1L;
     private List<Planet> planets;
     private int flightDaysCost;
     private transient Map<Planet, Player> landedPlayers;

@@ -21,6 +21,7 @@ import java.util.*;
  */
 
 public class Sabotage extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private Random random;
     private int maxAttempts;
 

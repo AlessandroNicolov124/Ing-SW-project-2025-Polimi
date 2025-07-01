@@ -14,6 +14,7 @@ import java.util.*;
  */
 
 public class Stardust extends AdventureCard {
+    private static final long serialVersionUID = 1L;
 
     public Stardust() {
         super();

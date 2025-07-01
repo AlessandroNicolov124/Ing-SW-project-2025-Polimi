@@ -15,6 +15,7 @@ import java.util.Random;
  */
 
 public class BigMeteorSwarm extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private int numberOfMeteors;
     private Random random;
 

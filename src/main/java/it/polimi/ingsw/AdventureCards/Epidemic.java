@@ -17,6 +17,7 @@ import java.util.*;
  */
 
 public class Epidemic extends AdventureCard {
+    private static final long serialVersionUID = 1L;
 
     public Epidemic() {
         super();

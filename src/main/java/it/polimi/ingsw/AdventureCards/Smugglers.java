@@ -29,6 +29,7 @@ import java.util.*;
  */
 
 public class Smugglers extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private int smugglerStrength;
     private int goodsLostOnDefeat;
     private List<Cargo> goodsGainedOnVictory;

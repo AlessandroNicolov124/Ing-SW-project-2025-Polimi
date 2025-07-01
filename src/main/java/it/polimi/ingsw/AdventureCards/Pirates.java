@@ -23,6 +23,7 @@ import java.util.*;
  */
 
 public class Pirates extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private int rewardCredits;
     private int flightDaysCost;
     private int pirateStrength;

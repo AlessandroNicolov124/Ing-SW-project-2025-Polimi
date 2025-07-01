@@ -40,6 +40,7 @@ import java.util.*;
  */
 
 public class CombatZone extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private Random random;
     private int flightDayPenalty;
     private int crewLossPenalty;

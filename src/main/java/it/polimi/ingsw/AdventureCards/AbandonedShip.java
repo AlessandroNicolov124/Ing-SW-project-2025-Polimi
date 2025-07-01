@@ -25,6 +25,8 @@ import java.util.Map;
  */
 
 public class AbandonedShip extends AdventureCard {
+    private static final long serialVersionUID = 1L;
+
     private Map<CrewType, Integer> crewTypeRequired;
     private int creditsGained;
     private int flightDaysCost;

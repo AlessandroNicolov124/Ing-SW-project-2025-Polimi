@@ -20,6 +20,7 @@ import java.util.*;
  */
 
 public class Slavers extends AdventureCard {
+    private static final long serialVersionUID = 1L;
     private int slaverStrength;
     private int rewardCredits;
     private int flightDaysCost;

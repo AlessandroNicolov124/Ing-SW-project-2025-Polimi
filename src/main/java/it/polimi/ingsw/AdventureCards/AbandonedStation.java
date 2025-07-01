@@ -26,6 +26,7 @@ import java.util.List;
  */
 
 public class AbandonedStation extends AdventureCard{
+    private static final long serialVersionUID = 1L;
     private int minCrewRequired;
     private int flightDaysCost;
     private List<Cargo> goodsToLoad;
